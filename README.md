@@ -1,6 +1,6 @@
 <p align="center">
 
-  [![访问量](https://profile-counter.glitch.me/lc-hongdou-gallery/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
+  [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
 
 </p>
 
