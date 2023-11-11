@@ -4,11 +4,11 @@
 
 </p>
 
-
+-如果你的群里有【怡露】，可以使用#xx面板图列表 获取全部图片-
 
 ## 图库说明
 - 喵喵插件Miao-Plugin的角色面板的图库<br>
-- 已有1600+张图，1.7G+占用<br>
+- 已有1700+张图，2.2G+占用<br>
 - R16级别的图片,无漏点图<br>
 - 含有liangshi-calc各元素主角面板图<br>
 - 部分图片是从各大云崽群获取的公开图片<br>
@@ -18,8 +18,6 @@
 ## 止语姐姐的交流群
 - 884587317
 ## 项目地址
-
-* Yunzai-Bot：[Gitee](https://gitee.com/Le-niao/Yunzai-Bot) & [Github](https://github.com/Le-niao/Yunzai-Bot)
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
-
+* Lain-plugin多适配器插件：[Gitee](https://gitee.com/Zyy955/Lain-plugin)
