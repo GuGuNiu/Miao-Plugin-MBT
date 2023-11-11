@@ -18,8 +18,6 @@
 ## 止语姐姐的交流群
 - 884587317
 ## 项目地址
-
-* Yunzai-Bot：[Gitee](https://gitee.com/Le-niao/Yunzai-Bot) & [Github](https://github.com/Le-niao/Yunzai-Bot)
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
-* Lain-plugin多适配器插件[Gitee](https://gitee.com/Zyy955/Lain-plugin)
+* Lain-plugin多适配器插件：[Gitee](https://gitee.com/Zyy955/Lain-plugin)
