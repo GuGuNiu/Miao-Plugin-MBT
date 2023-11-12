@@ -22,3 +22,5 @@
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
 * Lain-plugin多适配器插件：[Gitee](https://gitee.com/Zyy955/Lain-plugin)
+## 免责声明
+请勿用于以盈利为目的的任何场景,素材均来自网络,如果侵权请联系删除
