@@ -16,7 +16,7 @@
 - 文件冲突时建议覆盖,时常修复旧图片的瑕疵或删除<br>
 ## 存放路径
 /plugins/miao-plugin/resources/profile
-## 止语姐姐的交流群
+## 止语姐姐的Lain插件交流群
 - 884587317
 ## 项目地址
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
