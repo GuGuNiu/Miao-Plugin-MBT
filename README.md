@@ -22,10 +22,11 @@
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
 * Lain-plugin多适配器插件：[Gitee](https://gitee.com/Zyy955/Lain-plugin)
 
-<details><summary>止语姐姐的爱发电~您的支持是我更新的动力</summary>
+<details><summary>止语姐姐的爱发电~您支持她就是我更新的动力</summary>
 
 ![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
 
 </details>
+
 ## 免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如果侵权请联系删除
