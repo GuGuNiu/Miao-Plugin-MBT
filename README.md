@@ -16,12 +16,15 @@
 ## 存放路径
 /plugins/miao-plugin/resources/profile
 ## 止语姐姐的Lain插件交流群
+
 - 884587317
+  
  <details><summary>⭐止语姐姐的爱发电~您支持她就是我更新的动力</summary>
 
 ![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
 
 </details>
+
 ## 项目地址
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
