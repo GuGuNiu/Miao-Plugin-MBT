@@ -33,9 +33,6 @@
 
 指令执行后会自动将图包拷贝至喵喵插件内，也可发送`#启用咕咕牛图包`重新拷贝。
 
-## 存放路径
-/plugins/miao-plugin/resources/profile
-
 ## 项目地址
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
