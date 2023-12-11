@@ -1,4 +1,3 @@
-<a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/" target="_blank"><img src="https://s2.loli.net/2023/12/11/tjIAO2mCfQXBUsa.jpg" ></a>
 
 <p align="center">
 
@@ -11,7 +10,7 @@
 ## 图库说明
 - 喵喵插件Miao-Plugin的角色面板的图库<br>
 - 已有1400+张图，1.5G+占用<br>
-- 最高R17+级别的图片,无漏点图<br>
+- 最高R17.9+级别的图片,无漏点图<br>
 - 部分图片是从各大云崽群获取的公开图片<br>
 - 文件冲突时建议覆盖,时常修复旧图片的瑕疵或删除<br>
 
