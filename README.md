@@ -5,7 +5,8 @@
 
 </p>
 
--如果你的群里有【怡露-106205736】，可以使用#xx面板图列表 获取全部图片,机器人是实时更新,仓库大概一星期更新一次-<br>
+如果你的群里有【怡露-106205736】，可以使用#xx面板图列表 获取全部图片
+机器人是实时更新,仓库大概一星期更新一次<br>
 
 ## 图库说明
 - 已有1500+张图，1.7G+占用<br>
@@ -14,6 +15,7 @@
 - 部分图片是从各大云崽群获取的公开图片<br>
 - 考虑到出图效率,暂不使用超分图片提高清晰度<br>
 - 文件冲突时建议覆盖,时常修复旧图片的瑕疵或删除<br>
+- 有疑问请提issues<br>
 
 ## 使用图库的方式
 
@@ -34,9 +36,6 @@
 
 指令执行后会自动将图包拷贝至喵喵插件内，也可发送`#启用咕咕牛图包`重新拷贝。
 
-## Lain-Plugin交流群
-884587317
-  
 ## 项目地址
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
