@@ -4,10 +4,6 @@
   [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
 
 </p>
-
-如果你的群里有【怡露-106205736】，可以使用#xx面板图列表 获取全部图片<br>
-机器人是实时更新,仓库大概一星期更新一次<br>
-
 ## 图库说明
 - 图库已收录1500+张图，1.7G+占用<br>
 - 最高R17.9+级别的图片,部分图片可能含有性暗示,无漏点图<br>
@@ -35,6 +31,10 @@
 向机器人发送`#下载咕咕牛图包`后耐心等待若干分钟。后续可通过`#(强制)更新咕咕牛图包`拉取最新图包。
 
 指令执行后会自动将图包拷贝至喵喵插件内，也可发送`#启用咕咕牛图包`重新拷贝。
+
+### 方法3
+添加机器人好友【怡露-106205736】，可以使用#xx面板图列表 获取全部图片<br>
+机器人是实时更新,仓库大概一星期更新一次<br>
 
 ## 项目地址
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
