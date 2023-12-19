@@ -7,11 +7,11 @@
 ## 图库说明
 - 图库已收录1500+张图，1.7G+占用<br>
 - 最高R17.9+级别的图片,部分图片可能含有性暗示,无漏点图<br>
-- 超冷门角色基本不更新,请谅解<br>
 - 部分图片是从各大云崽群获取的公开图片<br>
 - 考虑到出图效率,暂不使用超分图片提高清晰度<br>
 - 文件冲突时建议覆盖,时常修复旧图片的瑕疵或删除<br>
 - 图库不会上传至其他平台,提供了三种方法下载<br>
+- 超冷门角色基本不更新,请谅解<br>
 - 有疑问请提issues<br>
 
 ## 使用图库的方式
@@ -58,8 +58,13 @@
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
 
-## 图片瑕疵说明
-已发现不超分的图片使用魔棒抠出来后还是能在QQ内看到毛刺，目前无解但是不影响图片在面板图上的显示
+## 其它说明
+ 
+>已发现不超分的图片使用魔棒抠出来后还是能在QQ内看到毛刺，目前无解但是不影响图片在面板图上的显示<br>
+
+>优化了文件的命名，衣着暴露的命名会含有X，如`胡桃GuX1.webp`，衣着暴露+性暗示姿势含有XR，如胡桃`GuXR1.webp`<br>
+ 
+>删除时可以搜索关键词X或XR快捷处理
 
 ## 免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如果侵权请联系删除
