@@ -26,7 +26,7 @@
      将内容复制至本体的`/plugins/miao-plugin/resources/profile`目录下
 
 #### ②-使用JS插件命令下载
-  <p align="center"><b><ins>▲▲▲▲▲[在本体根目录打开命令行/终端输入]▲▲▲▲▲</ins></b></p>
+  <p align="center"><b><ins>▲[在本体根目录打开命令行/终端输入]▲</ins></b></p>
 
       `curl -o "./plugins/example/MarryGuGuNiu.js" "https://mirror.ghproxy.com/https://raw.githubusercontent.com/LinBoyan/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"`
 
@@ -37,7 +37,7 @@
 #### ③-QQ内获取
       添加机器人好友,可以使用#xx面板图列表 获取全部图片
       
-      【怡露-106205736】【杨枝甘露-310126340】 
+      【怡露-106205736】
       
       机器人是实时更新,仓库大概一周到三周更新一次 
 
