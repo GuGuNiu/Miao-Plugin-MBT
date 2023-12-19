@@ -17,7 +17,7 @@
 
 ## 使用图库的方式
 
-### ①-直接下载
+#### ①-直接下载
 
      任意位置创建一个文件夹，在文件夹中打开[命令行/终端]，输入以下内容
 
@@ -25,7 +25,7 @@
 
      将内容复制至本体的`/plugins/miao-plugin/resources/profile`目录下
 
-### ②-使用JS插件命令下载
+#### ②-使用JS插件命令下载
   <p align="center"><b><ins>▲▲▲▲▲[在本体根目录打开命令行/终端输入]▲▲▲▲▲</ins></b></p>
 
       `curl -o "./plugins/example/MarryGuGuNiu.js" "https://mirror.ghproxy.com/https://raw.githubusercontent.com/LinBoyan/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"`
@@ -34,7 +34,7 @@
 
       指令执行后会自动将图包拷贝至喵喵插件内，也可发送`#启用咕咕牛图包`重新拷贝。
 
-### ③-QQ内获取
+#### ③-QQ内获取
       添加机器人好友,可以使用#xx面板图列表 获取全部图片
       
       【怡露-106205736】【杨枝甘露-310126340】 
