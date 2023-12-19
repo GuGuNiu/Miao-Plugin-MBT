@@ -1,9 +1,8 @@
 ![0124c65544e8de0000019ae9f3ae0e.jpg@2o.png](https://s2.loli.net/2023/12/19/laMwV3D6Gq4dTtb.png)
-<p align="center">
-
+<div align="center"> 
+  
   [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
-
-</p>
+</div>
 
 ## 图库说明
 - 图库已收录1500+张图，1.7G+占用<br>
