@@ -19,12 +19,16 @@
 #### ①-直接下载
 <details>
     <summary>展开</summary>
+  <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
+
+    
+
+  <p align="center">   
+    
+                                     git clone --depth=1 https://github.com/GuGuNiu/Miao-Plugin-MBT ./    
+  </p>
   
-     任意位置创建一个文件夹，在文件夹中打开[命令行/终端]，输入以下内容
-
-     `git clone --depth=1 https://github.com/GuGuNiu/Miao-Plugin-MBT ./`
-
-     将内容复制至本体的`/plugins/miao-plugin/resources/profile`目录下
+  <p align="center"><b>将内容复制至本体的`/plugins/miao-plugin/resources/profile`目录下</b></p>
 
 </details>
 
@@ -32,7 +36,7 @@
  <details>
   <summary>展开</summary>
   
-   #####       <p align="center" font color="green"><b><ins>[在本体根目录打打开````命令行/终端````输入以下命令]</ins></b></p>
+   #####       <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
 
       `curl -o "./plugins/example/MarryGuGuNiu.js" "https://mirror.ghproxy.com/https://raw.githubusercontent.com/LinBoyan/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"`
 
@@ -46,11 +50,11 @@
 <details>
       <summary>展开</summary>
   
-      添加机器人好友,可以使用#xx面板图列表 获取全部图片
+ <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片</p>
       
-      【怡露-106205736】
+ <p align="center">【怡露-106205736】
       
-      机器人是实时更新,仓库大概一周到三周更新一次 
+ <p align="center">机器人是实时更新,仓库大概一周到三周更新一次 </p>
 </details>
   
 ## 项目地址
