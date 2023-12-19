@@ -39,7 +39,7 @@
       
       【怡露-106205736】【杨枝甘露-310126340】 
       
-      机器人是实时更新,仓库大概一星期更新一次 
+      机器人是实时更新,仓库大概一周到三周更新一次 
 
 ## 项目地址
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
