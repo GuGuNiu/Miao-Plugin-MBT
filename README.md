@@ -57,11 +57,6 @@
  <p align="center">机器人是实时更新,仓库大概一周到三周更新一次 </p>
 </details>
   
-## 项目地址
-
-* Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
-* Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
-
 ## 其它说明
  
 >已发现不超分的图片使用魔棒抠出来后还是能在QQ内看到毛刺，目前无解但是不影响图片在面板图上的显示<br>
@@ -69,6 +64,11 @@
 >优化了文件的命名，衣着暴露的命名会含有X，如`胡桃GuX1.webp`，衣着暴露+性暗示姿势含有XR，如胡桃`GuXR1.webp`<br>
  
 >删除时可以搜索关键词X或XR快捷处理
+
+## 项目地址
+
+* Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
+* Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
 
 ## 免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如果侵权请联系删除
