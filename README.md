@@ -25,7 +25,7 @@
 
   <p align="center">   
     
-                            git clone --depth=1 https://github.com/GuGuNiu/Miao-Plugin-MBT ./    
+                        git clone --depth=1 https://github.com/GuGuNiu/Miao-Plugin-MBT ./    
   </p>
   
   <p align="center"><b>将内容复制至本体的`/plugins/miao-plugin/resources/profile`目录下</b></p>
