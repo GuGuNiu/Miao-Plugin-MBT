@@ -6,6 +6,18 @@
 
 <div align="center"> 
   
+![数量](https://img.shields.io/badge/%F0%9F%93%82%20%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%201500%2B%20-%20%233C3C3C?labelColor=green)
+![容量](https://img.shields.io/badge/%F0%9F%92%BE%20%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%201.71G%2B%20-%20%233C3C3C?labelColor=yellow)
+![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20%20%20QQ%20-%20106205736%20-%20%233C3C3C?logo=qq&labelColor=%235577FF)
+![MM](https://img.shields.io/badge/%F0%9F%90%B1%20%20%20MiaoYunzai--V3%20-%20Miao--Plugin-%20%233C3C3C?labelColor=%23FFAAAA)
+[![gitee](https://img.shields.io/badge/%20%20%20%20Gitee%20-%20%E6%8F%92%E4%BB%B6%E5%BA%93-%20%233C3C3C?logo=gitee&logoColor=black&labelColor=%23ADFCEC)](https://gitee.com/yhArcadia/Yunzai-Bot-plugins-index)
+
+</div>
+
+<div align="center"> 
+
+
+
 # ⭐特别声明⭐
 在某黄色海鲜市场app发现有人倒卖图库，仓库声明无任何收费<br>
 为尊重原图画师的权益，新图片将会加入PID和作者ID
