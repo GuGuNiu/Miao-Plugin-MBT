@@ -34,7 +34,7 @@
     ⚠️衣着暴露含有X，如`胡桃Gu1X.webp`<br>
     ⚠️衣着暴露+性暗示姿势含有XR，如胡桃`Gu1XR.webp`<br><br>
 - 部分图片是从各大云崽群获取的公开图片<br><br>
-- 超冷门角色基本不更新,请谅解<br><br>
+- 超冷门角色基本不更新,请谅解<br>
 
 
 
@@ -84,15 +84,11 @@
 </details>
 
 <br>
-<br>
 
 ## 💻项目地址
 
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
-
-<br>
-<br>
-
+  
 ## ⛔免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如果侵权请联系删除
