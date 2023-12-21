@@ -28,14 +28,20 @@
 <br>
 
 ## 🔝图库说明
-- R17+级别的图片,部分图片可能含有性暗示,无漏点图<br>
-- 仅保证在面板上显示正常，缩略图和原图发送畸变无法保证，修复难度过大<br>
-- 部分图片是从各大云崽群获取的公开图片<br>
-- 超冷门角色基本不更新,请谅解<br>
-<br>
-<br>
+- R17+级别的图片,部分图片可能含有性暗示,无漏点图<br><br>
+- 仅保证在面板上显示正常，缩略图和原图发送畸变无法保证，修复难度过大<br><br>
+- 文件的命名,删除时可以搜索关键词X或XR快捷处理<br><br>
+    ⚠️衣着暴露含有X，如`胡桃Gu1X.webp`<br>
+    ⚠️衣着暴露+性暗示姿势含有XR，如胡桃`Gu1XR.webp`<br><br>
+- 部分图片是从各大云崽群获取的公开图片<br><br>
+- 仓库使用waifu+bigjpg混合超分图片<br><br>
+- 冷门角色基本不更新,请谅解<br><br>
+
+
 
 ## 🫧使用图库的方式
+
+> ### ‼️在开始使用前请确保您的硬盘剩余容量大于图库容量的1.5倍以上,Git下载会产生缓存
 
 #### 1️⃣-直接下载  【✅️推荐】
 <details>
@@ -79,26 +85,11 @@
 </details>
 
 <br>
-<br>
-
-  
-## ⚠️其它说明
- 
->已发现部分图片Alpha通道受损或丢失导致`黑色背景去不掉`及`QQ转发内图片畸变`的问题，但是不影响图片在面板图上的显示，热门角色会逐步修复,冷门角色大概率不一定会吧..
-
->优化了文件的命名,删除时可以搜索关键词X或XR快捷处理<br>-衣着暴露含有X，如`胡桃Gu1X.webp`<br>-衣着暴露+性暗示姿势含有XR，如胡桃`Gu1XR.webp`<br>
-
-<br>
-<br>
-
 
 ## 💻项目地址
 
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
 * Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
-
-<br>
-<br>
-
+  
 ## ⛔免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如果侵权请联系删除
