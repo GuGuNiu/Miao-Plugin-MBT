@@ -37,7 +37,7 @@
 
 ## 🫧使用图库的方式
 
-#### 1️⃣-直接下载
+#### 1️⃣-直接下载  【✅️推荐】
 <details>
     <summary>展开</summary>
   <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
@@ -53,7 +53,7 @@
 
 </details>
 
-#### 2️⃣-使用JS插件命令下载
+#### 2️⃣-使用JS插件命令下载  【不推荐】
  <details>
   <summary>展开</summary>
   
@@ -67,7 +67,7 @@
 
 </details>
 
-#### 3️⃣-QQ内获取
+#### 3️⃣-QQ内获取  【不推荐】
 <details>
       <summary>展开</summary>
   
