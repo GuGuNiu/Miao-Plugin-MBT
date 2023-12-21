@@ -11,7 +11,6 @@
 [![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20QQ%E4%BA%A4%E6%B5%81%E7%BE%A4%20-%20884587317%20-%20%233C3C3C?labelColor=blue)
 ](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=wFf-VGYvFf_XjK3H-oShhMjqCsP43LOU&authKey=BS%2FE%2BANcQAtJQwJc3E6VFJMt7S7Q4YIQSNiFIZ0Eq6%2B9nAjl5JBMwpl%2BSfreKq70&noverify=0&group_code=884587317)
 [![MM](https://img.shields.io/badge/%F0%9F%90%B1%20%20%20MiaoYunzai--V3%20-%20Miao--Plugin-%20%233C3C3C?labelColor=%23FFAAAA)](https://gitee.com/yoimiya-kokomi/miao-plugin)
-[![gitee](https://img.shields.io/badge/%20%20%20%20Gitee%20-%20%E6%8F%92%E4%BB%B6%E5%BA%93-%20%233C3C3C?logo=gitee&logoColor=black&labelColor=%23ADFCEC)](https://gitee.com/yhArcadia/Yunzai-Bot-plugins-index)
 ![r18](https://img.shields.io/badge/%F0%9F%94%9E%20%20-%20%E6%97%A0%E6%88%90%E4%BA%BA%E5%9B%BE-%20red?labelColor=white)
 
 </div>
