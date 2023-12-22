@@ -41,9 +41,9 @@
 
 ## 🫧使用图库的方式
 
-> ### ‼️在开始使用前请确保您的硬盘剩余容量大于图库容量的1.5倍以上,Git下载会产生缓存
+> #### ‼️在用前确保硬盘空间大于图库容量的1.5倍以上,Git下载会产生缓存
 
-#### 1️⃣-直接下载  【✅️推荐】
+#### 1️⃣-直接下载  【不推荐】
 <details>
     <summary>展开</summary>
   <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
@@ -59,7 +59,7 @@
 
 </details>
 
-#### 2️⃣-使用JS插件命令下载  【不推荐】
+#### 2️⃣-使用JS插件命令下载  【✅️推荐】
  <details>
   <summary>展开</summary>
   
@@ -77,11 +77,14 @@
 <details>
       <summary>展开</summary>
   
- <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片</p>
+ <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片，机器人实时更新</p>
       
- <p align="center">【怡露-106205736】
+ <div align="center">
+
+![AAB820AA2A30C926208993F4D687561F.png](https://s2.loli.net/2023/12/22/PmaqwbOfoCTRlcH.png)
+
+ </div>
       
- <p align="center">机器人是实时更新,仓库大概三周到一个月更新一次 </p>
 </details>
 
 <br>
