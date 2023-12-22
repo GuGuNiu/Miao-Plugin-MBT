@@ -77,11 +77,14 @@
 <details>
       <summary>展开</summary>
   
- <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片</p>
+ <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片，机器人实时更新</p>
       
- <p align="center">【怡露-106205736】
+ <div align="center">
+
+![AAB820AA2A30C926208993F4D687561F.png](https://s2.loli.net/2023/12/22/PmaqwbOfoCTRlcH.png)
+
+ </div>
       
- <p align="center">机器人是实时更新,仓库大概三周到一个月更新一次 </p>
 </details>
 
 <br>
