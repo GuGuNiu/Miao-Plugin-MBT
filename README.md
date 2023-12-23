@@ -7,7 +7,7 @@
 <div align="center"> 
   
 ![数量](https://img.shields.io/badge/%F0%9F%93%82%20%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%201500%2B%20-%20%233C3C3C?labelColor=green)
-![容量](https://img.shields.io/badge/%F0%9F%92%BE%20%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%201.71G%2B%20-%20%233C3C3C?labelColor=yellow)
+![容量](https://img.shields.io/badge/%F0%9F%92%BE%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%20%202G%2B%20%20-%20%233C3C3C?labelColor=yellow)
 [![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20QQ%E4%BA%A4%E6%B5%81%E7%BE%A4%20-%20884587317%20-%20%233C3C3C?labelColor=blue)
 ](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=wFf-VGYvFf_XjK3H-oShhMjqCsP43LOU&authKey=BS%2FE%2BANcQAtJQwJc3E6VFJMt7S7Q4YIQSNiFIZ0Eq6%2B9nAjl5JBMwpl%2BSfreKq70&noverify=0&group_code=884587317)
 [![MM](https://img.shields.io/badge/%F0%9F%90%B1%20%20%20MiaoYunzai--V3%20-%20Miao--Plugin-%20%233C3C3C?labelColor=%23FFAAAA)](https://gitee.com/yoimiya-kokomi/miao-plugin)
@@ -32,7 +32,8 @@
 - 仅保证在面板上显示正常，缩略图和原图发送畸变无法保证，修复难度过大<br><br>
 - 文件的命名,删除时可以搜索关键词X或XR快捷处理<br><br>
     ⚠️衣着暴露含有X，如`胡桃Gu1X.webp`<br>
-    ⚠️衣着暴露+性暗示姿势含有XR，如胡桃`Gu1XR.webp`<br><br>
+    ⚠️衣着暴露+性暗示姿势含有XR，如`胡桃Gu1XR.webp`<br>
+    ⚠️真人COSER,如`胡桃Gu1Coser.webp`<br><br>
 - 部分图片是从各大云崽群获取的公开图片<br><br>
 - 仓库使用waifu+bigjpg混合超分图片<br><br>
 - 冷门角色基本不更新,请谅解<br><br>
