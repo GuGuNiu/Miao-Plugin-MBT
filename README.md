@@ -66,7 +66,7 @@
   
    #####       <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
 
-      `curl -o "./plugins/example/MarryGuGuNiu.js" "https://mirror.ghproxy.com/https://raw.githubusercontent.com/LinBoyan/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"`
+    curl -o "./plugins/example/MarryGuGuNiu.js" "https://raw.githubusercontent.com/lava081/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"
 
    #####       <p align="center">向机器人发送`#下载咕咕牛图包`后耐心等待若干分钟。后续可通过`#(强制)更新咕咕牛图包`拉取最新图包。</p>   
 
