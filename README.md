@@ -2,6 +2,7 @@
 <div align="center"> 
   
   [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
+  
 </div>
 
 <div align="center"> 
@@ -28,15 +29,15 @@
 <br>
 
 ## 🔝图库说明
-- R17+级别的图片,部分图片可能含有性暗示,无漏点图<br><br>
-- 仅保证在面板上显示正常，缩略图和原图发送畸变无法保证，修复难度过大<br><br>
+- R17+级别的图,部分图可能含有性暗示,但无漏点图
+- 仅保证在面板上显示正常，缩略图和原图发送畸变无法保证
 - 文件的命名,删除时可以搜索关键词X或XR快捷处理<br><br>
     ⚠️衣着暴露含有X，如`胡桃Gu1X.webp`<br>
     ⚠️衣着暴露+性暗示姿势含有XR，如`胡桃Gu1XR.webp`<br>
     ⚠️真人COSER,如`胡桃Gu1Coser.webp`<br><br>
-- 部分图片是从各大云崽群获取的公开图片<br><br>
-- 仓库使用waifu+bigjpg混合超分图片<br><br>
-- 冷门角色基本不更新,请谅解<br><br>
+- 部分图片是从各大云崽群获取的公开图
+- 仓库使用waifu+bigjpg混合超分图
+- 冷门角色基本不更新,请谅解
 
 
 
