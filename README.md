@@ -93,13 +93,13 @@
 <details>
       <summary>展开</summary>
   
- <p align="center">Github的项目地址：</p>
+ <p align="center"><b>Github的项目地址：</b></p>
  
-  <div align="center">  
+  <p align="center">  
     
        https://github.com/Zyy955/character-Api
   
-  </div>
+  </p>
       
 </details>
 
