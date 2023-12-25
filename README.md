@@ -51,7 +51,7 @@
 
 > #### ‼️在用前确保硬盘空间大于图库容量的1.5倍以上,Git下载会产生缓存
 
-#### 1️⃣-直接下载  【不推荐】
+#### 1️⃣-直接下载&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
 <details>
     <summary>展开</summary>
   <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
@@ -67,7 +67,7 @@
 
 </details>
 
-#### 2️⃣-使用JS插件命令下载  【✅️推荐】
+#### 2️⃣-使用JS插件命令下载  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【👍强烈推荐】
  <details>
   <summary>展开</summary>
   
@@ -81,7 +81,7 @@
 
 </details>
 
-#### 3️⃣-QQ内获取  【不推荐】
+#### 3️⃣-QQ内获取&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
 <details>
       <summary>展开</summary>
   
@@ -95,7 +95,7 @@
       
 </details>
 
-#### 4️⃣-止语姐姐的本地面板图API插件
+#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
 <details>
       <summary>展开</summary>
   
@@ -106,6 +106,14 @@
        https://github.com/Zyy955/character-Api
        
 </p>
+      
+</details>
+
+#### 5️⃣-最后的锦囊妙计
+<details>
+      <summary>展开</summary>
+  
+# 进交流群AT我拿压缩包...😅😅😅😅
       
 </details>
 
