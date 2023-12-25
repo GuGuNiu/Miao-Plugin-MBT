@@ -89,6 +89,20 @@
       
 </details>
 
+#### 4️⃣-止语姐姐的本地面板图API插件
+<details>
+      <summary>展开</summary>
+  
+ <p align="center">Github的项目地址：</p>
+ 
+  <div align="center">  
+    
+       https://github.com/Zyy955/character-Api
+  
+  </div>
+      
+</details>
+
 <br>
 
 ## 💻项目地址
