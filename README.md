@@ -94,7 +94,7 @@
       
 </details>
 
-#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
+#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
 <details>
       <summary>展开</summary>
   
@@ -108,12 +108,22 @@
       
 </details>
 
-#### 5️⃣-最后的锦囊妙计
+#### 5️⃣-寒暄的抱脸空间&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
 <details>
       <summary>展开</summary>
-  
-# 进交流群拿压缩包...😅😅😅😅
-      
+<p align="center">抱脸不是实时更新的，具体需要进交流群后询问寒暄大佬，因为等于就是镜像仓库</p>
+<div align="center">
+    
+                  https://HanXuan-MBT.hf.space
+                
+</div>
+</details>
+
+#### 7️⃣-最后的办法
+<details>
+      <summary>展开</summary>
+<p align="center">进交流群拿压缩包吧，别折腾了......😅😅😅</p>
+
 </details>
 
 <br>
@@ -129,9 +139,9 @@
 ## ❄️冷门角色列表
 
 
-| 游&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;戏| 角色名字-以元素排序 |
+| 游&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;戏| 角色名字-以元素和出场排序 |
 | :-: | :-: |
-| 原&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;神 | <p align="left">👫：空,荧<br>🌀：琴,砂糖,早柚,魈,珐露珊<br>🪨：荒泷一斗,凝光,诺艾尔,云堇,五郎,钟离,阿贝多<br>⚡：北斗,多莉,九条裟罗,久岐忍,雷泽,丽莎,赛诺<br>🍀：坎蒂丝,柯莱,绮良良,卡维,瑶瑶<br>💧：芭芭拉,莫娜,神里绫人,行秋,达达利亚<br>🔥：班尼特,迪卢克,安柏,托马,辛焱,宵宫,烟绯,香菱<br>🧊：凯亚,迪奥娜,菲米尼,莱依拉,米卡,七七,夏洛蒂,优菈,重云,神里绫华,申鹤</p> | <br>
+| 原&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;神 | <p align="left">👫：空,荧<br>🌀：琴,砂糖,早柚,魈,珐露珊<br>🪨：阿贝多,诺艾尔,凝光,云堇,钟离,五郎,荒泷一斗<br>⚡：北斗,丽莎,九条裟罗,久岐忍,雷泽,赛诺,多莉<br>🍀：柯莱,卡维,绮良良,瑶瑶<br>💧：芭芭拉,莫娜,行秋,达达利亚,神里绫人,坎蒂丝<br>🔥：班尼特,迪卢克,安柏,辛焱,烟绯,香菱,托马,宵宫<br>🧊：凯亚,迪奥娜,重云,优菈,甘雨,七七,申鹤,神里绫华,莱依拉,米卡,菲米尼,夏洛蒂</p> | <br>
 | 星&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;铁 | 阿兰,艾斯妲,白露,虎克,杰帕德,娜塔莎,佩拉,三月七,停云,桑博,瓦尔特,希露瓦,彦卿,黑塔| 
 
 
