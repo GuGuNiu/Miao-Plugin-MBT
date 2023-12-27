@@ -94,7 +94,7 @@
       
 </details>
 
-#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
+#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
 <details>
       <summary>展开</summary>
   
@@ -108,12 +108,22 @@
       
 </details>
 
-#### 5️⃣-最后的锦囊妙计
+#### 5️⃣-寒暄的抱脸空间&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
 <details>
       <summary>展开</summary>
-  
-# 进交流群拿压缩包...😅😅😅😅
-      
+<p align="center">抱脸不是实时更新的，具体需要进交流群后询问寒暄大佬，因为等于就是镜像仓库</p>
+<div align="center">
+    
+          https://HanXuan-MBT.hf.space
+                
+</div>
+</details>
+
+#### 7️⃣-最后的办法
+<details>
+      <summary>展开</summary>
+<p align="center">进交流群拿压缩包吧，别折腾了......😅😅😅</p>
+
 </details>
 
 <br>
