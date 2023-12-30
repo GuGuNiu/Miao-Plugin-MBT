@@ -9,10 +9,11 @@
   
 ![数量](https://img.shields.io/badge/%F0%9F%93%82%20%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%201500%2B%20-%20%233C3C3C?labelColor=green)
 ![容量](https://img.shields.io/badge/%F0%9F%92%BE%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%20%202G%2B%20%20-%20%233C3C3C?labelColor=yellow)
-[![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20QQ%E4%BA%A4%E6%B5%81%E7%BE%A4%20-%20884587317%20-%20%233C3C3C?labelColor=blue)
-](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=wFf-VGYvFf_XjK3H-oShhMjqCsP43LOU&authKey=BS%2FE%2BANcQAtJQwJc3E6VFJMt7S7Q4YIQSNiFIZ0Eq6%2B9nAjl5JBMwpl%2BSfreKq70&noverify=0&group_code=884587317)
 [![MM](https://img.shields.io/badge/%F0%9F%90%B1%20%20%20MiaoYunzai--V3%20-%20Miao--Plugin-%20%233C3C3C?labelColor=%23FFAAAA)](https://gitee.com/yoimiya-kokomi/miao-plugin)
 ![r18](https://img.shields.io/badge/%F0%9F%94%9E%20%20-%20%E6%97%A0%E6%88%90%E4%BA%BA%E5%9B%BE-%20red?labelColor=white)
+[![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20QQ%E4%BA%A4%E6%B5%81%E7%BE%A4%20-%20884587317%20-%20%233C3C3C?labelColor=blue)
+](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=wFf-VGYvFf_XjK3H-oShhMjqCsP43LOU&authKey=BS%2FE%2BANcQAtJQwJc3E6VFJMt7S7Q4YIQSNiFIZ0Eq6%2B9nAjl5JBMwpl%2BSfreKq70&noverify=0&group_code=884587317)
+
 
 </div>
 
@@ -68,15 +69,26 @@
  <details>
   <summary>展开</summary>
   
-   #####       <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
+   ###      <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
 
     curl -o "./plugins/example/MarryGuGuNiu.js" "https://raw.githubusercontent.com/lava081/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"
 
-   #####       <p align="center">向机器人发送`#下载咕咕牛图包`后耐心等待若干分钟。后续可通过`#(强制)更新咕咕牛图包`拉取最新图包。</p>   
+<div align="center">
+   
+| 作用| 指令 |
+| :-: | :-: |
+| 首次下载| #下载咕咕牛图包 |
+| 更新| #(强制)更新咕咕牛图包 |
+| 启用| #启用咕咕牛图包 |
+|其它说明| <ins>图包很大启用需要半小时起步请耐心点</ins> ||
 
-   #####       <p align="center">指令执行后会自动将图包拷贝至喵喵插件内，也可发送`#启用咕咕牛图包`重新拷贝。</p>  
+</div>  
+
+<br>
 
 </details>
+
+
 
 #### 3️⃣-QQ内获取&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
 <details>
@@ -98,18 +110,18 @@
   
  <p align="center"><b>Github的项目地址：</b></p>
  
-<p align="center">  
+<div align="center">
     
        https://github.com/Zyy955/character-Api
        
-</p>
+</div>
       
 </details>
 
 #### 5️⃣-寒暄的抱脸空间&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
 <details>
       <summary>展开</summary>
-<p align="center">抱脸不是实时更新的，具体需要进交流群后询问寒暄大佬，因为等于就是镜像仓库</p>
+<p align="center">抱脸空间每天更新一次，右键文件夹以压缩包形式下载，速率大概在3M/S，无需魔法网络</p>
 <div align="center">
     
                   https://HanXuan-MBT.hf.space
@@ -122,7 +134,7 @@
 ## ❓️常见问答
 💠问：下载了怎么更新后续的图？<br>
 
-    答：重新拉仓库    使用github桌面版只下载更新内容  |   用js更新
+    答：重新拉仓库  |  使用github桌面版只下载更新内容  |   用js更新
 
 💠问：为什么没有Gitee库？<br>
 
@@ -130,7 +142,7 @@
 
 💠问：图库更新时间和频率？<br>
 
-    答：看心情，建议已下载的用户半个月更新一次仓库
+    答：看心情，建议已下载的用户一个月更新一次仓库
 
 💠问：为什么有些图不够清晰,瑕疵多呢？<br>
 
@@ -140,9 +152,10 @@
 
     答：图库首先尊重画师创作成果，内容依据原贴声明为准
 
-💠问：有喜欢的图想做成面板图？<br>
+💠问：星铁面板图为什么这么少？<br>
 
-    答：请进交流群发给我，会适当考虑是否使用
+    答：因为原神面板图的数量是积累了一年，星铁11月份才开始弄的，会缓慢增加但不会超过原神数量
+
 
 ## 💻项目地址
 
