@@ -122,6 +122,7 @@
 <details>
       <summary>展开</summary>
 <p align="center">抱脸空间每天更新一次，右键文件夹以压缩包形式下载，速率大概在3M/S，无需魔法网络</p>
+  <p align="center">如无法访问github建议收藏抱脸空间网址,每天同步</p>
 <div align="center">
     
                   https://HanXuan-MBT.hf.space
