@@ -125,7 +125,9 @@
   <p align="center">如无法访问github建议收藏抱脸空间网址,每天同步</p>
 <div align="center">
     
-                  https://HanXuan-MBT.hf.space
+                  HanXuan-MBT.hf.space
+                  MBT-HaanXuan.Koyeb.app
+                  
                 
 </div>
 </details>
