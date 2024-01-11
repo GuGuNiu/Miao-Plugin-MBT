@@ -8,7 +8,7 @@
 <div align="center"> 
   
 ![Static Badge](https://img.shields.io/badge/%20%F0%9F%93%82%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%201600%2B%20-%20%233C3C3C?labelColor=green)
-![Static Badge](https://img.shields.io/badge/%20%F0%9F%92%BE%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%203G%2B%20-%20%233C3C3C?labelColor=yellow)
+![Static Badge](https://img.shields.io/badge/%F0%9F%92%BE%20%E5%9B%BE%E5%BA%93%E5%8D%A0%E7%94%A8%20-%20600M%2B%20-%20%233c3c3c?labelColor=yellow)
 [![MM](https://img.shields.io/badge/%F0%9F%90%B1%20%20%20MiaoYunzai--V3%20-%20Miao--Plugin-%20%233C3C3C?labelColor=%23FFAAAA)](https://gitee.com/yoimiya-kokomi/miao-plugin)
 ![r18](https://img.shields.io/badge/%F0%9F%94%9E%20%20-%20%E6%97%A0%E6%88%90%E4%BA%BA%E5%9B%BE-%20red?labelColor=white)
 [![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20QQ%E4%BA%A4%E6%B5%81%E7%BE%A4%20-%20884587317%20-%20%233C3C3C?labelColor=blue)
