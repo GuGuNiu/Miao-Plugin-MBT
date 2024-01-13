@@ -7,10 +7,9 @@
 
 <div align="center"> 
   
-![Static Badge](https://img.shields.io/badge/%20%F0%9F%93%82%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%201600%2B%20-%20%233C3C3C?labelColor=green)
-![Static Badge](https://img.shields.io/badge/%F0%9F%92%BE%20%E5%9B%BE%E5%BA%93%E5%8D%A0%E7%94%A8%20-%20600M%2B%20-%20%233c3c3c?labelColor=yellow)
-[![MM](https://img.shields.io/badge/%F0%9F%90%B1%20%20%20MiaoYunzai--V3%20-%20Miao--Plugin-%20%233C3C3C?labelColor=%23FFAAAA)](https://gitee.com/yoimiya-kokomi/miao-plugin)
-![r18](https://img.shields.io/badge/%F0%9F%94%9E%20%20-%20%E6%97%A0%E6%88%90%E4%BA%BA%E5%9B%BE-%20red?labelColor=white)
+![Static Badge](https://img.shields.io/badge/%F0%9F%93%82%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%202000%2B%20-%20%233c3c3c?labelColor=green)
+![Static Badge](https://img.shields.io/badge/%F0%9F%92%BE%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%20800M%2B%20-%20%233c3c3c?labelColor=yellow)
+[![Static Badge](https://img.shields.io/badge/%E6%94%AF%E6%8C%81%E6%8F%92%E4%BB%B6-Miao--Plugin-%20%233c3c3c?labelColor=orange)](https://gitee.com/yoimiya-kokomi/miao-plugin)
 [![QQ](https://img.shields.io/badge/%F0%9F%90%A7%20QQ%E4%BA%A4%E6%B5%81%E7%BE%A4%20-%20884587317%20-%20%233C3C3C?labelColor=blue)
 ](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=wFf-VGYvFf_XjK3H-oShhMjqCsP43LOU&authKey=BS%2FE%2BANcQAtJQwJc3E6VFJMt7S7Q4YIQSNiFIZ0Eq6%2B9nAjl5JBMwpl%2BSfreKq70&noverify=0&group_code=884587317)
 
@@ -23,10 +22,8 @@
 
 # ⭐特别声明⭐
 在某黄色海鲜市场app发现有人倒卖图库，仓库声明无任何收费<br>
-为尊重原图画师的权益，新图片将会加入PID和作者ID<br>
  <br>
   
-# 由于仓库已压缩至600M,建议已下载的重新拉仓库,把以前的文件全删除了
 
 </div>
 
@@ -45,7 +42,7 @@
 
 ## 🫧用图库的方式
 
-> #### ‼️在用前确保硬盘空间大于图库容量的1.5倍以上,Git下载会产生缓存
+> #### ‼️在用前确保硬盘空间大于图库容量的.5倍以上,Git下载会产生缓存
 
 #### 1️⃣-直接下载&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
 <details>
