@@ -10,16 +10,18 @@
 ![Static Badge](https://img.shields.io/badge/%F0%9F%93%82%20%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%202000%2B%20-%20%233c3c3c?labelColor=green)
 ![Static Badge](https://img.shields.io/badge/%F0%9F%92%BE%20%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%20800M%2B%20-%20%233c3c3c?labelColor=yellow)
 [![Static Badge](https://img.shields.io/badge/%E6%94%AF%E6%8C%81%E6%8F%92%E4%BB%B6-Miao--Plugin-%20%233c3c3c?labelColor=orange)](https://gitee.com/yoimiya-kokomi/miao-plugin)
-
+[![Static Badge](https://img.shields.io/badge/QQ%E7%BE%A4%20-%20798368954%20-%233c3c3c?labelColor=blue)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=kLEoWb50BxKU63jFj5TBnLCEZ9A2bEvo&authKey=dmA3h0egrNmnk7Hd2U5x%2FUwu5W%2F3%2FRBs0Gxt6UbBuPG4cnisxRqaHJifCAZlEnYt&noverify=0&group_code=798368954)
 
 </div>
 
 
 ## 🔝图库说明
-- R17+级别的图,部分图含有性暗示,无漏点图,有Ai图
-- 有些不好看的图呢,只是暂时顶替一下,下下...次也许就换了
-- 不提供超清以上分辨率的面板图,部分付费商品图也不会提供超清图
+- 🔞R17+级别的图,部分图可能含有<ins>性暗示,无漏点图</ins>,有Ai图
+- 部分角色图片数量极少暂时没办法,个人审美要求高了点没发现好看的
+- 在不影响面板图清晰度的情况下已照顾到了1M带宽朋友的发送速度
 - 冷门角色基本不更新，请看末尾
+- 图片来源：Pixiv/触站/Twitter/小红书/Deviantart/Melonbooks/麦芽堂/Booth
+
 
 ## 🫧用图库的方式
 
