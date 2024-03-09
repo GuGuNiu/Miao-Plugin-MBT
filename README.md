@@ -1,4 +1,4 @@
-![0124c65544e8de0000019ae9f3ae0e.jpg@2o.png](https://s2.loli.net/2023/12/19/IKRZud23Sl7pjq1.png)
+![界面.png](https://s2.loli.net/2024/03/09/ZGNrwVyPDbOx9Bf.png)
 <div align="center"> 
   
   [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
