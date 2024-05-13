@@ -19,25 +19,21 @@
 <div align="center"> 
   
   ## 图库已有『原神/星铁』的全角色面板图,含有<ins>未发布</ins>的角色<br>
-  仓库目前还在修整旧图中
+
 
 </div>
 
 
 ## 🔝图库说明
 - 🔞R17+级别的图,部分图可能含有『<ins>性暗示</ins>』『<ins>无漏点图</ins>』,有Ai图
-- 图库的面板图包含有『搞笑图,擦边图,泪目图,跨性别图,正常图』
+- 图库的面板图包含有『搞笑图,擦边图,泪目图,跨性别图,正常图,成人图』
 - 『<ins>彩蛋面板图</ins>』被使用的概率极低,因此本仓库不使用
-- 部分角色数量少没办法,个人审美要求极高,尽量会多加
-- 暂无绝区零面板图的计划
 
-## 💫图片来源
-  Pixiv / 触站 / Twitter / 小红书 / Deviantart / Melonbooks / 麦芽堂 / Booth / 抖音 / 片绘 / Pinterest
 ## 🫧用图库的方式
 
 > #### ‼️在用前确保硬盘空间大于图库容量的 5 倍以上,Git下载会产生缓存
 
-#### 1️⃣-直接下载&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
+#### 1️⃣-直接下载
 <details>
     <summary>展开</summary>
   <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
@@ -53,7 +49,7 @@
 
 </details>
 
-#### 2️⃣-使用Js插件命令下载  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【👍强烈推荐】
+#### 2️⃣-使用【岩浆大佬】的Js插件命令下载
  <details>
   <summary>展开</summary>
   
@@ -76,39 +72,13 @@
 
 </details>
 
-
-
-#### 3️⃣-QQ内获取&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
-<details>
-      <summary>展开</summary>
-  
- <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片，机器人实时更新</p>
-      
- <div align="center">
-
-![AAB820AA2A30C926208993F4D687561F.png](https://s2.loli.net/2023/12/22/PmaqwbOfoCTRlcH.png)
-
- </div>
-      
-</details>
-
-#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
-<details>
-      <summary>展开</summary>
-  
- <p align="center"><b>可通过插件把面板图放在其他设备互联,Github的项目地址：</b></p>
- 
-<div align="center">
-    
-       https://github.com/Zyy955/character-Api
-       
-</div>
-      
-</details>
-
 <br>
 
 ## ❓️常见问答
+
+<details>
+    <summary>点击此处展开</summary>
+  
 💠问：下载了怎么更新后续的图？<br>
 
     答：重新拉仓库  |  使用github桌面版只下载更新内容  |   用js更新
@@ -133,6 +103,7 @@
 
     答：综合考虑到仓库容量/群内压缩/puppeteer的多次压缩，显示正常的情况下不对图片超分
 
+</details>
 
 ## 💻项目地址
 
@@ -142,12 +113,3 @@
 ## ⛔免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如侵权请联系删除
 <br>
-## ❄️冷门角色列表
-
-
-| 游&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;戏| 角色名字-以元素和出场排序 |
-| :-: | :-: |
-| 原&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;神 | <p align="left">~~👫：空,荧~~<br>~~🌀：琴,砂糖,早柚,魈,珐露珊<br>🪨：阿贝多,诺艾尔,凝光,云堇,钟离,五郎,荒泷一斗~~<br>~~⚡：北斗,丽莎,雷泽,九条裟罗,久岐忍,赛诺,多莉~~<br>~~🍀：柯莱,卡维,绮良良,瑶瑶~~<br>~~💧：芭芭拉,莫娜,行秋,达达利亚,神里绫人,坎蒂丝~~<br>~~🔥：班尼特,迪卢克,安柏,辛焱,烟绯,香菱,托马,宵宫~~<br>~~🧊：凯亚,迪奥娜,重云,优菈,甘雨,七七,申鹤,神里绫华,莱依拉,米卡,菲米尼,夏洛蒂~~</p> | <br>
-| 星&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;铁 | ~~阿兰,艾斯妲,白露,虎克,杰帕德,娜塔莎,佩拉,三月七,停云,桑博,瓦尔特,希露瓦,彦卿,黑塔,雪衣,桑博,桂乃芬,寒鸦,卢卡,素裳~~| 
-
-<b>冷门不代表不更新,以上角色基于500个群的数据统计</b>
