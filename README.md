@@ -49,7 +49,7 @@
 
 </details>
 
-#### 2️⃣-使用『岩浆大佬』的Js-----软链接方式
+#### 2️⃣-使用『岩浆大佬』的Js-----软链接方式(docker不可用)
  <details>
   <summary>展开</summary>
   
