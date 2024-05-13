@@ -72,36 +72,6 @@
 
 </details>
 
-
-
-#### 3️⃣-QQ内获取&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
-<details>
-      <summary>展开</summary>
-  
- <p align="center">添加机器人好友,可以使用#xx面板图列表 获取全部图片，机器人实时更新</p>
-      
- <div align="center">
-
-![AAB820AA2A30C926208993F4D687561F.png](https://s2.loli.net/2023/12/22/PmaqwbOfoCTRlcH.png)
-
- </div>
-      
-</details>
-
-#### 4️⃣-Zyy955的面板图API插件&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【✅️推荐】
-<details>
-      <summary>展开</summary>
-  
- <p align="center"><b>可通过插件把面板图放在其他设备互联,Github的项目地址：</b></p>
- 
-<div align="center">
-    
-       https://github.com/Zyy955/character-Api
-       
-</div>
-      
-</details>
-
 <br>
 
 ## ❓️常见问答
