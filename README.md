@@ -49,7 +49,7 @@
 
 </details>
 
-#### 2️⃣-使用【岩浆大佬】的Js插件命令下载
+#### 2️⃣-使用『岩浆大佬』的Js-----软链接方式
  <details>
   <summary>展开</summary>
   
@@ -72,8 +72,31 @@
 
 </details>
 
+
+#### 3️⃣-使用『咕咕牛图库』的Js-----本体直装
+ <details>
+  <summary>展开</summary>
+  
+   ###      <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
+
+    curl -o "./plugins/example/MarryGuGuNiu.js" " "
+
+<div align="center">
+   
+| 作用| 指令 |
+| :-: | :-: |
+| 下载| #下载咕咕牛 |
+| 更新| #更新咕咕牛 |
+| 开关| #启用/禁用咕咕牛 |
+| 卸载| #删除咕咕牛 |
+| 菜单| #咕咕牛帮助 |
+</div>  
+
 <br>
 
+</details>
+
+<br>
 ## ❓️常见问答
 
 <details>
