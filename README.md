@@ -33,7 +33,7 @@
 
 > #### ‼️在用前确保硬盘空间大于图库容量的 5 倍以上,Git下载会产生缓存
 
-#### 1️⃣-直接下载&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【❌不推荐】
+#### 1️⃣-直接下载
 <details>
     <summary>展开</summary>
   <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
@@ -49,7 +49,7 @@
 
 </details>
 
-#### 2️⃣-使用Js插件命令下载  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;【👍强烈推荐】
+#### 2️⃣-使用【岩浆大佬】的Js插件命令下载
  <details>
   <summary>展开</summary>
   
