@@ -71,20 +71,11 @@
  <details>
   <summary>展开</summary>
   
-   ###      <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
+   ###      <p align="center"><b>访问下面的仓库地址</b></p>
 
-    curl -o "./plugins/example/MarryGuGuNiu.js" " "
+    https://github.com/GuGuNiu/GuGuNiu-GalleryJs
 
-<div align="center">
-   
-| 作用| 指令 |
-| :-: | :-: |
-| 下载| #下载咕咕牛|
-| 更新| #更新咕咕牛 |
-| 开关| #启用咕咕牛 &nbsp;  &nbsp; &nbsp; &nbsp;#禁用咕咕牛 |
-| 卸载| #删除咕咕牛 |
-| 菜单| #咕咕牛帮助 |
-</div>  
+
 
 <br>
 
