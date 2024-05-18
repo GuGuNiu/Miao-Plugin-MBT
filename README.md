@@ -43,22 +43,35 @@
 
 </details>
 
-#### 2️⃣-使用『岩浆大佬』的Js-----软链接方式(docker不可用)
+#### 2️⃣-使用『咕咕牛图库』的Js
  <details>
   <summary>展开</summary>
-  
-   ###      <p align="center"><b>[在本体根目录打打开<ins>````命令行/终端````</ins>输入以下命令]</b></p>
+  <br>
+Github源：
 
-    curl -o "./plugins/example/MarryGuGuNiu.js" "https://raw.githubusercontent.com/lava081/SomeJsforMiaoYunzai/main/MarryGuGuNiu.js"
+    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://raw.githubusercontent.com/GuGuNiu/GuGuNiu-GalleryJs/main/咕咕牛图库下载器.js"
+
+
+<br>
+
+备份镜像源:
+
+    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/GuGuNiu-GalleryJs@main/咕咕牛图库下载器.js"
+        
+<br>
 
 <div align="center">
-   
-| 作用| 指令 |
-| :-: | :-: |
-| 下载| #下载咕咕牛图包 |
-| 更新| #(强制)更新咕咕牛图包 |
-| 启用| #启用咕咕牛图包 |
-| 说明| <ins>图包很大启用需要半小时起步请耐心点</ins> ||
+  
+   可以使用#咕咕牛帮助 呼叫出菜单
+  
+| -|  指令 | 其它指令|
+| :-: | :-: | :-: |
+| 安装图库|   #下载咕咕牛   | #代理下载咕咕牛 |
+| 更新图库|   #更新咕咕牛   |
+| 操作图库|   #启用咕咕牛   | #禁用咕咕牛 |
+| 图库查看|   #检查咕咕牛   |
+| 异常修复|   #重置咕咕牛   |
+| 删除图库|   #删除咕咕牛   |
 
 </div>  
 
@@ -66,22 +79,6 @@
 
 </details>
 
-
-#### 3️⃣-使用『咕咕牛图库』的Js-----本体直装
- <details>
-  <summary>展开</summary>
-  
-   ###      <p align="center"><b>访问下面的仓库地址</b></p>
-
-    https://github.com/GuGuNiu/GuGuNiu-GalleryJs
-
-
-
-<br>
-
-</details>
-
-<br>
 
 ## ❓️常见问题
 
