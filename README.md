@@ -12,7 +12,7 @@
 ![Static Badge](https://img.shields.io/badge/%F0%9F%93%82%20%E9%9D%A2%E6%9D%BF%E5%9B%BE%E6%95%B0%E9%87%8F%20-%202500%2B%20-%20%233c3c3c?labelColor=green)
 ![Static Badge](https://img.shields.io/badge/%F0%9F%92%BE%20%E5%9B%BE%E5%BA%93%E5%AE%B9%E9%87%8F%20-%201.0G%2B%20-%20%233c3c3c?labelColor=yellow)
 [![Static Badge](https://img.shields.io/badge/%E6%94%AF%E6%8C%81%E6%8F%92%E4%BB%B6-Miao--Plugin-%20%233c3c3c?labelColor=orange)](https://gitee.com/yoimiya-kokomi/miao-plugin)
-[![Static Badge](https://img.shields.io/badge/QQ%E7%BE%A4%20-%20798368954%20-%233c3c3c?labelColor=blue)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=kLEoWb50BxKU63jFj5TBnLCEZ9A2bEvo&authKey=dmA3h0egrNmnk7Hd2U5x%2FUwu5W%2F3%2FRBs0Gxt6UbBuPG4cnisxRqaHJifCAZlEnYt&noverify=0&group_code=798368954)
+
 
 </div>
 
