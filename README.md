@@ -19,7 +19,6 @@
 
 ## 🔝图库说明
 - 🔞R17+级别的图,部分图可能含有『<ins>性暗示</ins>』『<ins>无漏点图</ins>』,有Ai图
-- 图库的面板图包含有『搞笑图,擦边图,泪目图,跨性别图,正常图,成人图』
 - 『<ins>彩蛋面板图</ins>』被使用的概率极低,因此本仓库不使用
 - 已包含<ins>原神/星穹铁道</ins>全角色面板图和部分未发布角色
 
@@ -80,7 +79,6 @@ Github源：
 
 </details>
 
-
 ## ❓️常见问题
 
 <details>
@@ -94,18 +92,6 @@ Github源：
 
     答：仓库不够大，且内容判定违规
 
-💠问：js下载时提示403？<br>
-
-    答：需要使用魔法网络
-
-💠问：下载时提示创建文件夹失败？<br>
-
-    答：请自己google，git下载教程
-
-💠问：文件夹软连接失败？<br>
-
-    答：请自行根据系统修改成硬连接或直接覆盖
-    
 🔶问：面板图不是超清<br>
 
     答：综合考虑到仓库容量/群内压缩/puppeteer的多次压缩，显示正常的情况下不对图片超分
@@ -115,7 +101,6 @@ Github源：
 ## 💻项目地址
 
 * Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
-* Yunzai-Bot插件库：[Gitee](https://gitee.com/Hikari666/Yunzai-Bot-plugins-index) & [GitHub](https://github.com/HiArcadia/Yunzai-Bot-plugins-index)
   
 ## ⛔免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如侵权请联系删除
