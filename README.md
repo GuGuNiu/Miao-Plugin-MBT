@@ -17,52 +17,33 @@
 </div>
 
 
-## 🔝图库说明
+## 🔝说明
 - 🔞R17+级别的图,部分图可能含有『<ins>性暗示</ins>』『<ins>无漏点图</ins>』,有Ai图
+- 综合考虑到各方面的问题，在显示正常的情况下不使用超清以上分辨率原图
 - 『<ins>彩蛋面板图</ins>』被使用的概率极低,因此本仓库不使用
 - 已包含<ins>原神/星穹铁道</ins>全角色面板图和部分未发布角色
 
-## 🫧用图库的方式
+<br>
+
+## 🫧安装
 
 > #### ‼️在用前确保硬盘空间大于图库容量的 5 倍以上,Git下载会产生缓存
 
-#### 1️⃣-直接下载
+#### 在Yunzai根目录运行以下命令,使用 #咕咕牛帮助 呼叫出菜单
+
+1、Github源：
+
+    curl -o "./plugins/example/咕咕牛下载器.js" "https://raw.githubusercontent.com/GuGuNiu/GuGuNiu-GalleryJs/main/咕咕牛图库下载器.js"
+2、备份镜像源:
+
+    curl -o "./plugins/example/咕咕牛下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/GuGuNiu-GalleryJs@main/咕咕牛图库下载器.js"
+
 <details>
-    <summary>展开</summary>
-  <p align="center"><b> 任意位置创建一个文件夹，在文件夹中打开<ins>[命令行/终端]</ins>，输入以下内容</b></p>
-
-    
-
-  <p align="center">   
-    
-                        git clone --depth=1 https://github.com/GuGuNiu/Miao-Plugin-MBT ./    
-  </p>
-  
-  <p align="center"><b>将内容复制至本体的`/plugins/miao-plugin/resources/profile`目录下</b></p>
-
-</details>
-
-#### 2️⃣-使用『咕咕牛图库』的Js
- <details>
-  <summary>展开</summary>
-  <br>
-Github源：
-
-    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://raw.githubusercontent.com/GuGuNiu/GuGuNiu-GalleryJs/main/咕咕牛图库下载器.js"
-
-
-<br>
-
-备份镜像源:
-
-    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/GuGuNiu-GalleryJs@main/咕咕牛图库下载器.js"
-        
-<br>
+    <summary>Js插件指令说明展开</summary>
 
 <div align="center">
   
-   可以使用#咕咕牛帮助 呼叫出菜单
-  
+ 
 | -|  指令 | 其它指令|
 | :-: | :-: | :-: |
 | 安装图库|   #下载咕咕牛   | #代理下载咕咕牛 |
@@ -74,27 +55,6 @@ Github源：
 | 清理缓存|   #清理咕咕牛缓存   |
 
 </div>  
-
-<br>
-
-</details>
-
-## ❓️常见问题
-
-<details>
-    <summary>点击此处展开</summary>
-  
-💠问：下载了怎么更新后续的图？<br>
-
-    答：重新拉仓库  |  使用github桌面版只下载更新内容  |   用js更新
-
-🔶问：为什么没有Gitee库？<br>
-
-    答：仓库不够大，且内容判定违规
-
-🔶问：面板图不是超清<br>
-
-    答：综合考虑到仓库容量/群内压缩/puppeteer的多次压缩，显示正常的情况下不对图片超分
 
 </details>
 
