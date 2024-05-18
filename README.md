@@ -56,10 +56,6 @@
 
 </details>
 
-## 💻项目地址
-
-* Miao-plugin：[Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin) & [Github](https://github.com/yoimiya-kokomi/miao-plugin)
-  
 ## ⛔免责声明
 请勿用于以盈利为目的的任何场景,素材均来自网络,如侵权请联系删除
 <br>
