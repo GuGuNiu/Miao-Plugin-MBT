@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
 
 
-//        『咕咕牛🐂』图库 下载器  v1.7
+//        『咕咕牛🐂』图库 下载器  v1.8
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -20,7 +20,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库下载器 v1.7',
+            name: '『咕咕牛🐂』图库下载器 v1.8',
             dsc: '『咕咕牛🐂』',
             event: 'message',
             priority: 100,
@@ -178,41 +178,71 @@ export class MiaoPluginMBT extends plugin {
                 return;
             }
             await e.reply('『咕咕牛🐂』正在更新中，请稍候...', true);
-            const gitPullOutput = execSync('git pull', { cwd: this.localPath }).toString();
+            const gitPullOutput = await new Promise((resolve, reject) => {
+                exec('git pull', { cwd: this.localPath }, (error, stdout, stderr) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(stdout);
+                    }
+                });
+            });
             if (gitPullOutput.includes('Already up to date')) {
-                this.reply("『咕咕牛』已经是最新的啦");
+                await e.reply("『咕咕牛』已经是最新的啦");
             } else {
-                const gitLog = execSync('git log -n 20 --date=format:"%Y/%m/%d-%H:%M:%S" --pretty=format:"%cd %s"', { cwd: this.localPath }).toString();
+                const gitLog = await new Promise((resolve, reject) => {
+                    exec('git log -n 20 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(stdout);
+                        }
+                    });
+                });
                 const forwardMsg = `最近的更新记录：\n${gitLog}`;
                 const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』更新成功');
-                this.reply(forwardMsgFormatted);
+                await this.reply(forwardMsgFormatted);
                 await this.deleteFilesWithGuKeyword();
-                execSync('git clean -df', { cwd: this.localPath });
+                await new Promise((resolve, reject) => {
+                    exec('git clean -df', { cwd: this.localPath }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
                 this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
             }
         } catch (error) {
             console.error('更新『咕咕牛🐂』时出现错误:', error);
-            let forward = [];
-            forward.push(`更新『咕咕牛🐂』时出现错误:\n ${error.message}`);
-                 if (error.message.includes('code 128')) {
-                        forward.push("检查网络连接：确保您的网络连接正常,有时候网络问题可能导致Git无法正常执行操作。");
-                  }
-                 if (error.message.includes('code 1')) {
-                         forward.push("该报错是本地与仓库文件冲突, 请手动重置咕咕牛后下载");
-                  }
-                  if (error.message.includes('Failed to connect to github.com port 443')) {
-                    forward.push("该报错可能是网络问题/被墙/访问被拒绝");
-                    }
-                 if (error.message.includes('OpenSSL SSL_read: SSL_ERROR_SYSCALL')) {
-                    forward.push("该报错可能是网络问题/被墙/访问被拒绝");
-                    }
-            let updaterrormsg = await common.makeForwardMsg(this.e, forward, '『咕咕牛🐂』更新失败');
-            this.reply('更新『咕咕牛』时出现错误，请查看日志！');
-            setTimeout(async () => {
-                this.reply(updaterrormsg);
-            }, 2000);
+            let forward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];
+            
+            if (error.message.includes('code 128')) {
+                forward.push("检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。");
+            }
+            if (error.message.includes('code 1')) {
+                forward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
+            }
+            if (error.message.includes('443')) {
+                forward.push("该报错可能是网络问题、被墙或访问被拒绝。");
+            }
+            if (error.message.includes('SSL')) {
+                forward.push("该报错可能是网络问题、被墙或访问被拒绝。");
+            }
+    
+            try {
+                let updaterrormsg = await common.makeForwardMsg(this.e, forward, '『咕咕牛🐂』更新失败');
+                await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
+                setTimeout(async () => {
+                    await this.reply(updaterrormsg);
+                }, 2000);
+            } catch (forwardError) {
+                console.error('生成更新错误消息时出现错误:', forwardError);
+                await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
+            }
         }
-    }  
+    }    
     async restartGu(e) {
         try {
             const directoryExists = fs.existsSync(this.localPath);
