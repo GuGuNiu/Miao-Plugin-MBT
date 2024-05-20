@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { exec, execSync } from 'child_process';
+import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
 
@@ -230,17 +230,11 @@ export class MiaoPluginMBT extends plugin {
             if (error.message.includes('SSL')) {
                 forward.push("该报错可能是网络问题、被墙或访问被拒绝。");
             }
-    
-            try {
-                let updaterrormsg = await common.makeForwardMsg(this.e, forward, '『咕咕牛🐂』更新失败');
-                await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
-                setTimeout(async () => {
-                    await this.reply(updaterrormsg);
-                }, 2000);
-            } catch (forwardError) {
-                console.error('生成更新错误消息时出现错误:', forwardError);
-                await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
-            }
+            let updaterrormsg = await common.makeForwardMsg(this.e, forward, '『咕咕牛🐂』更新失败');
+            await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
+            setTimeout(async () => {
+                await this.reply(updaterrormsg);
+             }, 2000);
         }
     }    
     async restartGu(e) {
