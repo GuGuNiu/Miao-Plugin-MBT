@@ -96,10 +96,14 @@ export class MiaoPluginMBT extends plugin {
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
+        this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
     }
     async GuHelp(e) {
-        e.reply(segment.image("https://s2.loli.net/2024/05/20/KS9A6JNgewHZzp8.png"))
-    }
+        if (!fs.existsSync(this.GuPath)) {
+            e.reply(segment.image("https://s2.loli.net/2024/05/20/KS9A6JNgewHZzp8.png"))
+            return true;
+         }e.reply(segment.image(this.GuPath+'/help.png'))
+      }
     async BanRole(e){
         
     }
@@ -208,6 +212,8 @@ export class MiaoPluginMBT extends plugin {
             });
             this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
             await e.reply(`『咕咕牛』已下载完成，正在载入喵喵插件中...`);
+            fs.mkdirSync(this.GuPath, { recursive: true });
+            this.copyFolderRecursiveSync(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
             setTimeout(async () => {
                 return e.reply(`『咕咕牛』已成功进入了喵喵里面！`);
             }, 10000);
@@ -319,6 +325,8 @@ export class MiaoPluginMBT extends plugin {
                     });
                 });
                 this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
+                fs.mkdirSync(this.GuPath, { recursive: true });
+                this.copyFolderRecursiveSync(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
             }
         } catch (error) {
             console.error('更新『咕咕牛🐂』时出现错误:', error);
