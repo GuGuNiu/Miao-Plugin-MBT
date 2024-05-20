@@ -64,7 +64,13 @@ export class MiaoPluginMBT extends plugin {
                     permission: "master"
                 }
             ]
-        });
+            
+        })
+        this.task = {
+                cron: '0 12 * * 1',
+                fnc: () => this.executeTask(),
+                log: true
+        }
         const currentFileUrl = import.meta.url;
         const currentFilePath = fileURLToPath(currentFileUrl);
         this.mirror = 'https://mirror.ghproxy.com/';
@@ -73,6 +79,15 @@ export class MiaoPluginMBT extends plugin {
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
         this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
+    }
+    async executeTask() {
+        try {
+            console.log("[定时任务]：开始更新『咕咕牛🐂』图库");
+            await this.GallaryGuupdate({ reply: () => {} });
+            console.log("[定时任务]：『咕咕牛🐂』图库更新完毕");
+        } catch (error) {
+            console.error("[定时任务]：『咕咕牛🐂』图库更新失败", error);
+        }
     }
     async GuHelp(e) {
         e.reply("🔶安装图库：#(代理)下载咕咕牛\n💠更新图库：#更新咕咕牛\n🔶操作图库：#启/禁用咕咕牛\n💠图库查看：#检查咕咕牛\n🔶异常修复：#重置咕咕牛\n💠删除图库：#删除咕咕牛\n\n无法更新请先重置后下载")
