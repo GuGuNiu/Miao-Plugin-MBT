@@ -453,19 +453,20 @@ export class MiaoPluginMBT extends plugin {
             return e.reply('清理缓存失败，请查看控制台日志！');
         }
     }
-    copyFolderRecursiveSync(source, target) {
+    async copyFolderRecursiveSync(source, target) {
         if (!fs.existsSync(target)) {
             fs.mkdirSync(target, { recursive: true });
         }
         const files = fs.readdirSync(source);
-        files.forEach((file) => {
+        await Promise.all(files.map(async (file) => {
             const curSource = path.join(source, file);
             const curDest = path.join(target, file);
             if (fs.lstatSync(curSource).isDirectory()) {
-                this.copyFolderRecursiveSync(curSource, curDest);
+                await this.copyFolderRecursiveSync(curSource, curDest);
             } else {
-                fs.copyFileSync(curSource, curDest);
+                await fs.promises.copyFile(curSource, curDest);
             }
-        });
+        }));
     }
+    
 }
