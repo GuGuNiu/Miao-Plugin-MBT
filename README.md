@@ -32,10 +32,10 @@
 
 1、Github源：
 
-    curl -o "./plugins/example/咕咕牛下载器.js" "https://raw.githubusercontent.com/GuGuNiu/GuGuNiu-GalleryJs/main/咕咕牛图库下载器.js"
+    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://raw.githubusercontent.com/GuGuNiu/GuGuNiu-GalleryJs/main/咕咕牛图库下载器.js"
 2、备份镜像源:
 
-    curl -o "./plugins/example/咕咕牛下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/GuGuNiu-GalleryJs@main/咕咕牛图库下载器.js"
+    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/GuGuNiu-GalleryJs@main/咕咕牛图库下载器.js"
 
 <details>
     <summary>Js插件指令说明展开</summary>
