@@ -33,7 +33,10 @@
 1、Github源：
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库下载器.js"
-2、备份镜像源:
+2、mirror镜像源:
+
+    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://mirror.ghproxy.com/https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库下载器.js"
+3、备份镜像源:
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js"
 
