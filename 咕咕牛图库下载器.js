@@ -98,7 +98,7 @@ export class MiaoPluginMBT extends plugin {
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
     }
     async GuHelp(e) {
-        e.reply(segment.image("/resources/GuGuNiu-Gallery/help.png"))
+        e.reply(segment.image("https://s2.loli.net/2024/05/20/KS9A6JNgewHZzp8.png"))
     }
     async BanRole(e){
         
