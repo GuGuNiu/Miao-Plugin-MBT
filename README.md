@@ -40,8 +40,3 @@
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js"
 
-<details>
-
-
-
-</details>
