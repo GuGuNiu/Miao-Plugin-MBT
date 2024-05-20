@@ -3,9 +3,11 @@ import path from 'path';
 import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
+//import puppeteer from '../../lib/puppeteer/puppeteer.js'
 
 
-//        『咕咕牛🐂』图库 下载器  v1.8
+
+//           『咕咕牛🐂』图库管理器 v2.0
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -20,8 +22,8 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库下载器 v1.8',
-            dsc: '『咕咕牛🐂』',
+            name: '『咕咕牛🐂』图库管理器 v2.0',
+            dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 100,
             rule: [
@@ -47,7 +49,7 @@ export class MiaoPluginMBT extends plugin {
                 },
                 {
                     reg: /^#咕咕牛帮助$/,
-                    fnc: 'GuHelp',
+                    fnc: 'GuHelp'
                 },
                 {
                     reg: /^#重置咕咕牛$/,
@@ -56,12 +58,25 @@ export class MiaoPluginMBT extends plugin {
                 },
                 {
                     reg: /^#检查咕咕牛$/,
-                    fnc: 'CheckFolderGu',
+                    fnc: 'CheckFolderGu'
                 },
                 {     
                     reg: /^#清理咕咕牛缓存$/,
                     fnc: 'cleanGitPackCache',
                     permission: "master"
+                },                
+                {     
+                    reg: /^#查看(.*)$/,
+                    fnc: 'FindRoleFolder'
+                },
+                {     
+                    reg: /^#ban(.*)$/,
+                    fnc: 'BanRole',
+                    permission: "master"
+                },
+                {     
+                    reg: /^#咕咕牛$/,
+                    fnc: 'GuGuNiu',
                 }
             ]
             
@@ -79,7 +94,86 @@ export class MiaoPluginMBT extends plugin {
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
         this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
+        this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
+        this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
     }
+    async GuHelp(e) {
+        e.reply(segment.image("/resources/GuGuNiu-Gallery/help.png"))
+    }
+    async BanRole(e){
+        
+    }
+    async FindRoleFolder(e) {
+        if (!fs.existsSync(this.localPath)) {
+            await e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
+            return true;
+         }
+        const match = e.msg.match(/^#查看(.+)$/);
+        if (!match) {
+           // await e.reply('请输入正确的命令格式，例如：#查看花火', true);
+            return true;
+        }
+        let roleName = match[1].trim(); 
+        let aliasSR;
+            const aliasSRFilePath = path.resolve(this.SRaliasPath, 'alias.js');
+            const aliasSRContent = fs.readFileSync(aliasSRFilePath, 'utf-8');
+            const aliasRegexSR = /{[^{}]*}/;
+            const aliasJSONSR = aliasSRContent.match(aliasRegexSR)[0];
+            aliasSR = eval('(' + aliasJSONSR + ')');  
+        let aliasGS;
+            const aliasGSFilePath = path.resolve(this.GSaliasPath, 'alias.js');
+            const aliasGSContent = fs.readFileSync(aliasGSFilePath, 'utf-8');
+            const aliasRegexGS = /{[^{}]*}/;
+            const aliasJSONGS = aliasGSContent.match(aliasRegexGS)[0];
+            aliasGS = eval('(' + aliasJSONGS + ')'); 
+        let mainNameSR = Object.keys(aliasSR).find(main => {
+            const aliases = aliasSR[main].split(',');
+            return aliases.includes(roleName);
+        });
+        let mainNameGS = Object.keys(aliasGS).find(main => {
+            const aliases = aliasGS[main].split(',');
+            return aliases.includes(roleName);
+        });
+        if (mainNameSR) {
+            roleName = mainNameSR.trim();
+        } else if (mainNameGS) {
+            roleName = mainNameGS.trim();
+        }
+        let roleFolderPath;
+        const folders = fs.readdirSync(this.copylocalPath);
+        const matchedFolder = folders.find(folder => folder.includes(roleName));
+        if (!matchedFolder) {
+            await e.reply(`未找到角色『${roleName}』`);
+            return true;
+        }
+        roleFolderPath = path.join(this.copylocalPath, matchedFolder);
+        const files = fs.readdirSync(roleFolderPath)
+            .filter(file => /\.webp$/.test(file))
+            .sort((a, b) => {
+                const numA = parseInt(a.match(/\d+/)[0]);
+                const numB = parseInt(b.match(/\d+/)[0]);
+                return numA - numB;
+            });
+        if (files.length === 0) {
+            await e.reply(`『${matchedFolder}』文件夹下没有图片文件`, true);
+            return true;
+        }
+        let checkrolename = `当前查看『${matchedFolder}』，有${files.length}张`;
+        let RoleWebpPhotoList = []
+        RoleWebpPhotoList.push([`当前查看『${matchedFolder}』，有${files.length}张`]);
+        for (let i = 0; i < files.length; i++) {
+            const filePath = path.join(roleFolderPath, files[i]);
+            RoleWebpPhotoList.push([`${i + 1}、${files[i]}`, segment.image(`file://${filePath}`)])
+        }
+        try {
+            let RoleFindsuccessmsg = await common.makeForwardMsg(this.e, RoleWebpPhotoList, checkrolename)
+            await e.reply(RoleFindsuccessmsg)
+            if (!RoleFindsuccessmsg) e.reply('风控了，可私聊查看', true);
+        } catch (err) {
+            console.error(err);
+            await e.reply(`发送 ${matchedFolder} 的列表时出现错误,请查看控制台日志`);
+        }
+    } 
     async executeTask() {
         try {
             console.log("[定时任务]：开始更新『咕咕牛🐂』图库");
@@ -88,9 +182,6 @@ export class MiaoPluginMBT extends plugin {
         } catch (error) {
             console.error("[定时任务]：『咕咕牛🐂』图库更新失败", error);
         }
-    }
-    async GuHelp(e) {
-        e.reply("🔶安装图库：#(代理)下载咕咕牛\n💠更新图库：#更新咕咕牛\n🔶操作图库：#启/禁用咕咕牛\n💠图库查看：#检查咕咕牛\n🔶异常修复：#重置咕咕牛\n💠删除图库：#删除咕咕牛\n\n无法更新请先重置后下载")
     }
     async GallaryGudownload(e) {
         let downloadUrl;
@@ -331,6 +422,9 @@ export class MiaoPluginMBT extends plugin {
             }
         }
         return totalSize;
+    }
+    async GuGuNiu(e){
+        e.reply("🐂")
     }
     async cleanGitPackCache(e) {
         const gitPackFolderPath = path.join(this.localPath, '.git', 'objects', 'pack');
