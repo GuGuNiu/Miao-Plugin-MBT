@@ -7,7 +7,7 @@ import common from '../../lib/common/common.js';
 
 
 
-//           『咕咕牛🐂』图库管理器 v2.0
+//           『咕咕牛🐂』图库管理器 v2.1
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -22,7 +22,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.0',
+            name: '『咕咕牛🐂』图库管理器 v2.1',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 100,
@@ -33,8 +33,8 @@ export class MiaoPluginMBT extends plugin {
                     permission: "master"
                 },
                 {
-                    reg: /^#(强制)?更新咕咕牛$/,
-                    fnc: 'GallaryGuupdate',
+                    reg: /^#更新咕咕牛$/,
+                    fnc: 'GallaryGuUpdate',
                     permission: "master"
                 },
                 {
@@ -70,9 +70,13 @@ export class MiaoPluginMBT extends plugin {
                     fnc: 'FindRoleFolder'
                 },
                 {     
-                    reg: /^#ban(.*)$/,
+                    reg: /^#ban(加|删)(.*)$/,
                     fnc: 'BanRole',
                     permission: "master"
+                },
+                {     
+                    reg: /^#ban列表$/,
+                    fnc: 'BanRolelist',
                 },
                 {     
                     reg: /^#咕咕牛$/,
@@ -97,6 +101,16 @@ export class MiaoPluginMBT extends plugin {
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
+        this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
+    }
+    async executeTask() {
+        try {
+            console.log("[定时任务]：开始更新『咕咕牛🐂』图库");
+            await this.GallaryGuupdate({ reply: () => {} });
+            console.log("[定时任务]：『咕咕牛🐂』图库更新完毕");
+        } catch (error) {
+            console.error("[定时任务]：『咕咕牛🐂』图库更新失败", error);
+        }
     }
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
@@ -104,8 +118,104 @@ export class MiaoPluginMBT extends plugin {
             return true;
          }e.reply(segment.image(this.GuPath+'/help.png'))
       }
-    async BanRole(e){
-        
+    async BanRole(e) {
+        const banListPath = path.join(this.GuPath, 'banlist.txt');
+        let message = e.raw_message || e.message || e.content;
+        if (message.startsWith('#ban加')) {
+            const match = message.match(/#ban加(.+)/);
+            if (!match) {
+                await e.reply('请输入要添加到禁止列表的名称，例如：#ban加花火Gu1', true);
+                return true;
+            }
+            const newItem = match[1].trim() + '.webp;';
+            try {
+                const banList = fs.readFileSync(banListPath, 'utf8').split(';');
+                const fileName = match[1].trim() + '.webp';
+                if (banList.includes(fileName)) {
+                    await e.reply(`${fileName} 已经存在于禁止列表中`, true);
+                    return true;
+                }
+                fs.appendFileSync(banListPath, newItem, 'utf8');
+                await e.reply(`${match[1].trim()} 已添加到禁止列表中,该文件将被移除`, true);
+                this.deleteBanList()
+            } catch (error) {
+                await e.reply('写入文件时出现错误，请查看控制台日志', true);
+                console.error('写入文件时出现错误:', error);
+            }
+        } else if (message.startsWith('#ban删')) {
+            const match = message.match(/#ban删(.+)/);
+            if (!match) {
+                await e.reply('请输入要从禁止列表中删除的名称，例如：#ban删花火Gu1', true);
+                return true;
+            }
+            const itemToRemove = match[1].trim() + '.webp';
+            try {
+                let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+                const index = banList.indexOf(itemToRemove);
+                if (index === -1) {
+                    await e.reply(`${itemToRemove} 不存在`, true);
+                    return true;
+                }
+                banList.splice(index, 1);
+                fs.writeFileSync(banListPath, banList.join(';') + ';', 'utf8');
+                await e.reply(`${match[1].trim()} 已经从禁止列表中删除,请重新#启用咕咕牛`, true);
+            } catch (error) {
+                await e.reply('删除文件时出现错误，请查看控制台日志', true);
+                console.error('删除文件时出现错误:', error);
+            }
+        } else {
+            await e.reply('请输入正确的命令，例如：#ban加花火Gu1 或 #ban删花火Gu1', true);
+        }
+        return true;
+    }
+    async BanRolelist(e) {
+        const banListPath = path.join(this.GuPath, 'banlist.txt');
+        if (!fs.existsSync(banListPath)) {
+            await e.reply('禁用列表文件不存在', true);
+            return true;
+        }
+        try {
+            const fileContent = fs.readFileSync(banListPath, 'utf8');
+            const banList = fileContent.split(';').map(item => item.trim()); 
+            if (banList.length === 0 || (banList.length === 1 && banList[0] === '')) {
+                await e.reply('你还没有Ban过任何图片', true);
+                return true;
+            }
+            const formattedBanList = banList.map(item => item.replace(/\.webp$/, ''));
+            const totalItems = formattedBanList.length;
+            const BanListforwardMsg = [];
+            BanListforwardMsg.push(`已被Ban的数量：${totalItems}张,可用『#ban删花火Gu1』移除`);
+            BanListforwardMsg.push(formattedBanList.join('\n')); 
+            const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, 'Ban的图片列表');
+            await e.reply(banListMsg);
+        } catch (error) {
+            await e.reply('读取 banlist.txt 文件时出现错误，请查看控制台日志', true);
+        }
+        return true;
+    }
+    async GuGuNiu(e){e.reply("🐂")}
+    async deleteBanList() {
+            const banListPath = path.join(this.GuPath, 'banlist.txt');
+            try {
+                const banListContent = fs.readFileSync(banListPath, 'utf8');
+                const filesToDelete = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
+                const deleteFilesRecursively = (directory) => {
+                    const files = fs.readdirSync(directory);
+                    for (const file of files) {
+                        const filePath = path.join(directory, file);
+                        if (fs.statSync(filePath).isDirectory()) {
+                            deleteFilesRecursively(filePath);
+                        } else {
+                            const fileName = path.basename(filePath);
+                            if (filesToDelete.includes(fileName)) {
+                                fs.unlinkSync(filePath);
+                                console.log(`${fileName} 已删除`);
+                            }}}};
+                deleteFilesRecursively(this.characterPath);
+                console.log('所有禁止列表中的文件已删除');
+            } catch (error) {
+                console.error('删除文件时出现错误:', error);
+            }
     }
     async FindRoleFolder(e) {
         if (!fs.existsSync(this.localPath)) {
@@ -172,21 +282,12 @@ export class MiaoPluginMBT extends plugin {
         try {
             let RoleFindsuccessmsg = await common.makeForwardMsg(this.e, RoleWebpPhotoList, checkrolename)
             await e.reply(RoleFindsuccessmsg)
-            if (!RoleFindsuccessmsg) e.reply('风控了，可私聊查看', true);
+            if (!RoleFindsuccessmsg) e.reply('发送失败,请重试！', true);
         } catch (err) {
             console.error(err);
             await e.reply(`发送 ${matchedFolder} 的列表时出现错误,请查看控制台日志`);
         }
     } 
-    async executeTask() {
-        try {
-            console.log("[定时任务]：开始更新『咕咕牛🐂』图库");
-            await this.GallaryGuupdate({ reply: () => {} });
-            console.log("[定时任务]：『咕咕牛🐂』图库更新完毕");
-        } catch (error) {
-            console.error("[定时任务]：『咕咕牛🐂』图库更新失败", error);
-        }
-    }
     async GallaryGudownload(e) {
         let downloadUrl;
         if (e.msg == '#下载咕咕牛') {
@@ -240,6 +341,7 @@ export class MiaoPluginMBT extends plugin {
              }
                 await e.reply('『咕咕牛🐂』手动启用中,请稍后.....',true);
                 this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
+                this.deleteBanList()
                 await e.reply('『咕咕牛』重新进入了喵喵里面！');
         }else if (e.msg == '#禁用咕咕牛') {
                 await e.reply('『咕咕牛🐂』手动禁用中,请稍后.....',true);
@@ -266,24 +368,7 @@ export class MiaoPluginMBT extends plugin {
         console.log('『咕咕牛🐂』图库删除成功！');
         return e.reply('『咕咕牛』已离开你的崽崽了,感谢使用，再会！！');
     }
-    async deleteFilesWithGuKeyword() {
-        const normalCharacterPath = this.characterPath;
-        try {
-          const folders = await fs.promises.readdir(normalCharacterPath);
-          await Promise.all(folders.map(async (folder) => {
-            const folderPath = path.join(normalCharacterPath, folder);
-            const files = await fs.promises.readdir(folderPath);
-            const deletePromises = files
-              .filter(file => file.includes('Gu'))
-              .map(file => fs.promises.unlink(path.join(folderPath, file)));
-            await Promise.all(deletePromises);
-          }));
-          console.log('『咕咕牛🐂』删除成功');
-        } catch (err) {
-          console.error('『咕咕牛🐂』删除失败:', err);
-        }
-      }
-      async GallaryGuupdate(e) {
+    async GallaryGuUpdate(e) {
         try {
             if (!fs.existsSync(this.localPath)) {
                 await e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
@@ -327,13 +412,15 @@ export class MiaoPluginMBT extends plugin {
                 this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
                 fs.mkdirSync(this.GuPath, { recursive: true });
                 this.copyFolderRecursiveSync(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
+                this.copyFolderRecursiveSync(path.join(this.localPath,'咕咕牛图库下载器.js'), this.JsPath);
+                this.deleteBanList()
             }
         } catch (error) {
             console.error('更新『咕咕牛🐂』时出现错误:', error);
-            let forward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];
-            
+            let forward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];  
             if (error.message.includes('code 128')) {
                 forward.push("检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。");
+                forward.push("也可能出现合并失败，可以尝试重置咕咕牛");
             }
             if (error.message.includes('code 1')) {
                 forward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
@@ -416,6 +503,53 @@ export class MiaoPluginMBT extends plugin {
                 })()
             ]);
     }
+    async cleanGitPackCache(e) {
+        const gitPackFolderPath = path.join(this.localPath, '.git', 'objects', 'pack');
+        try {
+            const stats = await fs.promises.stat(gitPackFolderPath);
+            if (!stats.isDirectory()) {
+                return e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
+            }
+            const files = await fs.promises.readdir(gitPackFolderPath);
+            let largestFile = '';
+            let largestFileSize = 0;
+            await Promise.all(files.map(async file => {
+                const filePath = path.join(gitPackFolderPath, file);
+                const fileStats = await fs.promises.stat(filePath);
+                if (fileStats.size > largestFileSize) {
+                    largestFileSize = fileStats.size;
+                    largestFile = filePath;
+                }
+            }));
+            if (largestFile) {
+                await fs.promises.unlink(largestFile);
+                console.log(`清理缓存成功：${largestFile}`);
+                return e.reply(`清理缓存成功`);
+            } else {
+                return e.reply('没有找到可以删除的缓存文件！');
+            }
+        } catch (error) {
+            console.error('清理缓存失败:', error);
+            return e.reply('清理缓存失败，请查看控制台日志！');
+        }
+    }
+    async deleteFilesWithGuKeyword() {
+        const normalCharacterPath = this.characterPath;
+        try {
+          const folders = await fs.promises.readdir(normalCharacterPath);
+          await Promise.all(folders.map(async (folder) => {
+            const folderPath = path.join(normalCharacterPath, folder);
+            const files = await fs.promises.readdir(folderPath);
+            const deletePromises = files
+              .filter(file => file.includes('Gu'))
+              .map(file => fs.promises.unlink(path.join(folderPath, file)));
+            await Promise.all(deletePromises);
+          }));
+          console.log('『咕咕牛🐂』删除成功');
+        } catch (err) {
+          console.error('『咕咕牛🐂』删除失败:', err);
+        }
+    }
     async getFolderSize(folderPath) {
         let totalSize = 0;
         const files = await fs.promises.readdir(folderPath);
@@ -430,28 +564,6 @@ export class MiaoPluginMBT extends plugin {
             }
         }
         return totalSize;
-    }
-    async GuGuNiu(e){
-        e.reply("🐂")
-    }
-    async cleanGitPackCache(e) {
-        const gitPackFolderPath = path.join(this.localPath, '.git', 'objects', 'pack');
-        try {
-            const stats = await fs.promises.stat(gitPackFolderPath);
-            if (!stats.isDirectory()) {
-                return e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
-            }
-            const files = await fs.promises.readdir(gitPackFolderPath);
-            await Promise.all(files.map(async file => {
-                const filePath = path.join(gitPackFolderPath, file);
-                await fs.promises.unlink(filePath);
-                console.log(`已删除：${filePath}`);
-            }));
-            return e.reply('清理缓存成功！');
-        } catch (error) {
-            console.error('清理缓存失败:', error);
-            return e.reply('清理缓存失败，请查看控制台日志！');
-        }
     }
     async copyFolderRecursiveSync(source, target) {
         if (!fs.existsSync(target)) {
