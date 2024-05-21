@@ -136,7 +136,7 @@ export class MiaoPluginMBT extends plugin {
                     return true;
                 }
                 fs.appendFileSync(banListPath, newItem, 'utf8');
-                await e.reply(`${match[1].trim()} 已添加到禁止列表中,该文件将被移除`, true);
+                await e.reply(`${match[1].trim()}已添加到禁止列表中,该文件将被移除`, true);
                 this.deleteBanList()
             } catch (error) {
                 await e.reply('写入文件时出现错误，请查看控制台日志', true);
@@ -157,15 +157,15 @@ export class MiaoPluginMBT extends plugin {
                     return true;
                 }
                 banList.splice(index, 1);
-                fs.writeFileSync(banListPath, banList.join(';') + ';', 'utf8');
-                await e.reply(`${match[1].trim()} 已经从禁止列表中删除,请重新#启用咕咕牛`, true);
+                fs.writeFileSync(banListPath, banList.join(';'), 'utf8'); // Remove the trailing semicolon here
+                await e.reply(`${match[1].trim()}已经从禁止列表中删除,请重新#启用咕咕牛`, true);
             } catch (error) {
                 await e.reply('删除文件时出现错误，请查看控制台日志', true);
                 console.error('删除文件时出现错误:', error);
             }
         } else {
             await e.reply('请输入正确的命令，例如：#ban加花火Gu1 或 #ban删花火Gu1', true);
-        }
+        }   
         return true;
     }
     async BanRolelist(e) {
@@ -176,43 +176,54 @@ export class MiaoPluginMBT extends plugin {
         }
         try {
             const fileContent = fs.readFileSync(banListPath, 'utf8').trim();
+            if (fileContent === '') {
+                await e.reply('你还没有Ban过任何图片', true);
+                return true;
+            }
             const banList = fileContent.split(';').map(item => item.trim()); 
+    
+            // 去重
             const uniqueBanList = [...new Set(banList)];
+    
             const totalItems = uniqueBanList.length - 1;
+    
             const formattedBanList = uniqueBanList.map(item => item.replace(/\.webp$/, ''));
+    
             const BanListforwardMsg = [];
-            BanListforwardMsg.push(`已被Ban的数量：${totalItems}张，可用『#ban删花火Gu1』移除`);
+            BanListforwardMsg.push(`已被Ban的数量：${totalItems}张,可用『#ban删花火Gu1』移除`);
             BanListforwardMsg.push(formattedBanList.join('\n')); 
             const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, 'Ban的图片列表');
             await e.reply(banListMsg);
+            return true;
         } catch (error) {
             await e.reply('读取 banlist.txt 文件时出现错误，请查看控制台日志', true);
+            return true;
         }
-        return true;
-    } 
+    }
+    
     async GuGuNiu(e){e.reply("🐂")}
     async deleteBanList() {
-            const banListPath = path.join(this.GuPath, 'banlist.txt');
-            try {
-                const banListContent = fs.readFileSync(banListPath, 'utf8');
-                const filesToDelete = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
-                const deleteFilesRecursively = (directory) => {
-                    const files = fs.readdirSync(directory);
-                    for (const file of files) {
-                        const filePath = path.join(directory, file);
-                        if (fs.statSync(filePath).isDirectory()) {
-                            deleteFilesRecursively(filePath);
-                        } else {
-                            const fileName = path.basename(filePath);
-                            if (filesToDelete.includes(fileName)) {
-                                fs.unlinkSync(filePath);
-                                console.log(`${fileName} 已删除`);
-                            }}}};
-                deleteFilesRecursively(this.characterPath);
-                console.log('所有禁止列表中的文件已删除');
-            } catch (error) {
-                console.error('删除文件时出现错误:', error);
-            }
+        const banListPath = path.join(this.GuPath, 'banlist.txt');
+        try {
+            const banListContent = fs.readFileSync(banListPath, 'utf8');
+            const filesToDelete = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
+            const deleteFilesRecursively = (directory) => {
+                const files = fs.readdirSync(directory);
+                for (const file of files) {
+                    const filePath = path.join(directory, file);
+                    if (fs.statSync(filePath).isDirectory()) {
+                        deleteFilesRecursively(filePath);
+                    } else {
+                        const fileName = path.basename(filePath);
+                        if (filesToDelete.includes(fileName)) {
+                            fs.unlinkSync(filePath);
+                            console.log(`${fileName} 已删除`);
+                        }}}};
+            deleteFilesRecursively(this.characterPath);
+            console.log('所有禁止列表中的文件已删除');
+        } catch (error) {
+            console.error('删除文件时出现错误:', error);
+        }
     }
     async FindRoleFolder(e) {
         if (!fs.existsSync(this.localPath)) {
@@ -315,6 +326,7 @@ export class MiaoPluginMBT extends plugin {
             setTimeout(async () => {
                 return e.reply(`『咕咕牛』已成功进入了喵喵里面！`);
             }, 10000);
+            this.deleteBanList()
         } catch (error) {
             console.error('下载『咕咕牛🐂』时出现错误:', error);
             let DowloadeErrorForward =[]
@@ -338,8 +350,10 @@ export class MiaoPluginMBT extends plugin {
              }
                 await e.reply('『咕咕牛🐂』手动启用中,请稍后.....',true);
                 this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
-                this.deleteBanList()
                 await e.reply('『咕咕牛』重新进入了喵喵里面！');
+                setTimeout(async () => {
+                    this.deleteBanList()
+                }, 2000);
         }else if (e.msg == '#禁用咕咕牛') {
                 await e.reply('『咕咕牛🐂』手动禁用中,请稍后.....',true);
                 await this.deleteFilesWithGuKeyword();
