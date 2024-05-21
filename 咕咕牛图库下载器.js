@@ -175,16 +175,13 @@ export class MiaoPluginMBT extends plugin {
             return true;
         }
         try {
-            const fileContent = fs.readFileSync(banListPath, 'utf8');
+            const fileContent = fs.readFileSync(banListPath, 'utf8').trim();
             const banList = fileContent.split(';').map(item => item.trim()); 
-            if (banList.length === 0 || (banList.length === 1 && banList[0] === '')) {
-                await e.reply('你还没有Ban过任何图片', true);
-                return true;
-            }
-            const formattedBanList = banList.map(item => item.replace(/\.webp$/, ''));
-            const totalItems = formattedBanList.length;
+            const uniqueBanList = [...new Set(banList)];
+            const totalItems = uniqueBanList.length - 1;
+            const formattedBanList = uniqueBanList.map(item => item.replace(/\.webp$/, ''));
             const BanListforwardMsg = [];
-            BanListforwardMsg.push(`已被Ban的数量：${totalItems}张,可用『#ban删花火Gu1』移除`);
+            BanListforwardMsg.push(`已被Ban的数量：${totalItems}张，可用『#ban删花火Gu1』移除`);
             BanListforwardMsg.push(formattedBanList.join('\n')); 
             const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, 'Ban的图片列表');
             await e.reply(banListMsg);
@@ -192,7 +189,7 @@ export class MiaoPluginMBT extends plugin {
             await e.reply('读取 banlist.txt 文件时出现错误，请查看控制台日志', true);
         }
         return true;
-    }
+    } 
     async GuGuNiu(e){e.reply("🐂")}
     async deleteBanList() {
             const banListPath = path.join(this.GuPath, 'banlist.txt');
