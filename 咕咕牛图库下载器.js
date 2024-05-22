@@ -181,14 +181,9 @@ export class MiaoPluginMBT extends plugin {
                 return true;
             }
             const banList = fileContent.split(';').map(item => item.trim()); 
-    
-            // 去重
             const uniqueBanList = [...new Set(banList)];
-    
             const totalItems = uniqueBanList.length - 1;
-    
             const formattedBanList = uniqueBanList.map(item => item.replace(/\.webp$/, ''));
-    
             const BanListforwardMsg = [];
             BanListforwardMsg.push(`已被Ban的数量：${totalItems}张,可用『#ban删花火Gu1』移除`);
             BanListforwardMsg.push(formattedBanList.join('\n')); 
@@ -196,11 +191,10 @@ export class MiaoPluginMBT extends plugin {
             await e.reply(banListMsg);
             return true;
         } catch (error) {
-            await e.reply('读取 banlist.txt 文件时出现错误，请查看控制台日志', true);
+            await e.reply('读取封禁文件时出现错误，请查看控制台日志', true);
             return true;
         }
     }
-    
     async GuGuNiu(e){e.reply("🐂")}
     async deleteBanList() {
         const banListPath = path.join(this.GuPath, 'banlist.txt');
