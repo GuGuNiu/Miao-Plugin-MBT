@@ -435,6 +435,10 @@ export class MiaoPluginMBT extends plugin {
             if (error.message.includes('code 1')) {
                 forward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
             }
+            if (error.message.includes('code 28')) {
+                forward.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输在控制台输入以下命令");
+                forward.push("git config --global http.postBuffer 524288000");
+            }
             if (error.message.includes('443')) {
                 forward.push("该报错可能是网络问题、被墙或访问被拒绝。");
             }
