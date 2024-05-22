@@ -214,7 +214,7 @@ export class MiaoPluginMBT extends plugin {
                             console.log(`${fileName} 已删除`);
                         }}}};
             deleteFilesRecursively(this.characterPath);
-            console.log('所有禁止列表中的文件已删除');
+            console.log('『咕咕牛🐂』封禁列表中的文件已删除');
         } catch (error) {
             console.error('删除文件时出现错误:', error);
         }
@@ -559,9 +559,9 @@ export class MiaoPluginMBT extends plugin {
               .map(file => fs.promises.unlink(path.join(folderPath, file)));
             await Promise.all(deletePromises);
           }));
-          console.log('『咕咕牛🐂』删除成功');
+          console.log('『咕咕牛🐂』图库删除成功');
         } catch (err) {
-          console.error('『咕咕牛🐂』删除失败:', err);
+          console.error('『咕咕牛🐂』图库删除失败:', err);
         }
     }
     async getFolderSize(folderPath) {
