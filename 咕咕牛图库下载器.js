@@ -327,6 +327,9 @@ export class MiaoPluginMBT extends plugin {
                 return e.reply(`『咕咕牛』已成功进入了喵喵里面！`);
             }, 10000);
             this.deleteBanList()
+            const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
+            const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js'); 
+            await fs.promises.copyFile(sourceFile, destFile);
         } catch (error) {
             console.error('下载『咕咕牛🐂』时出现错误:', error);
             let DowloadeErrorForward =[]
@@ -423,7 +426,9 @@ export class MiaoPluginMBT extends plugin {
                 this.copyFolderRecursiveSync(this.copylocalPath, this.characterPath);
                 fs.mkdirSync(this.GuPath, { recursive: true });
                 this.copyFolderRecursiveSync(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
-                this.copyFolderRecursiveSync(path.join(this.localPath,'咕咕牛图库下载器.js'), this.JsPath);
+                const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js'); 
+                const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
+                await fs.promises.copyFile(sourceFile, destFile);
                 this.deleteBanList()
             }
         } catch (error) {
