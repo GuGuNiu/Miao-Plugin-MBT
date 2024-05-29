@@ -114,7 +114,7 @@ export class MiaoPluginMBT extends plugin {
     }
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
-            e.reply(segment.image("https://s2.loli.net/2024/05/20/KS9A6JNgewHZzp8.png"))
+            e.reply(segment.image("https://s2.loli.net/2024/05/29/BYoW7bE5FRr6OqL.png"))
             return true;
          }e.reply(segment.image(this.GuPath+'/help.png'))
       }
