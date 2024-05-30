@@ -7,7 +7,7 @@ import common from '../../lib/common/common.js';
 
 
 
-//           『咕咕牛🐂』图库管理器 v2.1
+//           『咕咕牛🐂』图库管理器 v2.2
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -22,7 +22,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.1',
+            name: '『咕咕牛🐂』图库管理器 v2.2',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 100,
@@ -222,7 +222,7 @@ export class MiaoPluginMBT extends plugin {
          }
         const match = e.msg.match(/^#查看(.+)$/);
         if (!match) {
-           // await e.reply('请输入正确的命令格式，例如：#查看花火', true);
+            await e.reply('请输入正确的命令格式，例如：#查看花火', true);
             return true;
         }
         let roleName = match[1].trim(); 
