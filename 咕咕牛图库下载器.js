@@ -48,6 +48,11 @@ export class MiaoPluginMBT extends plugin {
                     permission: "master"
                 },
                 {
+                    reg: /^#(启用|禁用)官方立绘$/,
+                    fnc: 'MihoyoSplashoption',
+                    permission: "master"
+                },
+                {
                     reg: /^#咕咕牛帮助$/,
                     fnc: 'GuHelp'
                 },
@@ -87,7 +92,7 @@ export class MiaoPluginMBT extends plugin {
         })
         this.task = {
                 cron: '0 12 * * 1',
-                fnc: () => this.executeTask(),
+                // fnc: () => this.executeTask(),
                 log: true
         }
         const currentFileUrl = import.meta.url;
@@ -102,15 +107,6 @@ export class MiaoPluginMBT extends plugin {
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
-    }
-    async executeTask() {
-        try {
-            console.log("[定时任务]：开始更新『咕咕牛🐂』图库");
-            await this.GallaryGuupdate({ reply: () => {} });
-            console.log("[定时任务]：『咕咕牛🐂』图库更新完毕");
-        } catch (error) {
-            console.error("[定时任务]：『咕咕牛🐂』图库更新失败", error);
-        }
     }
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
@@ -157,7 +153,7 @@ export class MiaoPluginMBT extends plugin {
                     return true;
                 }
                 banList.splice(index, 1);
-                fs.writeFileSync(banListPath, banList.join(';'), 'utf8'); // Remove the trailing semicolon here
+                fs.writeFileSync(banListPath, banList.join(';'), 'utf8'); 
                 await e.reply(`${match[1].trim()}已经从禁止列表中删除,请重新#启用咕咕牛`, true);
             } catch (error) {
                 await e.reply('删除文件时出现错误，请查看控制台日志', true);
@@ -375,6 +371,41 @@ export class MiaoPluginMBT extends plugin {
         await fs.promises.rm(this.localPath, { recursive: true });
         console.log('『咕咕牛🐂』图库删除成功！');
         return e.reply('『咕咕牛』已离开你的崽崽了,感谢使用，再会！！');
+    }
+    async MihoyoSplashoption(e) {
+        if (e.msg == '#启用官方立绘') {
+            await this.copySplashWebp(this.SRaliasPath, this.characterPath);
+            await this.copySplashWebp(this.GSaliasPath, this.characterPath);
+            return e.reply('官方立绘已经启用了',true);
+        }else  if (e.msg == '#禁用官方立绘') {
+            await this.deleteGusplashWebp(this.characterPath);
+            return e.reply('官方立绘已经禁用了',true);
+
+        }
+    } 
+    async copySplashWebp(sourceDir, targetDir) {
+        const folders = fs.readdirSync(sourceDir, { withFileTypes: true });
+        for (const folder of folders) {
+            if (!folder.isDirectory() || folder.name === 'common') continue;
+            const folderPath = path.join(sourceDir, folder.name);
+            const splashPath = path.join(folderPath, 'imgs', 'splash.webp');
+            const targetFolderPath = path.join(targetDir, folder.name);
+            const targetSplashPath = path.join(targetFolderPath, 'Gusplash.webp');
+            fs.mkdirSync(targetFolderPath, { recursive: true });
+            fs.copyFileSync(splashPath, targetSplashPath);
+            console.log(`已复制 ${splashPath} 到 ${targetSplashPath}`);
+        }
+    }
+    async deleteGusplashWebp(directory) {
+        const entries = fs.readdirSync(directory, { withFileTypes: true });
+        for (const entry of entries) {
+            const entryPath = path.join(directory, entry.name);
+            if (entry.isDirectory()) {
+                await this.deleteGusplashWebp(entryPath);
+            } else if (entry.isFile() && entry.name === 'Gusplash.webp') {
+                    await fs.promises.unlink(entryPath);
+            }
+        }
     }
     async GallaryGuUpdate(e) {
         try {
