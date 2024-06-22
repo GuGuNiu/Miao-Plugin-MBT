@@ -5,9 +5,8 @@ import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
 
 
-//           『咕咕牛🐂』图库管理器 v2.2
+//           『咕咕牛🐂』图库管理器 v2.4
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
-
 
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -20,7 +19,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.2',
+            name: '『咕咕牛🐂』图库管理器 v2.4',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 10,
@@ -78,6 +77,10 @@ export class MiaoPluginMBT extends plugin {
                 {     
                     reg: /^#ban列表$/,
                     fnc: 'BanRolelist',
+                },
+                {     
+                    reg: /^#净化咕咕牛$/,
+                    fnc: 'RemoveBadimages',
                 },
                 {     
                     reg: /^#咕咕牛$/,
@@ -312,6 +315,30 @@ export class MiaoPluginMBT extends plugin {
         }
     }
 
+    async RemoveBadimages(e) {
+            await e.reply('正在净化咕咕牛，请稍候...', true);
+            const deleteFilesWithRKeyword = (directory) => {
+                let count = 0;
+                const files = fs.readdirSync(directory);
+
+                files.forEach(file => {
+                    const filePath = path.join(directory, file);
+                    const stats = fs.statSync(filePath);
+
+                    if (stats.isDirectory()) {
+                        count += deleteFilesWithRKeyword(filePath); 
+                    } else if (stats.isFile() && file.includes('_R')) {
+                        fs.unlinkSync(filePath);
+                        count++;
+                    }
+                });
+                return count;
+            };
+            let count = deleteFilesWithRKeyword(this.characterPath);
+            await e.reply(`净化完毕，一共扔了 ${count} 张面板图！`);
+            await e.reply(`绿色网络从你做起！`);
+    }
+    
     async GuGuNiu(e) {
             await e.reply("🐂");
             const stats = await fs.promises.stat(this.localPath);
