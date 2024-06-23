@@ -239,54 +239,137 @@ export class MiaoPluginMBT extends plugin {
     async BanRole(e) {
         const banListPath = path.join(this.GuPath, 'banlist.txt');
         let message = e.raw_message || e.message || e.content;
+    
         if (message.startsWith('#ban加')) {
-            const match = message.match(/#ban加(.+)/);
+            const match = message.match(/^#ban加(.+)/);
             if (!match) {
                 await e.reply('请输入要添加到禁止列表的名称，例如：#ban加花火Gu1', true);
                 return true;
             }
-            const newItem = match[1].trim() + '.webp;';
-            try {
-                const banList = fs.readFileSync(banListPath, 'utf8').split(';');
-                const fileName = match[1].trim() + '.webp';
-                if (banList.includes(fileName)) {
-                    await e.reply(`${fileName} 已经存在于禁止列表中`, true);
-                    return true;
+    
+            let inputRoleName = match[1].trim();
+            let roleName = inputRoleName.replace(/Gu\d+$/, '').trim();
+    
+            let mainName = this.getMainRoleName(roleName); // 获取主角色名称
+    
+            if (mainName) {
+                mainName = `${mainName}${inputRoleName.match(/Gu\d+$/)[0]}`;
+                const fileName = `${mainName}.webp`;
+                let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+    
+                if (!banList.includes(fileName)) {
+                    banList.push(fileName); // 添加新文件名到列表
+                    fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8'); // 在每个文件名后添加分号
+                    await e.reply(`${fileName} 🚫已封禁`, true);
+                    this.DeleteBanList();
+                } else {
+                    await e.reply(`${fileName} ❌️已存在`, true);
                 }
-                fs.appendFileSync(banListPath, newItem, 'utf8');
-                await e.reply(`${match[1].trim()}已添加到禁止列表中,该文件将被移除`, true);
-                this.DeleteBanList()
-            } catch (error) {
-                await e.reply('写入文件时出现错误，请查看控制台日志', true);
-                console.error('写入文件时出现错误:', error);
+            } else {
+                await e.reply(`未找到角色：${roleName}`, true);
             }
         } else if (message.startsWith('#ban删')) {
-            const match = message.match(/#ban删(.+)/);
+            const match = message.match(/^#ban删(.+)/);
             if (!match) {
                 await e.reply('请输入要从禁止列表中删除的名称，例如：#ban删花火Gu1', true);
                 return true;
             }
-            const itemToRemove = match[1].trim() + '.webp';
-            try {
+    
+            let inputRoleName = match[1].trim();
+            let roleName = inputRoleName.replace(/Gu\d+$/, '').trim();
+    
+            let mainName = this.getMainRoleName(roleName);
+    
+            if (mainName) {
+                mainName = `${mainName}${inputRoleName.match(/Gu\d+$/)[0]}`;
+                const fileName = `${mainName}.webp`;
                 let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
-                const index = banList.indexOf(itemToRemove);
-                if (index === -1) {
-                    await e.reply(`${itemToRemove} 不存在`, true);
-                    return true;
+    
+                if (banList.includes(fileName)) {
+                    banList = banList.filter(item => item !== fileName);
+                    fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
+                    await e.reply(`${fileName} ✅️已解禁`, true);
+                    await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                } else {
+                    await e.reply(`${fileName} ❌️不存在`, true);
                 }
-                banList.splice(index, 1);
-                fs.writeFileSync(banListPath, banList.join(';'), 'utf8'); 
-                await e.reply(`${match[1].trim()}已经从禁止列表中删除,请重新#启用咕咕牛`, true);
-            } catch (error) {
-                await e.reply('删除文件时出现错误，请查看控制台日志', true);
-                console.error('删除文件时出现错误:', error);
+            } else {
+                await e.reply(`未找到角色：${roleName}`, true);
             }
-        } else {
-            await e.reply('请输入正确的命令，例如：#ban加花火Gu1 或 #ban删花火Gu1', true);
-        }   
+        }
+    
         return true;
     }
+    
 
+    async FindRoleSplash(e) {
+        if (!fs.existsSync(this.localPath)) {
+            await e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
+            return true;
+        }
+
+        const match = e.msg.match(/^#查看(.+)$/);
+        if (!match) {
+            await e.reply('请输入正确的命令格式，例如：#查看花火', true);
+            return true;
+        }
+
+        let roleName = match[1].trim();
+        roleName = this.getMainRoleName(roleName);
+
+        let roleFolderPath;
+        const folders = fs.readdirSync(this.copylocalPath);
+        const matchedFolder = folders.find(folder => folder.includes(roleName));
+        if (!matchedFolder) {
+            await e.reply(`未找到角色『${roleName}』`);
+            return true;
+        }
+
+        roleFolderPath = path.join(this.copylocalPath, matchedFolder);
+        const files = fs.readdirSync(roleFolderPath)
+            .filter(file => /\.webp$/.test(file))
+            .sort((a, b) => {
+                const numA = parseInt(a.match(/\d+/)[0]);
+                const numB = parseInt(b.match(/\d+/)[0]);
+                return numA - numB;
+            });
+
+        if (files.length === 0) {
+            await e.reply(`『${matchedFolder}』文件夹下没有图片文件`, true);
+            return true;
+        }
+
+        let checkrolename = `当前查看『${matchedFolder}』，有${files.length}张`;
+        let RoleWebpPhotoList = [];
+        RoleWebpPhotoList.push([`当前查看『${matchedFolder}』，有${files.length}张`]);
+
+        const banListPath = path.join(this.GuPath, 'banlist.txt');
+        const banListContent = fs.readFileSync(banListPath, 'utf-8');
+        const filesToBan = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
+
+        for (let i = 0; i < files.length; i++) {
+            let fileName = files[i];
+            const filePath = path.join(roleFolderPath, fileName);
+
+            if (filesToBan.includes(fileName)) {
+                fileName = `${fileName.replace('.webp', '')}.webp ❌封禁中`;
+            }
+
+            RoleWebpPhotoList.push([`${i + 1}、${fileName}`, segment.image(`file://${filePath}`)]);
+        }
+
+        try {
+            let RoleFindsuccessmsg = await common.makeForwardMsg(this.e, RoleWebpPhotoList, checkrolename);
+            await e.reply(RoleFindsuccessmsg);
+            if (!RoleFindsuccessmsg) {
+                e.reply('发送失败,请私聊查看！', true);
+            }
+        } catch (err) {
+            console.error(err);
+            await e.reply(`发送 ${matchedFolder} 的列表时出现错误,请查看控制台日志`);
+        }
+    }
+    
     async BanRolelist(e) {
         const banListPath = path.join(this.GuPath, 'banlist.txt');
         if (!fs.existsSync(banListPath)) {
@@ -301,12 +384,12 @@ export class MiaoPluginMBT extends plugin {
             }
             const banList = fileContent.split(';').map(item => item.trim()); 
             const uniqueBanList = [...new Set(banList)];
-            const totalItems = uniqueBanList.length - 1;
+            const totalItems = uniqueBanList.length;
             const formattedBanList = uniqueBanList.map(item => item.replace(/\.webp$/, ''));
             const BanListforwardMsg = [];
-            BanListforwardMsg.push(`已被Ban的数量：${totalItems}张,可用『#ban删花火Gu1』移除`);
+            BanListforwardMsg.push(`当前已Ban的有：${totalItems}张\n『#ban删花火Gu1』可以移除封禁`);
             BanListforwardMsg.push(formattedBanList.join('\n')); 
-            const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, 'Ban的图片列表');
+            const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, '封禁中的图片列表');
             await e.reply(banListMsg);
             return true;
         } catch (error) {
@@ -355,108 +438,10 @@ export class MiaoPluginMBT extends plugin {
             });
     
             const forwardMsg = `最近的更新记录：\n${gitLog}`;
-            const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』更新日志');
+            const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』日志');
             await e.reply(forwardMsgFormatted);
     }
     
-    async FindRoleSplash(e) {
-        if (!fs.existsSync(this.localPath)) {
-            await e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
-            return true;
-        }
-    
-        const match = e.msg.match(/^#查看(.+)$/);
-        if (!match) {
-            await e.reply('请输入正确的命令格式，例如：#查看花火', true);
-            return true;
-        }
-    
-        let roleName = match[1].trim(); 
-    
-        let aliasSR;
-        const aliasSRFilePath = path.resolve(this.SRaliasPath, 'alias.js');
-        const aliasSRContent = fs.readFileSync(aliasSRFilePath, 'utf-8');
-        const aliasRegexSR = /{[^{}]*}/;
-        const aliasJSONSR = aliasSRContent.match(aliasRegexSR)[0];
-        aliasSR = eval('(' + aliasJSONSR + ')');  
-    
-        let aliasGS;
-        const aliasGSFilePath = path.resolve(this.GSaliasPath, 'alias.js');
-        const aliasGSContent = fs.readFileSync(aliasGSFilePath, 'utf-8');
-        const aliasRegexGS = /{[^{}]*}/;
-        const aliasJSONGS = aliasGSContent.match(aliasRegexGS)[0];
-        aliasGS = eval('(' + aliasJSONGS + ')'); 
-    
-        let mainNameSR = Object.keys(aliasSR).find(main => {
-            const aliases = aliasSR[main].split(',');
-            return aliases.includes(roleName);
-        });
-    
-        let mainNameGS = Object.keys(aliasGS).find(main => {
-            const aliases = aliasGS[main].split(',');
-            return aliases.includes(roleName);
-        });
-    
-        if (mainNameSR) {
-            roleName = mainNameSR.trim();
-        } else if (mainNameGS) {
-            roleName = mainNameGS.trim();
-        }
-    
-        let roleFolderPath;
-        const folders = fs.readdirSync(this.copylocalPath);
-        const matchedFolder = folders.find(folder => folder.includes(roleName));
-        if (!matchedFolder) {
-            await e.reply(`未找到角色『${roleName}』`);
-            return true;
-        }
-    
-        roleFolderPath = path.join(this.copylocalPath, matchedFolder);
-        const files = fs.readdirSync(roleFolderPath)
-            .filter(file => /\.webp$/.test(file))
-            .sort((a, b) => {
-                const numA = parseInt(a.match(/\d+/)[0]);
-                const numB = parseInt(b.match(/\d+/)[0]);
-                return numA - numB;
-            });
-    
-        if (files.length === 0) {
-            await e.reply(`『${matchedFolder}』文件夹下没有图片文件`, true);
-            return true;
-        }
-    
-        let checkrolename = `当前查看『${matchedFolder}』，有${files.length}张`;
-        let RoleWebpPhotoList = [];
-        RoleWebpPhotoList.push([`当前查看『${matchedFolder}』，有${files.length}张`]);
-    
-        const banListPath = path.join(this.GuPath, 'banlist.txt');
-        const banListContent = fs.readFileSync(banListPath, 'utf-8');
-        const filesToBan = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
-    
-        for (let i = 0; i < files.length; i++) {
-            let fileName = files[i];
-            const filePath = path.join(roleFolderPath, fileName);
-            
-            if (filesToBan.includes(fileName)) {
-                fileName = `${fileName.replace('.webp', '')}.webp ❌封禁中`;
-            }
-    
-            RoleWebpPhotoList.push([`${i + 1}、${fileName}`, segment.image(`file://${filePath}`)]);
-        }
-    
-        try {
-            let RoleFindsuccessmsg = await common.makeForwardMsg(this.e, RoleWebpPhotoList, checkrolename);
-            await e.reply(RoleFindsuccessmsg);
-            if (!RoleFindsuccessmsg) {
-                e.reply('发送失败,请私聊查看！', true);
-            } 
-        } catch (err) {
-            console.error(err);
-            await e.reply(`发送 ${matchedFolder} 的列表时出现错误,请查看控制台日志`);
-        }
-    }
-    
-   
     async GalleryOption(e){
         try {
         if (e.msg == '#启用咕咕牛') {
@@ -520,7 +505,6 @@ export class MiaoPluginMBT extends plugin {
     }    
 
     async CheckFolder(e) {
-            const AllFolderNoramlCharacterPath = this.characterPath
             const gitPath = this.GitPath
             const characterFolderPath = path.resolve(this.localPath, 'normal-character');
             if (!fs.existsSync(characterFolderPath)) {
@@ -548,7 +532,7 @@ export class MiaoPluginMBT extends plugin {
             const gitSize = await this.getFolderSize(gitPath);
             const gitAllSize = formatBytes(gitSize);
             const MBTSize = formatBytes(gitSize + totalSize)
-            let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}\n如缓存过大,可用#清理咕咕牛缓存`;
+            let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}`;
             forward.forEach(item => {
                 message += `${item}\n`;
             });
@@ -722,5 +706,40 @@ export class MiaoPluginMBT extends plugin {
         }));
         console.log(`文件夹 ${source} 复制到 ${target} 完成`);
     }
+
+    getMainRoleName(roleName) {
+        let aliasSR;
+        const aliasSRFilePath = path.resolve(this.SRaliasPath, 'alias.js');
+        const aliasSRContent = fs.readFileSync(aliasSRFilePath, 'utf-8');
+        const aliasRegexSR = /{[^{}]*}/;
+        const aliasJSONSR = aliasSRContent.match(aliasRegexSR)[0];
+        aliasSR = eval('(' + aliasJSONSR + ')');
+
+        let aliasGS;
+        const aliasGSFilePath = path.resolve(this.GSaliasPath, 'alias.js');
+        const aliasGSContent = fs.readFileSync(aliasGSFilePath, 'utf-8');
+        const aliasRegexGS = /{[^{}]*}/;
+        const aliasJSONGS = aliasGSContent.match(aliasRegexGS)[0];
+        aliasGS = eval('(' + aliasJSONGS + ')');
+
+        let mainNameSR = Object.keys(aliasSR).find(main => {
+            const aliases = aliasSR[main].split(',');
+            return aliases.includes(roleName);
+        });
+
+        let mainNameGS = Object.keys(aliasGS).find(main => {
+            const aliases = aliasGS[main].split(',');
+            return aliases.includes(roleName);
+        });
+
+        if (mainNameSR) {
+            return mainNameSR.trim();
+        } else if (mainNameGS) {
+            return mainNameGS.trim();
+        }
+
+        return roleName;
+    }
+
       
 }
