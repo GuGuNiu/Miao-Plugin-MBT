@@ -90,7 +90,7 @@ export class MiaoPluginMBT extends plugin {
         })
         this.task = {
             name: '『咕咕牛🐂』定时更新任务',
-            cron: '*/1 * * * *',
+            cron: '0 5 */5 * *',
             fnc: () => this.executeTask(),
             log: true
         }
