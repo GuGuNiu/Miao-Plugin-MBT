@@ -511,7 +511,7 @@ export class MiaoPluginMBT extends plugin {
                 return logger.info("[『咕咕牛🐂』定时更新任务]：执行完毕")
             }
         }
-    }
+    
 
     async RestartGuGuNiuGuNiu(e) {
         try {
