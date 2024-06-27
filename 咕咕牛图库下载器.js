@@ -22,7 +22,7 @@ export class MiaoPluginMBT extends plugin {
             name: '『咕咕牛🐂』图库管理器 v2.4',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
-            priority: 10,
+            priority: 500,
             rule: [
                 {
                     reg: /^#(代理)?下载咕咕牛$/,
@@ -85,10 +85,15 @@ export class MiaoPluginMBT extends plugin {
                 {     
                     reg: /^#咕咕牛$/,
                     fnc: 'GuGuNiu',
-                }
+                },
             ]
-            
         })
+        this.task = {
+            name: '『咕咕牛🐂』定时更新任务',
+            cron: '*/1 * * * *',
+            fnc: () => this.executeTask(),
+            log: true
+        }
         const currentFileUrl = import.meta.url;
         const currentFilePath = fileURLToPath(currentFileUrl);
         this.proxy = 'https://mirror.ghproxy.com/';  
@@ -168,9 +173,9 @@ export class MiaoPluginMBT extends plugin {
                     }
                 });
             });
-            if (gitPullOutput.includes('Already up to date')) {
+            if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
                 await e.reply("『咕咕牛』已经是最新的啦");
-            } else {
+            }else {
                 const gitLog = await new Promise((resolve, reject) => {
                     exec('git log -n 20 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
                         if (error) {
@@ -481,7 +486,29 @@ export class MiaoPluginMBT extends plugin {
         console.log('『咕咕牛🐂』图库删除成功！');
         return e.reply('『咕咕牛』已离开你的崽崽了,感谢使用，再会！！');
     }
-   
+
+    async executeTask(){
+        logger.info("[『咕咕牛🐂』定时更新任务]：开始执行")
+        const gitPullOutput = await new Promise((resolve, reject) => {
+            exec('git pull', { cwd: this.localPath }, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
+        if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {logger.info("[『咕咕牛🐂』定时更新任务]：暂无更新内容")}
+        this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+        fs.mkdirSync(this.GuPath, { recursive: true });
+        this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png'), this.GuPath);
+        const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
+        const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
+        await fs.promises.copyFile(sourceFile, destFile);
+        this.DeleteBanList();
+        return logger.info("[『咕咕牛🐂』定时更新任务]：执行完毕")
+    }
+
     async RestartGuGuNiuGuNiu(e) {
         try {
             const directoryExists = fs.existsSync(this.localPath);
