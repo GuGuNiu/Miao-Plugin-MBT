@@ -200,7 +200,7 @@ export class MiaoPluginMBT extends plugin {
                 });
                 this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
                 fs.mkdirSync(this.GuPath, { recursive: true });
-                this.CopyFolderRecursive(path.join(this.localPath,'GuGuNiu-Gallery','help.png'), this.GuPath);
+                this.CopyFolderRecursive(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
                 const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js'); 
                 const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
                 await fs.promises.copyFile(sourceFile, destFile);
@@ -503,7 +503,7 @@ export class MiaoPluginMBT extends plugin {
         }else{
                 this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
                 fs.mkdirSync(this.GuPath, { recursive: true });
-                this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png'), this.GuPath);
+                this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery'), this.GuPath);
                 const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
                 const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
                 await fs.promises.copyFile(sourceFile, destFile);
