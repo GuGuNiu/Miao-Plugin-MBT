@@ -92,7 +92,7 @@ export class MiaoPluginMBT extends plugin {
             name: '『咕咕牛🐂』定时更新任务',
             cron: '0 5 */5 * *',
             fnc: () => this.executeTask(),
-            log: true
+            log: false
         }
         const currentFileUrl = import.meta.url;
         const currentFilePath = fileURLToPath(currentFileUrl);
@@ -498,15 +498,19 @@ export class MiaoPluginMBT extends plugin {
                 }
             });
         });
-        if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {logger.info("[『咕咕牛🐂』定时更新任务]：暂无更新内容")}
-        this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
-        fs.mkdirSync(this.GuPath, { recursive: true });
-        this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png'), this.GuPath);
-        const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
-        const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
-        await fs.promises.copyFile(sourceFile, destFile);
-        this.DeleteBanList();
-        return logger.info("[『咕咕牛🐂』定时更新任务]：执行完毕")
+        if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
+            logger.info("[『咕咕牛🐂』定时更新任务]：暂无更新内容")
+        }else{
+                this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                fs.mkdirSync(this.GuPath, { recursive: true });
+                this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png'), this.GuPath);
+                const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
+                const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
+                await fs.promises.copyFile(sourceFile, destFile);
+                this.DeleteBanList();
+                return logger.info("[『咕咕牛🐂』定时更新任务]：执行完毕")
+            }
+        }
     }
 
     async RestartGuGuNiuGuNiu(e) {
