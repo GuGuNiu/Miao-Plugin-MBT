@@ -5,8 +5,11 @@ import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
 
 
-//           『咕咕牛🐂』图库管理器 v2.5
+//           『咕咕牛🐂』图库管理器 v2.6
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
+
+
+
 
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -19,7 +22,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.5',
+            name: '『咕咕牛🐂』图库管理器 v2.6',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 100,
@@ -79,7 +82,7 @@ export class MiaoPluginMBT extends plugin {
                     fnc: 'BanRolelist',
                 },
                 {     
-                    reg: /^#净化咕咕牛$/,
+                    reg: /^#(确认)?净化咕咕牛$/,
                     fnc: 'RemoveBadimages',
                 },
                 {     
@@ -238,7 +241,7 @@ export class MiaoPluginMBT extends plugin {
 
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
-            e.reply(segment.image("https://s2.loli.net/2024/05/30/joFM9Eie3yXBvuI.png"))
+            e.reply(segment.image("https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png"))
             return true;
          }e.reply(segment.image(this.GuPath+'/help.png'))
       }
@@ -298,7 +301,7 @@ export class MiaoPluginMBT extends plugin {
                 if (banList.includes(fileName)) {
                     banList = banList.filter(item => item !== fileName);
                     fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
-                    await e.reply(`${fileName} ✅️已解禁`, true);
+                    await e.reply(`${fileName} ✅️已解禁,需#启用咕咕牛恢复图片`, true);
                     await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
                 } else {
                     await e.reply(`${fileName} ❌️不存在`, true);
@@ -410,29 +413,39 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async RemoveBadimages(e) {
-            await e.reply('正在净化咕咕牛，请稍候...', true);
-            const deleteFilesWithRKeyword = (directory) => {
-                let count = 0;
-                const files = fs.readdirSync(directory);
+        if (e.msg == '#净化咕咕牛') {
 
-                files.forEach(file => {
-                    const filePath = path.join(directory, file);
-                    const stats = fs.statSync(filePath);
+             e.reply("--『咕咕牛』封禁高危面板图--\n无清空功能,请用#ban删花火Gu1\n净化对象：漏点|暗示|泳衣|兔女郎")
+             setTimeout(async () => {
+                    e.reply("输入#确认净化咕咕牛,进行下一步")               
+             }, 3000);
 
-                    if (stats.isDirectory()) {
-                        count += deleteFilesWithRKeyword(filePath); 
-                    } else if (stats.isFile() && file.includes('_R')) {
-                        fs.unlinkSync(filePath);
-                        count++;
-                    }
-                });
-                return count;
-            };
-            let count = deleteFilesWithRKeyword(this.characterPath);
-            await e.reply(`净化完毕，一共扔了 ${count} 张面板图！`);
-            await e.reply(`绿色网络从你做起！`);
+        }else if (e.msg == '#确认净化咕咕牛') {
+            await e.reply("好的,开始净化咕咕牛",true)
+            const banListPath = path.join(this.GuPath, 'banlist.txt');
+            if (!fs.existsSync(banListPath)) {
+                fs.writeFileSync(banListPath, '', 'utf8');
+            }
+            let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+            let count = 0;
+
+            R18_images.forEach(image => {
+                const fileName = `${image}.webp`;
+                if (!banList.includes(fileName)) {
+                    banList.push(fileName);
+                    count ++;
+                }
+            });
+            fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
+            setTimeout(async () => {
+                 await e.reply(`净化完毕，一共扔了 ${count} 张面板图！`);
+                 e.reply(`绿色网络从你做起`);
+             }, 10000);
+             this.DeleteBanList();
+
     }
-    
+    }
+
     async GuGuNiu(e) {
             await e.reply("🐂");
             const stats = await fs.promises.stat(this.localPath);
@@ -785,3 +798,172 @@ export class MiaoPluginMBT extends plugin {
 
       
 }
+
+const R18_images=[
+  "芭芭拉Gu5",
+  "芭芭拉Gu15",
+  "北斗Gu6",
+  "布洛妮娅Gu1",
+  "布洛妮娅Gu5",
+  "迪希雅Gu2",
+  "迪希雅Gu8",
+  "迪希雅Gu9",
+  "珐露珊Gu1",
+  "菲谢尔Gu6",
+  "菲谢尔Gu8",
+  "芙宁娜Gu28",
+  "符玄Gu1",
+  "符玄Gu7",
+  "符玄Gu3",
+  "甘雨Gu1",
+  "甘雨Gu8",
+  "甘雨Gu13",
+  "甘雨Gu22",
+  "甘雨Gu20",
+  "甘雨Gu27",
+  "甘雨Gu28",
+  "杰帕德Gu1",
+  "镜流Gu2",
+  "镜流Gu8",
+  "镜流Gu17",
+  "久岐忍Gu6",
+  "久岐忍Gu10",
+  "卡芙卡Gu2",
+  "卡芙卡Gu11",
+  "卡芙卡Gu12",
+  "卡芙卡Gu17",
+  "卡芙卡Gu19",
+  "卡芙卡Gu22",
+  "卡芙卡Gu21",
+  "坎蒂丝Gu1",
+  "坎蒂丝Gu6",
+  "克洛琳德Gu5",  
+  "刻晴Gu15",
+  "刻晴Gu17",
+  "刻晴Gu19",
+  "刻晴Gu20",
+  "刻晴Gu23",
+  "刻晴Gu24",
+  "刻晴Gu26",
+  "莱依拉Gu7",
+  "雷电将军Gu1",
+  "雷电将军Gu7",
+  "雷电将军Gu14",
+  "雷电将军Gu34",
+  "雷电将军Gu39",
+  "雷电将军Gu45",
+  "丽莎Gu1",
+  "丽莎Gu2",
+  "琳尼特Gu3",
+  "琳尼特Gu5",
+  "琳尼特Gu6",
+  "琳尼特Gu15",
+  "琳尼特Gu9",
+  "琳尼特Gu7",
+  "琳尼特Gu13",
+  "玲可Gu4",
+  "流浪者Gu4",
+  "流浪者Gu8",
+  "流萤Gu8",
+  "流萤Gu20",
+  "流萤Gu22",
+  "流萤Gu24",
+  "流萤Gu27",
+  "流萤Gu28",
+  "流萤Gu30",
+  "莫娜Gu2",
+  "莫娜Gu8",
+  "莫娜Gu9",
+  "莫娜Gu12",
+  "莫娜Gu15",
+  "纳西妲Gu23",
+  "纳西妲Gu33",
+  "娜塔莎Gu2",
+  "娜维娅Gu13",
+  "娜维娅Gu25",
+  "妮露Gu1",
+  "妮露Gu6",
+  "妮露Gu10",
+  "妮露Gu16",
+  "妮露Gu19",
+  "妮露Gu20",
+  "妮露Gu22",
+  "妮露Gu23",
+  "妮露Gu26",
+  "妮露Gu27",
+  "妮露Gu29",
+  "妮露Gu31",
+  "妮露Gu32",
+  "妮露Gu33",
+  "妮露Gu35",
+  "诺艾尔Gu1",
+  "诺艾尔Gu2",
+  "诺艾尔Gu7",
+  "诺艾尔Gu13",
+  "七七Gu9",
+  "琴Gu4",
+  "青雀Gu1",
+  "青雀Gu12",
+  "青雀Gu15",
+  "阮梅Gu12",
+  "阮梅Gu13",
+  "阮梅Gu16",
+  "阮梅Gu17",
+  "珊瑚宫心海Gu5",
+  "珊瑚宫心海Gu12",
+  "珊瑚宫心海Gu34",
+  "珊瑚宫心海Gu36",
+  "珊瑚宫心海Gu37",
+  "珊瑚宫心海Gu40",
+  "申鹤Gu1",
+  "申鹤Gu9",
+  "申鹤Gu10",
+  "申鹤Gu8",
+  "神里绫华Gu13",
+  "神里绫华Gu14",
+  "神里绫华Gu17",
+  "神里绫华Gu21",
+  "神里绫华Gu28",
+  "素裳Gu1",
+  "素裳Gu4",
+  "停云Gu1",
+  "停云Gu5",
+  "托帕Gu2",
+  "托帕Gu4",
+  "托帕Gu5",
+  "托帕Gu15",
+  "温迪Gu11",
+  "五郎Gu6",
+  "夏沃蕾Gu1",
+  "夏沃蕾Gu3",
+  "闲云Gu7",
+  "香菱Gu1",
+  "宵宫Gu4",
+  "宵宫Gu16",
+  "宵宫Gu17",
+  "宵宫Gu20",
+  "星Gu3",
+  "星Gu5",
+  "雪衣Gu2",
+  "夜兰Gu7",
+  "夜兰Gu11",
+  "夜兰Gu12",
+  "夜兰Gu13",
+  "夜兰Gu25",
+  "夜兰Gu26",
+  "夜兰Gu27",
+  "夜兰Gu28",
+  "夜兰Gu29",
+  "荧Gu2",
+  "荧Gu11",
+  "荧Gu7",
+  "荧Gu18",
+  "荧Gu21",
+  "荧Gu20",
+  "荧Gu1",
+  "优菈Gu7",
+  "优菈Gu12",
+  "优菈Gu13",
+  "驭空Gu3",
+  "真理医生Gu4"
+]
