@@ -33,7 +33,7 @@
 ### 功能菜单图:
 <details><summary>展开</summary>
 
-![help.png](https://s2.loli.net/2024/05/30/joFM9Eie3yXBvuI.png)
+![help.png](https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png)
 
 
 </details>
