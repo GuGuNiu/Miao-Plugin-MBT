@@ -25,7 +25,7 @@ export class MiaoPluginMBT extends plugin {
             name: '『咕咕牛🐂』图库管理器 v2.6',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
-            priority: 100,
+            priority: 600,
             rule: [
                 {
                     reg: /^#(代理)?下载咕咕牛$/,
@@ -188,7 +188,7 @@ export class MiaoPluginMBT extends plugin {
                         }
                     });
                 });
-                const forwardMsg = `最近的更新记录：\n${gitLog}`;
+                const forwardMsg = [ `最近的更新记录：\n${gitLog}` ];
                 const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』更新成功');
                 await this.reply(forwardMsgFormatted);
                 await this.DeleteFilesWithGuKeyword();
