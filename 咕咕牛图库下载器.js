@@ -11,6 +11,7 @@ import common from '../../lib/common/common.js';
 
 
 
+
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -818,5 +819,5 @@ const R18_images=[
     "托帕Gu5","托帕Gu15","温迪Gu11","五郎Gu6","夏沃蕾Gu1","夏沃蕾Gu3","闲云Gu7","香菱Gu1","宵宫Gu4","宵宫Gu16",
     "宵宫Gu17","宵宫Gu20","星Gu3","星Gu5","雪衣Gu2","夜兰Gu7","夜兰Gu11","夜兰Gu12","夜兰Gu13","夜兰Gu25","夜兰Gu26",
     "夜兰Gu27","夜兰Gu28","夜兰Gu29","荧Gu2","荧Gu11","荧Gu7","荧Gu18","荧Gu21","荧Gu20","荧Gu1","优菈Gu7",
-    "优菈Gu12","优菈Gu13","驭空Gu3","真理医生Gu4","流萤Gu31","流萤Gu32","流萤Gu34"
+    "优菈Gu12","优菈Gu13","驭空Gu3","真理医生Gu4","流萤Gu31","流萤Gu32","流萤Gu34","停云Gu7"
     ]
