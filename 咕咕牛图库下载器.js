@@ -63,15 +63,11 @@ export class MiaoPluginMBT extends plugin {
                 {
                     reg: /^#检查咕咕牛$/,
                     fnc: 'CheckFolder'
-                },
-                {     
-                    reg: /^#清理咕咕牛缓存$/,
-                    fnc: 'CleanGitPackCache',
-                    permission: "master"
-                },                
+                },           
                 {     
                     reg: /^#查看(.*)$/,
                     fnc: 'FindRoleSplash'
+                    //(?!群)(?!最近)(?!多久)(?!从未)(?!现有)(?!全部)(?!热门)(?!相关)
                 },
                 {     
                     reg: /^#ban(加|删)(.*)$/,
@@ -108,6 +104,7 @@ export class MiaoPluginMBT extends plugin {
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
+        this.ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-zzz/character/');
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
@@ -601,41 +598,12 @@ export class MiaoPluginMBT extends plugin {
             ]);
     }
 
-    async CleanGitPackCache(e) {
-        const gitPackFolderPath = path.join(this.localPath, '.git', 'objects', 'pack');
-        try {
-            const stats = await fs.promises.stat(gitPackFolderPath);
-            if (!stats.isDirectory()) {
-                return e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
-            }
-            const files = await fs.promises.readdir(gitPackFolderPath);
-            let largestFile = '';
-            let largestFileSize = 0;
-            await Promise.all(files.map(async file => {
-                const filePath = path.join(gitPackFolderPath, file);
-                const fileStats = await fs.promises.stat(filePath);
-                if (fileStats.size > largestFileSize) {
-                    largestFileSize = fileStats.size;
-                    largestFile = filePath;
-                }
-            }));
-            if (largestFile) {
-                await fs.promises.unlink(largestFile);
-                console.log(`清理缓存成功：${largestFile}`);
-                return e.reply(`清理缓存成功`);
-            } else {
-                return e.reply('没有找到可以删除的缓存文件！');
-            }
-        } catch (error) {
-            console.error('清理缓存失败:', error);
-            return e.reply('清理缓存失败，请查看控制台日志！');
-        }
-    }
 
     async MihoyoSplashOption(e) {
         if (e.msg == '#启用官方立绘') {
             await this.CopySplashWebp(this.SRaliasPath, this.characterPath);
             await this.CopySplashWebp(this.GSaliasPath, this.characterPath);
+            await this.CopySplashWebp(this.ZZZaliasPath, this.characterPath);
             return e.reply('官方立绘已经启用了',true);
         }else  if (e.msg == '#禁用官方立绘') {
             await this.DeleteGuSplashWebp(this.characterPath);
@@ -778,6 +746,13 @@ export class MiaoPluginMBT extends plugin {
         const aliasJSONGS = aliasGSContent.match(aliasRegexGS)[0];
         aliasGS = eval('(' + aliasJSONGS + ')');
 
+        let aliasZZZ;
+        const aliasZZZFilePath = path.resolve(this.ZZZaliasPath, 'alias.js');
+        const aliasZZZContent = fs.readFileSync(aliasZZZFilePath, 'utf-8');
+        const aliasRegexZZZ = /{[^{}]*}/;
+        const aliasJSONZZZ = aliasZZZContent.match(aliasRegexZZZ)[0];
+        aliasZZZ = eval('(' + aliasJSONZZZ + ')');
+
         let mainNameSR = Object.keys(aliasSR).find(main => {
             const aliases = aliasSR[main].split(',');
             return aliases.includes(roleName);
@@ -788,9 +763,16 @@ export class MiaoPluginMBT extends plugin {
             return aliases.includes(roleName);
         });
 
+        let mainNameZZZ = Object.keys(aliasGS).find(main => {
+            const aliases = aliasZZZ[main].split(',');
+            return aliases.includes(roleName);
+        });
+
         if (mainNameSR) {
             return mainNameSR.trim();
         } else if (mainNameGS) {
+            return mainNameGS.trim();
+        } else if (mainNameZZZ) {
             return mainNameGS.trim();
         }
 
