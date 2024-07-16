@@ -435,11 +435,12 @@ export class MiaoPluginMBT extends plugin {
                 }
             });
             fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
+            this.DeleteBanList();
             setTimeout(async () => {
                  await e.reply(`净化完毕，一共扔了 ${count} 张面板图！`);
                  e.reply(`绿色网络从你做起`);
              }, 10000);
-             this.DeleteBanList();
+          
 
     }
     }
@@ -465,7 +466,6 @@ export class MiaoPluginMBT extends plugin {
     }
     
     async GalleryOption(e){
-        try {
         if (e.msg == '#启用咕咕牛') {
             if (!fs.existsSync(this.localPath)) {
                 await e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
@@ -481,15 +481,6 @@ export class MiaoPluginMBT extends plugin {
                 await e.reply('『咕咕牛🐂』手动禁用中,请稍后.....',true);
                 await this.DeleteFilesWithGuKeyword();
                 await e.reply('『咕咕牛』已离开喵喵');
-        }}catch (error) {
-            console.error('『咕咕牛🐂』操作出现错误:', error);
-            let GalleryOptionforward = []
-                GalleryOptionforward.push(`更新『咕咕牛🐂』时出现错误:\n ${error}`);
-            let GalleryOptionmsg = await common.makeForwardMsg(this.e, GalleryOptionforward, '『咕咕牛🐂』操作日志');
-            await e.reply('『咕咕牛』操作出现错误，请查看日志！');
-            setTimeout(async () => {
-                this.reply(GalleryOptionmsg);
-            }, 2000);
         }
     }
 
@@ -587,7 +578,7 @@ export class MiaoPluginMBT extends plugin {
             const MBTSize = formatBytes(gitSize + totalSize)
             let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}`;
             forward.forEach(item => {
-                message += `${item}\n`;
+                message += [`${item}\n`];
             });
             await Promise.all([
                 e.reply(checkmessage),
