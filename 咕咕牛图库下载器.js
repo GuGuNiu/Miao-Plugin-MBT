@@ -143,6 +143,7 @@ export class MiaoPluginMBT extends plugin {
             const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
             const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js'); 
             await fs.promises.copyFile(sourceFile, destFile);
+            await e.reply(`『咕咕牛』图库默认将每隔15天-30天自动更新`);
         } catch (error) {
             console.error('下载『咕咕牛🐂』时出现错误:', error);
             let DowloadeErrorForward =[]
