@@ -1,3 +1,3 @@
-Px18img-type: 1
-GGOP: 1
-MihoyoOption: 0
+Px18img-type: 1  #R18开关 1是开 0是关
+GGOP: 1          #图库开关
+MihoyoOption: 0  #官方立绘开关
