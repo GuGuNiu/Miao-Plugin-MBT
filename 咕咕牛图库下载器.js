@@ -604,7 +604,7 @@ export class MiaoPluginMBT extends plugin {
             .sort((a, b) => a.localeCompare(b));    
             let totalCharacterCount = characterFolders.length;
             let CheckRoleforward = [];
-            let message = [];
+            let RoleNumMessage = [];
             CheckRoleforward.push("---按A-Z字母排序---")
             let totalPanelImageCount = 0;
             for (const folder of characterFolders) {
