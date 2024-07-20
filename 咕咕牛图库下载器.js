@@ -86,7 +86,7 @@ export class MiaoPluginMBT extends plugin {
                 {     
                     reg: /^#咕咕牛$/,
                     fnc: 'GuGuNiu',
-                },
+                }
             ]
         })
         this.task = {
@@ -109,7 +109,6 @@ export class MiaoPluginMBT extends plugin {
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
-
     async GallaryDownload(e) {
         let downloadUrl;
         if (e.msg == '#下载咕咕牛') {
