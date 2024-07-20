@@ -3,9 +3,10 @@ import path from 'path';
 import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
+import yaml from 'yaml'
 
 
-//           『咕咕牛🐂』图库管理器 v2.6
+//           『咕咕牛🐂』图库管理器 v2.7
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -23,7 +24,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.6',
+            name: '『咕咕牛🐂』图库管理器 v2.7',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 1000,
@@ -200,7 +201,16 @@ export class MiaoPluginMBT extends plugin {
                         }
                     });
                 });
-                this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                const banListPath = path.join(this.GuPath, 'banlist.txt');
+                let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+
+                const galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
+                const galleryConfigContent = fs.readFileSync(galleryConfigPath, 'utf8');
+                const galleryConfig = yaml.parse(galleryConfigContent);
+
+                if (galleryConfig && galleryConfig['GGOP'] === 1) {
+                     this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                }
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
                 const sourceFile = path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png');
@@ -211,26 +221,36 @@ export class MiaoPluginMBT extends plugin {
                 const destJSFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
                 await fs.promises.copyFile(sourceJSFile, destJSFile);
                 
+                if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
+                    R18_images.forEach(image => {
+                        const fileName = `${image}.webp`;
+                        if (!banList.includes(fileName)) {
+                            banList.push(fileName);
+                        }
+                    });
+                    fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
+                }
+
                 this.DeleteBanList()
             }
         } catch (error) {
             console.error('更新『咕咕牛🐂』时出现错误:', error);
-            let forward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];  
+            let updateerrorforward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];  
             if (error.message.includes('code 128')) {
-                forward.push("检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。");
-                forward.push("也可能出现合并失败，可以尝试重置咕咕牛");
+                updateerrorforward.push("检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。");
+                updateerrorforward.push("也可能出现合并失败，可以尝试重置咕咕牛");
             }
             if (error.message.includes('code 1')) {
-                forward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
+                updateerrorforward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
             }
             if (error.message.includes('code 28')) {
-                forward.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输在控制台输入以下命令");
-                forward.push("git config --global http.postBuffer 524288000");
+                updateerrorforward.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输在控制台输入以下命令");
+                updateerrorforward.push("git config --global http.postBuffer 524288000");
             }
             if (error.message.includes('443')) {
-                forward.push("该报错可能是网络问题、被墙或访问被拒绝。");
+                updateerrorforward.push("该报错可能是网络问题、被墙或访问被拒绝。");
             }
-            let updaterrormsg = await common.makeForwardMsg(this.e, forward, '『咕咕牛🐂』更新失败');
+            let updaterrormsg = await common.makeForwardMsg(this.e, updateerrorforward, '『咕咕牛🐂』更新失败');
             await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
             setTimeout(async () => {
                 await this.reply(updaterrormsg);
@@ -313,6 +333,34 @@ export class MiaoPluginMBT extends plugin {
         return true;
     }
     
+    async BanRolelist(e) {
+        const banListPath = path.join(this.GuPath, 'banlist.txt');
+        if (!fs.existsSync(banListPath)) {
+            await e.reply('禁用文件不存在,已重新生成', true);
+            fs.writeFileSync(banListPath, '', 'utf8');
+            return true;
+        }
+        try {
+            const fileContent = fs.readFileSync(banListPath, 'utf8').trim();
+            if (fileContent === '') {
+                await e.reply('你还没有Ban过任何图片', true);
+                return true;
+            }
+            const banList = fileContent.split(';').map(item => item.trim()); 
+            const uniqueBanList = [...new Set(banList)];
+            const totalItems = uniqueBanList.length -1;
+            const formattedBanList = uniqueBanList.map(item => item.replace(/\.webp$/, ''));
+            const BanListforwardMsg = [];
+            BanListforwardMsg.push(`当前已Ban的数量：${totalItems}张\n『#ban删花火Gu1』可以移除封禁\n被净化的面板图无法解禁`);
+            BanListforwardMsg.push(formattedBanList.join('\n')); 
+            const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, '封禁中的图片列表');
+            await e.reply(banListMsg);
+            return true;
+        } catch (error) {
+            await e.reply('读取封禁文件时出现错误，请查看控制台日志', true);
+            return true;
+        }
+    }
 
     async FindRoleSplash(e) {
         if (!fs.existsSync(this.localPath)) {
@@ -381,69 +429,51 @@ export class MiaoPluginMBT extends plugin {
             await e.reply(`发送 ${matchedFolder} 的列表时出现错误,请查看控制台日志`);
         }
     }
-    
-    async BanRolelist(e) {
-        const banListPath = path.join(this.GuPath, 'banlist.txt');
-        if (!fs.existsSync(banListPath)) {
-            await e.reply('禁用文件不存在,已重新生成', true);
-            fs.writeFileSync(banListPath, '', 'utf8');
-            return true;
-        }
-        try {
-            const fileContent = fs.readFileSync(banListPath, 'utf8').trim();
-            if (fileContent === '') {
-                await e.reply('你还没有Ban过任何图片', true);
-                return true;
-            }
-            const banList = fileContent.split(';').map(item => item.trim()); 
-            const uniqueBanList = [...new Set(banList)];
-            const totalItems = uniqueBanList.length -1;
-            const formattedBanList = uniqueBanList.map(item => item.replace(/\.webp$/, ''));
-            const BanListforwardMsg = [];
-            BanListforwardMsg.push(`当前已Ban的有：${totalItems}张\n『#ban删花火Gu1』可以移除封禁`);
-            BanListforwardMsg.push(formattedBanList.join('\n')); 
-            const banListMsg = await common.makeForwardMsg(this.e, BanListforwardMsg, '封禁中的图片列表');
-            await e.reply(banListMsg);
-            return true;
-        } catch (error) {
-            await e.reply('读取封禁文件时出现错误，请查看控制台日志', true);
-            return true;
-        }
-    }
 
     async RemoveBadimages(e) {
+        const galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
+        const galleryConfigContent = fs.readFileSync(galleryConfigPath, 'utf8');
+        const galleryConfig = yaml.parse(galleryConfigContent);
+
         if (e.msg == '#净化咕咕牛') {
 
-             e.reply("--『咕咕牛』封禁高危面板图--\n无清空功能,请用#ban删花火Gu1\n净化对象：漏点|暗示|泳衣|兔女郎")
+             e.reply("『咕咕牛』封禁高危面板图,净化无法解除需要你手动修改配置文件,下次更新依旧会延续净化,十分建议呢用#ban封禁",true)
              setTimeout(async () => {
                     e.reply("输入#确认净化咕咕牛,进行下一步")               
              }, 3000);
 
-        }else if (e.msg == '#确认净化咕咕牛') {
-            await e.reply("好的,开始净化咕咕牛",true)
-            const banListPath = path.join(this.GuPath, 'banlist.txt');
-            if (!fs.existsSync(banListPath)) {
-                fs.writeFileSync(banListPath, '', 'utf8');
-            }
-            let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
-            let count = 0;
+            }else if (e.msg == '#确认净化咕咕牛') {
+                
+                if (galleryConfig && galleryConfig['Px18img-type'] === 1 ) {
 
-            R18_images.forEach(image => {
-                const fileName = `${image}.webp`;
-                if (!banList.includes(fileName)) {
-                    banList.push(fileName);
-                    count ++;
+                await e.reply("好的,开始净化咕咕牛",true)
+                const banListPath = path.join(this.GuPath, 'banlist.txt');
+                if (!fs.existsSync(banListPath)) {
+                    fs.writeFileSync(banListPath, '', 'utf8');
                 }
-            });
-            fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
-            this.DeleteBanList();
-            setTimeout(async () => {
-                 await e.reply(`净化完毕，一共扔了 ${count} 张面板图！`);
-                 e.reply(`绿色网络从你做起`);
-             }, 10000);
-          
+                let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
 
-    }
+                R18_images.forEach(image => {
+                    const fileName = `${image}.webp`;
+                    if (!banList.includes(fileName)) {
+                        banList.push(fileName);
+                    }
+                });
+                fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
+                this.DeleteBanList();
+
+                galleryConfig['Px18img-type'] = 0;
+                const newGalleryConfigContent = yaml.stringify(galleryConfig);
+                fs.writeFileSync(galleryConfigPath, newGalleryConfigContent, 'utf8');
+               
+                setTimeout(async () => {
+                    await e.reply(`净化完毕，绿色网络从你做起！`);
+                  }, 10000);
+                  } else if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
+                await e.reply("你已经净化过了,亲",true);
+            }
+
+        }
     }
 
     async GuGuNiu(e) {
@@ -461,12 +491,15 @@ export class MiaoPluginMBT extends plugin {
                 });
             });
     
-            const forwardMsg = [`最近的更新记录：\n${gitLog}`];
-            const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』日志');
+            const uplogforwardMsg = [`最近的更新记录：\n${gitLog}`];
+            const forwardMsgFormatted = await common.makeForwardMsg(this.e, uplogforwardMsg, '『咕咕牛🐂』日志');
             await e.reply(forwardMsgFormatted);
     }
     
     async GalleryOption(e){
+        const galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
+        const galleryConfigContent = fs.readFileSync(galleryConfigPath, 'utf8');
+        const galleryConfig = yaml.parse(galleryConfigContent);
         if (e.msg == '#启用咕咕牛') {
             if (!fs.existsSync(this.localPath)) {
                 await e.reply('『咕咕牛🐂』尚未下载，请先执行 #下载咕咕牛 进行下载！', true);
@@ -478,10 +511,19 @@ export class MiaoPluginMBT extends plugin {
                 setTimeout(async () => {
                     this.DeleteBanList()
                 }, 2000);
+
+                galleryConfig['GGOP'] = 1;
+                const newGalleryConfigContent = yaml.stringify(galleryConfig);
+                fs.writeFileSync(galleryConfigPath, newGalleryConfigContent, 'utf8');
+
         }else if (e.msg == '#禁用咕咕牛') {
                 await e.reply('『咕咕牛🐂』手动禁用中,请稍后.....',true);
                 await this.DeleteFilesWithGuKeyword();
                 await e.reply('『咕咕牛』已离开喵喵');
+
+                galleryConfig['GGOP'] = 0;
+                const newGalleryConfigContent = yaml.stringify(galleryConfig);
+                fs.writeFileSync(galleryConfigPath, newGalleryConfigContent, 'utf8');
         }
     }
 
@@ -539,9 +581,9 @@ export class MiaoPluginMBT extends plugin {
             return e.reply('『咕咕牛🐂』重置成功！');
         } catch (error) {
             console.error('重置『咕咕牛🐂』时出现错误:', error);
-            let forward = [];
-            forward.push(`重置『咕咕牛🐂』时出现错误:\n ${error.message}`);
-            let restarterror = await common.makeForwardMsg(this.e, forward, '『咕咕牛🐂』重置失败');
+            let rerrforward = [];
+            rerrforward.push(`重置『咕咕牛🐂』时出现错误:\n ${error.message}`);
+            let restarterror = await common.makeForwardMsg(this.e, rerrforward, '『咕咕牛🐂』重置失败');
             this.reply('『咕咕牛🐂』重置失败，请查看控制台日志！');
             setTimeout(async () => {
                 this.reply(restarterror);
@@ -561,16 +603,16 @@ export class MiaoPluginMBT extends plugin {
             .map(dirent => dirent.name)
             .sort((a, b) => a.localeCompare(b));    
             let totalCharacterCount = characterFolders.length;
-            let forward = [];
+            let CheckRoleforward = [];
             let message = [];
-            forward.push("---按A-Z字母排序---")
+            CheckRoleforward.push("---按A-Z字母排序---")
             let totalPanelImageCount = 0;
             for (const folder of characterFolders) {
                 const folderPath = path.resolve(characterFolderPath, folder);
                 const panelImages = fs.readdirSync(folderPath).filter(file => file.endsWith('.webp'));
                 totalPanelImageCount += panelImages.length;
                 const name = `${folder}：${panelImages.length}张`;
-                forward.push(name);
+                CheckRoleforward.push(name);
             }
             const totalSize = await this.getFolderSize(characterFolderPath);
             const formattedTotalSize = formatBytes(totalSize);
@@ -578,13 +620,13 @@ export class MiaoPluginMBT extends plugin {
             const gitAllSize = formatBytes(gitSize);
             const MBTSize = formatBytes(gitSize + totalSize)
             let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}`;
-            forward.forEach(item => {
-                message += [`${item}\n`];
+            CheckRoleforward.forEach(item => {
+                RoleNumMessage += [`${item}\n`];
             });
             await Promise.all([
                 e.reply(checkmessage),
                 (async () => {
-                    const msg = await common.makeForwardMsg(this.e, message, '『咕咕牛🐂』图库数量');
+                    const msg = await common.makeForwardMsg(this.e, RoleNumMessage, '『咕咕牛🐂』图库数量');
                     this.reply(msg);
                 })()
             ]);
@@ -595,7 +637,7 @@ export class MiaoPluginMBT extends plugin {
         if (e.msg == '#启用官方立绘') {
             await this.CopySplashWebp(this.SRaliasPath, this.characterPath);
             await this.CopySplashWebp(this.GSaliasPath, this.characterPath);
-            await this.CopySplashWebp(this.ZZZaliasPath, this.characterPath);
+           // await this.CopySplashWebp(this.ZZZaliasPath, this.characterPath);
             return e.reply('官方立绘已经启用了',true);
         }else  if (e.msg == '#禁用官方立绘') {
             await this.DeleteGuSplashWebp(this.characterPath);
@@ -619,7 +661,7 @@ export class MiaoPluginMBT extends plugin {
                         const fileName = path.basename(filePath);
                         if (filesToDelete.includes(fileName)) {
                             await fs.promises.unlink(filePath);
-                            console.log(`${fileName} 已删除`);
+                           // console.log(`${fileName} 已删除`);
                         }
                     }
                 }
@@ -738,12 +780,12 @@ export class MiaoPluginMBT extends plugin {
         const aliasJSONGS = aliasGSContent.match(aliasRegexGS)[0];
         aliasGS = eval('(' + aliasJSONGS + ')');
 
-        let aliasZZZ;
-        const aliasZZZFilePath = path.resolve(this.ZZZaliasPath, 'alias.js');
-        const aliasZZZContent = fs.readFileSync(aliasZZZFilePath, 'utf-8');
-        const aliasRegexZZZ = /{[^{}]*}/;
-        const aliasJSONZZZ = aliasZZZContent.match(aliasRegexZZZ)[0];
-        aliasZZZ = eval('(' + aliasJSONZZZ + ')');
+        // let aliasZZZ;
+        // const aliasZZZFilePath = path.resolve(this.ZZZaliasPath, 'alias.js');
+        // const aliasZZZContent = fs.readFileSync(aliasZZZFilePath, 'utf-8');
+        // const aliasRegexZZZ = /{[^{}]*}/;
+        // const aliasJSONZZZ = aliasZZZContent.match(aliasRegexZZZ)[0];
+        // aliasZZZ = eval('(' + aliasJSONZZZ + ')');
 
         let mainNameSR = Object.keys(aliasSR).find(main => {
             const aliases = aliasSR[main].split(',');
@@ -755,18 +797,19 @@ export class MiaoPluginMBT extends plugin {
             return aliases.includes(roleName);
         });
 
-        let mainNameZZZ = Object.keys(aliasGS).find(main => {
-            const aliases = aliasZZZ[main].split(',');
-            return aliases.includes(roleName);
-        });
+        // let mainNameZZZ = Object.keys(aliasZZZ).find(main => {
+        //     const aliases = aliasZZZ[main].split(',');
+        //     return aliases.includes(roleName);
+        // });
 
         if (mainNameSR) {
             return mainNameSR.trim();
         } else if (mainNameGS) {
             return mainNameGS.trim();
-        } else if (mainNameZZZ) {
-            return mainNameGS.trim();
-        }
+        } 
+        // else if (mainNameZZZ) {
+        //     return mainNameZZZ.trim();
+        // }
 
         return roleName;
     }
