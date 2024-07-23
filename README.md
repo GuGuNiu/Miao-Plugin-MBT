@@ -21,8 +21,7 @@
 截止6月22号当前存图：1500张，占用：820MB
 ## 快速安装
 
- #### 在Yunzai根目录运行以下任意一条可执行的命令,使用 #咕咕牛帮助 呼叫出菜单
-
+ #### 在Yunzai根目录运行以下命令,使用 #咕咕牛帮助 呼叫出菜单,使用Js即可无需手动更新,每15天-30天会自动更新整个图库
 
 1、Github源：
 
@@ -33,6 +32,8 @@
 3、jsdelivr源:
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js"
+
+
 
 ### 功能菜单图:
 <details><summary>展开</summary>
