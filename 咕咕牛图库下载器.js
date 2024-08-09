@@ -177,6 +177,16 @@ export class MiaoPluginMBT extends plugin {
             });
             if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
                 await e.reply("『咕咕牛』已经是最新的啦");
+                const gitLog = await new Promise((resolve, reject) => {
+                    exec('git log -n 1 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(stdout);
+                        }
+                    });
+                });
+                await e.reply(`最近一次更新：${gitLog}`);
             }else {
                 const gitLog = await new Promise((resolve, reject) => {
                     exec('git log -n 20 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
