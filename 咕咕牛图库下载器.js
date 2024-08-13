@@ -324,13 +324,17 @@ export class MiaoPluginMBT extends plugin {
     
             let inputRoleName = match[1].trim();
             let roleName = inputRoleName.replace(/Gu\d+$/, '').trim();
-    
             let mainName = this.getMainRoleName(roleName);
     
             if (mainName) {
                 mainName = `${mainName}${inputRoleName.match(/Gu\d+$/)[0]}`;
                 const fileName = `${mainName}.webp`;
                 let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+
+                if (R18_images.includes(inputRoleName)) {
+                    await e.reply(`${inputRoleName} ❌️已拒绝删除`, true);
+                    return true;
+                }
     
                 if (banList.includes(fileName)) {
                     banList = banList.filter(item => item !== fileName);
