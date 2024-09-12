@@ -109,7 +109,7 @@ export class MiaoPluginMBT extends plugin {
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
-        this.ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-zzz/character/');
+        this.bietiaop_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
@@ -810,6 +810,11 @@ export class MiaoPluginMBT extends plugin {
         const aliasJSONGS = aliasGSContent.match(aliasRegexGS)[0];
         aliasGS = eval('(' + aliasJSONGS + ')');
 
+        let aliasZZZ;
+        const ZZZFilePath = path.resolve(this.bietiaop_ZZZaliasPath, 'alias.yaml'); 
+        const ZZZContent = fs.readFileSync(ZZZFilePath, 'utf-8');
+        ZZZ = yaml.parse(ZZZContent);
+
         let mainNameSR = Object.keys(aliasSR).find(main => {
             const aliases = aliasSR[main].split(',');
             return aliases.includes(roleName);
@@ -820,10 +825,17 @@ export class MiaoPluginMBT extends plugin {
             return aliases.includes(roleName);
         });
 
+        let BTP_mainNameZZZ = Object.keys(aliasZZZ).find(main => {
+            const aliases = aliasZZZ[main];
+            return aliases.includes(roleName); 
+        });
+
         if (mainNameSR) {
             return mainNameSR.trim();
         } else if (mainNameGS) {
             return mainNameGS.trim();
+        } else if (BTP_mainNameZZZ) {
+            return BTP_mainNameZZZ.trim();
         } 
         return roleName;
     }
