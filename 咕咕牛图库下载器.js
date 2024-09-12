@@ -439,11 +439,11 @@ export class MiaoPluginMBT extends plugin {
             const isR18Image = R18_images.includes(fileName.replace('.webp', ''));
  
             if (isBanned && isR18Image) {
-                fileName = `${fileName.replace('.webp', '')}.webp ❌封禁🟢净化`;
+                fileName = `${fileName.replace('.webp', '')} ❌封禁🟢净化`;
             } else if (isBanned) {
-                fileName = `${fileName.replace('.webp', '')}.webp ❌封禁`;
+                fileName = `${fileName.replace('.webp', '')} ❌封禁`;
             } else {
-                fileName = `${fileName.replace('.webp', '')}.webp`; 
+                fileName = `${fileName.replace('.webp', '')}`; 
             }
 
             RoleWebpPhotoList.push([`${i + 1}、${fileName}`, segment.image(`file://${filePath}`)]);
