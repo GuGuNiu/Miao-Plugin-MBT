@@ -103,13 +103,19 @@ export class MiaoPluginMBT extends plugin {
         const currentFilePath = fileURLToPath(currentFileUrl);
         this.proxy = 'https://mirror.ghproxy.com/';  
         this.repositoryUrl = 'https://github.com/GuGuNiu/Miao-Plugin-MBT/';
+
         this.localPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/');
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
+
         this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
+
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
+
+        this.ZZZ_Plugin = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/');
         this.bietiaop_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');
+        
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
