@@ -612,12 +612,12 @@ export class MiaoPluginMBT extends plugin {
         }
     
 
-    async RestartGuGuNiuGuNiu(e) {
-        try {
+    async RestartGuGuNiu(e) {
+        try { 
             if (!fs.existsSync(this.localPath)) {
                 await e.reply('『咕咕牛🐂』未下载！', true);
-                return;
-             }
+                return true;
+            }
             await fs.promises.rm(this.localPath, { recursive: true });
             console.log('『咕咕牛🐂』重置成功！');
             return e.reply('『咕咕牛🐂』重置成功！');
