@@ -105,12 +105,12 @@ export class MiaoPluginMBT extends plugin {
 
         this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
-        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/');
-        this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/');
+        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); /////////
+        this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); /////////
 
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
-        this.bietiaop_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');
+        this.ZZZ_Plugin_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');  /////////
 
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
@@ -139,7 +139,7 @@ export class MiaoPluginMBT extends plugin {
                 });
             });
             await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
-            await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+            await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath); 
             await e.reply(`『咕咕牛』下载完成，载入喵喵中..`);
             fs.mkdirSync(this.GuPath, { recursive: true });
             this.CopyFolderRecursive(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
@@ -347,7 +347,7 @@ export class MiaoPluginMBT extends plugin {
                 if (banList.includes(fileName)) {
                     banList = banList.filter(item => item !== fileName);
                     fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
-                    await e.reply(`${fileName} ✅️已解禁,需#启用咕咕牛恢复图片`, true);
+                    await e.reply(`${fileName} ✅️已解禁`, true);
                     await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
                     await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 } else {
@@ -397,29 +397,29 @@ export class MiaoPluginMBT extends plugin {
             await e.reply('『咕咕牛🐂』未下载！', true);
             return true;
         }
-
+    
         const match = e.msg.match(/^#查看(.+)$/);
         if (!match) {
             await e.reply('请输入正确的命令格式\n例如：#查看花火', true);
             return true;
         }
-
+    
         let roleName = match[1].trim();
         roleName = this.getMainRoleName(roleName);
-
+    
         const foldersONE = fs.readdirSync(this.copylocalPath);
         const foldersTWO = fs.readdirSync(this.ZZZ_Plugin_copylocalPath);
         const allFolders = [
             ...foldersONE.map(folder => path.join(this.copylocalPath, folder)), 
             ...foldersTWO.map(folder => path.join(this.ZZZ_Plugin_copylocalPath, folder))
         ];
-
+    
         const matchedFolder = allFolders.find(folder => path.basename(folder).includes(roleName));
         if (!matchedFolder) {
             await e.reply(`未找到角色『${roleName}』`);
             return true;
-        }
-        
+        } 
+    
         const files = fs.readdirSync(matchedFolder)
         .filter(file => /\.webp$/.test(file))
         .sort((a, b) => {
@@ -427,26 +427,26 @@ export class MiaoPluginMBT extends plugin {
             const numB = parseInt(b.match(/\d+/)[0]);
             return numA - numB;
         });
-
+    
         if (files.length === 0) {
-            await e.reply(`『${matchedFolder}』文件夹下没有图片文件`, true);
+            await e.reply(`『${path.basename(matchedFolder)}』文件夹下没有图片`, true);
             return true;
         }
-
-        let checkrolename = `当前查看『${matchedFolder}』，有${files.length}张`;
+    
+        let checkrolename = `当前查看『${path.basename(matchedFolder)}』，有${files.length}张`;
         let RoleWebpPhotoList = [];
-        RoleWebpPhotoList.push([`当前查看『${matchedFolder}』，有${files.length}张`]);
-
+        RoleWebpPhotoList.push([`当前查看『${path.basename(matchedFolder)}』，有${files.length}张`]);
+    
         const banListPath = path.join(this.GuPath, 'banlist.txt');
         const banListContent = fs.readFileSync(banListPath, 'utf-8');
         const filesToBan = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
-
+    
         for (let i = 0; i < files.length; i++) {
             let fileName = files[i];
             const filePath = path.join(matchedFolder, fileName);
             const isBanned = filesToBan.includes(fileName);
             const isR18Image = R18_images.includes(fileName.replace('.webp', ''));
-    
+        
             if (isBanned && isR18Image) {
                 fileName = `${fileName.replace('.webp', '')} ❌封禁🟢净化`;
             } else if (isBanned) {
@@ -454,10 +454,10 @@ export class MiaoPluginMBT extends plugin {
             } else {
                 fileName = `${fileName.replace('.webp', '')}`; 
             }
-
+    
             RoleWebpPhotoList.push([`${i + 1}、${fileName}`, segment.image(`file://${filePath}`)]);
         }
-
+    
         try {
             let RoleFindsuccessmsg = await common.makeForwardMsg(this.e, RoleWebpPhotoList, checkrolename);
             await e.reply(RoleFindsuccessmsg);
@@ -466,9 +466,10 @@ export class MiaoPluginMBT extends plugin {
             }
         } catch (err) {
             console.error(err);
-            await e.reply(`发送 ${matchedFolder} 的列表时出现错误,请查看控制台日志`);
+            await e.reply(`发送 ${path.basename(matchedFolder)} 的列表时出现错误,请查看控制台日志`);
         }
     }
+    
 
     async RemoveBadimages(e) {
         const galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
@@ -613,11 +614,10 @@ export class MiaoPluginMBT extends plugin {
 
     async RestartGuGuNiuGuNiu(e) {
         try {
-            const directoryExists = fs.existsSync(this.localPath);
-            if (!directoryExists) {
-                 await e.reply('『咕咕牛🐂』未下载！', true);
+            if (!fs.existsSync(this.localPath)) {
+                await e.reply('『咕咕牛🐂』未下载！', true);
                 return;
-            }
+             }
             await fs.promises.rm(this.localPath, { recursive: true });
             console.log('『咕咕牛🐂』重置成功！');
             return e.reply('『咕咕牛🐂』重置成功！');
@@ -634,46 +634,68 @@ export class MiaoPluginMBT extends plugin {
     }    
 
     async CheckFolder(e) {
-            const gitPath = this.GitPath
-            const characterFolderPath = path.resolve(this.localPath, 'normal-character');
-            if (!fs.existsSync(characterFolderPath)) {
-                await e.reply('『咕咕牛🐂』未下载！', true);
-                return;
+        const gitPath = this.GitPath;
+        const characterFolderPaths = [
+            'normal-character',
+            'zzz-character'
+        ].map(folder => path.join(this.localPath, folder));
+    
+        if (!fs.existsSync(this.localPath)) {
+            await e.reply('『咕咕牛🐂』未下载！', true);
+            return true;
+        }
+    
+        let characterFolders = [];
+    
+        for (const folderPath of characterFolderPaths) {
+            if (fs.existsSync(folderPath)) {
+                const folders = fs.readdirSync(folderPath, { withFileTypes: true })
+                    .filter(dirent => dirent.isDirectory())
+                    .map(dirent => path.join(folderPath, dirent.name));
+                characterFolders = characterFolders.concat(folders);
             }
-            const characterFolders = fs.readdirSync(characterFolderPath, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name)
-            .sort((a, b) => a.localeCompare(b));    
-            let totalCharacterCount = characterFolders.length;
-            let CheckRoleforward = [];
-            let RoleNumMessage = [];
-            CheckRoleforward.push("---按A-Z字母排序---")
-            let totalPanelImageCount = 0;
-            for (const folder of characterFolders) {
-                const folderPath = path.resolve(characterFolderPath, folder);
+        }
+    
+        characterFolders = characterFolders.sort((a, b) => a.localeCompare(b));
+        let totalCharacterCount = characterFolders.length;
+        let CheckRoleforward = [];
+        let RoleNumMessage = [];
+        CheckRoleforward.push("---按A-Z字母排序---");
+        let totalPanelImageCount = 0;
+    
+        for (const folderPath of characterFolders) {
+            if (fs.existsSync(folderPath)) {
+                const folder = path.basename(folderPath);
                 const panelImages = fs.readdirSync(folderPath).filter(file => file.endsWith('.webp'));
                 totalPanelImageCount += panelImages.length;
                 const name = `${folder}：${panelImages.length}张`;
                 CheckRoleforward.push(name);
             }
-            const totalSize = await this.getFolderSize(characterFolderPath);
-            const formattedTotalSize = formatBytes(totalSize);
-            const gitSize = await this.getFolderSize(gitPath);
-            const gitAllSize = formatBytes(gitSize);
-            const MBTSize = formatBytes(gitSize + totalSize)
-            let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}`;
-            CheckRoleforward.forEach(item => {
-                RoleNumMessage += [`${item}\n`];
-            });
-            await Promise.all([
-                e.reply(checkmessage),
-                (async () => {
-                    const msg = await common.makeForwardMsg(this.e, RoleNumMessage, '『咕咕牛🐂』图库数量');
-                    this.reply(msg);
-                })()
-            ]);
+        }
+    
+        let totalSize = 0;
+        for (const folderPath of characterFolderPaths) {
+            totalSize += await this.getFolderSize(folderPath);
+        }
+    
+        const formattedTotalSize = formatBytes(totalSize);
+        const gitSize = await this.getFolderSize(gitPath);
+        const gitAllSize = formatBytes(gitSize);
+        const MBTSize = formatBytes(gitSize + totalSize);
+        let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}`;
+        RoleNumMessage = CheckRoleforward.join('\n');
+    
+        await Promise.all([
+            e.reply(checkmessage),
+            (async () => {
+                const msg = await common.makeForwardMsg(this.e, RoleNumMessage, '『咕咕牛🐂』图库数量');
+                await e.reply(msg);
+            })()
+        ]);
     }
-
+    
+    
+    
 
     async MihoyoSplashOption(e) {
         if (e.msg == '#启用官方立绘') {
@@ -688,9 +710,11 @@ export class MiaoPluginMBT extends plugin {
 
     async DeleteBanList() {
         const banListPath = path.join(this.GuPath, 'banlist.txt');
+    
         try {
             const banListContent = await fs.promises.readFile(banListPath, 'utf8');
             const filesToDelete = banListContent.split(';').map(item => item.trim()).filter(item => item !== '');
+    
             const deleteFilesRecursively = async (directory) => {
                 const files = await fs.promises.readdir(directory);
                 for (const file of files) {
@@ -702,43 +726,47 @@ export class MiaoPluginMBT extends plugin {
                         const fileName = path.basename(filePath);
                         if (filesToDelete.includes(fileName)) {
                             await fs.promises.unlink(filePath);
-                          //------刷屏点----/ console.log(`${fileName} 已删除`);
+                     //------刷屏点----/ console.log(`${fileName} 已删除`);
                         }
                     }
                 }
-            };
+            }
             await deleteFilesRecursively(this.characterPath);
+            await deleteFilesRecursively(this.ZZZ_Plugin_characterPath);
+
             console.log('『咕咕牛🐂』封禁列表中的文件已删除');
         } catch (error) {
             console.error('删除文件时出现错误:', error);
         }
     }
-
     async DeleteFilesWithGuKeyword() {
-        const normalCharacterPath = this.characterPath;
-        try {
-            const folders = await fs.promises.readdir(normalCharacterPath);
-            await Promise.all(folders.map(async (folder) => {
-                const folderPath = path.join(normalCharacterPath, folder);
-                const stats = await fs.promises.lstat(folderPath);
-                if (stats.isDirectory()) {
-                    const files = await fs.promises.readdir(folderPath);
-                    const deletePromises = files.map(async (file) => {
-                        const filePath = path.join(folderPath, file);
-                        const fileStats = await fs.promises.lstat(filePath);
-                        if (fileStats.isFile() && file.includes('Gu') && !file.endsWith('.db')) {
-                            await fs.promises.unlink(filePath);
-                           //------刷屏点----/console.log(`已删除文件: ${filePath}`);
-                        }
-                    });
-                    await Promise.all(deletePromises);
-                }
-            }));
-            console.log('『咕咕牛🐂』图库删除成功');
-        } catch (err) {
-            console.error('『咕咕牛🐂』图库删除失败:', err);
+        const ToCheck = [this.characterPath, this.ZZZ_Plugin_characterPath];
+        for (const normalCharacterPath of ToCheck) {
+            try {
+                const folders = await fs.promises.readdir(normalCharacterPath);
+                await Promise.all(folders.map(async (folder) => {
+                    const folderPath = path.join(normalCharacterPath, folder);
+                    const stats = await fs.promises.lstat(folderPath);
+                    if (stats.isDirectory()) {
+                        const files = await fs.promises.readdir(folderPath);
+    
+                        const deletePromises = files.map(async (file) => {
+                            const filePath = path.join(folderPath, file);
+                            const fileStats = await fs.promises.lstat(filePath);
+                            if (fileStats.isFile() && file.includes('Gu') && !file.endsWith('.db')) {
+                                await fs.promises.unlink(filePath);
+                            }
+                        });
+                        await Promise.all(deletePromises);
+                    }
+                }));
+                console.log('『咕咕牛🐂』图库删除成功');
+            } catch (err) {
+                console.error('『咕咕牛🐂』图库删除失败:', err);
+            }
         }
     }
+    
     
     async CopySplashWebp(sourceDir, targetDir) {
         const folders = await fs.promises.readdir(sourceDir, { withFileTypes: true });
@@ -822,7 +850,7 @@ export class MiaoPluginMBT extends plugin {
         aliasGS = eval('(' + aliasJSONGS + ')');
 
         let aliasZZZ;
-        const ZZZFilePath = path.resolve(this.bietiaop_ZZZaliasPath, 'alias.yaml'); 
+        const ZZZFilePath = path.resolve(this.ZZZ_Plugin_ZZZaliasPath, 'alias.yaml'); 
         const ZZZContent = fs.readFileSync(ZZZFilePath, 'utf-8');
         aliasZZZ = yaml.parse(ZZZContent);
 
