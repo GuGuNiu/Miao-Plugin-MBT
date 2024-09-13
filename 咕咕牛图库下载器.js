@@ -6,11 +6,8 @@ import common from '../../lib/common/common.js';
 import yaml from 'yaml'
 
 
-//           『咕咕牛🐂』图库管理器 v2.7
+//        『咕咕牛🐂』图库管理器 v2.8
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
-
-
-
 
 
 function formatBytes(bytes) {
@@ -24,7 +21,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.7',
+            name: '『咕咕牛🐂』图库管理器 v2.8',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 1000,
@@ -68,7 +65,6 @@ export class MiaoPluginMBT extends plugin {
                 {     
                     reg: /^#查看(.*)$/,
                     fnc: 'FindRoleSplash'
-                    //(?!群)(?!最近)(?!多久)(?!从未)(?!现有)(?!全部)(?!热门)(?!相关)
                 },
                 {     
                     reg: /^#ban(加|删)(.*)$/,
@@ -109,13 +105,13 @@ export class MiaoPluginMBT extends plugin {
 
         this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
+        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/');
+        this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/');
 
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
-
-        this.ZZZ_Plugin = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/');
         this.bietiaop_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');
-        
+
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
@@ -142,7 +138,8 @@ export class MiaoPluginMBT extends plugin {
                     }
                 });
             });
-            this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+            await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+            await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
             await e.reply(`『咕咕牛』下载完成，载入喵喵中..`);
             fs.mkdirSync(this.GuPath, { recursive: true });
             this.CopyFolderRecursive(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
@@ -235,7 +232,8 @@ export class MiaoPluginMBT extends plugin {
                 const galleryConfig = yaml.parse(galleryConfigContent);
 
                 if (galleryConfig && galleryConfig['GGOP'] === 1) {
-                     this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 }
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
@@ -351,6 +349,7 @@ export class MiaoPluginMBT extends plugin {
                     fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
                     await e.reply(`${fileName} ✅️已解禁,需#启用咕咕牛恢复图片`, true);
                     await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 } else {
                     await e.reply(`${fileName} ❌️不存在`, true);
                 }
@@ -408,22 +407,26 @@ export class MiaoPluginMBT extends plugin {
         let roleName = match[1].trim();
         roleName = this.getMainRoleName(roleName);
 
-        let roleFolderPath;
-        const folders = fs.readdirSync(this.copylocalPath);
-        const matchedFolder = folders.find(folder => folder.includes(roleName));
+        const foldersONE = fs.readdirSync(this.copylocalPath);
+        const foldersTWO = fs.readdirSync(this.ZZZ_Plugin_copylocalPath);
+        const allFolders = [
+            ...foldersONE.map(folder => path.join(this.copylocalPath, folder)), 
+            ...foldersTWO.map(folder => path.join(this.ZZZ_Plugin_copylocalPath, folder))
+        ];
+
+        const matchedFolder = allFolders.find(folder => path.basename(folder).includes(roleName));
         if (!matchedFolder) {
             await e.reply(`未找到角色『${roleName}』`);
             return true;
         }
-
-        roleFolderPath = path.join(this.copylocalPath, matchedFolder);
-        const files = fs.readdirSync(roleFolderPath)
-            .filter(file => /\.webp$/.test(file))
-            .sort((a, b) => {
-                const numA = parseInt(a.match(/\d+/)[0]);
-                const numB = parseInt(b.match(/\d+/)[0]);
-                return numA - numB;
-            });
+        
+        const files = fs.readdirSync(matchedFolder)
+        .filter(file => /\.webp$/.test(file))
+        .sort((a, b) => {
+            const numA = parseInt(a.match(/\d+/)[0]);
+            const numB = parseInt(b.match(/\d+/)[0]);
+            return numA - numB;
+        });
 
         if (files.length === 0) {
             await e.reply(`『${matchedFolder}』文件夹下没有图片文件`, true);
@@ -440,10 +443,10 @@ export class MiaoPluginMBT extends plugin {
 
         for (let i = 0; i < files.length; i++) {
             let fileName = files[i];
-            const filePath = path.join(roleFolderPath, fileName);
+            const filePath = path.join(matchedFolder, fileName);
             const isBanned = filesToBan.includes(fileName);
             const isR18Image = R18_images.includes(fileName.replace('.webp', ''));
- 
+    
             if (isBanned && isR18Image) {
                 fileName = `${fileName.replace('.webp', '')} ❌封禁🟢净化`;
             } else if (isBanned) {
@@ -544,6 +547,7 @@ export class MiaoPluginMBT extends plugin {
              }
                 await e.reply('『咕咕牛🐂』启用中,请稍后...',true);
                 await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 await e.reply('『咕咕牛』重新进入喵喵里面！');
                 setTimeout(async () => {
                     this.DeleteBanList()
@@ -589,7 +593,8 @@ export class MiaoPluginMBT extends plugin {
         if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
             logger.info("[『咕咕牛🐂』定时更新任务]：暂无更新内容")
         }else{
-                this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
                 const sourceFile = path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png');
@@ -819,7 +824,7 @@ export class MiaoPluginMBT extends plugin {
         let aliasZZZ;
         const ZZZFilePath = path.resolve(this.bietiaop_ZZZaliasPath, 'alias.yaml'); 
         const ZZZContent = fs.readFileSync(ZZZFilePath, 'utf-8');
-        ZZZ = yaml.parse(ZZZContent);
+        aliasZZZ = yaml.parse(ZZZContent);
 
         let mainNameSR = Object.keys(aliasSR).find(main => {
             const aliases = aliasSR[main].split(',');
@@ -859,14 +864,12 @@ const R18_images=[
 "刻晴Gu5","刻晴Gu15","刻晴Gu17","刻晴Gu19","刻晴Gu18","刻晴Gu20","刻晴Gu24","刻晴Gu26","雷电将军Gu1","雷电将军Gu11","雷电将军Gu14",
 "雷电将军Gu33","雷电将军Gu34","雷电将军Gu39","雷电将军Gu45","丽莎Gu1","丽莎Gu2","琳尼特Gu3","琳尼特Gu5","琳尼特Gu6","琳尼特Gu7",
 "琳尼特Gu13","琳尼特Gu16","莫娜Gu2","莫娜Gu12","莫娜Gu9","纳西妲Gu23","纳西妲Gu33","娜维娅Gu13","妮露Gu1","妮露Gu4","妮露Gu5",
-"妮露Gu6","妮露Gu16","妮露Gu19","妮露Gu20","妮露Gu22","妮露Gu23","妮露Gu27","妮露Gu28","妮露Gu29","妮露Gu10","妮露Gu31","妮露Gu32","妮露Gu33",
+"妮露Gu6","妮露Gu16","妮露Gu19","妮露Gu20","妮露Gu22","妮露Gu23","妮露Gu27","妮露Gu28","妮露Gu29","妮露Gu10","妮露Gu31","妮露Gu32",
 "妮露Gu35","诺艾尔Gu1","诺艾尔Gu12","诺艾尔Gu13","琴Gu4","珊瑚宫心海Gu12","珊瑚宫心海Gu34","珊瑚宫心海Gu36","珊瑚宫心海Gu40",
 "申鹤Gu1","申鹤Gu3","申鹤Gu4","申鹤Gu8","申鹤Gu9","申鹤Gu10","神里绫华Gu14","神里绫华Gu23","神里绫华Gu17","五郎Gu6",
 "希格雯Gu13","希格雯Gu10","夏沃蕾Gu1","夏沃蕾Gu3","闲云Gu7","香菱Gu1","夜兰Gu7","夜兰Gu11","夜兰Gu13","夜兰Gu25","夜兰Gu26",
 "夜兰Gu27","夜兰Gu28","夜兰Gu29","夜兰Gu12","荧Gu1","荧Gu2","荧Gu7","荧Gu11","荧Gu18","荧Gu20","荧Gu21","荧Gu14","优菈Gu7",
-"优菈Gu12","优菈Gu13",
-
-
+"优菈Gu12","优菈Gu13","妮露Gu33",
 //-------------------SR-------------------//
 "布洛妮娅Gu1","布洛妮娅Gu5","丹恒Gu2","符玄Gu1","黑天鹅Gu1","花火Gu1","花火Gu8","花火Gu21","花火Gu28","花火Gu29","花火Gu35",
 "花火Gu48","花火Gu49","黄泉Gu2","藿藿Gu8","镜流Gu2","镜流Gu12","镜流Gu8","卡芙卡Gu2","卡芙卡Gu8","克拉拉Gu4","流萤Gu20","流萤Gu22",
@@ -874,6 +877,7 @@ const R18_images=[
 "阮梅Gu17","三月七Gu11","三月七Gu9","素裳Gu1","素裳Gu5","停云Gu5","托帕Gu2","托帕Gu4","托帕Gu5","托帕Gu7","托帕Gu14","托帕Gu15",
 "星Gu10","星Gu3","星Gu5","雪衣Gu2","驭空Gu3",
 
+//-------------------ZZZ-------------------//
 
 //-------------------娘化-------------------//
 "杰帕德Gu1","流浪者Gu4","魈Gu12","真理医生Gu4"
