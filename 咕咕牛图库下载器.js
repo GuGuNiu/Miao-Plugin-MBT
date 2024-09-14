@@ -177,7 +177,7 @@ export class MiaoPluginMBT extends plugin {
         try {
             if (!fs.existsSync(this.localPath)) {
                  await e.reply('『咕咕牛🐂』未下载！', true);
-                return;
+                return true;
             }
             await e.reply('『咕咕牛🐂』开始更新了', true);
             const gitPullOutput = await new Promise((resolve, reject) => {
