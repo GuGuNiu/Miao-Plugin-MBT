@@ -1,8 +1,7 @@
 ![界面.png](https://s2.loli.net/2024/03/09/ZGNrwVyPDbOx9Bf.png)
 
 
-# 已跑路，仓库以后不会更新了
-![跑路.jpeg](https://q3.itc.cn/q_70/images03/20240227/5c9e5bc86f60488a8ed810e8f172c95f.jpeg)
+
 
 ## 限制级说明 🚨
   图库仅限制在R17+级别的图片，小部分图可能含有明显的『<ins>性暗示</ins>』
@@ -61,4 +60,11 @@ ZZZ-Plugin ：https://github.com/ZZZure/ZZZ-Plugin/
   
 </div>
 
+
+<details><summary>.</summary>
+  
+# 已跑路，仓库以后不会更新了
+![跑路.jpeg](https://q3.itc.cn/q_70/images03/20240227/5c9e5bc86f60488a8ed810e8f172c95f.jpeg)
+  
+</details>
 
