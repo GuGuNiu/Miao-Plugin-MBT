@@ -86,6 +86,10 @@ export class MiaoPluginMBT extends plugin {
                 {     
                     reg: /^#清理咕咕牛缓存$/,
                     fnc: 'CC',
+                },
+                {     
+                    reg: /^#清空咕咕牛封禁$/,
+                    fnc: 'GOODBYEGUGUNIU',
                 }
             ]
         })
@@ -99,19 +103,15 @@ export class MiaoPluginMBT extends plugin {
         const currentFilePath = fileURLToPath(currentFileUrl);
         this.proxy = 'https://mirror.ghproxy.com/';  
         this.repositoryUrl = 'https://github.com/GuGuNiu/Miao-Plugin-MBT/';
-
         this.localPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/');
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
-
         this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
-        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); /////////
-        this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); /////////
-
+        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); 
+        this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); 
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
-        this.ZZZ_Plugin_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');  /////////
-
+        this.ZZZ_Plugin_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');  
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
@@ -316,7 +316,7 @@ export class MiaoPluginMBT extends plugin {
                     banList.push(fileName); 
                     fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8'); 
                     await e.reply(`${fileName} 🚫已封禁`, true);
-                    this.DeleteBanList();
+                    this.DeleteBanList();   
                 } else {
                     await e.reply(`${fileName} ❌️已存在`, true);
                 }
@@ -348,6 +348,7 @@ export class MiaoPluginMBT extends plugin {
                     banList = banList.filter(item => item !== fileName);
                     fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
                     await e.reply(`${fileName} ✅️已解禁`, true);
+                    await e.reply("批量解除封禁可输入#清空咕咕牛封禁,仅重置封禁文件不影响净化模式")
                     await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
                     await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 } else {
@@ -611,6 +612,18 @@ export class MiaoPluginMBT extends plugin {
             }
         }
     
+    async GOODBYEGUGUNIU(e){
+        const banListPath = path.join(this.GuPath, 'banlist.txt');
+        if (!fs.existsSync(banListPath)) {
+            fs.writeFileSync(banListPath, '', 'utf8');
+            e.reply("牛的封禁列表文件不存在，已重新创建",true)
+        }else {
+            fs.unlinkSync(banListPath);
+            fs.writeFileSync(banListPath, '', 'utf8');
+            e.reply("牛的封禁文件清空成功",true)
+
+        }
+    }
 
     async RestartGuGuNiu(e) {
         try { 
