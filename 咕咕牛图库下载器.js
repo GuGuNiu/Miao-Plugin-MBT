@@ -863,9 +863,11 @@ export class MiaoPluginMBT extends plugin {
         aliasGS = eval('(' + aliasJSONGS + ')');
 
         let aliasZZZ;
-        const ZZZFilePath = path.resolve(this.ZZZ_Plugin_ZZZaliasPath, 'alias.yaml'); 
-        const ZZZContent = fs.readFileSync(ZZZFilePath, 'utf-8');
-        aliasZZZ = yaml.parse(ZZZContent);
+        const ZZZFilePath = path.resolve(this.ZZZ_Plugin_ZZZaliasPath, 'alias.yaml');
+        if (fs.existsSync(ZZZFilePath)) {
+            const ZZZContent = fs.readFileSync(ZZZFilePath, 'utf-8');
+            aliasZZZ = yaml.parse(ZZZContent);
+        }
 
         let mainNameSR = Object.keys(aliasSR).find(main => {
             const aliases = aliasSR[main].split(',');
@@ -877,10 +879,13 @@ export class MiaoPluginMBT extends plugin {
             return aliases.includes(roleName);
         });
 
-        let BTP_mainNameZZZ = Object.keys(aliasZZZ).find(main => {
-            const aliases = aliasZZZ[main];
-            return aliases.includes(roleName); 
-        });
+        let BTP_mainNameZZZ;
+        if (aliasZZZ) {
+            BTP_mainNameZZZ = Object.keys(aliasZZZ).find(main => {
+                const aliases = aliasZZZ[main];
+                return aliases.includes(roleName);
+            });
+        }
 
         if (mainNameSR) {
             return mainNameSR.trim();
