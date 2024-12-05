@@ -6,7 +6,7 @@ import common from '../../lib/common/common.js';
 import yaml from 'yaml'
 
 
-//        『咕咕牛🐂』图库管理器 v2.8
+//        『咕咕牛🐂』图库管理器 v2.9
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -21,7 +21,7 @@ function formatBytes(bytes) {
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.8',
+            name: '『咕咕牛🐂』图库管理器 v2.9',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 1000,
@@ -102,6 +102,7 @@ export class MiaoPluginMBT extends plugin {
         const currentFileUrl = import.meta.url;
         const currentFilePath = fileURLToPath(currentFileUrl);
         this.proxy = 'https://mirror.ghproxy.com/';  
+        this.proxy2 = 'https://ghp.ci/';  
         this.repositoryUrl = 'https://github.com/GuGuNiu/Miao-Plugin-MBT/';
         this.localPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/');
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
@@ -115,21 +116,23 @@ export class MiaoPluginMBT extends plugin {
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
+
     async GallaryDownload(e) {
-        let downloadUrl;
-        if (e.msg == '#下载咕咕牛') {
-            downloadUrl = this.repositoryUrl;
-        } else if (e.msg == '#代理下载咕咕牛') {
-            downloadUrl = this.proxy + this.repositoryUrl;
-        }
-        await e.reply('『咕咕牛🐂』开始下载了', true);
-        if (fs.existsSync(this.localPath)) {
-            await e.reply('『咕咕牛』已存在，请勿重复下载！如有异常请手动执行#重置咕咕牛');
-            return;
-        }
-        try {
-            await new Promise((resolve, reject) => {
-                const process = exec(`git clone --depth=1 ${downloadUrl} ${this.localPath}`, { stdio: 'inherit' });
+        const A = "Github";  
+        const B = "Mirror";    
+        const C = "Ghproxy";         
+        
+        const urls = {
+            [A]: this.repositoryUrl,
+            [B]: this.proxy + this.repositoryUrl,
+            [C]: this.proxy2 + this.repositoryUrl
+        };
+        let DownloadSource = A;
+
+        const tryDownload = async (sourceName) => {
+            const url = urls[sourceName];
+            return new Promise((resolve, reject) => {
+                const process = exec(`git clone --depth=1 ${url} ${this.localPath}`, { stdio: 'inherit' });
                 process.on('close', (code) => {
                     if (code === 0) {
                         resolve();
@@ -138,149 +141,56 @@ export class MiaoPluginMBT extends plugin {
                     }
                 });
             });
-            await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
-            await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath); 
-            await e.reply(`『咕咕牛』下载完成，载入喵喵中..`);
-            fs.mkdirSync(this.GuPath, { recursive: true });
-            this.CopyFolderRecursive(path.join(this.localPath,'GuGuNiu-Gallery'), this.GuPath);
-            setTimeout(async () => {
-                return e.reply(`『咕咕牛』成功进入喵喵里面！`);
-            }, 20000);
-            this.DeleteBanList()
-            const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
-            const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js'); 
-            await fs.promises.copyFile(sourceFile, destFile);
-            await e.reply(`『咕咕牛』将每隔15天自动更新,包括Js`);
+        };
+
+        try {
+            await tryDownload(A);
+            await e.reply(`『咕咕牛』下载成功,来源：${A}\n正在准备进行下一步操作...`);
+            await this.PostDownload(e);
+
         } catch (error) {
-            console.error('下载『咕咕牛🐂』时出现错误:', error);
-            let DowloadeErrorForward =[]
-            DowloadeErrorForward.push(`下载『咕咕牛🐂』时出现错误:\n ${error}`);
-            if (error.message.includes('code 128')) {
-                DowloadeErrorForward.push("检查网络连接：确保您的网络连接正常,有时候网络问题可能导致Git无法正常执行操作。");
+            await e.reply('『咕咕牛』的Github仓库下载失败，已自动切换至代理下载中,请稍后....', true);
+
+            let proxyError;
+            for (let sourceName of [B, C]) {
+                try {
+                    await tryDownload(sourceName);  
+                    DownloadSource = sourceName;
+                    await e.reply(`『咕咕牛』代理下载成功,来源：${sourceName}\n正在准备进行下一步操作...`);
+                    await this.PostDownload(e);
+                    break;
+                } catch (error) {
+                    proxyError = error;
+                    if (sourceName === C) {     
+                        let DowloadeErrorForward = this.generateDownloadErrorFeedback(proxyError);
+                        await e.reply('『咕咕牛』下载失败，请查看控制台日志！');
+                        let DownloadErrorGumsg = await common.makeForwardMsg(this.e, DowloadeErrorForward, '『咕咕牛🐂』操作日志');
+                        setTimeout(async () => {
+                            this.reply(DownloadErrorGumsg);
+                        }, 2000);
+                        return;
+                    }
+                }
             }
-            if (error.message.includes('code 28')) {
-                updateerrorforward.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输在控制台输入以下命令");
-                updateerrorforward.push("git config --global http.postBuffer 524288000");
-            }
-            if (error.message.includes('443')) {
-                updateerrorforward.push("该报错可能是网络问题、被墙或访问被拒绝。");
-            }
-            let DownloadErrorGumsg = await common.makeForwardMsg(this.e, DowloadeErrorForward, '『咕咕牛🐂』操作日志');
-            await e.reply('下载『咕咕牛』时出现错误，请查看控制台日志！');
-            setTimeout(async () => {
-                this.reply(DownloadErrorGumsg);
-            }, 2000);
         }
     }
 
-    async GallaryUpdate(e) {
-        try {
-            if (!fs.existsSync(this.localPath)) {
-                 await e.reply('『咕咕牛🐂』未下载！', true);
-                return true;
-            }
-            await e.reply('『咕咕牛🐂』开始更新了', true);
-            const gitPullOutput = await new Promise((resolve, reject) => {
-                exec('git pull', { cwd: this.localPath }, (error, stdout, stderr) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(stdout);
-                    }
-                });
-            });
-            if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
-                await e.reply("『咕咕牛』已经是最新的啦");
-                const gitLog = await new Promise((resolve, reject) => {
-                    exec('git log -n 1 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
-                        if (error) {
-                            reject(error);
-                        } else {
-                            resolve(stdout);
-                        }
-                    });
-                });
-                await e.reply(`最近一次更新：${gitLog}`);
-            }else {
-                const gitLog = await new Promise((resolve, reject) => {
-                    exec('git log -n 20 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
-                        if (error) {
-                            reject(error);
-                        } else {
-                            resolve(stdout);
-                        }
-                    });
-                });
-                const forwardMsg = [ `最近的更新记录：\n${gitLog}` ];
-                const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』更新成功');
-                await this.reply(forwardMsgFormatted);
-                await this.DeleteFilesWithGuKeyword();
-                await new Promise((resolve, reject) => {
-                    exec('git clean -df', { cwd: this.localPath }, (error, stdout, stderr) => {
-                        if (error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
-                    });
-                });
-                const banListPath = path.join(this.GuPath, 'banlist.txt');
-                let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+    async PostDownload(e) {
+        await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+        await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+        await e.reply(`『咕咕牛』正在咕咕噜的载入喵喵中...`);
+        fs.mkdirSync(this.GuPath, { recursive: true });
+        this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery'), this.GuPath);
 
-                const galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
-                const galleryConfigContent = fs.readFileSync(galleryConfigPath, 'utf8');
-                const galleryConfig = yaml.parse(galleryConfigContent);
+        setTimeout(async () => {
+            await e.reply(`『咕咕牛』成功进入喵喵里面！每隔15天自动更新，包括Js。`);
+        }, 20000);
 
-                if (galleryConfig && galleryConfig['GGOP'] === 1) {
-                    await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
-                    await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
-                }
-
-                fs.mkdirSync(this.GuPath, { recursive: true });
-                const sourceFile = path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png');
-                const destFile = path.join(this.GuPath, 'help.png');
-                await fs.promises.copyFile(sourceFile, destFile);
-
-                const sourceJSFile = path.join(this.localPath, '咕咕牛图库下载器.js');
-                const destJSFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
-                await fs.promises.copyFile(sourceJSFile, destJSFile);
-                
-                if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
-                    R18_images.forEach(image => {
-                        const fileName = `${image}.webp`;
-                        if (!banList.includes(fileName)) {
-                            banList.push(fileName);
-                        }
-                    });
-                    fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
-                }
-
-                this.DeleteBanList()
-            }
-        } catch (error) {
-            console.error('更新『咕咕牛🐂』时出现错误:', error);
-            let updateerrorforward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];  
-            if (error.message.includes('code 128')) {
-                updateerrorforward.push("检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。");
-                updateerrorforward.push("也可能出现合并失败，可以尝试重置咕咕牛");
-            }
-            if (error.message.includes('code 1')) {
-                updateerrorforward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
-            }
-            if (error.message.includes('code 28')) {
-                updateerrorforward.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输在控制台输入以下命令");
-                updateerrorforward.push("git config --global http.postBuffer 524288000");
-            }
-            if (error.message.includes('443')) {
-                updateerrorforward.push("该报错可能是网络问题、被墙或访问被拒绝。");
-            }
-            let updaterrormsg = await common.makeForwardMsg(this.e, updateerrorforward, '『咕咕牛🐂』更新失败');
-            await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
-            setTimeout(async () => {
-                await this.reply(updaterrormsg);
-             }, 2000);
-        }
-    }    
+        this.DeleteBanList();
+        const sourceFile = path.join(this.localPath, '咕咕牛图库下载器.js');
+        const destFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
+        await fs.promises.copyFile(sourceFile, destFile);
+    }
 
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
@@ -845,6 +755,23 @@ export class MiaoPluginMBT extends plugin {
             }
         }));
        //------刷屏点----/ console.log(`文件夹 ${source} 复制到 ${target} 完成`);
+    }
+
+    generateDownloadErrorFeedback(error) {
+        let feedback = [];
+        feedback.push(`下载『咕咕牛🐂』时出现错误:\n ${error}`);
+        
+        if (error.message.includes('code 128')) {
+            feedback.push("检查网络连接：确保您的网络连接正常, 有时候网络问题可能导致Git无法正常执行操作。");
+        }
+        if (error.message.includes('code 28')) {
+            feedback.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输。在控制台输入以下命令：");
+            feedback.push("git config --global http.postBuffer 524288000");
+        }
+        if (error.message.includes('443')) {
+            feedback.push("该报错可能是网络问题、被墙或访问被拒绝。");
+        }
+        return feedback;
     }
 
     getMainRoleName(roleName) {
