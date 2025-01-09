@@ -21,6 +21,8 @@
 
 【[ZZZ-Plugin](https://github.com/ZZZure/ZZZ-Plugin/)】 绝区零：1.1
 
+【[Waves-Plugin](https://github.com/erzaozi/waves-plugin)】 鸣潮：2.0
+
 ## 快速安装
 
  #### 在Yunzai根目录运行以下命令,使用 #咕咕牛帮助 呼叫出菜单,使用Js每15天-30天会自动更新整个图库
@@ -51,6 +53,9 @@ Miao-Yunzai : https://github.com/yoimiya-kokomi/Miao-Yunzai
 Miao-Plugin : https://github.com/yoimiya-kokomi/miao-plugin
 
 ZZZ-Plugin ：https://github.com/ZZZure/ZZZ-Plugin/
+
+Waves-Plugin:
+https://github.com/erzaozi/waves-plugin
 
 <br>
 
