@@ -1,7 +1,6 @@
 ![界面.png](https://s2.loli.net/2024/03/09/ZGNrwVyPDbOx9Bf.png)
 
-# 本仓库即日起合并至 GuGuZhou-Plugin插件内
-https://github.com/cunyx-xiaomizhou/GuGuZhou-Plugin
+# 本仓库即日起合并至 【[GuGuZhou-Plugin](https://github.com/cunyx-xiaomizhou/GuGuZhou-Plugin)】插件内
 
 <br><br>
 
