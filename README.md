@@ -1,7 +1,9 @@
 ![界面.png](https://s2.loli.net/2024/03/09/ZGNrwVyPDbOx9Bf.png)
 
+# 本仓库即日起合并至 GuGuZhou-Plugin插件内
+https://github.com/cunyx-xiaomizhou/GuGuZhou-Plugin
 
-
+<br><br>
 
 ## 限制级说明 🚨
   图库仅限制在R17+级别的图片，小部分图可能含有明显的『<ins>性暗示</ins>』
