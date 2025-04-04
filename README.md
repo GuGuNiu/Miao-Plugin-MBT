@@ -1,13 +1,6 @@
 ![界面.png](https://s2.loli.net/2024/03/09/ZGNrwVyPDbOx9Bf.png)
 
-# 本仓库即日起合并至 【[GuGuZhou-Plugin](https://github.com/cunyx-xiaomizhou/GuGuZhou-Plugin)】插件内
-
 <br><br>
-
-## 限制级说明 🚨
-  图库仅限制在R17+级别的图片，小部分图可能含有明显的『<ins>性暗示</ins>』
-  
-  使用 #净化咕咕牛 可以快速封禁被标记的R18面板图
 
 ## 图库说明
 - 面板图在显示正常的情况下不使用超清以上分辨率的原图
@@ -16,7 +9,7 @@
 - 请勿用于以『<ins>盈利</ins>』为目的的任何场景,如侵权请联系删除
 
 ## 制图进度
-【[Miao-Plugin](https://github.com/yoimiya-kokomi/miao-plugin)】原神：1.0-5.1
+【[Miao-Plugin](https://github.com/yoimiya-kokomi/miao-plugin)】原神：1.0-5.4
 
 【[Miao-Plugin](https://github.com/yoimiya-kokomi/miao-plugin)】星穹铁道：1.0-2.6
 
