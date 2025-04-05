@@ -688,71 +688,67 @@ export class MiaoPluginMBT extends plugin {
             }, 2000);
         }
     }    
-
     async CheckFolder(e) {
         const gitPath = this.GitPath;
         const characterFolderPaths = [
-            'gs-character',
-            'sr-character',
-            'zzz-character'
-        ].map(folder => path.join(this.localPath, folder));
+            { name: '原神', path: this.localPath + '/gs-character' },
+            { name: '星铁', path: this.localPath + '/sr-character' },
+            { name: '绝区零', path: this.localPath + '/zzz-character' },
+            { name: '鸣潮', path: this.localPath + '/waves-character' }
+        ];
     
         if (!fs.existsSync(this.localPath)) {
             await e.reply('『咕咕牛🐂』未下载！', true);
             return true;
         }
     
-        let characterFolders = [];
-    
-        for (const folderPath of characterFolderPaths) {
+        const CheckRoleforward = [];
+        let totalRolesCount = 0;
+        for (const { name, path: folderPath } of characterFolderPaths) {
             if (fs.existsSync(folderPath)) {
-                const folders = fs.readdirSync(folderPath, { withFileTypes: true })
+                const subFolders = fs.readdirSync(folderPath, { withFileTypes: true })
                     .filter(dirent => dirent.isDirectory())
-                    .map(dirent => path.join(folderPath, dirent.name));
-                characterFolders = characterFolders.concat(folders);
-            }
-        }
+                    .map(dirent => dirent.name)
+                    .sort((a, b) => a.localeCompare(b, 'zh', { sensitivity: 'base' }));
     
-        characterFolders = characterFolders.sort((a, b) => a.localeCompare(b));
-        let totalCharacterCount = characterFolders.length;
-        let CheckRoleforward = [];
-        let RoleNumMessage = [];
-        CheckRoleforward.push("---按A-Z字母排序---");
-        let totalPanelImageCount = 0;
+                totalRolesCount += subFolders.length;
+                let folderMessage = `------${name}------\n`;
+                subFolders.forEach(subFolder => {
+                    const panelImages = fs.readdirSync(`${folderPath}/${subFolder}`)
+                        .filter(file => file.endsWith('.webp'));
+                    folderMessage += `${subFolder}：${panelImages.length}张\n`;
+                });
     
-        for (const folderPath of characterFolders) {
-            if (fs.existsSync(folderPath)) {
-                const folder = path.basename(folderPath);
-                const panelImages = fs.readdirSync(folderPath).filter(file => file.endsWith('.webp'));
-                totalPanelImageCount += panelImages.length;
-                const name = `${folder}：${panelImages.length}张`;
-                CheckRoleforward.push(name);
+                CheckRoleforward.push(folderMessage);
             }
         }
     
         let totalSize = 0;
-        for (const folderPath of characterFolderPaths) {
+        for (const { path: folderPath } of characterFolderPaths) {
             totalSize += await this.getFolderSize(folderPath);
         }
-    
         const formattedTotalSize = formatBytes(totalSize);
         const gitSize = await this.getFolderSize(gitPath);
         const gitAllSize = formatBytes(gitSize);
         const MBTSize = formatBytes(gitSize + totalSize);
-        let checkmessage = `----『咕咕牛🐂』----\n角色数量：${totalCharacterCount}名\n图片数量：${totalPanelImageCount}张\n图库容量：${formattedTotalSize}\nGit缓存容量：${gitAllSize}\n咕咕牛图库占用：${MBTSize}`;
-        RoleNumMessage = CheckRoleforward.join('\n');
+
+        const checkmessage =
+            `----『咕咕牛🐂』----\n` +
+            `角色数量：${totalRolesCount}名\n` +
+            `图库容量：${formattedTotalSize}\n` +
+            `Git 缓存：${gitAllSize}\n` +
+            `总占用：${MBTSize}`;
+    
+        const RoleNumMessage = CheckRoleforward;
     
         await Promise.all([
             e.reply(checkmessage),
             (async () => {
-                const msg = await common.makeForwardMsg(this.e, RoleNumMessage, '『咕咕牛🐂』图库数量');
+                const msg = await common.makeForwardMsg(this.e,RoleNumMessage, '『咕咕牛🐂』图库详情');
                 await e.reply(msg);
             })()
         ]);
     }
-    
-    
-    
 
     async MihoyoSplashOption(e) {
         if (e.msg == '#启用官方立绘') {
@@ -892,19 +888,18 @@ export class MiaoPluginMBT extends plugin {
     }
 
     generateDownloadErrorFeedback(error) {
-        let feedback = [];
-        feedback.push(`下载『咕咕牛🐂』时出现错误:\n ${error}`);
-        
-        if (error.message.includes('code 128')) {
-            feedback.push("检查网络连接：确保您的网络连接正常, 有时候网络问题可能导致Git无法正常执行操作。");
-        }
-        if (error.message.includes('code 28')) {
-            feedback.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输。在控制台输入以下命令：");
-            feedback.push("git config --global http.postBuffer 524288000");
-        }
-        if (error.message.includes('443')) {
-            feedback.push("该报错可能是网络问题、被墙或访问被拒绝。");
-        }
+        const errorMessages = {
+            'code 128': "检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。",
+            'code 28': "增加 Git 的 HTTP 缓冲区大小，在控制台输入命令：git config --global http.postBuffer 524288000",
+            '443': "可能是网络问题、被墙或访问被拒绝。"
+        };
+    
+        let feedback = [`下载『咕咕牛🐂』时出现错误: ${error}`];
+        Object.keys(errorMessages).forEach(code => {
+            if (error.message.includes(code)) {
+                feedback.push(errorMessages[code]);
+            }
+        });
         return feedback;
     }
 
