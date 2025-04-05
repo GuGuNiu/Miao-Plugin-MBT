@@ -6,7 +6,7 @@ import common from '../../lib/common/common.js';
 import yaml from 'yaml'
 
 
-//        『咕咕牛🐂』图库管理器 v2.9
+//        『咕咕牛🐂』图库管理器 v3.0
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
 
@@ -14,14 +14,14 @@ function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const dm = 2;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v2.9',
+            name: '『咕咕牛🐂』图库管理器 v3.0',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 1000,
@@ -101,34 +101,48 @@ export class MiaoPluginMBT extends plugin {
         }
         const currentFileUrl = import.meta.url;
         const currentFilePath = fileURLToPath(currentFileUrl);
-        this.proxy = 'https://mirror.ghproxy.com/';  
+        this.proxy = 'https://ghfast.top/';  
         this.proxy2 = 'https://ghp.ci/';  
+        this.proxy3 = 'https://ghgo.xyz/';  
+        this.proxy4 = 'https://ghproxy.com/';  
         this.repositoryUrl = 'https://github.com/GuGuNiu/Miao-Plugin-MBT/';
+        
         this.localPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/');
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
-        this.copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/normal-character/');
+        //载入路径
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
-        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); 
         this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); 
+        //图库路径
+        this.SRcopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/sr-character/');
+        this.GScopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/gs-character/');
+        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); 
+        this.Waves_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/waves-character/');
+        //别名路径
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
         this.ZZZ_Plugin_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');  
+
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
     }
 
     async GallaryDownload(e) {
+        e.reply('『咕咕牛』开始下载了');
         const A = "Github";  
-        const B = "Mirror";    
-        const C = "Ghproxy";         
+        const B = "Ghproxy1";    
+        const C = "Ghproxy2";    
+        const D = "Ghproxy3";  
+        const E = "Ghproxy4";       
         
         const urls = {
             [A]: this.repositoryUrl,
             [B]: this.proxy + this.repositoryUrl,
-            [C]: this.proxy2 + this.repositoryUrl
+            [C]: this.proxy2 + this.repositoryUrl,
+            [D]: this.proxy3 + this.repositoryUrl,
+            [E]: this.proxy4 + this.repositoryUrl
         };
         let DownloadSource = A;
-
+    
         const tryDownload = async (sourceName) => {
             const url = urls[sourceName];
             return new Promise((resolve, reject) => {
@@ -142,28 +156,28 @@ export class MiaoPluginMBT extends plugin {
                 });
             });
         };
-
+    
         try {
             await tryDownload(A);
-            await e.reply(`『咕咕牛』下载成功,来源：${A}\n正在准备进行下一步操作...`);
+            await e.reply(`『咕咕牛』下载成功, 来源：${A}\n正在准备进行下一步操作...`);
             await this.PostDownload(e);
-
+    
         } catch (error) {
             await e.reply('『咕咕牛』的Github仓库下载失败，已自动切换至代理下载中,请稍后....', true);
-
+    
             let proxyError;
-            for (let sourceName of [B, C]) {
+            for (let sourceName of [B, C, D, E]) {
                 try {
                     await tryDownload(sourceName);  
                     DownloadSource = sourceName;
-                    await e.reply(`『咕咕牛』代理下载成功,来源：${sourceName}\n正在准备进行下一步操作...`);
+                    await e.reply(`『咕咕牛』代理下载成功, 来源：${sourceName}\n正在准备进行下一步操作...`);
                     await this.PostDownload(e);
                     break;
                 } catch (error) {
                     proxyError = error;
                     if (sourceName === C) {     
                         let DowloadeErrorForward = this.generateDownloadErrorFeedback(proxyError);
-                        await e.reply('『咕咕牛』下载失败，请查看控制台日志！');
+                        await e.reply('『咕咕牛』 代理下载失败，请查看控制台日志！');
                         let DownloadErrorGumsg = await common.makeForwardMsg(this.e, DowloadeErrorForward, '『咕咕牛🐂』操作日志');
                         setTimeout(async () => {
                             this.reply(DownloadErrorGumsg);
@@ -174,11 +188,15 @@ export class MiaoPluginMBT extends plugin {
             }
         }
     }
+    
+    
 
     async PostDownload(e) {
-        await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+        await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
+        await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath)
         await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
         await e.reply(`『咕咕牛』正在咕咕噜的载入喵喵中...`);
+
         fs.mkdirSync(this.GuPath, { recursive: true });
         this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery'), this.GuPath);
 
@@ -192,6 +210,116 @@ export class MiaoPluginMBT extends plugin {
         await fs.promises.copyFile(sourceFile, destFile);
     }
 
+    async GallaryUpdate(e) {
+        try {
+            if (!fs.existsSync(this.localPath)) {
+                 await e.reply('『咕咕牛🐂』未下载！', true);
+                return;
+            }
+            await e.reply('『咕咕牛🐂』开始更新了', true);
+            const gitPullOutput = await new Promise((resolve, reject) => {
+                exec('git pull', { cwd: this.localPath }, (error, stdout, stderr) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(stdout);
+                    }
+                });
+            });
+            if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
+                await e.reply("『咕咕牛』已经是最新的啦");
+                const gitLog = await new Promise((resolve, reject) => {
+                    exec('git log -n 1 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(stdout);
+                        }
+                    });
+                });
+                await e.reply(`最近一次更新：${gitLog}`);
+            }else {
+                const gitLog = await new Promise((resolve, reject) => {
+                    exec('git log -n 20 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"', { cwd: this.localPath }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(stdout);
+                        }
+                    });
+                });
+                const forwardMsg = [ `最近的更新记录：\n${gitLog}` ];
+                const forwardMsgFormatted = await common.makeForwardMsg(this.e, forwardMsg, '『咕咕牛🐂』更新成功');
+                await this.reply(forwardMsgFormatted);
+                await this.DeleteFilesWithGuKeyword();
+                await new Promise((resolve, reject) => {
+                    exec('git clean -df', { cwd: this.localPath }, (error, stdout, stderr) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+                const banListPath = path.join(this.GuPath, 'banlist.txt');
+                let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
+
+                const galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
+                const galleryConfigContent = fs.readFileSync(galleryConfigPath, 'utf8');
+                const galleryConfig = yaml.parse(galleryConfigContent);
+
+                if (galleryConfig && galleryConfig['GGOP'] === 1) {
+                     this.CopyFolderRecursive(this.GSpylocalPath, this.characterPath);
+                     this.CopyFolderRecursive(this.SRopylocalPath, this.characterPath);
+                     this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+
+                }
+
+                fs.mkdirSync(this.GuPath, { recursive: true });
+                const sourceFile = path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png');
+                const destFile = path.join(this.GuPath, 'help.png');
+                await fs.promises.copyFile(sourceFile, destFile);
+
+                const sourceJSFile = path.join(this.localPath, '咕咕牛图库下载器.js');
+                const destJSFile = path.join(this.JsPath, '咕咕牛图库下载器.js');
+                await fs.promises.copyFile(sourceJSFile, destJSFile);
+
+                if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
+                    R18_images.forEach(image => {
+                        const fileName = `${image}.webp`;
+                        if (!banList.includes(fileName)) {
+                            banList.push(fileName);
+                        }
+                    });
+                    fs.writeFileSync(banListPath, `${banList.join(';')};`, 'utf8')
+                }
+
+                this.DeleteBanList()
+            }
+        } catch (error) {
+            console.error('更新『咕咕牛🐂』时出现错误:', error);
+            let updateerrorforward = [`更新『咕咕牛🐂』时出现错误:\n${error.message}`];  
+            if (error.message.includes('code 128')) {
+                updateerrorforward.push("检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。");
+                updateerrorforward.push("也可能出现合并失败，可以尝试重置咕咕牛");
+            }
+            if (error.message.includes('code 1')) {
+                updateerrorforward.push("该报错是本地与仓库文件冲突，请手动重置咕咕牛后再尝试下载。");
+            }
+            if (error.message.includes('code 28')) {
+                updateerrorforward.push("试着增加 Git 的 HTTP 缓冲区大小，这样可以帮助处理较大的数据传输在控制台输入以下命令");
+                updateerrorforward.push("git config --global http.postBuffer 524288000");
+            }
+            if (error.message.includes('443')) {
+                updateerrorforward.push("该报错可能是网络问题、被墙或访问被拒绝。");
+            }
+            let updaterrormsg = await common.makeForwardMsg(this.e, updateerrorforward, '『咕咕牛🐂』更新失败');
+            await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
+            setTimeout(async () => {
+                await this.reply(updaterrormsg);
+             }, 2000);
+        }
+    }    
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
             e.reply(segment.image("https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png"))
@@ -259,7 +387,8 @@ export class MiaoPluginMBT extends plugin {
                     fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
                     await e.reply(`${fileName} ✅️已解禁`, true);
                     await e.reply("批量解除封禁可输入#清空咕咕牛封禁,仅重置封禁文件不影响净化模式")
-                    await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
                     await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 } else {
                     await e.reply(`${fileName} ❌️不存在`, true);
@@ -318,11 +447,13 @@ export class MiaoPluginMBT extends plugin {
         let roleName = match[1].trim();
         roleName = this.getMainRoleName(roleName);
     
-        const foldersONE = fs.readdirSync(this.copylocalPath);
-        const foldersTWO = fs.readdirSync(this.ZZZ_Plugin_copylocalPath);
+        const foldersONE = fs.readdirSync(this.GScopylocalPath);
+        const foldersTWO = fs.readdirSync(this.SRcopylocalPath);
+        const foldersTHREE = fs.readdirSync(this.ZZZ_Plugin_copylocalPath);
         const allFolders = [
-            ...foldersONE.map(folder => path.join(this.copylocalPath, folder)), 
-            ...foldersTWO.map(folder => path.join(this.ZZZ_Plugin_copylocalPath, folder))
+            ...foldersONE.map(folder => path.join(this.GScopylocalPath, folder)), 
+            ...foldersTWO.map(folder => path.join(this.SRcopylocalPath, folder)), 
+            ...foldersTHREE.map(folder => path.join(this.ZZZ_Plugin_copylocalPath, folder))
         ];
     
         const matchedFolder = allFolders.find(folder => path.basename(folder).includes(roleName));
@@ -458,7 +589,8 @@ export class MiaoPluginMBT extends plugin {
                 return;
              }
                 await e.reply('『咕咕牛🐂』启用中,请稍后...',true);
-                await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
                 await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
                 await e.reply('『咕咕牛』重新进入喵喵里面！');
                 setTimeout(async () => {
@@ -505,7 +637,8 @@ export class MiaoPluginMBT extends plugin {
         if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
             logger.info("[『咕咕牛🐂』定时更新任务]：暂无更新内容")
         }else{
-                await this.CopyFolderRecursive(this.copylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
+                await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
                 await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
@@ -559,7 +692,8 @@ export class MiaoPluginMBT extends plugin {
     async CheckFolder(e) {
         const gitPath = this.GitPath;
         const characterFolderPaths = [
-            'normal-character',
+            'gs-character',
+            'sr-character',
             'zzz-character'
         ].map(folder => path.join(this.localPath, folder));
     
