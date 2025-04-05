@@ -127,14 +127,6 @@ export class MiaoPluginMBT extends plugin {
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
 
-        const R18_path = path.join(this.GuPath, 'R18.txt');
-        let R18_images = [];
-        try {
-            const raw = fs.readFileSync(R18_path, 'utf-8');
-            this.R18_images = [...raw.matchAll(/"([^"]+)"/g)].map(m => m[1]);
-          } catch (err) {
-            this.R18_images = [];
-          }
      }
 
      async GallaryDownload(e) {
@@ -296,7 +288,7 @@ export class MiaoPluginMBT extends plugin {
                 await fs.promises.copyFile(sourceJSFile, destJSFile);
 
                 if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
-                    this.R18_images.forEach(image => {
+                    R18_images.forEach(image => {
                         const fileName = `${image}.webp`;
                         if (!banList.includes(fileName)) {
                             banList.push(fileName);
@@ -388,7 +380,7 @@ export class MiaoPluginMBT extends plugin {
                 const fileName = `${mainName}.webp`;
                 let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
 
-                if (this.R18_images.includes(inputRoleName)) {
+                if (R18_images.includes(inputRoleName)) {
                     await e.reply(`${inputRoleName} ❌️已拒绝删除`, true);
                     return true;
                 }
@@ -498,7 +490,7 @@ export class MiaoPluginMBT extends plugin {
             let fileName = files[i];
             const filePath = path.join(matchedFolder, fileName);
             const isBanned = filesToBan.includes(fileName);
-            const isR18Image = this.R18_images.includes(fileName.replace('.webp', ''));
+            const isR18Image = R18_images.includes(fileName.replace('.webp', ''));
         
             if (isBanned && isR18Image) {
                 fileName = `${fileName.replace('.webp', '')} ❌封禁🟢净化`;
@@ -547,7 +539,7 @@ export class MiaoPluginMBT extends plugin {
                 }
                 let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
 
-                this.R18_images.forEach(image => {
+                R18_images.forEach(image => {
                     const fileName = `${image}.webp`;
                     if (!banList.includes(fileName)) {
                         banList.push(fileName);
@@ -966,5 +958,10 @@ export class MiaoPluginMBT extends plugin {
 
       
 }
+
+
+const R18_images = [
+
+]
 
 
