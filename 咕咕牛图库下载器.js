@@ -6,6 +6,8 @@ import common from '../../lib/common/common.js';
 import yaml from 'yaml'
 
 
+
+
 //        『咕咕牛🐂』图库管理器 v3.0
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
 
@@ -124,9 +126,18 @@ export class MiaoPluginMBT extends plugin {
 
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
-    }
 
-    async GallaryDownload(e) {
+        const R18_path = path.join(this.GuPath, 'R18.txt');
+        let R18_images = [];
+        try {
+            const raw = fs.readFileSync(R18_path, 'utf-8');
+            this.R18_images = [...raw.matchAll(/"([^"]+)"/g)].map(m => m[1]);
+          } catch (err) {
+            this.R18_images = [];
+          }
+     }
+
+     async GallaryDownload(e) {
         e.reply('『咕咕牛』开始下载了');
         const A = "Github";  
         const B = "Ghproxy1";    
@@ -285,7 +296,7 @@ export class MiaoPluginMBT extends plugin {
                 await fs.promises.copyFile(sourceJSFile, destJSFile);
 
                 if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
-                    R18_images.forEach(image => {
+                    this.R18_images.forEach(image => {
                         const fileName = `${image}.webp`;
                         if (!banList.includes(fileName)) {
                             banList.push(fileName);
@@ -377,7 +388,7 @@ export class MiaoPluginMBT extends plugin {
                 const fileName = `${mainName}.webp`;
                 let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
 
-                if (R18_images.includes(inputRoleName)) {
+                if (this.R18_images.includes(inputRoleName)) {
                     await e.reply(`${inputRoleName} ❌️已拒绝删除`, true);
                     return true;
                 }
@@ -487,7 +498,7 @@ export class MiaoPluginMBT extends plugin {
             let fileName = files[i];
             const filePath = path.join(matchedFolder, fileName);
             const isBanned = filesToBan.includes(fileName);
-            const isR18Image = R18_images.includes(fileName.replace('.webp', ''));
+            const isR18Image = this.R18_images.includes(fileName.replace('.webp', ''));
         
             if (isBanned && isR18Image) {
                 fileName = `${fileName.replace('.webp', '')} ❌封禁🟢净化`;
@@ -536,7 +547,7 @@ export class MiaoPluginMBT extends plugin {
                 }
                 let banList = fs.readFileSync(banListPath, 'utf8').split(';').filter(item => item.trim() !== '');
 
-                R18_images.forEach(image => {
+                this.R18_images.forEach(image => {
                     const fileName = `${image}.webp`;
                     if (!banList.includes(fileName)) {
                         banList.push(fileName);
@@ -956,33 +967,4 @@ export class MiaoPluginMBT extends plugin {
       
 }
 
-const R18_images=[
 
-//-------------------GS-------------------//
-"安柏Gu3","安柏Gu10","八重神子Gu14","芭芭拉Gu4","芭芭拉Gu5","芭芭拉Gu11","芭芭拉Gu14","白术Gu8","北斗Gu2","北斗Gu3",
-"北斗Gu4","北斗Gu6","迪希雅Gu8","迪希雅Gu9","珐露珊Gu1","甘雨Gu1","甘雨Gu4","甘雨Gu8","甘雨Gu13","甘雨Gu14","甘雨Gu22",
-"甘雨Gu27","甘雨Gu26","甘雨Gu28","胡桃Gu14","胡桃Gu32","胡桃Gu31","胡桃Gu35","胡桃Gu47","胡桃Gu47","胡桃Gu49","久岐忍Gu6",
-"久岐忍Gu7","久岐忍Gu11","久岐忍Gu10","坎蒂丝Gu1","坎蒂丝Gu4","坎蒂丝Gu6","克洛琳德Gu5","克洛琳德Gu6","刻晴Gu1","刻晴Gu3",
-"刻晴Gu5","刻晴Gu15","刻晴Gu17","刻晴Gu19","刻晴Gu18","刻晴Gu20","刻晴Gu24","刻晴Gu26","雷电将军Gu1","雷电将军Gu11","雷电将军Gu14",
-"雷电将军Gu33","雷电将军Gu34","雷电将军Gu39","雷电将军Gu45","丽莎Gu1","丽莎Gu2","琳尼特Gu3","琳尼特Gu5","琳尼特Gu6","琳尼特Gu7",
-"琳尼特Gu13","琳尼特Gu16","莫娜Gu2","莫娜Gu12","莫娜Gu9","纳西妲Gu23","纳西妲Gu33","娜维娅Gu13","妮露Gu1","妮露Gu4","妮露Gu5",
-"妮露Gu6","妮露Gu16","妮露Gu19","妮露Gu20","妮露Gu22","妮露Gu23","妮露Gu27","妮露Gu28","妮露Gu29","妮露Gu10","妮露Gu31","妮露Gu32",
-"妮露Gu35","诺艾尔Gu1","诺艾尔Gu12","诺艾尔Gu13","琴Gu4","珊瑚宫心海Gu12","珊瑚宫心海Gu34","珊瑚宫心海Gu36","珊瑚宫心海Gu40",
-"申鹤Gu1","申鹤Gu3","申鹤Gu4","申鹤Gu8","申鹤Gu9","申鹤Gu10","神里绫华Gu14","神里绫华Gu23","神里绫华Gu17","五郎Gu6",
-"希格雯Gu13","希格雯Gu10","夏沃蕾Gu1","夏沃蕾Gu3","闲云Gu7","香菱Gu1","夜兰Gu7","夜兰Gu11","夜兰Gu13","夜兰Gu25","夜兰Gu26",
-"夜兰Gu27","夜兰Gu28","夜兰Gu29","夜兰Gu12","荧Gu1","荧Gu2","荧Gu7","荧Gu11","荧Gu18","荧Gu20","荧Gu21","荧Gu14","优菈Gu7",
-"优菈Gu12","优菈Gu13","妮露Gu33",
-//-------------------SR-------------------//
-"布洛妮娅Gu1","布洛妮娅Gu5","丹恒Gu2","符玄Gu1","黑天鹅Gu1","花火Gu1","花火Gu8","花火Gu21","花火Gu28","花火Gu29","花火Gu35",
-"花火Gu48","花火Gu49","黄泉Gu2","藿藿Gu8","镜流Gu2","镜流Gu12","镜流Gu8","卡芙卡Gu2","卡芙卡Gu8","克拉拉Gu4","流萤Gu20","流萤Gu22",
-"流萤Gu24","流萤Gu27","流萤Gu28","流萤Gu30","流萤Gu32","流萤Gu34","娜塔莎Gu2","青雀Gu12","青雀Gu15","青雀Gu16","阮梅Gu12","阮梅Gu16",
-"阮梅Gu17","三月七Gu11","三月七Gu9","素裳Gu1","素裳Gu5","停云Gu5","托帕Gu2","托帕Gu4","托帕Gu5","托帕Gu7","托帕Gu14","托帕Gu15",
-"星Gu10","星Gu3","星Gu5","雪衣Gu2","驭空Gu3",
-
-//-------------------ZZZ-------------------//
-
-//-------------------娘化-------------------//
-"杰帕德Gu1","流浪者Gu4","魈Gu12","真理医生Gu4"
-
-
-]
