@@ -8,8 +8,14 @@ import yaml from 'yaml'
 
 
 
+
+
 //        『咕咕牛🐂』图库管理器 v3.0
 //        Github仓库地址：https://github.com/GuGuNiu/Miao-Plugin-MBT/
+
+
+
+
 
 
 function formatBytes(bytes) {
@@ -115,7 +121,7 @@ export class MiaoPluginMBT extends plugin {
         //载入路径
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
         this.ZZZcharacterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); 
-        this.WavescharacterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/waves-plugin/resources/rolePic/'); 
+        this.WAVEScharacterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/waves-plugin/resources/rolePic/'); 
 
         //图库路径
         this.SRcopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/sr-character/');
@@ -200,9 +206,12 @@ export class MiaoPluginMBT extends plugin {
     
 
     async PostDownload(e) {
+
         await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
         await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath)
         await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
+        await this.CopyFolderRecursive(this.WAVEScopylocalPath, this.WAVEScharacterPath);
+
         await e.reply(`『咕咕牛』正在咕咕噜的载入喵喵中...`);
 
         fs.mkdirSync(this.GuPath, { recursive: true });
@@ -280,7 +289,7 @@ export class MiaoPluginMBT extends plugin {
                      this.CopyFolderRecursive(this.GSpylocalPath, this.characterPath);
                      this.CopyFolderRecursive(this.SRopylocalPath, this.characterPath);
                      this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
-
+                     this.CopyFolderRecursive(this.WAVEScopylocalPath, this.WAVEScharacterPath);
                 }
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
@@ -395,9 +404,12 @@ export class MiaoPluginMBT extends plugin {
                     fs.writeFileSync(banListPath, `${banList.join(';')}`, 'utf8');
                     await e.reply(`${fileName} ✅️已解禁`, true);
                     await e.reply("批量解除封禁可输入#清空咕咕牛封禁,仅重置封禁文件不影响净化模式")
-                    await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
-                    await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
-                    await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
+
+                        await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
+                        await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
+                        await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
+                        await this.CopyFolderRecursive(this.WAVEScopylocalPath, this.WAVEScharacterPath);
+
                 } else {
                     await e.reply(`${fileName} ❌️不存在`, true);
                 }
@@ -597,9 +609,12 @@ export class MiaoPluginMBT extends plugin {
                 return;
              }
                 await e.reply('『咕咕牛🐂』启用中,请稍后...',true);
-                await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
-                await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
-                await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
+
+                    await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
+                    await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
+                    await this.CopyFolderRecursive(this.WAVEScopylocalPath, this.WAVEScharacterPath);
+                    
                 await e.reply('『咕咕牛』重新进入喵喵里面！');
                 setTimeout(async () => {
                     this.DeleteBanList()
@@ -645,9 +660,11 @@ export class MiaoPluginMBT extends plugin {
         if (/Already up[ -]to[ -]date/.test(gitPullOutput)) {
             logger.info("[『咕咕牛🐂』定时更新任务]：暂无更新内容")
         }else{
+
                 await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
                 await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
                 await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
+                await this.CopyFolderRecursive(this.WAVEScopylocalPath, this.WAVEScharacterPath);
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
                 const sourceFile = path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png');
