@@ -471,10 +471,12 @@ export class MiaoPluginMBT extends plugin {
         const foldersONE = fs.readdirSync(this.GScopylocalPath);
         const foldersTWO = fs.readdirSync(this.SRcopylocalPath);
         const foldersTHREE = fs.readdirSync(this.ZZZcopylocalPath);
+        const foldersFREE = fs.readdirSync(this.WAVEScopylocalPath);
         const allFolders = [
             ...foldersONE.map(folder => path.join(this.GScopylocalPath, folder)), 
             ...foldersTWO.map(folder => path.join(this.SRcopylocalPath, folder)), 
-            ...foldersTHREE.map(folder => path.join(this.ZZZcopylocalPath, folder))
+            ...foldersTHREE.map(folder => path.join(this.ZZZcopylocalPath, folder)),
+            ...foldersFREE.map(folder => path.join(this.WAVEScopylocalPath, folder))
         ];
     
         const matchedFolder = allFolders.find(folder => path.basename(folder).includes(roleName));
@@ -917,7 +919,8 @@ export class MiaoPluginMBT extends plugin {
         const errorMessages = {
             'code 128': "检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。",
             'code 28': "增加 Git 的 HTTP 缓冲区大小，在控制台输入命令：git config --global http.postBuffer 524288000",
-            '443': "可能是网络问题、被墙或访问被拒绝。"
+            '443': "可能是网络问题、被墙或访问被拒绝。",
+            'Please commit your changes or stash them before you merge.' : "本地文件冲突了~"
         };
     
         let feedback = [`下载『咕咕牛🐂』时出现错误: ${error}`];
