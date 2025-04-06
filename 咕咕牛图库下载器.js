@@ -818,7 +818,7 @@ export class MiaoPluginMBT extends plugin {
         }
     }
     async DeleteFilesWithGuKeyword() {
-        const ToCheck = [this.characterPath, this.ZZZcharacterPath];
+        const ToCheck = [this.characterPath, this.ZZZcharacterPath, this.WAVEScharacterPath];
         for (const normalCharacterPath of ToCheck) {
             try {
                 const folders = await fs.promises.readdir(normalCharacterPath);
