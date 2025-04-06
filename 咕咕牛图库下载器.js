@@ -111,18 +111,23 @@ export class MiaoPluginMBT extends plugin {
         
         this.localPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/');
         this.GitPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/.git/');
+
         //载入路径
         this.characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/profile/normal-character/');
-        this.ZZZ_Plugin_characterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); 
+        this.ZZZcharacterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/resources/images/panel/'); 
+        this.WavescharacterPath = path.resolve(path.dirname(currentFilePath), '../../plugins/waves-plugin/resources/rolePic/'); 
+
         //图库路径
         this.SRcopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/sr-character/');
         this.GScopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/gs-character/');
-        this.ZZZ_Plugin_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); 
-        this.Waves_copylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/waves-character/');
+        this.ZZZcopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/zzz-character/'); 
+        this.WAVEScopylocalPath = path.resolve(path.dirname(currentFilePath), '../../resources/Miao-Plugin-MBT/waves-character/');
+
         //别名路径
         this.GSaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-gs/character/');
         this.SRaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/miao-plugin/resources/meta-sr/character/');
-        this.ZZZ_Plugin_ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');  
+        this.ZZZaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/ZZZ-Plugin/defset/');  
+        this.WAVESaliasPath = path.resolve(path.dirname(currentFilePath), '../../plugins/waves-plugin/resources/Alias/');  
 
         this.GuPath = path.resolve(path.dirname(currentFilePath), '../../resources/GuGuNiu-Gallery/');
         this.JsPath = path.resolve(path.dirname(currentFilePath), '../../plugins/example/');
@@ -197,7 +202,7 @@ export class MiaoPluginMBT extends plugin {
     async PostDownload(e) {
         await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
         await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath)
-        await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+        await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
         await e.reply(`『咕咕牛』正在咕咕噜的载入喵喵中...`);
 
         fs.mkdirSync(this.GuPath, { recursive: true });
@@ -274,7 +279,7 @@ export class MiaoPluginMBT extends plugin {
                 if (galleryConfig && galleryConfig['GGOP'] === 1) {
                      this.CopyFolderRecursive(this.GSpylocalPath, this.characterPath);
                      this.CopyFolderRecursive(this.SRopylocalPath, this.characterPath);
-                     this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+                     this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
 
                 }
 
@@ -392,7 +397,7 @@ export class MiaoPluginMBT extends plugin {
                     await e.reply("批量解除封禁可输入#清空咕咕牛封禁,仅重置封禁文件不影响净化模式")
                     await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
                     await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
-                    await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+                    await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
                 } else {
                     await e.reply(`${fileName} ❌️不存在`, true);
                 }
@@ -452,11 +457,11 @@ export class MiaoPluginMBT extends plugin {
     
         const foldersONE = fs.readdirSync(this.GScopylocalPath);
         const foldersTWO = fs.readdirSync(this.SRcopylocalPath);
-        const foldersTHREE = fs.readdirSync(this.ZZZ_Plugin_copylocalPath);
+        const foldersTHREE = fs.readdirSync(this.ZZZcopylocalPath);
         const allFolders = [
             ...foldersONE.map(folder => path.join(this.GScopylocalPath, folder)), 
             ...foldersTWO.map(folder => path.join(this.SRcopylocalPath, folder)), 
-            ...foldersTHREE.map(folder => path.join(this.ZZZ_Plugin_copylocalPath, folder))
+            ...foldersTHREE.map(folder => path.join(this.ZZZcopylocalPath, folder))
         ];
     
         const matchedFolder = allFolders.find(folder => path.basename(folder).includes(roleName));
@@ -594,7 +599,7 @@ export class MiaoPluginMBT extends plugin {
                 await e.reply('『咕咕牛🐂』启用中,请稍后...',true);
                 await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
                 await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
-                await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+                await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
                 await e.reply('『咕咕牛』重新进入喵喵里面！');
                 setTimeout(async () => {
                     this.DeleteBanList()
@@ -642,7 +647,7 @@ export class MiaoPluginMBT extends plugin {
         }else{
                 await this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
                 await this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
-                await this.CopyFolderRecursive(this.ZZZ_Plugin_copylocalPath, this.ZZZ_Plugin_characterPath);
+                await this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
 
                 fs.mkdirSync(this.GuPath, { recursive: true });
                 const sourceFile = path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png');
@@ -788,7 +793,7 @@ export class MiaoPluginMBT extends plugin {
                 }
             }
             await deleteFilesRecursively(this.characterPath);
-            await deleteFilesRecursively(this.ZZZ_Plugin_characterPath);
+            await deleteFilesRecursively(this.ZZZcharacterPath);
 
             console.log('『咕咕牛🐂』封禁列表中的文件已删除');
         } catch (error) {
@@ -796,7 +801,7 @@ export class MiaoPluginMBT extends plugin {
         }
     }
     async DeleteFilesWithGuKeyword() {
-        const ToCheck = [this.characterPath, this.ZZZ_Plugin_characterPath];
+        const ToCheck = [this.characterPath, this.ZZZcharacterPath];
         for (const normalCharacterPath of ToCheck) {
             try {
                 const folders = await fs.promises.readdir(normalCharacterPath);
@@ -922,10 +927,17 @@ export class MiaoPluginMBT extends plugin {
         aliasGS = eval('(' + aliasJSONGS + ')');
 
         let aliasZZZ;
-        const ZZZFilePath = path.resolve(this.ZZZ_Plugin_ZZZaliasPath, 'alias.yaml');
+        const ZZZFilePath = path.resolve(this.ZZZaliasPath, 'alias.yaml');
         if (fs.existsSync(ZZZFilePath)) {
             const ZZZContent = fs.readFileSync(ZZZFilePath, 'utf-8');
             aliasZZZ = yaml.parse(ZZZContent);
+        }
+
+        let aliasWAVES;
+        const WAVESFilePath = path.resolve(this.WAVESaliasPath, 'role.yaml');
+        if (fs.existsSync(WAVESFilePath)) {
+            const WAVESContent = fs.readFileSync(WAVESFilePath, 'utf-8');
+            aliasWAVES = yaml.parse(WAVESContent);
         }
 
         let mainNameSR = Object.keys(aliasSR).find(main => {
@@ -938,10 +950,18 @@ export class MiaoPluginMBT extends plugin {
             return aliases.includes(roleName);
         });
 
-        let BTP_mainNameZZZ;
+        let mainNameZZZ;
         if (aliasZZZ) {
-            BTP_mainNameZZZ = Object.keys(aliasZZZ).find(main => {
+            mainNameZZZ = Object.keys(aliasZZZ).find(main => {
                 const aliases = aliasZZZ[main];
+                return aliases.includes(roleName);
+            });
+        }
+
+        let mainNameWAVES;
+        if (aliasWAVES) {
+            mainNameWAVES = Object.keys(aliasWAVES).find(main => {
+                const aliases = aliasWAVES[main];
                 return aliases.includes(roleName);
             });
         }
@@ -950,8 +970,10 @@ export class MiaoPluginMBT extends plugin {
             return mainNameSR.trim();
         } else if (mainNameGS) {
             return mainNameGS.trim();
-        } else if (BTP_mainNameZZZ) {
-            return BTP_mainNameZZZ.trim();
+        } else if (mainNameZZZ) {
+            return mainNameZZZ.trim();
+        } else if (mainNameWAVES) {
+            return mainNameWAVES.trim();
         } 
         return roleName;
     }
