@@ -286,8 +286,8 @@ export class MiaoPluginMBT extends plugin {
                 const galleryConfig = yaml.parse(galleryConfigContent);
 
                 if (galleryConfig && galleryConfig['GGOP'] === 1) {
-                     this.CopyFolderRecursive(this.GSpylocalPath, this.characterPath);
-                     this.CopyFolderRecursive(this.SRopylocalPath, this.characterPath);
+                     this.CopyFolderRecursive(this.GScopylocalPath, this.characterPath);
+                     this.CopyFolderRecursive(this.SRcopylocalPath, this.characterPath);
                      this.CopyFolderRecursive(this.ZZZcopylocalPath, this.ZZZcharacterPath);
                      this.CopyFolderRecursive(this.WAVEScopylocalPath, this.WAVEScharacterPath);
                 }
@@ -337,6 +337,7 @@ export class MiaoPluginMBT extends plugin {
              }, 2000);
         }
     }    
+
     async GuHelp(e) {
         if (!fs.existsSync(this.GuPath)) {
             e.reply(segment.image("https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png"))
