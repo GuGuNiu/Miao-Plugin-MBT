@@ -761,23 +761,6 @@ export class MiaoPluginMBT extends plugin {
         }
     }
     
-
-    async GOODBYEGUGUNIU(e) {
-        const banListPath = path.join(this.GuPath, 'banlist.txt');
-            if (!fs.existsSync(banListPath)) {
-                fs.writeFileSync(banListPath, '', 'utf8');
-                await e.reply("牛的封禁列表文件不存在，已重新创建", true);
-            } else {
-                fs.unlinkSync(banListPath);
-                fs.writeFileSync(banListPath, '', 'utf8');
-                await e.reply("牛的封禁文件清空成功", true);
-            }
-    }
-    
-
-    
-
-
     async CheckFolder(e) {
         const gitPath = this.GitPath;
         const characterFolderPaths = [
