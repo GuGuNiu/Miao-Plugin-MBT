@@ -21,6 +21,7 @@ async function batchCopyFiles(fileList) {
         fs.mkdirSync(destDir, { recursive: true });
         await fs.promises.copyFile(fileItem.source, fileItem.dest);
     }
+    
 }
 
 
@@ -82,10 +83,19 @@ export class MiaoPluginMBT extends plugin {
         this.galleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml');
 
         
-
+        this.filesToCopy = [
+            {
+                source: path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png'),
+                dest: path.join(this.GuPath, 'help.png')
+            },
+            {
+                source: path.join(this.localPath, '咕咕牛图库下载器.js'),
+                dest: path.join(this.JsPath, '咕咕牛图库下载器.js')
+            }
+        ];
 
     }
-
+    
     async updateGalleryConfig(field, value) {
         const galleryConfigContent = fs.readFileSync(this.galleryConfigPath, 'utf8');
         const galleryConfig = yaml.parse(galleryConfigContent);
@@ -246,18 +256,8 @@ export class MiaoPluginMBT extends plugin {
             await e.reply('『咕咕牛』成功进入喵喵里面！\n会自动更新Js和图库~~~。');
         }, 20000);
         
-        const filesToCopy = [
-            {
-                source: path.join(this.localPath, 'GuGuNiu-Gallery', 'help.png'),
-                dest: path.join(this.GuPath, 'help.png')
-            },
-            {
-                source: path.join(this.localPath, '咕咕牛图库下载器.js'),
-                dest: path.join(this.JsPath, '咕咕牛图库下载器.js')
-            }
-        ];
         
-        await batchCopyFiles(filesToCopy);
+        await batchCopyFiles(this.filesToCopy);
 
     }
     
@@ -290,7 +290,7 @@ export class MiaoPluginMBT extends plugin {
                     await this.copyCharacterFolders();
                 }
     
-                await batchCopyFiles(filesToCopy);
+                await batchCopyFiles(this.filesToCopy);
     
                 if (galleryConfig && galleryConfig['Px18img-type'] === 0) {
                     const banList = await this.updateBanList();
@@ -754,7 +754,7 @@ export class MiaoPluginMBT extends plugin {
             }
     
             await this.copyCharacterFolders();
-            await batchCopyFiles(filesToCopy);
+            await batchCopyFiles(this.filesToCopy);
     
             logger.info("『咕咕牛🐂』定时更新任务：执行完毕");
     
