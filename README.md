@@ -1,10 +1,7 @@
 ![界面.png](https://s2.loli.net/2024/03/09/ZGNrwVyPDbOx9Bf.png)
 
-<br><br>
 
 ## 图库说明
-- 面板图在显示正常的情况下不使用超清以上分辨率的原图
-- 『<ins>彩蛋面板图</ins>』被使用的概率极低,因此本仓库不使用
 - 『<ins>图库管理器Js</ins>』的操作不会影响你的其他面板图和其他图库
 - 请勿用于以『<ins>盈利</ins>』为目的的任何场景,如侵权请联系删除
 
@@ -19,7 +16,7 @@
 
 ## 快速安装
 
- #### 在Yunzai根目录运行以下命令,使用 #咕咕牛帮助 呼叫出菜单,使用Js每15天-30天会自动更新整个图库
+ #### 在Yunzai根目录运行以下命令,使用 #咕咕牛帮助 呼叫出菜单,使用Js会自动更新整个图库
 
 1、Github源：
 
@@ -48,8 +45,7 @@ Miao-Plugin : https://github.com/yoimiya-kokomi/miao-plugin
 
 ZZZ-Plugin ：https://github.com/ZZZure/ZZZ-Plugin/
 
-Waves-Plugin:
-https://github.com/erzaozi/waves-plugin
+Waves-Plugin:https://github.com/erzaozi/waves-plugin
 
 <br>
 
