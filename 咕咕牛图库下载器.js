@@ -181,16 +181,23 @@ export class MiaoPluginMBT extends plugin {
               }
             } else {
               const error = new Error(`code ${code}`);
-              const feedback = this.generateDownloadErrorFeedback(error).join('\n');
-              await e.reply("下载失败！\n" + feedback);
+                console.error('下载『咕咕牛🐂』时出现错误:', error);
+                const updateerrorforward =await common.makeForwardMsg(e,this.generateDownloadErrorFeedback(error), '『咕咕牛🐂』下载失败日志');
+                await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
+                setTimeout(async () => {
+                    await this.reply(updateerrorforward);
+                }, 2000);
               console.error("下载失败，异常码：", code);
             }
           }.bind(this));
           
           git.on('error', async function(err) {
-            const feedback = this.generateDownloadErrorFeedback(err).join('\n');
-            await e.reply("下载失败！\n" + feedback);
-            console.error("下载出错：", err.message);
+              console.error('下载『咕咕牛🐂』时出现错误:', error);
+              const updateerrorforward =await common.makeForwardMsg(e,this.generateDownloadErrorFeedback(error), '『咕咕牛🐂』下载失败日志');
+              await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
+              setTimeout(async () => {
+                  await this.reply(updateerrorforward);
+              }, 2000);
           }.bind(this));
           
       }
@@ -296,7 +303,7 @@ export class MiaoPluginMBT extends plugin {
             }
         }catch (error) {
             console.error('更新『咕咕牛🐂』时出现错误:', error);
-            const updateerrorforward = await this.generateDownloadErrorFeedback(error);
+            const updateerrorforward =await common.makeForwardMsg(e,this.generateDownloadErrorFeedback(error), '『咕咕牛🐂』更新失败日志');
             await this.reply('更新『咕咕牛』时出现错误，请查看日志！');
             setTimeout(async () => {
                 await this.reply(updateerrorforward);
@@ -1139,7 +1146,7 @@ export class MiaoPluginMBT extends plugin {
             'fatal: could not open index.lock': "Git 正在进行操作时，另一个操作锁住了文件，可以删除 '.git/index.lock' 文件再试。",
         };
     
-        let feedback = [`下载『咕咕牛🐂』时出现错误: ${error}`];
+        let feedback = [`操作『咕咕牛🐂』时出现错误: ${error}`];
         Object.keys(errorMessages).forEach(code => {
             if (error.message.includes(code)) {
                 feedback.push(errorMessages[code]);
