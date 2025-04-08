@@ -109,179 +109,87 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryDownload(e) {
-        const sources = {
-            "ghfast.top": "https://ghfast.top/" + this.repositoryUrl,
-            "ghp.ci": "https://ghp.ci/" + this.repositoryUrl,
-            "ghgo.xyz": "https://ghgo.xyz/" + this.repositoryUrl,
-            "ghproxy.com": "https://ghproxy.com/" + this.repositoryUrl,
-            "fastgit.org": "https://fastgit.org/" + this.repositoryUrl,
-            "github.moeyy.xyz": "https://github.moeyy.xyz/" + this.repositoryUrl,
-            "gh.api.99988866.xyz": "https://gh.api.99988866.xyz/" + this.repositoryUrl,
-            "raw.gitmirror.com": "https://raw.gitmirror.com/" + this.repositoryUrl,
-            "github.com": this.repositoryUrl 
-        };
-    
+        
+        const rawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
+      
         await e.reply('『咕咕牛🐂』测速中，请稍候...');
-    
-        const testSourceSpeed = async (url) => {
-            const start = Date.now();
-            try {
-                const response = await fetch(url + "/README.md", { timeout: 3000 });
-                if (response.ok) return Date.now() - start;
-                return Infinity;
-            } catch {
-                return Infinity;
-            }
+        const speeds = await this.testProxies(rawPath);
+      
+        let msg = '测速完成，各源延迟如下：\n\n';
+        for (let s of speeds) {
+          msg += `${s.name}：${s.speed === Infinity ? '超时 ❌' : s.speed + 'ms ✅'}\n`;
+        }
+      
+        const available = speeds.filter(i => i.speed !== Infinity);
+        if (available.length === 0) {
+          await e.reply(msg + `\n⚠️ 所有源测速失败，请检查网络或手动下载。`);
+          return;
+        }
+      
+        available.sort((a, b) => a.speed - b.speed);
+        const best = available[0];
+      
+        const bestCloneUrl = best.url.replace(rawPath, '') + this.repositoryUrl;
+      
+        msg += `\n✅ 最佳源：${best.name}（${best.speed}ms），开始下载...\n`;
+        await e.reply(msg);
+      
+        try {
+
+          await e.reply("『咕咕牛』下载完成，准备下一步操作...");
+
+          await this.cloneFullRepo(bestCloneUrl, e);
+          await this.PostDownload(e);
+        } catch (err) {
+          await e.reply("下载失败，请检查控制台日志或手动尝试！");
+          console.error("下载失败 ：", err.message);
+        }
+      }
+      
+      async testProxies(rawPath) {
+        const sources = {
+          "Ghfast.top": this.proxy + rawPath,
+          "Ghp.ci": this.proxy2 + rawPath,
+          "Ghgo.xyz": this.proxy3 + rawPath,
+          "Ghproxy.com": this.proxy4 + rawPath,
+          "Github.moeyy.xyz": this.proxy5 + rawPath,
+          "Git.yumenaka.net": this.proxy6 + rawPath,
+          "Raw.gitmirror.com": this.proxy7 + rawPath,
+          "Ghproxy.net": this.proxy8 + rawPath,
+          "Github.com": rawPath
         };
-    
+      
+        const testSourceSpeed = async (url) => {
+          const testFile = "/README.md";
+          const start = Date.now();
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3000);
+            const res = await fetch(url + testFile, { signal: controller.signal });
+            clearTimeout(timeout);
+            if (res.ok) return Date.now() - start;
+          } catch (e) {}
+          return Infinity;
+        };
+      
         const speeds = await Promise.all(Object.entries(sources).map(async ([name, url]) => {
-            const speed = await testSourceSpeed(url);
-            return { name, url, speed };
+          const speed = await testSourceSpeed(url);
+          return { name, url, speed };
         }));
-    
-        speeds.sort((a, b) => a.speed - b.speed);
-        const best = speeds[0];
-    
-        await e.reply(`测速完成，最佳源为 ${best.name}，延迟 ${best.speed}ms，开始下载`);
-    
-        try {
-          
-            const rawURL = best.url.replace(/github\.com.*$/, "main");
-            await this.downloadFromRaw(rawURL, e);
-            await this.PostDownload(e);
-            return;
-        } catch (err1) {
-            console.warn("raw.git 下载分段内容：", err1.message);
-        }
-    
-        try {
-  
-            await this.downloadViaSparse(best.url, e);
-            await this.PostDownload(e);
-            return;
-        } catch (err2) {
-            console.warn("Sparse-checkout（Git分段下载）：", err2.message);
-        }
-    
-        try {
-            await this.cloneFullRepo(best.url, e);
-            await this.PostDownload(e);
-        } catch (err3) {
-            await e.reply('所有方式均失败，请检查网络或手动下载');
-            console.error("git clone也失败：", err3.message);
-        }
-    }
+      
+        return speeds;
+      }
 
-
-
-     //下载一
-                    async downloadFromRaw(baseRawUrl, e) {
-                        const folders = ['gs-character', 'sr-character', 'zzz-character', 'waves-character'];
-                        for (let folder of folders) {
-                            const chars = await this.getCharacterListFromRaw(baseRawUrl + '/' + folder);
-                            for (let char of chars) {
-                                const url = `${baseRawUrl}/${folder}/${char}/panel.webp`;
-                                const targetPath = path.join(this.localPath, folder, char, 'panel.webp');
-                                await this.downloadSingleFile(url, targetPath);
-                            }
-                        }
-                    }
-                    
-                    async getCharacterListFromAlias() {
-                        const characterLists = [];
-                    
-                        const aliasGSFile = path.resolve(this.GSaliasPath, 'alias.js');
-                        if (fs.existsSync(aliasGSFile)) {
-                            const content = fs.readFileSync(aliasGSFile, 'utf-8');
-                            const match = content.match(/{[^{}]*}/);
-                            if (match) {
-                                const aliasGS = eval('(' + match[0] + ')');
-                                characterLists.push(...Object.keys(aliasGS).map(name => name.trim()));
-                            }
-                        }
-                    
-                        const aliasSRFile = path.resolve(this.SRaliasPath, 'alias.js');
-                        if (fs.existsSync(aliasSRFile)) {
-                            const content = fs.readFileSync(aliasSRFile, 'utf-8');
-                            const match = content.match(/{[^{}]*}/);
-                            if (match) {
-                                const aliasSR = eval('(' + match[0] + ')');
-                                characterLists.push(...Object.keys(aliasSR).map(name => name.trim()));
-                            }
-                        }
-                    
-                        const aliasZZZFile = path.resolve(this.ZZZaliasPath, 'alias.yaml');
-                        if (fs.existsSync(aliasZZZFile)) {
-                            const content = fs.readFileSync(aliasZZZFile, 'utf-8');
-                            const aliasZZZ = yaml.parse(content);
-                            characterLists.push(...Object.keys(aliasZZZ).map(name => name.trim()));
-                        }
-                    
-                        const aliasWAVESFile = path.resolve(this.WAVESaliasPath, 'role.yaml');
-                        if (fs.existsSync(aliasWAVESFile)) {
-                            const content = fs.readFileSync(aliasWAVESFile, 'utf-8');
-                            const aliasWAVES = yaml.parse(content);
-                            characterLists.push(...Object.keys(aliasWAVES).map(name => name.trim()));
-                        }
-                    
-                        return [...new Set(characterLists)];
-                    }
-                    
-                    
-                    async getCharacterListFromRaw(folderUrl) {
-                        const characterList = await this.getCharacterListFromAlias();
-                        if (characterList && characterList.length > 0) {
-                            return characterList;
-                        }
-                    
-                    }
-                    
-                    async downloadSingleFile(url, destPath) {
-                        const dir = path.dirname(destPath);
-                        await fs.promises.mkdir(dir, { recursive: true });
-                    
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error(`下载失败: ${url}`);
-                        const buffer = await res.arrayBuffer();
-                        fs.writeFileSync(destPath, Buffer.from(buffer));
-                    }
-
-
-    //下载二
-                    async downloadViaSparse(url, e) {
-                        await fs.promises.rm(this.localPath, { recursive: true, force: true });
-                        await fs.promises.mkdir(this.localPath, { recursive: true });
-                    
-                        const cmd = [
-                            `git init`,
-                            `git remote add -f origin ${url}`,
-                            `git config core.sparseCheckout true`,
-                            `echo "gs-character/" >> .git/info/sparse-checkout`,
-                            `echo "sr-character/" >> .git/info/sparse-checkout`,
-                            `echo "zzz-character/" >> .git/info/sparse-checkout`,
-                            `echo "waves-character/" >> .git/info/sparse-checkout`,
-                            `git pull origin main`
-                        ].join(" && ");
-                    
-                        return new Promise((resolve, reject) => {
-                            exec(cmd, { cwd: this.localPath }, (err, stdout, stderr) => {
-                                if (err) reject(err);
-                                else resolve();
-                            });
-                        });
-                    }
-    
-
-    //下载三
-                    async cloneFullRepo(url, e) {
-                        await fs.promises.rm(this.localPath, { recursive: true, force: true });
-                        return new Promise((resolve, reject) => {
-                            const process = exec(`git clone --depth=1 ${url} ${this.localPath}`);
-                            process.on('close', code => {
-                                code === 0 ? resolve() : reject(new Error(`git clone failed: ${code}`));
-                            });
-                        });
-                    }
+      async cloneFullRepo(url, e) {
+        await fs.promises.rm(this.localPath, { recursive: true, force: true });
+        return new Promise((resolve, reject) => {
+          const process = exec(`git clone --depth=1 ${url} ${this.localPath}`);
+          process.on('close', code => {
+            code === 0 ? resolve() : reject(new Error(`git clone failed: ${code}`));
+          });
+        });
+      }
+            
     
 
     async PostDownload(e) {
