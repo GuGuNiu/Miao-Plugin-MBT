@@ -105,56 +105,54 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryDownload(e) {
-        var rawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
-        var speeds = await this.testProxies(rawPath);
-        var msg = '『咕咕牛🐂』节点测速延迟：\n\n';
-        var i, s;
-        for (i = 0; i < speeds.length; i++) {
-          s = speeds[i];
-          var speedMsg = "";
+      
+        const rawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
+        const speeds = await this.testProxies(rawPath);
+        let msg = '『咕咕牛🐂』节点测速延迟：\n\n';
+
+        for (let i = 0; i < speeds.length; i++) {
+          const s = speeds[i];
+          let speedMsg = "";
           if (s.speed === Infinity) {
             speedMsg = "超时 ❌";
           } else {
             speedMsg = s.speed + "ms ✅";
           }
-          msg = msg + s.name + "：" + speedMsg + "\n";
+          msg += `${s.name}：${speedMsg}\n`;
         }
-        
-        var available = [];
-        for (i = 0; i < speeds.length; i++) {
+
+        const available = [];
+        for (let i = 0; i < speeds.length; i++) {
           if (speeds[i].speed !== Infinity) {
             available.push(speeds[i]);
           }
         }
-        
+
         if (available.length === 0) {
           await e.reply(msg + "\n⚠️ 所有源测速失败，请检查网络或手动下载。");
           return;
         }
-        
-        available.sort(function(a, b) {
-          return a.speed - b.speed;
-        });
-        
-        var best = available[0];
-        var bestCloneUrl = best.url.replace(rawPath, "") + this.repositoryUrl;
-        msg = msg + "\n✅最佳：" + best.name + "开始下载了...\n";
+
+        available.sort((a, b) => a.speed - b.speed);
+        const best = available[0];
+        const bestCloneUrl = best.url.replace(rawPath, "") + this.repositoryUrl;
+        msg += `\n✅最佳：${best.name}开始下载了...\n`;
         await e.reply(msg);
-        
-        var progressReported10 = false;
-        var progressReported50 = false;
-        var progressReported90 = false;
-        
-        var git = spawn('git', ['clone', '--depth=1', '--progress', bestCloneUrl, this.localPath], { shell: true });
-        
-        git.stdout.on('data', function(data) {
+
+        let progressReported10 = false;
+        let progressReported50 = false;
+        let progressReported90 = false;
+
+        const git = spawn('git', ['clone', '--depth=1', '--progress', bestCloneUrl, this.localPath], { shell: true });
+
+        git.stdout.on('data', (data) => {
         });
-        
-        git.stderr.on('data', async function(data) {
-          var str = data.toString();
-          var m = str.match(/Receiving objects:\s*(\d+)%/);
+
+        git.stderr.on('data', async (data) => {
+          const str = data.toString();
+          const m = str.match(/Receiving objects:\s*(\d+)%/);
           if (m && m[1]) {
-            var progress = parseInt(m[1], 10);
+            const progress = parseInt(m[1], 10);
             if (progress >= 10 && progressReported10 === false) {
               progressReported10 = true;
               await e.reply('『咕咕牛』下载进度：10%');
@@ -165,43 +163,42 @@ export class MiaoPluginMBT extends plugin {
             }
             if (progress >= 90 && progressReported90 === false) {
               progressReported90 = true;
-              await e.reply('『咕咕牛』下载进度：90%,即将下载完成');
+              await e.reply('『咕咕牛』下载进度：90%，即将下载完成');
             }
           }
         });
-        
-        git.on('close', async function(code) {
-            if (code === 0) {
-              await e.reply("『咕咕牛』下载完成，准备下一步操作...");
-              try {
-                await this.PostDownload(e);
-              } catch (err) {
-                await e.reply("处理失败，请查看控制台日志或手动处理。");
-                console.error("处理失败：", err.message);
-              }
-            } else {
-              const error = new Error(`code ${code}`);
-                console.error('下载『咕咕牛🐂』时出现错误:', error);
-                const updateerrorforward =await common.makeForwardMsg(e,this.generateDownloadErrorFeedback(error), '『咕咕牛🐂』下载失败日志');
-                await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
-                setTimeout(async () => {
-                    await this.reply(updateerrorforward);
-                }, 2000);
-              console.error("下载失败，异常码：", code);
+
+        git.on('close', async (code) => {
+          if (code === 0) {
+            await e.reply("『咕咕牛』下载完成，准备下一步操作...");
+            try {
+              await this.PostDownload(e);
+            } catch (err) {
+              await e.reply("处理失败，请查看控制台日志或手动处理。");
+              console.error("处理失败：", err.message);
             }
-          }.bind(this));
+          } else {
+            const error = new Error(`code ${code}`);
+            console.error('下载『咕咕牛🐂』时出现错误:', error);
+            const updateerrorforward = await common.makeForwardMsg(e, this.generateDownloadErrorFeedback(error), '『咕咕牛🐂』下载失败日志');
+            await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
+            setTimeout(async () => {
+              await this.reply(updateerrorforward);
+            }, 2000);
+            console.error("下载失败，异常码：", code);
+          }
+        });
+
+        git.on('error', async (err) => {
+          console.error('下载『咕咕牛🐂』时出现错误:', err);
+          const updateerrorforward = await common.makeForwardMsg(e, this.generateDownloadErrorFeedback(err), '『咕咕牛🐂』下载失败日志');
+          await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
+          setTimeout(async () => {
+            await this.reply(updateerrorforward);
+          }, 2000);
+        });
+    }
           
-          git.on('error', async function(err) {
-              console.error('下载『咕咕牛🐂』时出现错误:', error);
-              const updateerrorforward =await common.makeForwardMsg(e,this.generateDownloadErrorFeedback(error), '『咕咕牛🐂』下载失败日志');
-              await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
-              setTimeout(async () => {
-                  await this.reply(updateerrorforward);
-              }, 2000);
-          }.bind(this));
-          
-      }
-      
       async testProxies(rawPath) {
         const sources = {
           "Github": rawPath,
