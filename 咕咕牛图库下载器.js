@@ -109,7 +109,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryDownload(e) {
-        
+
         const rawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
       
         await e.reply('『咕咕牛🐂』测速中，请稍候...');
@@ -136,9 +136,11 @@ export class MiaoPluginMBT extends plugin {
       
         try {
 
-          await e.reply("『咕咕牛』下载完成，准备下一步操作...");
 
           await this.cloneFullRepo(bestCloneUrl, e);
+          await e.reply("『咕咕牛』下载完成，准备下一步操作...");
+
+          
           await this.PostDownload(e);
         } catch (err) {
           await e.reply("下载失败，请检查控制台日志或手动尝试！");
