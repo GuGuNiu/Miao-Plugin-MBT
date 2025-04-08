@@ -140,7 +140,7 @@ export class MiaoPluginMBT extends plugin {
           await this.cloneFullRepo(bestCloneUrl, e);
           await e.reply("『咕咕牛』下载完成，准备下一步操作...");
 
-          
+
           await this.PostDownload(e);
         } catch (err) {
           await e.reply("下载失败，请检查控制台日志或手动尝试！");
@@ -921,9 +921,9 @@ export class MiaoPluginMBT extends plugin {
                         const filePath = path.join(folderPath, file);
                         try {
                             await fs.promises.unlink(filePath);
-                            console.log(`已删除：${filePath}`);
+                         //  console.log(`已删除：${filePath}`);
                         } catch (err) {
-                            console.warn(`删除失败：${filePath} - ${err.message}`);
+                        //   console.warn(`删除失败：${filePath} - ${err.message}`);
                         }
                     }));
                 }
