@@ -105,7 +105,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryDownload(e) {
-      
+
         const rawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
         const speeds = await this.testProxies(rawPath);
         let msg = '『咕咕牛🐂』节点测速延迟：\n\n';
@@ -842,71 +842,54 @@ export class MiaoPluginMBT extends plugin {
         ]);
     }
     
-    async ExportSingleImage(e) {
-        const rawInput = e.msg.replace(/^#咕咕牛导出/, '').trim();
-        let name = rawInput.replace(/\s+/g, '').replace(/gu/i, 'Gu');
-      
-        if (!/Gu\d+$/i.test(name)) {
-          const autoMatch = name.match(/(.*?)(\d+)$/);
-          if (autoMatch) {
-            name = autoMatch[1] + 'Gu' + autoMatch[2];
-          } else {
-            await e.reply('格式错误，请输入完整编号，例如：#咕咕牛导出 心海1', true);
-            return true;
-          }
+  async ExportSingleImage(e) {
+        const name = e.msg.replace('#咕咕牛导出', '').trim();
+        if (!name) {
+          await e.reply('请输入要导出的角色名，例如：#咕咕牛导出艾梅莉埃1');
+          return;
         }
-      
-        const roleName = name.replace(/Gu\d+$/, '');
-        const suffix = name.match(/Gu\d+$/)?.[0] || '';
-        const mainName = this.getMainRoleName(roleName, true);
-      
-        if (!mainName) {
-          await e.reply(`角色「${roleName}」不存在，请检查名称是否正确`, true);
-          return true;
-        }
-      
-        const fullName = `${mainName}${suffix}`;
-        const fileName = `${fullName}.webp`;
-      
-        const searchDirs = [
-          this.GScopylocalPath,
-          this.SRcopylocalPath,
-          this.ZZZcopylocalPath,
-          this.WAVEScopylocalPath
-        ];
-      
-        let foundPath = '';
-        for (const dir of searchDirs) {
-          const subfolders = fs.readdirSync(dir, { withFileTypes: true }).filter(f => f.isDirectory());
-          for (const folder of subfolders) {
-            const possiblePath = path.join(dir, folder.name, fileName);
-            if (fs.existsSync(possiblePath)) {
-              foundPath = possiblePath;
-              break;
+
+        const files = fs.readdirSync(this.GSPath, { withFileTypes: true });
+        let foundFile = null;
+
+        for (const dirent of files) {
+          if (dirent.isDirectory() && name.startsWith(dirent.name)) {
+            const subDir = path.join(this.GSPath, dirent.name);
+            const subFiles = fs.readdirSync(subDir);
+            for (const file of subFiles) {
+              if (file.includes(name)) {
+                foundFile = path.join(subDir, file);
+                break;
+              }
             }
+            if (foundFile) break;
           }
-          if (foundPath) break;
         }
-      
-        if (!foundPath) {
-          await e.reply(`未找到文件：${fileName}`, true);
-          return true;
+
+        if (!foundFile || !fs.existsSync(foundFile)) {
+          await e.reply('❌未找到对应的角色图片文件');
+          return;
         }
-      
+
+        const fileName = path.basename(foundFile);
+
         try {
           await e.reply([
             `📦文件导出成功：${fileName}`,
-            segment.file(foundPath) 
+            {
+              type: 'file',
+              file: foundFile,
+              name: fileName 
+            }
           ]);
         } catch (err) {
-          console.error('[文件导出失败]', err);
-          await e.reply('发送文件失败，请查看控制台日志或确认机器人权限', true);
+          logger.error('发送文件失败：', err);
+          await e.reply('❌发送文件失败，可能是网络问题或文件太大');
         }
+}
+
       
-        return true;
-      }
-      
-      async ManageGallary(e) {
+async ManageGallary(e) {
         const msg = e.msg.trim();
         let action = "";
         if (msg.indexOf("删除") !== -1) {
