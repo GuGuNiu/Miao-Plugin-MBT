@@ -85,13 +85,10 @@ export class MiaoPluginMBT extends plugin {
         if (this.Px18List && this.Px18List.length > 0) {
             return;
         }
-
         try {
             const Content = await fsPromises.readFile(this.Px18imgDestPath, 'utf8');
             const ParsedList = JSON.parse(Content);
-
             this.Px18List = Array.isArray(ParsedList) ? ParsedList : [];
-
         } catch (Error) {
             if (Error.code !== 'ENOENT') {
                  logger.error(`『咕咕牛🐂』加载或解析Px18img失败: ${this.Px18imgDestPath}`, Error);
@@ -102,7 +99,6 @@ export class MiaoPluginMBT extends plugin {
 
     async UpdateGalleryConfig(Field, Value) {
         let GalleryConfig = {};
-
         try {
             const GalleryConfigContent = await fsPromises.readFile(this.GalleryConfigPath, 'utf8');
             GalleryConfig = yaml.parse(GalleryConfigContent) || {};
@@ -111,10 +107,8 @@ export class MiaoPluginMBT extends plugin {
                  logger.error(`『咕咕牛🐂』读取 ${this.GalleryConfigPath} 时出错: ${ReadError}`);
             }
         }
-
         GalleryConfig[Field] = Value;
         const NewGalleryConfigContent = yaml.stringify(GalleryConfig);
-
         try {
             await fsPromises.writeFile(this.GalleryConfigPath, NewGalleryConfigContent, 'utf8');
         } catch (WriteError) {
@@ -123,6 +117,12 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryDownload(e) {
+
+        if (fs.existsSync(this.LocalPath)) {
+            await e.reply("『咕咕牛🐂』已存在，请勿重复下载。若需重新下载，请先使用#重置咕咕牛");
+            return;
+        }
+        
         const RawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
         let Speeds = [];
 
@@ -189,13 +189,15 @@ export class MiaoPluginMBT extends plugin {
                     console.error("处理失败：", err.message);
                 }
             } else {
-                const Error = new Error(`code ${code}`);
-                console.error('下载『咕咕牛🐂』时出现错误:', Error);
-                const UpdateErrorForward = await common.makeForwardMsg(e, this.GenerateDownloadErrorFeedback(Error), '『咕咕牛🐂』下载失败日志');
+
+                const DownloadError = new Error(`code ${code}`);
+                console.error('下载『咕咕牛🐂』时出现错误:', DownloadError);
+                const UpdateErrorForward = await common.makeForwardMsg(e, this.GenerateDownloadErrorFeedback(DownloadError), '『咕咕牛🐂』下载失败日志');
                 await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
                 setTimeout(async () => { await this.reply(UpdateErrorForward); }, 2000);
                 console.error("下载失败，异常码：", code);
             }
+            
         });
 
         Git.on('error', async (err) => {
@@ -263,15 +265,10 @@ export class MiaoPluginMBT extends plugin {
 
     async PostDownload(e) {
         await this.CopyCharacterFolders();
-
         await e.reply('『咕咕牛』正在咕咕噜的载入喵喵中...');
-
         await fsPromises.mkdir(this.GuPath, { recursive: true });
-
         await this.CopyFolderRecursive(path.join(this.LocalPath, 'GuGuNiu-Gallery'), this.GuPath);
-
         await this.DeleteBanList();
-
         setTimeout(async () => {
             await e.reply('『咕咕牛』成功进入喵喵里面！\n会自动更新Js和图库~~~。');
         }, 20000);
@@ -338,7 +335,7 @@ export class MiaoPluginMBT extends plugin {
             return yaml.parse(GalleryConfigContent);
         } catch (ReadError) {
             if (ReadError.code !== 'ENOENT') {
-                logger.error(`『咕咕牛🐂』读取 gallery config ${this.GalleryConfigPath} 失败:`, ReadError);
+                logger.error(`『咕咕牛🐂』读取 GalleryConfig ${this.GalleryConfigPath} 失败:`, ReadError);
             }
             return null;
         }
