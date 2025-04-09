@@ -843,68 +843,73 @@ export class MiaoPluginMBT extends plugin {
     }
     
     async ExportSingleImage(e) {
-        const rawInput = e.msg.replace(/^#咕咕牛导出/, '').trim();
-        let name = rawInput.replace(/\s+/g, '').replace(/gu/i, 'Gu');
-      
-        if (!/Gu\d+$/i.test(name)) {
-          const autoMatch = name.match(/(.*?)(\d+)$/);
-          if (autoMatch) {
-            name = autoMatch[1] + 'Gu' + autoMatch[2];
-          } else {
-            await e.reply('格式错误，请输入完整编号，例如：#咕咕牛导出 心海1', true);
-            return true;
-          }
-        }
-      
-        const roleName = name.replace(/Gu\d+$/, '');
-        const suffix = name.match(/Gu\d+$/)?.[0] || '';
-        const mainName = this.getMainRoleName(roleName, true);
-      
-        if (!mainName) {
-          await e.reply(`角色「${roleName}」不存在，请检查名称是否正确`, true);
+      const rawInput = e.msg.replace(/^#咕咕牛导出/, '').trim();
+      let name = rawInput.replace(/\s+/g, '').replace(/gu/i, 'Gu');
+    
+      if (!/Gu\d+$/i.test(name)) {
+        const autoMatch = name.match(/(.*?)(\d+)$/);
+        if (autoMatch) {
+          name = autoMatch[1] + 'Gu' + autoMatch[2];
+        } else {
+          await e.reply('格式错误，请输入完整编号，例如：#咕咕牛导出 心海1', true);
           return true;
         }
-      
-        const fullName = `${mainName}${suffix}`;
-        const fileName = `${fullName}.webp`;
-      
-        const searchDirs = [
-          this.GScopylocalPath,
-          this.SRcopylocalPath,
-          this.ZZZcopylocalPath,
-          this.WAVEScopylocalPath
-        ];
-      
-        let foundPath = '';
-        for (const dir of searchDirs) {
-          const subfolders = fs.readdirSync(dir, { withFileTypes: true }).filter(f => f.isDirectory());
-          for (const folder of subfolders) {
-            const possiblePath = path.join(dir, folder.name, fileName);
-            if (fs.existsSync(possiblePath)) {
-              foundPath = possiblePath;
-              break;
-            }
-          }
-          if (foundPath) break;
-        }
-      
-        if (!foundPath) {
-          await e.reply(`未找到文件：${fileName}`, true);
-          return true;
-        }
-      
-        try {
-          await e.reply([
-            `📦文件导出成功：${fileName}`,
-            segment.file(foundPath) 
-          ]);
-        } catch (err) {
-          console.error('[文件导出失败]', err);
-          await e.reply('发送文件失败，请查看控制台日志或确认机器人权限', true);
-        }
-      
+      }
+    
+      const roleName = name.replace(/Gu\d+$/, '');
+      const suffix = name.match(/Gu\d+$/)?.[0] || '';
+      const mainName = this.getMainRoleName(roleName, true);
+    
+      if (!mainName) {
+        await e.reply(`角色「${roleName}」不存在，请检查名称是否正确`, true);
         return true;
       }
+    
+      const fullName = `${mainName}${suffix}`;
+      const fileName = `${fullName}.webp`;
+    
+      const searchDirs = [
+        this.GScopylocalPath,
+        this.SRcopylocalPath,
+        this.ZZZcopylocalPath,
+        this.WAVEScopylocalPath
+      ];
+    
+      let foundPath = '';
+      for (const dir of searchDirs) {
+        const subfolders = fs.readdirSync(dir, { withFileTypes: true }).filter(f => f.isDirectory());
+        for (const folder of subfolders) {
+          const possiblePath = path.join(dir, folder.name, fileName);
+          if (fs.existsSync(possiblePath)) {
+            foundPath = possiblePath;
+            break;
+          }
+        }
+        if (foundPath) break;
+      }
+    
+      if (!foundPath) {
+        await e.reply(`未找到文件：${fileName}`, true);
+        return true;
+      }
+    
+      try {
+        await e.reply([
+          `📦文件导出成功：${fileName}`,
+          segment.file(foundPath)
+        ]);
+      } catch (err) {
+        logger.error('[文件导出失败]', err);
+        if (err?.message?.includes('highway') || err?.message?.includes('stat') || err?.code === 210005) {
+          await e.reply('图片过大，导出失败,可能是被限制发送', true);
+        } else {
+          await e.reply('发送文件失败，请查看控制台日志或确认机器人权限', true);
+        }
+      }
+    
+      return true;
+    }
+    
       
       async ManageGallary(e) {
         const msg = e.msg.trim();
