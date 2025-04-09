@@ -249,21 +249,22 @@ export class MiaoPluginMBT extends plugin {
             
     
 
-    async PostDownload(e) {
-        await this.copyCharacterFolders();
+      async PostDownload(e) {
+        await this.copyCharacterFolders();  
         await e.reply('『咕咕牛』正在咕咕噜的载入喵喵中...');
-    
+        
         fs.mkdirSync(this.GuPath, { recursive: true });
-        this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery'), this.GuPath);
+    
+        await this.CopyFolderRecursive(path.join(this.localPath, 'GuGuNiu-Gallery'), this.GuPath);
+        await this.DeleteBanList(); 
     
         setTimeout(async () => {
             await e.reply('『咕咕牛』成功进入喵喵里面！\n会自动更新Js和图库~~~。');
         }, 20000);
-        
-        
+    
         await batchCopyFiles(this.filesToCopy);
-
     }
+    
     
     async GallaryUpdate(e) {
         try {
