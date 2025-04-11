@@ -116,16 +116,6 @@ export class MiaoPluginMBT extends plugin {
         }
     }
     
-    async CountFuncUsage(name) {
-        const NumPath = path.join(this.GuPath, 'num');
-        let countData = {};
-            try {
-                const raw = await fsPromises.readFile(NumPath, 'utf8');
-                countData = JSON.parse(raw);
-            } catch (err) {}
-                countData[name] = (countData[name] || 0) + 1;
-                await fsPromises.writeFile(NumPath, JSON.stringify(countData, null, 2), 'utf8');
-    }
           
     async LoadPx18List() {
         if (this.Px18List && this.Px18List.length > 0) {
@@ -166,7 +156,6 @@ export class MiaoPluginMBT extends plugin {
     async GallaryDownload(e) {
         const startTime = Date.now();
         logger.info(`『咕咕牛』 ${new Date(startTime).toISOString()}] 图库下载: 收到命令 #下载咕咕牛`);
-        await this.CountFuncUsage('GallaryDownload');
         logger.debug(`『咕咕牛』 图库下载: 检查目标路径是否存在: ${this.LocalPath}`);
         try {
             await fsPromises.access(this.LocalPath);
@@ -391,7 +380,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryUpdate(e) {
-        await this.CountFuncUsage('GallaryUpdate');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) {
@@ -478,7 +466,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GuHelp(e) {
-        await this.CountFuncUsage('GuHelp');
         let GuPathExists = false;
         try { await fsPromises.access(this.GuPath); GuPathExists = true; } catch {}
 
@@ -492,7 +479,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async BanRole(e) {
-        await this.CountFuncUsage('BanRole');
         const BanListPath = path.join(this.GuPath, 'banlist.txt');
         const Message = e.raw_message || e.message || e.content;
 
@@ -650,7 +636,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async FindRoleSplash(e) {
-        await this.CountFuncUsage('FindRoleSplash');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) {
@@ -756,7 +741,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async RemoveBadimages(e) {
-        await this.CountFuncUsage('RemoveBadimages');
         const GalleryConfig = await this.GetGalleryConfig();
         const BanListPath = path.join(this.GuPath, 'banlist.txt');
 
@@ -814,7 +798,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async CheckR18Photo(e) {
-        await this.CountFuncUsage('CheckR18Photo');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) {
@@ -933,7 +916,6 @@ export class MiaoPluginMBT extends plugin {
     
 
     async GalleryOption(e) {
-        await this.CountFuncUsage('GalleryOption');
         const { msg } = e;
         const Delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -994,7 +976,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async CheckFolder(e) {
-        await this.CountFuncUsage('CheckFolder');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) { await e.reply('『咕咕牛🐂』未下载！', true); return true; }
@@ -1094,7 +1075,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async ExportSingleImage(e) {
-        await this.CountFuncUsage('ExportSingleImage');
         const RawInput = e.msg.replace(/^#咕咕牛导出/, '').trim();
         let Name = RawInput.replace(/\s+/g, '').replace(/gu/i, 'Gu');
 
@@ -1144,7 +1124,6 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async ManageGallary(e) {
-        await this.CountFuncUsage('ManageGallary');
         const Msg = e.msg.trim();
         let Action = "";
 
