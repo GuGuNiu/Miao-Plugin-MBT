@@ -2,17 +2,9 @@
 
 
 ## 图库说明
-- 『<ins>图库管理器Js</ins>』的操作不会影响你的其他面板图和其他图库
-- 请勿用于以『<ins>盈利</ins>』为目的的任何场景,如侵权请联系删除
-
-## 制图进度
-【[Miao-Plugin](https://github.com/yoimiya-kokomi/miao-plugin)】原神：1.0-5.4
-
-【[Miao-Plugin](https://github.com/yoimiya-kokomi/miao-plugin)】星穹铁道：1.0-2.6
-
-【[ZZZ-Plugin](https://github.com/ZZZure/ZZZ-Plugin/)】 绝区零：1.1
-
-【[Waves-Plugin](https://github.com/erzaozi/waves-plugin)】 鸣潮：2.0
+- Web图库管理器可操作本地存在的全部图库
+- 图库管理器的操作不会影响你的其他面板图和其他图库
+- 请勿用于以盈利为目的的任何场景,如侵权请联系删除
 
 ## 快速安装
 
@@ -21,13 +13,10 @@
 1、Github源：
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库下载器.js"
-2、mirror源:
-
-    curl -o "./plugins/example/咕咕牛图库下载器.js" "https://mirror.ghproxy.com/https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库下载器.js"
-3、jsdelivr源:
+    
+2、jsdelivr源:
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js"
-
 
 
 ### 功能菜单图:
@@ -35,8 +24,9 @@
 
 ![help.png](https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png)
 
-
+![help2.png](https://s2.loli.net/2025/04/11/nIAvfHTUtCNcWrZ.png)
 </details>
+
 
 ### 图库依赖的主体插件
 Miao-Yunzai : https://github.com/yoimiya-kokomi/Miao-Yunzai
