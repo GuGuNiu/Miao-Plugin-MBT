@@ -8,8 +8,8 @@
 
 ## 快速安装
 
- #### 在Yunzai根目录运行以下命令,使用 #咕咕牛帮助 呼叫出菜单,使用Js会自动更新整个图库
-
+ #### Yunzai/Miao-Yunzai/TRSS-Yunzai版本
+ 
 1、Github源：
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库下载器.js"
@@ -18,7 +18,8 @@
 
     curl -o "./plugins/example/咕咕牛图库下载器.js" "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js"
 
-
+ #### Karin版本
+ 
 ### 功能菜单图:
 <details><summary>展开</summary>
 
