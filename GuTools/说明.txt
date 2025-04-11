@@ -1,0 +1,10 @@
+#安装环境
+npm i express
+npm install js-yaml
+
+
+#启用服务器
+node server.js
+
+#浏览器后台地址
+http://localhost:3000/
