@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import common from '../../lib/common/common.js';
 import yaml from 'yaml';
 import { spawn } from 'child_process';
+import os from 'os';
 
 async function BatchCopyFiles(FileList) {
     for (const FileItem of FileList) {
@@ -15,10 +16,12 @@ async function BatchCopyFiles(FileList) {
     }
 }
 
+
+
 export class MiaoPluginMBT extends plugin {
     constructor() {
         super({
-            name: '『咕咕牛🐂』图库管理器 v3.5',
+            name: '『咕咕牛🐂』图库管理器 v3.7',
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 1000,
@@ -73,14 +76,57 @@ export class MiaoPluginMBT extends plugin {
         this.JsPath = path.join(BaseDir, 'plugins/example/'); 
         this.GalleryConfigPath = path.join(this.GuPath, 'GalleryConfig.yaml'); 
 
-        this.Px18List = []; 
+        this.Px18imgSourcePath = path.join(this.LocalPath, 'GuGuNiu-Gallery', 'Px18img.json');
+        this.Px18imgDestPath = path.join(this.GuPath, 'Px18img.json');
+        this.Px18List = [];
 
         this.FilesToCopy = [
             { source: path.join(this.LocalPath, 'GuGuNiu-Gallery', 'help.png'), dest: path.join(this.GuPath, 'help.png') },
-            { source: path.join(this.LocalPath, 'GuGuNiu-Gallery', 'Px18img.json'), dest: path.join(this.GuPath, 'Px18img.json') },
             { source: path.join(this.LocalPath, '咕咕牛图库下载器.js'), dest: path.join(this.JsPath, '咕咕牛图库下载器.js') },
+            { source: this.Px18imgSourcePath, dest: this.Px18imgDestPath }
         ];
     } 
+
+    async InitFuncCounter() {
+        // 定义 num 文件的完整路径
+        const NumPath = path.join(this.GuPath, 'num');
+        // 定义父目录的路径
+        const ParentDir = path.dirname(NumPath); // 这就是 this.GuPath
+
+        try {
+            // recursive: true 会自动创建所有不存在的父目录
+            await fsPromises.mkdir(ParentDir, { recursive: true });
+            logger.info(`咕咕牛』初始化计数器: 确保目录 ${ParentDir} 存在。`);
+
+            // 2. 尝试访问 num 文件
+            await fsPromises.access(NumPath);
+            logger.info(`咕咕牛』初始化计数器: 文件 ${NumPath} 已存在。`);
+
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                logger.warn(`[咕咕牛 警告] 初始化计数器: 文件 ${NumPath} 不存在，正在创建...`);
+                try {
+                    await fsPromises.writeFile(NumPath, '{}', 'utf8');
+                } catch (writeErr) {
+                    logger.error(`『咕咕牛🐂』 初始化计数器: 创建文件 ${NumPath} 失败:`, writeErr);
+                }
+            } else {
+                logger.error(`『咕咕牛🐂』 初始化计数器: 检查或创建 ${NumPath} 时发生错误:`, err);
+            }
+        }
+    }
+    
+    async CountFuncUsage(name) {
+        const NumPath = path.join(this.GuPath, 'num');
+        let countData = {};
+            try {
+                const raw = await fsPromises.readFile(NumPath, 'utf8');
+                countData = JSON.parse(raw);
+            } catch (err) {}
+                countData[name] = (countData[name] || 0) + 1;
+                await fsPromises.writeFile(NumPath, JSON.stringify(countData, null, 2), 'utf8');
+    }
+          
     async LoadPx18List() {
         if (this.Px18List && this.Px18List.length > 0) {
             return;
@@ -116,97 +162,165 @@ export class MiaoPluginMBT extends plugin {
         }
     }
 
-    async GallaryDownload(e) {
 
-        if (fs.existsSync(this.LocalPath)) {
-            await e.reply("『咕咕牛🐂』已存在，请勿重复下载。若需重新下载，请先使用#重置咕咕牛");
+    async GallaryDownload(e) {
+        const startTime = Date.now();
+        logger.info(`『咕咕牛』 ${new Date(startTime).toISOString()}] 图库下载: 收到命令 #下载咕咕牛`);
+        await this.CountFuncUsage('GallaryDownload');
+        logger.debug(`『咕咕牛』 图库下载: 检查目标路径是否存在: ${this.LocalPath}`);
+        try {
+            await fsPromises.access(this.LocalPath);
+            logger.warn(`[咕咕牛 警告] 图库下载: 目标目录 ${this.LocalPath} 已存在。正在中止下载。`);
+            await e.reply("『咕咕牛🐂』图库目录已存在，请勿重复下载。若需重新下载，请先使用 #重置咕咕牛");
             return;
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                logger.info(`『咕咕牛』图库下载: 目标目录 ${this.LocalPath} 未找到。继续下载。`);
+            } else {
+                logger.error(`『咕咕牛🐂』 图库下载: 检查目标目录 ${this.LocalPath} 时出错:`, err);
+                await e.reply(`检查目标目录时发生错误: ${err.message}。请检查路径和权限。`);
+                return;
+            }
         }
-        
+    
         const RawPath = 'https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main';
         let Speeds = [];
-
-        Speeds = await this.TestProxies(RawPath);
-
+        logger.info('『『咕咕牛』图库下载: 开始代理测速...');
+        logMemoryUsage("代理测速前");
+    
+        try {
+            Speeds = await this.TestProxies(RawPath);
+            logger.info(`『咕咕牛』图库下载: 代理测速完成。测试了 ${Speeds.length} 个代理。`);
+        } catch (testErr) {
+            logger.error(`『咕咕牛』图库下载: 代理测速过程中失败:`, testErr);
+            await e.reply("『咕咕牛🐂』代理测速过程中出错，请检查网络或稍后再试。");
+            return;
+        }
+        logMemoryUsage("代理测速后");
+    
         let Msg = '『咕咕牛🐂』节点测速延迟：\n\n';
-
         Speeds.forEach(S => {
             let SpeedMsg = S.speed === Infinity ? "超时 ❌" : `${S.speed}ms ✅`;
             Msg += `${S.name}：${SpeedMsg}\n`;
         });
-
+        logger.info(`『咕咕牛』图库下载: 代理测速结果:\n${Speeds.map(s => `  - ${s.name}: ${s.speed === Infinity ? '超时' : s.speed + 'ms'}`).join('\n')}`);
+    
         const Available = Speeds.filter(S => S.speed !== Infinity);
-
         if (Available.length === 0) {
-            await e.reply(Msg + "\n⚠️ 所有源测速失败，请检查网络或手动下载。");
+            logger.error('『咕咕牛』图库下载: 所有代理测速失败。无法下载。');
+            await e.reply(Msg + "\n⚠️ 所有下载节点测速失败，无法下载。请检查网络连接、代理可用性或稍后再试。");
             return;
         }
-
+    
         Available.sort((a, b) => a.speed - b.speed);
         const Best = Available[0];
         const BestCloneUrl = Best.url.replace(RawPath, "") + this.RepositoryUrl;
-
-        Msg += `\n✅最佳：${Best.name}开始下载了...\n`;
+        logger.info(`『咕咕牛』图库下载: 已选择最佳代理: ${Best.name} (${Best.speed}ms)。`);
+        logger.info(`『咕咕牛』图库下载: 最终 Git Clone URL 为: ${BestCloneUrl}`);
+    
+        Msg += `\n✅ 最佳节点：${Best.name}，开始使用此节点下载...\n(下载需要时间，详细进度和可能出现的错误请关注控制台日志)`;
         await e.reply(Msg);
-
+    
+        let stdoutAggregated = '';
+        let stderrAggregated = '';
         let ProgressReported10 = false;
         let ProgressReported50 = false;
         let ProgressReported90 = false;
-
-        const Git = spawn('git', ['clone', '--depth=1', '--progress', BestCloneUrl, this.LocalPath], { shell: true });
-
-        Git.stdout.on('data', (data) => {});
-
-        Git.stderr.on('data', async (data) => {
-            const Str = data.toString();
-            const M = Str.match(/Receiving objects:\s*(\d+)%/);
-
-            if (M && M[1]) {
-                const Progress = parseInt(M[1], 10);
-
-                if (Progress >= 10 && !ProgressReported10) {
-                    ProgressReported10 = true;
-                    await e.reply('『咕咕牛』下载进度：10%');
+    
+        const cloneArgs = ['clone', '--depth=1', '--progress', BestCloneUrl, this.LocalPath];
+        logger.info(`『咕咕牛』图库下载: 准备执行 git 命令: git ${cloneArgs.join(' ')}`);
+        logMemoryUsage("Git Clone Spawn 前");
+    
+        try {
+            const parentDir = path.dirname(this.LocalPath);
+            await fsPromises.mkdir(parentDir, { recursive: true });
+            logger.debug(`『咕咕牛』 图库下载: 确保父目录存在: ${parentDir}`);
+    
+            const Git = spawn('git', cloneArgs, {
+                stdio: ['pipe', 'pipe', 'pipe'],
+                shell: false
+            });
+    
+            logger.info(`『咕咕牛』图库下载: Git 进程已生成，PID: ${Git.pid}。正在等待完成...`);
+    
+            Git.stdout.on('data', (data) => {
+                const output = data.toString();
+                stdoutAggregated += output;
+                logger.debug(`『咕咕牛』 ${output.trim()}`);
+            });
+    
+            Git.stderr.on('data', async (data) => {
+                const str = data.toString();
+                stderrAggregated += str;
+                logger.warn(`『咕咕牛』 ${str.trim()}`);
+    
+                const M = str.match(/Receiving objects:\s*(\d+)%/);
+                if (M && M[1]) {
+                    const Progress = parseInt(M[1], 10);
+                    if (Progress >= 10 && !ProgressReported10) {
+                        ProgressReported10 = true;
+                        await e.reply('『咕咕牛』下载进度：10%');
+                    }
+                    if (Progress >= 50 && !ProgressReported50) {
+                        ProgressReported50 = true;
+                        await e.reply('『咕咕牛』下载进度：50%');
+                    }
+                    if (Progress >= 90 && !ProgressReported90) {
+                        ProgressReported90 = true;
+                        await e.reply('『咕咕牛』下载进度：90%，即将完成...');
+                    }
                 }
-                if (Progress >= 50 && !ProgressReported50) {
-                    ProgressReported50 = true;
-                    await e.reply('『咕咕牛』下载进度：50%');
+            });
+    
+            Git.on('error', async (spawnError) => {
+                logMemoryUsage("Git Clone Spawn 错误");
+                logger.error(`『咕咕牛🐂』 图库下载: 生成 git 克隆进程本身失败！错误详细信息:`, spawnError);
+                logger.error(`『咕咕牛🐂』 图库下载: 在生成错误之前捕获的 Stderr:\n${stderrAggregated}`);
+                const feedbackMsg = this.GenerateDownloadErrorFeedback(spawnError, stderrAggregated);
+                const ErrorForward = await common.makeForwardMsg(e, feedbackMsg, '『咕咕牛🐂』下载启动失败日志');
+                await e.reply('启动下载进程时发生严重错误（例如找不到git），请查看控制台日志！');
+                setTimeout(async () => { await e.reply(ErrorForward); }, 1000);
+            });
+    
+            Git.on('close', async (code) => {
+                const endTime = Date.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(1);
+                logMemoryUsage("Git 克隆进程关闭后");
+                logger.info(`『咕咕牛』 ${new Date(endTime).toISOString()}] 图库下载: Git 克隆进程完成。退出码: ${code}。耗时: ${duration} 秒。`);
+                logger.info(`『咕咕牛』图库下载: Git 克隆完整标准输出:\n------ 标准输出开始 ------\n${stdoutAggregated}\n------ 标准输出结束 ------`);
+                logger.warn(`『咕咕牛』图库下载: Git 克隆完整标准错误:\n------ 标准错误开始 ------\n${stderrAggregated}\n------ 标准错误结束 ------`);
+    
+                if (code === 0) {
+                    logger.info('『咕咕牛』图库下载: Git 克隆成功完成。');
+                    await e.reply(`『咕咕牛』下载成功！ (耗时 ${duration} 秒)`);
+                    await e.reply('开始进行安装和文件处理，请稍候...');
+                    try {
+                        await this.PostDownload(e);
+                        logger.info('『咕咕牛』图库下载: 下载后处理已成功完成。');
+                    } catch (postErr) {
+                        logger.error('『咕咕牛』图库下载: 下载后处理过程中出错:', postErr);
+                        await e.reply("下载成功，但在后续文件处理步骤中出错，请查看控制台日志进行手动检查或配置。");
+                    }
+                } else {
+                    logger.error(`『咕咕牛』图库下载: Git 克隆失败，非零退出码: ${code}。`);
+                    const downloadError = new Error(`Git clone exited with code ${code}`);
+                    const feedbackMsg = this.GenerateDownloadErrorFeedback(downloadError, stderrAggregated);
+                    const ErrorForward = await common.makeForwardMsg(e, feedbackMsg, `『咕咕牛🐂』下载失败日志 (Code: ${code})`);
+                    await e.reply(`下载『咕咕牛』失败，错误码: ${code}。(耗时 ${duration} 秒) 请查看控制台输出的详细日志以定位问题！`);
+                    setTimeout(async () => { await e.reply(ErrorForward); }, 1000);
                 }
-                if (Progress >= 90 && !ProgressReported90) {
-                    ProgressReported90 = true;
-                    await e.reply('『咕咕牛』下载进度：90%，即将下载完成');
-                }
-            }
-        });
-
-        Git.on('close', async (code) => {
-            if (code === 0) {
-                await e.reply("『咕咕牛』下载完成，准备下一步操作...");
-                try {
-                    await this.PostDownload(e);
-                } catch (err) {
-                    await e.reply("处理失败，请查看控制台日志或手动处理。");
-                    console.error("处理失败：", err.message);
-                }
-            } else {
-
-                const DownloadError = new Error(`code ${code}`);
-                console.error('下载『咕咕牛🐂』时出现错误:', DownloadError);
-                const UpdateErrorForward = await common.makeForwardMsg(e, this.GenerateDownloadErrorFeedback(DownloadError), '『咕咕牛🐂』下载失败日志');
-                await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
-                setTimeout(async () => { await this.reply(UpdateErrorForward); }, 2000);
-                console.error("下载失败，异常码：", code);
-            }
-            
-        });
-
-        Git.on('error', async (err) => {
-            console.error('下载『咕咕牛🐂』时出现错误:', err);
-            const UpdateErrorForward = await common.makeForwardMsg(e, this.GenerateDownloadErrorFeedback(err), '『咕咕牛🐂』下载失败日志');
-            await this.reply('下载『咕咕牛』时出现错误，请查看日志！');
-            setTimeout(async () => { await this.reply(UpdateErrorForward); }, 2000);
-        });
+            });
+    
+        } catch (error) {
+            const errorTime = Date.now();
+            logger.error(`『咕咕牛🐂』 ${new Date(errorTime).toISOString()}] 图库下载: 在生成 Git 进程之前发生意外错误:`, error);
+            await e.reply("准备下载环境时发生意外错误（例如无法创建目录），请查看控制台日志。");
+            logMemoryUsage("Git Clone Spawn 前出错");
+        }
     }
+    
+
+
 
     async TestProxies(RawPath) {
         const Sources = {
@@ -277,6 +391,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GallaryUpdate(e) {
+        await this.CountFuncUsage('GallaryUpdate');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) {
@@ -363,6 +478,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async GuHelp(e) {
+        await this.CountFuncUsage('GuHelp');
         let GuPathExists = false;
         try { await fsPromises.access(this.GuPath); GuPathExists = true; } catch {}
 
@@ -376,6 +492,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async BanRole(e) {
+        await this.CountFuncUsage('BanRole');
         const BanListPath = path.join(this.GuPath, 'banlist.txt');
         const Message = e.raw_message || e.message || e.content;
 
@@ -391,7 +508,7 @@ export class MiaoPluginMBT extends plugin {
         }
 
         if (/^#ban[加删]/.test(Message)) {
-            await e.reply("📝建议使用新指令：#咕咕牛封禁花火1 或 #咕咕牛解禁花火1", true);
+            await e.reply("📝建议使用新指令：#咕咕牛封禁花火1 或 #咕咕牛解禁花火1，无需含有Gu", true);
             return true;
         }
 
@@ -450,7 +567,13 @@ export class MiaoPluginMBT extends plugin {
         }
 
         const RawInput = Match[1].trim();
+        if (/Gu\d+$/i.test(RawInput)) {
+            await e.reply("📝建议使用新指令：#咕咕牛封禁花火1 或 #咕咕牛解禁花火1，无需含有Gu", true);
+            return true;
+        }
+
         let Name = RawInput.replace(/\s+/g, '').replace(/gu/i, 'Gu');
+
 
         if (!/Gu\d+$/i.test(Name)) {
             const AutoMatch = Name.match(/(.*?)(\d+)$/);
@@ -527,6 +650,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async FindRoleSplash(e) {
+        await this.CountFuncUsage('FindRoleSplash');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) {
@@ -632,6 +756,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async RemoveBadimages(e) {
+        await this.CountFuncUsage('RemoveBadimages');
         const GalleryConfig = await this.GetGalleryConfig();
         const BanListPath = path.join(this.GuPath, 'banlist.txt');
 
@@ -652,7 +777,7 @@ export class MiaoPluginMBT extends plugin {
 
             await this.LoadPx18List();
             if (this.Px18List.length === 0) {
-                await e.reply("无法加载净化列表 (Px18img.json)，操作中止。");
+                await e.reply("无法加载净化列表 Px18img，操作中止。");
                 return true;
             }
 
@@ -689,6 +814,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async CheckR18Photo(e) {
+        await this.CountFuncUsage('CheckR18Photo');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) {
@@ -759,30 +885,55 @@ export class MiaoPluginMBT extends plugin {
 
     async GuGuNiu(e) {
         await e.reply("🐂");
-
+    
         let Stats;
-        try {
             Stats = await fsPromises.stat(this.LocalPath);
-        } catch (StatError) {
-            logger.error(`『咕咕牛🐂』获取图库状态失败: ${this.LocalPath}`, StatError);
-            await e.reply("无法获取图库信息。");
-            return;
-        }
 
         const CreationTime = Stats.birthtime.toISOString();
         await e.reply(`图库安装时间: ${CreationTime}`);
-
-        try {
+    
             const GitLog = await this.ExecGitCommand('git log -n 50 --date=format:"[%m-%d %H:%M:%S]" --pretty=format:"%cd %s"');
             const UplogForwardMsg = [`最近的更新记录：\n${GitLog}`];
             const ForwardMsgFormatted = await common.makeForwardMsg(this.e, UplogForwardMsg, '『咕咕牛🐂』日志');
             await e.reply(ForwardMsgFormatted);
-        } catch(GitLogErr) {
-            logger.error('『咕咕牛🐂』获取 git log 失败:', GitLogErr);
-        }
-    }
+ 
+            const NumPath = path.join(this.GuPath, 'num');
+            const NumContent = await fsPromises.readFile(NumPath, 'utf8');
+            const NumStats = JSON.parse(NumContent);
+    
+            if (Object.keys(NumStats).length === 0) {
+                await e.reply("暂无功能调用记录。");
+                return;
+            }
+    
+            const SortedEntries = Object.entries(NumStats).sort((a, b) => b[1] - a[1]);
+            const TotalCount = SortedEntries.reduce((sum, [, count]) => sum + count, 0);
+    
+            const StatsList = SortedEntries
+                .map(([func, count]) => `${func}：${count} 次`)
+                .join('\n');
+    
+            await e.reply(`功能使用统计『总计 ${TotalCount} 次』：\n${StatsList}`);
+    
+            const Platform = `${os.platform()} ${os.arch()}`;
+            const NodeVersion = process.version;
+          
+            const MemoryUsage = process.memoryUsage();
+            const UsedMB = (MemoryUsage.rss / 1024 / 1024).toFixed(1);
+          
+            const SystemInfo = [
+                '🖥 系统信息：',
+                `系统平台：${Platform}`,
+                `Node.js版本：${NodeVersion}`,
+                `内存占用：${UsedMB} MB`
+            ].join('\n');
+          
+            await e.reply(SystemInfo);
+          }
+    
 
     async GalleryOption(e) {
+        await this.CountFuncUsage('GalleryOption');
         const { msg } = e;
         const Delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -843,6 +994,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async CheckFolder(e) {
+        await this.CountFuncUsage('CheckFolder');
         let LocalPathExists = false;
         try { await fsPromises.access(this.LocalPath); LocalPathExists = true; } catch {}
         if (!LocalPathExists) { await e.reply('『咕咕牛🐂』未下载！', true); return true; }
@@ -942,6 +1094,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async ExportSingleImage(e) {
+        await this.CountFuncUsage('ExportSingleImage');
         const RawInput = e.msg.replace(/^#咕咕牛导出/, '').trim();
         let Name = RawInput.replace(/\s+/g, '').replace(/gu/i, 'Gu');
 
@@ -991,6 +1144,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     async ManageGallary(e) {
+        await this.CountFuncUsage('ManageGallary');
         const Msg = e.msg.trim();
         let Action = "";
 
@@ -1203,7 +1357,8 @@ export class MiaoPluginMBT extends plugin {
     GenerateDownloadErrorFeedback(Error) {
       const ErrorMessages = {
          'code 128': "检查网络连接：确保您的网络连接正常，有时候网络问题可能导致 Git 无法正常执行操作。", 
-         'code 128#2': "也是可能本地已存在图库,JS无法识别到，可以尝试重置咕咕牛。",
+         'code 128': "也是可能本地已存在图库,JS无法识别到，可以尝试重置咕咕牛。",
+
          'code 28': "增加 Git 的 HTTP 缓冲区大小，在控制台输入命令：git config --global http.postBuffer 524288000", 
          '443': "可能是网络问题、被墙或访问被拒绝。", 
          'code 1': "Git 操作失败，可能是本地与远程仓库冲突、权限问题或锁文件问题。请检查并解决冲突或确保文件没有被锁定。", 
@@ -1215,11 +1370,21 @@ export class MiaoPluginMBT extends plugin {
          'error: Your local': "本地文件有未提交的更改，执行 'git stash' 或 'git commit' 提交本地更改。", 
          'fatal: Failed to resolve': "Git 无法找到当前仓库的 HEAD，可能仓库不完整，尝试 'git fsck' 来修复。", 
          'fatal: could not open index.lock': "Git 正在进行操作时，另一个操作锁住了文件，可以删除 '.git/index.lock' 文件再试。", };
-      let Feedback = [`操作『咕咕牛🐂』时出现错误: ${Error}`];
+      
+      let Feedback = [`『咕咕牛🐂』操作时出现错误: ${Error}`];
       const ErrorString = Error.message || Error.toString();
-      Object.entries(ErrorMessages).forEach(([Key, Msg]) => { const Code = Key.replace(/#\d+$/, ''); if (ErrorString.includes(Code)) { if (!Feedback.includes(Msg)) Feedback.push(Msg); } });
-      if (ErrorString.includes('code 128') && !Feedback.includes(ErrorMessages['code 128#2'])) Feedback.push(ErrorMessages['code 128#2']);
-      return Feedback;
+
+      Object.entries(ErrorMessages).forEach(([Key, Msg]) => {
+         const Code = Key.replace(/#\d+$/, '');
+        if (ErrorString.includes(Code)) {
+             if (!Feedback.includes(Msg)) 
+                Feedback.push(Msg); 
+            } });
+      if (ErrorString.includes('code 128') && !Feedback.includes(ErrorMessages['code 128#2'])) 
+                Feedback.push(ErrorMessages['code 128#2']);
+
+
+            return Feedback;
     }
 
     async GetMainRoleName(RoleName) {
@@ -1264,16 +1429,52 @@ export class MiaoPluginMBT extends plugin {
 
         const AliasMapCombined = Object.assign({}, AliasGS, AliasSR, AliasZZZ, AliasWAVES);
 
-        const FindMainName = (AliasMap, IsStringList = true) => Object.keys(AliasMap).find(Main => { const Aliases = AliasMap[Main]; if (!Aliases) return false; let AliasArray; if (IsStringList) { if (typeof Aliases !== 'string') return false; AliasArray = Aliases.split(','); } else { if (!Array.isArray(Aliases)) return false; AliasArray = Aliases; } return typeof RoleName === 'string' && AliasArray.includes(RoleName.trim()); });
+        const FindMainName = (AliasMap, IsStringList = true) => Object.keys(AliasMap).find(Main => {
+
+            const Aliases = AliasMap[Main]; 
+            if (!Aliases) 
+                return false; 
+            
+            let AliasArray; 
+            if (IsStringList) { 
+                if (typeof Aliases !== 'string') 
+                    return false; AliasArray = Aliases.split(','); 
+                } else { if (!Array.isArray(Aliases)) 
+                    return false; 
+                    AliasArray = Aliases; 
+                } 
+                return typeof RoleName === 'string' && AliasArray.includes(RoleName.trim()); 
+            });
         let MainName = FindMainName(AliasGS) || FindMainName(AliasSR) || FindMainName(AliasZZZ, false) || FindMainName(AliasWAVES, false);
         MainName = MainName || (typeof RoleName === 'string' ? RoleName.trim() : RoleName);
 
-        const Exists = Object.keys(AliasMapCombined).includes(MainName) || Object.values(AliasMapCombined).some(List => { if (!List) return false; let AliasArray; if (Array.isArray(List)) AliasArray = List; else if (typeof List === 'string') AliasArray = List.split(','); else return false; return typeof RoleName === 'string' && AliasArray.includes(RoleName.trim()); });
+        const Exists = Object.keys(AliasMapCombined).includes(MainName) || Object.values(AliasMapCombined).some(List => {
+            if (!List) return false; 
+            let AliasArray; 
+            if (Array.isArray(List)) AliasArray = List; 
+            else if (typeof List === 'string') AliasArray = List.split(','); 
+            else return false; return typeof RoleName === 'string' && AliasArray.includes(RoleName.trim()); });
 
         return { mainName: MainName, exists: Exists };
     }
 }
-
+    function logMemoryUsage(label = '') {
+        try {
+            const totalMem = os.totalmem();
+            const freeMem = os.freemem();
+            const usedMem = totalMem - freeMem;
+            const usedMemMB = (usedMem / 1024 / 1024).toFixed(1);
+            const totalMemMB = (totalMem / 1024 / 1024).toFixed(1);
+            const freeMemMB = (freeMem / 1024 / 1024).toFixed(1);
+            const percentageUsed = ((usedMem / totalMem) * 100).toFixed(1);
+            logger.info(`『咕咕牛 ${label}』 使用情况: ${usedMemMB}MB / ${totalMemMB}MB (${percentageUsed}% 已使用, ${freeMemMB}MB 空闲)`);
+            if (typeof os.loadavg === 'function') {
+                logger.info(`[咕咕牛 负载 ${label}] 系统平均负载 (1分钟, 5分钟, 15分钟): ${os.loadavg().map(l => l.toFixed(2)).join(', ')}`);
+            }
+        } catch (e) {
+            logger.warn(`『咕咕牛』 获取内存/负载使用情况失败: ${e.message}`);
+        }
+    }
 const GUGUNIU_RULES = [
     { reg: /^#(代理)?下载咕咕牛$/, fnc: 'GallaryDownload' },
     { reg: /^#(强制)?更新咕咕牛$/, fnc: 'GallaryUpdate' },
