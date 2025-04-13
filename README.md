@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://s2.loli.net/2025/04/13/vmLCJ54kUWxB83f.png" width="30%">
+  <img src="https://s2.loli.net/2025/04/13/vmLCJ54kUWxB83f.png" width="70%">
 </p>
 
 <div align="center"> 
