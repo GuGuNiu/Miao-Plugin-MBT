@@ -1,18 +1,382 @@
 [
     {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu12.webp",
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu1.webp",
         "attributes": {
-            "filename": "珊瑚宫心海Gu12.webp",
-            "parentFolder": "珊瑚宫心海",
+            "filename": "芙宁娜Gu1.webp",
+            "parentFolder": "芙宁娜",
             "isPx18": false,
-            "isRx18": true,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": true,
-            "isBan": true
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "6058737734",
+            "md5": "d618f149fc8734e4b6029b4a131369c5",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:40:39.335Z",
+        "timestamp": "2025-04-12T05:56:07.904Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu10.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu10.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9148382102",
+            "md5": "cc91fcf27cef04fce7c02035ecb07923",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:18:46.262Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu11.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu11.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7453944216",
+            "md5": "4af20f8abd4a709bce3d43aa29a2459c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:18:49.270Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu12.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu12.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1440251060",
+            "md5": "8cc0af23842af2774fc7bfc98ce21b87",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:22.821Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu13.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu13.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5623481044",
+            "md5": "cfa263b89593724d1483f9539eb7d194",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:25.543Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu14.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu14.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "6888565113",
+            "md5": "7afc2d3c47fa682190647314a2b76664",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:28.582Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu15.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu15.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7363521907",
+            "md5": "fc1f3f896cc9aae4cc17d0a897c3979d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:35.222Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu16.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu16.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "2892687064",
+            "md5": "8a2b9673584102a41afc95eb93e7550e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:38.144Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu17.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu17.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9866822689",
+            "md5": "0272e7ae296ba605459121604975a2a1",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:41.270Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu18.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu18.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9866052881",
+            "md5": "b6ddf073abe516df2412b27afdd9f4cf",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:44.285Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu19.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu19.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9163220968",
+            "md5": "a3cd460454b13426346b88aef39993e2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:51.654Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu2.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu2.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9542061494",
+            "md5": "4c8bd0f9f4960cbe609a25d8a08be714",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:56:10.496Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu20.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu20.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5675095822",
+            "md5": "e1fca173aa0064ae7d94eca1a45536e6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:19:58.629Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu21.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu21.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9247232481",
+            "md5": "d22968ab67e147388ffea83625137e00",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:20:01.560Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu22.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu22.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "8032253702",
+            "md5": "71895324599bdd51bf3307a0bf51ac87",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:20:04.518Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu23.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu23.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3225140584",
+            "md5": "d6dd170d705f21c320577799616987ec",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:20:09.206Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu24.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu24.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "4353625587",
+            "md5": "1d5e6576331727998096bae5e3221997",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:20:22.638Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu25.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu25.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3018583509",
+            "md5": "41a81d3d01a94768cbb7ba73a376997f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:20:25.502Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu26.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu26.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3230704709",
+            "md5": "2f60787e29252d7466fdf738123d2e5a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:20:28.406Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu27.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu27.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "8457737247",
+            "md5": "e427f4ccc8475210872dc0d66c49207b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:21:05.006Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -23,12 +387,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7974787841",
+            "md5": "b17a77ec43b4fbe0017ed2a36819d925",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:34:21.166Z",
+        "timestamp": "2025-04-12T04:39:15.364Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -39,12 +406,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9433707432",
+            "md5": "0ee3d65aafc9228627becaf6bf5ab5b9",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:00.957Z",
+        "timestamp": "2025-04-12T04:39:20.332Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -55,12 +425,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3083849115",
+            "md5": "b3a2924f723ee6e8bc7f20018237b537",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:04.675Z",
+        "timestamp": "2025-04-12T04:39:23.533Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -71,12 +444,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3146475669",
+            "md5": "917a3b8dc6a738b64a876c5830f366fa",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:07.347Z",
+        "timestamp": "2025-04-12T04:39:26.868Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -87,12 +463,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5663823732",
+            "md5": "102f3f8a6fbfc7d737adb53cc83484fd",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:10.323Z",
+        "timestamp": "2025-04-12T04:39:31.013Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -103,12 +482,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3965404461",
+            "md5": "f9164b64e1290c3f42d51516bbe6da3e",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:20.034Z",
+        "timestamp": "2025-04-12T04:39:34.085Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -119,12 +501,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1952731532",
+            "md5": "c82d5db57c5a62f2c0da6f73ec775321",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:22.973Z",
+        "timestamp": "2025-04-12T04:39:39.896Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -135,12 +520,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7742694609",
+            "md5": "2004252de29e6cdee5858493a87960f6",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:26.435Z",
+        "timestamp": "2025-04-12T04:39:47.220Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -151,12 +539,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7878133829",
+            "md5": "bf510d7f9fc7b0ca20d89518f91f157e",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:29.963Z",
+        "timestamp": "2025-04-12T04:39:50.988Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -167,28 +558,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "8551959149",
+            "md5": "cd97fbc7717f823768f5142472d03ea7",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:05:48.389Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "花火",
-        "path": "sr-character/花火/花火Gu2.webp",
-        "attributes": {
-            "filename": "花火Gu2.webp",
-            "parentFolder": "花火",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:05:57.459Z",
+        "timestamp": "2025-04-12T04:39:53.910Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -199,12 +577,34 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7412815532",
+            "md5": "9b4a023f32de367856a078970cf9c2f4",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:04.451Z",
+        "timestamp": "2025-04-12T04:39:56.853Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu2.webp",
+        "attributes": {
+            "filename": "花火Gu2.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7452070773",
+            "md5": "3e395973cc2b95d7faccfc82684cceec",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T04:40:00.663Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -215,12 +615,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3737313299",
+            "md5": "2cda44876aeb4737663f672f7226b23d",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:07.299Z",
+        "timestamp": "2025-04-12T04:40:03.837Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -229,14 +632,17 @@
         "attributes": {
             "filename": "花火Gu21.webp",
             "parentFolder": "花火",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5061761154",
+            "md5": "d27c2ec9d691716070864b7be7473cbd",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:10.435Z",
+        "timestamp": "2025-04-12T04:40:07.741Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -247,12 +653,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9000848846",
+            "md5": "72f566d56ff74b49da5f265af759757b",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:14.435Z",
+        "timestamp": "2025-04-12T04:40:12.294Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -263,12 +672,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "6459284705",
+            "md5": "c35783d976a74bebe1aa98946642744b",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:31.974Z",
+        "timestamp": "2025-04-12T04:40:16.014Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -279,12 +691,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5089643327",
+            "md5": "f9033a30bc0926fd85c24894f49ba9bb",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:34.467Z",
+        "timestamp": "2025-04-12T04:40:19.278Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -295,12 +710,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5651392411",
+            "md5": "b34276966bbafe4ba936287f0f523084",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:37.542Z",
+        "timestamp": "2025-04-12T04:40:22.204Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -311,12 +729,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1358801267",
+            "md5": "fe168bd868552baa1348782e972eb844",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:43.483Z",
+        "timestamp": "2025-04-12T04:40:26.253Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -327,12 +748,15 @@
             "parentFolder": "花火",
             "isPx18": true,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3539748229",
+            "md5": "66d924ca47b3d46cc42eefc9e81c6ac2",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:47.875Z",
+        "timestamp": "2025-04-12T04:40:30.942Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -343,12 +767,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "2352666193",
+            "md5": "40d092ec33ee3d59c28510eeb7acfd17",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:52.619Z",
+        "timestamp": "2025-04-12T04:40:35.557Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -359,12 +786,15 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "4328385951",
+            "md5": "f1d5c669440a1040ce292f6a38ef0035",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:55.794Z",
+        "timestamp": "2025-04-12T04:40:39.831Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -375,413 +805,16 @@
             "parentFolder": "花火",
             "isPx18": true,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1574052240",
+            "md5": "a8003abd904eb3c09a9569c5ec8f899c",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:06:59.179Z",
+        "timestamp": "2025-04-12T04:40:44.525Z",
         "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu24.webp",
-        "attributes": {
-            "filename": "刻晴Gu24.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": true
-        },
-        "timestamp": "2025-04-11T06:25:07.926Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu21.webp",
-        "attributes": {
-            "filename": "刻晴Gu21.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:17.266Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu20.webp",
-        "attributes": {
-            "filename": "刻晴Gu20.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:22.379Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu22.webp",
-        "attributes": {
-            "filename": "刻晴Gu22.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:26.770Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu23.webp",
-        "attributes": {
-            "filename": "刻晴Gu23.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:30.395Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu25.webp",
-        "attributes": {
-            "filename": "刻晴Gu25.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:34.522Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu3.webp",
-        "attributes": {
-            "filename": "刻晴Gu3.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:38.036Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu4.webp",
-        "attributes": {
-            "filename": "刻晴Gu4.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:43.762Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu5.webp",
-        "attributes": {
-            "filename": "刻晴Gu5.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:46.962Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu2.webp",
-        "attributes": {
-            "filename": "刻晴Gu2.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:49.154Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu19.webp",
-        "attributes": {
-            "filename": "刻晴Gu19.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:52.650Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu7.webp",
-        "attributes": {
-            "filename": "刻晴Gu7.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:55.106Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu17.webp",
-        "attributes": {
-            "filename": "刻晴Gu17.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:11:59.876Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu16.webp",
-        "attributes": {
-            "filename": "刻晴Gu16.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:06.130Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu15.webp",
-        "attributes": {
-            "filename": "刻晴Gu15.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:09.282Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu14.webp",
-        "attributes": {
-            "filename": "刻晴Gu14.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:11.699Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu18.webp",
-        "attributes": {
-            "filename": "刻晴Gu18.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:15.603Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu13.webp",
-        "attributes": {
-            "filename": "刻晴Gu13.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:18.170Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu12.webp",
-        "attributes": {
-            "filename": "刻晴Gu12.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:20.506Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu10.webp",
-        "attributes": {
-            "filename": "刻晴Gu10.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:22.276Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu11.webp",
-        "attributes": {
-            "filename": "刻晴Gu11.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:25.292Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu1.webp",
-        "attributes": {
-            "filename": "刻晴Gu1.webp",
-            "parentFolder": "刻晴",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T04:56:20.291Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu6.webp",
-        "attributes": {
-            "filename": "刻晴Gu6.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:30.954Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu8.webp",
-        "attributes": {
-            "filename": "刻晴Gu8.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:32.763Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu9.webp",
-        "attributes": {
-            "filename": "刻晴Gu9.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T03:12:34.530Z",
-        "sourceGallery": "gs-character"
     },
     {
         "characterName": "花火",
@@ -791,92 +824,376 @@
             "parentFolder": "花火",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9375366310",
+            "md5": "964e1931c7b334651ef8857e77fe0746",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:41:06.251Z",
+        "timestamp": "2025-04-12T04:40:48.188Z",
         "sourceGallery": "sr-character"
     },
     {
-        "characterName": "苍角",
-        "path": "zzz-character/苍角/苍角Gu1.webp",
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu1.webp",
         "attributes": {
-            "filename": "苍角Gu1.webp",
-            "parentFolder": "苍角",
+            "filename": "胡桃Gu1.webp",
+            "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1874566815",
+            "md5": "cc196d8740a012665e19d13f3b4bec1f",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T03:41:21.064Z",
-        "sourceGallery": "zzz-character"
+        "timestamp": "2025-04-12T05:56:25.913Z",
+        "sourceGallery": "gs-character"
     },
     {
-        "characterName": "椿",
-        "path": "waves-character/椿/椿Gu1.webp",
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu11.webp",
         "attributes": {
-            "filename": "椿Gu1.webp",
-            "parentFolder": "椿",
+            "filename": "胡桃Gu11.webp",
+            "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3215549927",
+            "md5": "b4aeb0d550ef8e283c42a986483644f6",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:10:12.905Z",
-        "sourceGallery": "waves-character"
+        "timestamp": "2025-04-12T05:56:29.432Z",
+        "sourceGallery": "gs-character"
     },
     {
-        "characterName": "比利",
-        "path": "zzz-character/比利/比利Gu1.webp",
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu12.webp",
         "attributes": {
-            "filename": "比利Gu1.webp",
-            "parentFolder": "比利",
+            "filename": "胡桃Gu12.webp",
+            "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9860339137",
+            "md5": "1fd7cd405985d3810bb0a7b4337dbdbf",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:10:57.676Z",
-        "sourceGallery": "zzz-character"
+        "timestamp": "2025-04-12T05:56:39.433Z",
+        "sourceGallery": "gs-character"
     },
     {
-        "characterName": "比利",
-        "path": "zzz-character/比利/比利Gu2.webp",
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu13.webp",
         "attributes": {
-            "filename": "比利Gu2.webp",
-            "parentFolder": "比利",
+            "filename": "胡桃Gu13.webp",
+            "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5317556738",
+            "md5": "d4d346761f00d4bffa258a5be5fe5f71",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:11:00.376Z",
-        "sourceGallery": "zzz-character"
+        "timestamp": "2025-04-12T05:56:43.672Z",
+        "sourceGallery": "gs-character"
     },
     {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu1.webp",
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu15.webp",
         "attributes": {
-            "filename": "珊瑚宫心海Gu1.webp",
-            "parentFolder": "珊瑚宫心海",
+            "filename": "胡桃Gu15.webp",
+            "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "6453154803",
+            "md5": "e482d979a280c00765ffaaf5609b0109",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:11:26.244Z",
+        "timestamp": "2025-04-12T05:56:46.745Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu16.webp",
+        "attributes": {
+            "filename": "胡桃Gu16.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7562344275",
+            "md5": "1bad6bb4bed2ab8bef017b65cb10b03d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:56:50.352Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu17.webp",
+        "attributes": {
+            "filename": "胡桃Gu17.webp",
+            "parentFolder": "胡桃",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1844321755",
+            "md5": "324723f58d5336cb0679396f41d2a156",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:56:54.735Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu18.webp",
+        "attributes": {
+            "filename": "胡桃Gu18.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "4907951549",
+            "md5": "f296559cacc898df8ae96b0b1fc21631",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:56:57.626Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu19.webp",
+        "attributes": {
+            "filename": "胡桃Gu19.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "7452928182",
+            "md5": "179c0fdeda9e57763fea95fa157d6bee",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:01.394Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu2.webp",
+        "attributes": {
+            "filename": "胡桃Gu2.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "4379609376",
+            "md5": "a5bb341272d4b705cb63dd585a2b7154",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:09.946Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu20.webp",
+        "attributes": {
+            "filename": "胡桃Gu20.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9247763450",
+            "md5": "407b5de643e0b0dde6136a269eb09bff",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:14.072Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu21.webp",
+        "attributes": {
+            "filename": "胡桃Gu21.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1207374028",
+            "md5": "45ec08f9fd47bafa69c17589bd9a6046",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:18.211Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu22.webp",
+        "attributes": {
+            "filename": "胡桃Gu22.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "1095798876",
+            "md5": "46391868813fae22e9a3ce04fab7b884",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:24.848Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu23.webp",
+        "attributes": {
+            "filename": "胡桃Gu23.webp",
+            "parentFolder": "胡桃",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "4812276251",
+            "md5": "f59e2db8f64be1a1bc4645189fad242a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:29.320Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu24.webp",
+        "attributes": {
+            "filename": "胡桃Gu24.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3579515370",
+            "md5": "cfb4a903f42b609384db187ef4c64de6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:32.825Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu25.webp",
+        "attributes": {
+            "filename": "胡桃Gu25.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3774090982",
+            "md5": "29148f92b7ec73cd999bc22befda22e9",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:35.647Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu26.webp",
+        "attributes": {
+            "filename": "胡桃Gu26.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "3927976718",
+            "md5": "dc346df7362b9c18da88af833680afa0",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:39.631Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu27.webp",
+        "attributes": {
+            "filename": "胡桃Gu27.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "2407044568",
+            "md5": "bb37a191e979f3307601eb7d65002c11",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T05:57:42.562Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "characterName": "胡桃",
+        "path": "gs-character/胡桃/胡桃Gu28.webp",
+        "attributes": {
+            "filename": "胡桃Gu28.webp",
+            "parentFolder": "胡桃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "9606253357",
+            "md5": "4a5f5b724c8f1482e3f1e4d7a7a06f7a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-12T06:06:36.463Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -887,12 +1204,15 @@
             "parentFolder": "珊瑚宫心海",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "6764140325",
+            "md5": "49df5a116af804639f8f5e5369543d25",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:11:32.043Z",
+        "timestamp": "2025-04-12T06:25:15.601Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -903,1100 +1223,53 @@
             "parentFolder": "珊瑚宫心海",
             "isPx18": false,
             "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
+            "layout": "normal",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5669847138",
+            "md5": "25a004c3f0e10a9862da390dfcc8453e",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:11:34.395Z",
+        "timestamp": "2025-04-12T06:25:18.693Z",
         "sourceGallery": "gs-character"
     },
     {
         "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu13.webp",
+        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu12.webp",
         "attributes": {
-            "filename": "珊瑚宫心海Gu13.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:11:49.096Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu14.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu14.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:11:53.361Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu15.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu15.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:11:55.842Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu16.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu16.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:00.016Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu17.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu17.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:39.535Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu18.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu18.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:44.536Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu19.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu19.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:52.303Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu2.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu2.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:54.704Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu20.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu20.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:57.319Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu21.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu21.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:12:59.777Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu22.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu22.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:02.211Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu23.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu23.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:04.633Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu24.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu24.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:07.512Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu25.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu25.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:31.087Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu26.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu26.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:33.562Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu27.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu27.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:36.080Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu28.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu28.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:38.705Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu29.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu29.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:13:41.994Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu3.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu3.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:31.383Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu30.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu30.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:35.216Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu31.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu31.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:40.032Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu32.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu32.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:44.223Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu33.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu33.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:48.762Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu34.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu34.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:52.080Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu35.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu35.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:14:55.379Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu36.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu36.webp",
+            "filename": "珊瑚宫心海Gu12.webp",
             "parentFolder": "珊瑚宫心海",
             "isPx18": false,
             "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
+            "layout": "fullscreen",
+            "isEasterEgg": true,
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "5023524081",
+            "md5": "f78b5c3e90fa848a3700aa36b705f6b7",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:14:58.968Z",
+        "timestamp": "2025-04-12T06:25:24.687Z",
         "sourceGallery": "gs-character"
     },
     {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu37.webp",
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu28.webp",
         "attributes": {
-            "filename": "珊瑚宫心海Gu37.webp",
-            "parentFolder": "珊瑚宫心海",
+            "filename": "芙宁娜Gu28.webp",
+            "parentFolder": "芙宁娜",
             "isPx18": false,
-            "isRx18": true,
-            "isNormal": false,
-            "isFullscreen": true,
+            "isRx18": false,
+            "layout": "fullscreen",
             "isEasterEgg": false,
-            "isBan": false
+            "isAiImage": false,
+            "isBan": false,
+            "gid": "8043626823",
+            "md5": "3708ff9f542eea67b73a6834d273e9f6",
+            "Downloaded_From": "none"
         },
-        "timestamp": "2025-04-11T06:15:03.763Z",
+        "timestamp": "2025-04-12T07:07:22.486Z",
         "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu4.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu4.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:15:06.167Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu6.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu6.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:15:10.023Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu5.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu5.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:15:13.223Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu7.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu7.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:15:15.385Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu8.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu8.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:15:17.856Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "珊瑚宫心海",
-        "path": "gs-character/珊瑚宫心海/珊瑚宫心海Gu9.webp",
-        "attributes": {
-            "filename": "珊瑚宫心海Gu9.webp",
-            "parentFolder": "珊瑚宫心海",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:15:20.993Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "characterName": "花火",
-        "path": "sr-character/花火/花火Gu32.webp",
-        "attributes": {
-            "filename": "花火Gu32.webp",
-            "parentFolder": "花火",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:50:07.375Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "阿兰",
-        "path": "sr-character/阿兰/阿兰Gu1.webp",
-        "attributes": {
-            "filename": "阿兰Gu1.webp",
-            "parentFolder": "阿兰",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:53:53.062Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "白露",
-        "path": "sr-character/白露/白露Gu1.webp",
-        "attributes": {
-            "filename": "白露Gu1.webp",
-            "parentFolder": "白露",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:54:25.165Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "白露",
-        "path": "sr-character/白露/白露Gu2.webp",
-        "attributes": {
-            "filename": "白露Gu2.webp",
-            "parentFolder": "白露",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:54:26.862Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "白露",
-        "path": "sr-character/白露/白露Gu3.webp",
-        "attributes": {
-            "filename": "白露Gu3.webp",
-            "parentFolder": "白露",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:54:28.989Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "波提欧",
-        "path": "sr-character/波提欧/波提欧Gu1.webp",
-        "attributes": {
-            "filename": "波提欧Gu1.webp",
-            "parentFolder": "波提欧",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:55:05.101Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "波提欧",
-        "path": "sr-character/波提欧/波提欧Gu2.webp",
-        "attributes": {
-            "filename": "波提欧Gu2.webp",
-            "parentFolder": "波提欧",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:55:08.989Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "波提欧",
-        "path": "sr-character/波提欧/波提欧Gu3.webp",
-        "attributes": {
-            "filename": "波提欧Gu3.webp",
-            "parentFolder": "波提欧",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:55:11.173Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "布洛妮娅",
-        "path": "sr-character/布洛妮娅/布洛妮娅Gu1.webp",
-        "attributes": {
-            "filename": "布洛妮娅Gu1.webp",
-            "parentFolder": "布洛妮娅",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:56:05.814Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "布洛妮娅",
-        "path": "sr-character/布洛妮娅/布洛妮娅Gu2.webp",
-        "attributes": {
-            "filename": "布洛妮娅Gu2.webp",
-            "parentFolder": "布洛妮娅",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:56:07.989Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "布洛妮娅",
-        "path": "sr-character/布洛妮娅/布洛妮娅Gu3.webp",
-        "attributes": {
-            "filename": "布洛妮娅Gu3.webp",
-            "parentFolder": "布洛妮娅",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:56:10.917Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "布洛妮娅",
-        "path": "sr-character/布洛妮娅/布洛妮娅Gu4.webp",
-        "attributes": {
-            "filename": "布洛妮娅Gu4.webp",
-            "parentFolder": "布洛妮娅",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:56:13.101Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "布洛妮娅",
-        "path": "sr-character/布洛妮娅/布洛妮娅Gu5.webp",
-        "attributes": {
-            "filename": "布洛妮娅Gu5.webp",
-            "parentFolder": "布洛妮娅",
-            "isPx18": false,
-            "isRx18": true,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:56:15.717Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "布洛妮娅",
-        "path": "sr-character/布洛妮娅/布洛妮娅Gu6.webp",
-        "attributes": {
-            "filename": "布洛妮娅Gu6.webp",
-            "parentFolder": "布洛妮娅",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:56:17.805Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "丹恒•饮月",
-        "path": "sr-character/丹恒•饮月/丹恒Gu1.webp",
-        "attributes": {
-            "filename": "丹恒Gu1.webp",
-            "parentFolder": "丹恒•饮月",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:57:13.063Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "丹恒•饮月",
-        "path": "sr-character/丹恒•饮月/丹恒Gu2.webp",
-        "attributes": {
-            "filename": "丹恒Gu2.webp",
-            "parentFolder": "丹恒•饮月",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:57:16.399Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "丹恒•饮月",
-        "path": "sr-character/丹恒•饮月/丹恒Gu3.webp",
-        "attributes": {
-            "filename": "丹恒Gu3.webp",
-            "parentFolder": "丹恒•饮月",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:57:20.269Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "丹恒•饮月",
-        "path": "sr-character/丹恒•饮月/丹恒Gu4.webp",
-        "attributes": {
-            "filename": "丹恒Gu4.webp",
-            "parentFolder": "丹恒•饮月",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:57:22.325Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "飞霄",
-        "path": "sr-character/飞霄/飞霄Gu1.webp",
-        "attributes": {
-            "filename": "飞霄Gu1.webp",
-            "parentFolder": "飞霄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:58:34.279Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "飞霄",
-        "path": "sr-character/飞霄/飞霄Gu2.webp",
-        "attributes": {
-            "filename": "飞霄Gu2.webp",
-            "parentFolder": "飞霄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:58:36.757Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "翡翠",
-        "path": "sr-character/翡翠/翡翠Gu1.webp",
-        "attributes": {
-            "filename": "翡翠Gu1.webp",
-            "parentFolder": "翡翠",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:58:57.989Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "翡翠",
-        "path": "sr-character/翡翠/翡翠Gu2.webp",
-        "attributes": {
-            "filename": "翡翠Gu2.webp",
-            "parentFolder": "翡翠",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:58:59.589Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu1.webp",
-        "attributes": {
-            "filename": "符玄Gu1.webp",
-            "parentFolder": "符玄",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:17.000Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu2.webp",
-        "attributes": {
-            "filename": "符玄Gu2.webp",
-            "parentFolder": "符玄",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:20.366Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu3.webp",
-        "attributes": {
-            "filename": "符玄Gu3.webp",
-            "parentFolder": "符玄",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:23.615Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu4.webp",
-        "attributes": {
-            "filename": "符玄Gu4.webp",
-            "parentFolder": "符玄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:25.317Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu5.webp",
-        "attributes": {
-            "filename": "符玄Gu5.webp",
-            "parentFolder": "符玄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:29.573Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu6.webp",
-        "attributes": {
-            "filename": "符玄Gu6.webp",
-            "parentFolder": "符玄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:31.517Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu7.webp",
-        "attributes": {
-            "filename": "符玄Gu7.webp",
-            "parentFolder": "符玄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:33.685Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu8.webp",
-        "attributes": {
-            "filename": "符玄Gu8.webp",
-            "parentFolder": "符玄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:52.445Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "符玄",
-        "path": "sr-character/符玄/符玄Gu9.webp",
-        "attributes": {
-            "filename": "符玄Gu9.webp",
-            "parentFolder": "符玄",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T06:59:37.966Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "桂乃芬",
-        "path": "sr-character/桂乃芬/桂乃芬Gu1.webp",
-        "attributes": {
-            "filename": "桂乃芬Gu1.webp",
-            "parentFolder": "桂乃芬",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T07:00:32.157Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "桂乃芬",
-        "path": "sr-character/桂乃芬/桂乃芬Gu2.webp",
-        "attributes": {
-            "filename": "桂乃芬Gu2.webp",
-            "parentFolder": "桂乃芬",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T07:00:34.101Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "花火",
-        "path": "sr-character/花火/花火Gu31.webp",
-        "attributes": {
-            "filename": "花火Gu31.webp",
-            "parentFolder": "花火",
-            "isPx18": true,
-            "isRx18": false,
-            "isNormal": true,
-            "isFullscreen": false,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T08:05:12.257Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "characterName": "花火",
-        "path": "sr-character/花火/花火Gu33.webp",
-        "attributes": {
-            "filename": "花火Gu33.webp",
-            "parentFolder": "花火",
-            "isPx18": false,
-            "isRx18": false,
-            "isNormal": false,
-            "isFullscreen": true,
-            "isEasterEgg": false,
-            "isBan": false
-        },
-        "timestamp": "2025-04-11T08:05:15.424Z",
-        "sourceGallery": "sr-character"
     }
 ]
