@@ -87,34 +87,6 @@ export class MiaoPluginMBT extends plugin {
         ];
     } 
 
-    async InitFuncCounter() {
-        // 定义 num 文件的完整路径
-        const NumPath = path.join(this.GuPath, 'num');
-        // 定义父目录的路径
-        const ParentDir = path.dirname(NumPath); // 这就是 this.GuPath
-
-        try {
-            // recursive: true 会自动创建所有不存在的父目录
-            await fsPromises.mkdir(ParentDir, { recursive: true });
-            logger.info(`咕咕牛』初始化计数器: 确保目录 ${ParentDir} 存在。`);
-
-            // 2. 尝试访问 num 文件
-            await fsPromises.access(NumPath);
-            logger.info(`咕咕牛』初始化计数器: 文件 ${NumPath} 已存在。`);
-
-        } catch (err) {
-            if (err.code === 'ENOENT') {
-                logger.warn(`[咕咕牛 警告] 初始化计数器: 文件 ${NumPath} 不存在，正在创建...`);
-                try {
-                    await fsPromises.writeFile(NumPath, '{}', 'utf8');
-                } catch (writeErr) {
-                    logger.error(`『咕咕牛🐂』 初始化计数器: 创建文件 ${NumPath} 失败:`, writeErr);
-                }
-            } else {
-                logger.error(`『咕咕牛🐂』 初始化计数器: 检查或创建 ${NumPath} 时发生错误:`, err);
-            }
-        }
-    }
     
           
     async LoadPx18List() {
@@ -879,24 +851,6 @@ export class MiaoPluginMBT extends plugin {
             const UplogForwardMsg = [`最近的更新记录：\n${GitLog}`];
             const ForwardMsgFormatted = await common.makeForwardMsg(this.e, UplogForwardMsg, '『咕咕牛🐂』日志');
             await e.reply(ForwardMsgFormatted);
- 
-            const NumPath = path.join(this.GuPath, 'num');
-            const NumContent = await fsPromises.readFile(NumPath, 'utf8');
-            const NumStats = JSON.parse(NumContent);
-    
-            if (Object.keys(NumStats).length === 0) {
-                await e.reply("暂无功能调用记录。");
-                return;
-            }
-    
-            const SortedEntries = Object.entries(NumStats).sort((a, b) => b[1] - a[1]);
-            const TotalCount = SortedEntries.reduce((sum, [, count]) => sum + count, 0);
-    
-            const StatsList = SortedEntries
-                .map(([func, count]) => `${func}：${count} 次`)
-                .join('\n');
-    
-            await e.reply(`功能使用统计『总计 ${TotalCount} 次』：\n${StatsList}`);
     
             const Platform = `${os.platform()} ${os.arch()}`;
             const NodeVersion = process.version;
