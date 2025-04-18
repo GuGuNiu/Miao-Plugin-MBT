@@ -8,7 +8,6 @@
 GuTools/package.json
 GuTools/package-lock.json
 /GuTools/imgtemp
-/GuTools
 GuGuNiu-Gallery/ExternalImageData.json
 GuGuNiu-Gallery/ImageData.json
 咕咕牛图库下载器.js.bak
@@ -16,3 +15,5 @@ GuGuNiu-Gallery/ImageData.json
 GuGuNiu-Gallery/Px18img.json
 GuGuNiu-Gallery/banlist.txt
 GuGuNiu-Gallery/banlist.txt
+*.css
+*.js
