@@ -1,0 +1,206 @@
+/* ================================= */
+/* == 高级管理 (#advancedManagementPane) == */
+/* ================================= */
+
+#advancedManagementPane {
+    padding: 20px;
+    background-color: #fdf2f2; /* 淡红色背景，暗示危险 */
+    overflow-y: auto; /* 允许整个面板滚动 */
+    height: 100%;
+    box-sizing: border-box;
+    display: flex; 
+    flex-direction: column;
+}
+
+
+
+
+
+
+/* 功能区域容器 (让其填充剩余空间) */
+.adv-mgmt-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* 功能区域之间的间距 */
+    flex-grow: 1; 
+    overflow-y: auto; 
+    padding: 5px; /* 给滚动条留点空间 */
+}
+
+/* 功能分区 */
+.adv-mgmt-section {
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #fee2e2; /* 浅红边框 */
+    box-shadow: 0 5px 15px rgba(200, 0, 0, 0.08);
+    flex-shrink: 0; /* 防止分区自身被压缩 */
+}
+.adv-mgmt-section.danger-zone { /* 危险区域特殊样式 */
+    border-color: #f87171;
+    background-color: #fff5f5;
+    box-shadow: 0 5px 15px rgba(220, 38, 38, 0.15);
+}
+
+/* 分区标题 */
+.section-title {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #7f1d1d; /* 深红色 */
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #fecaca;
+    text-align: center;
+}
+.section-title.danger { /* 危险区域标题颜色 */
+    color: #dc2626;
+    border-bottom-color: #f87171;
+}
+
+/* 工具卡片网格布局 */
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 响应式网格 */
+    gap: 20px;
+}
+
+/* 单个工具卡片 */
+.tool-card {
+    background-color: #fef9c3; /* 淡黄色卡片背景 */
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #fde68a;
+    box-shadow: 3px 3px 0px #fcd34d; /* 黄色硬阴影 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.tool-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 5px 5px 0px #facc15;
+}
+.danger-zone .tool-card { /* 危险区域卡片样式 */
+    background-color: #ffe4e6;
+    border-color: #ffa8b3;
+    box-shadow: 3px 3px 0px #ff8a9a;
+}
+.danger-zone .tool-card:hover {
+    box-shadow: 5px 5px 0px #ff6b81;
+}
+
+/* 卡片内标题 */
+.tool-card h4 {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #ca8a04; /* 暗黄色标题 */
+    margin: 0 0 5px 0;
+    border-bottom: 1px dashed #fde047;
+    padding-bottom: 5px;
+}
+.danger-zone .tool-card h4 {
+    color: #be185d; /* 危险区标题用粉色 */
+    border-bottom-color: #f9a8d4;
+}
+
+/* 卡片内描述 */
+.tool-description {
+    font-size: 0.9em;
+    color: #a16207; /* 暗黄文字 */
+    margin: 0 0 15px 0; /* 描述和按钮间距 */
+    flex-grow: 1; /* 让描述填充空间 */
+    line-height: 1.5;
+}
+.danger-zone .tool-card .tool-description {
+    color: #9d174d;
+}
+
+/* 卡片内按钮 */
+.tool-card .tool-button-adv {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: 2px solid #495057;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    box-shadow: 2px 2px 0px #adb5bd;
+    margin-top: 5px; /* 按钮间距 */
+    width: fit-content; /* 按钮宽度自适应 */
+    align-self: flex-start; /* 默认靠左 */
+}
+.tool-card .tool-button-adv:hover:not(:disabled) { background-color: #e9ecef; box-shadow: 3px 3px 0px #868e96; transform: translate(-1px, -1px); }
+.tool-card .tool-button-adv:active:not(:disabled) { box-shadow: 1px 1px 0px #adb5bd; transform: translate(1px, 1px); }
+.tool-card .tool-button-adv:disabled, .tool-card .tool-button-adv.disabled { background-color: #f1f3f5 !important; color: #adb5bd !important; border-color: #e9ecef !important; box-shadow: none !important; transform: none !important; cursor: not-allowed !important; opacity: 0.8 !important; }
+.tool-card .tool-button-adv.primary { background-color: #a5b4fc; color: #3730a3; border-color: #818cf8; box-shadow: 2px 2px 0px #a5b4fc; }
+.tool-card .tool-button-adv.primary:hover:not(:disabled) { background-color: #818cf8; box-shadow: 3px 3px 0px #6366f1; }
+.tool-card .tool-button-adv.danger { background-color: #fda4af; color: #be123c; border-color: #fb7185; box-shadow: 2px 2px 0px #fda4af; }
+.tool-card .tool-button-adv.danger:hover:not(:disabled) { background-color: #fb7185; box-shadow: 3px 3px 0px #f43f5e; }
+.tool-card .tool-button-adv.warning { background-color: #fed7aa; color: #9a3412; border-color: #fb923c; box-shadow: 2px 2px 0px #fdba74; }
+.tool-card .tool-button-adv.warning:hover:not(:disabled) { background-color: #fcd34d; box-shadow: 3px 3px 0px #fbbf24; }
+
+/* 卡片内输出区域 */
+.tool-card .tool-output {
+    margin-top: 15px;
+    border-top: 1px dashed #fde68a;
+    padding-top: 15px;
+}
+.danger-zone .tool-card .tool-output { border-top-color: #ffa8b3; }
+.tool-card .tool-output p { margin-bottom: 8px; font-weight: 500; color: #78350f; }
+.danger-zone .tool-card .tool-output p { color: #9d174d; }
+.tool-card .tool-output textarea,
+.tool-card .tool-output .scrollable-list-adv { /* 统一输出区域样式 */
+    width: 100%;
+    min-height: 100px;
+    max-height: 200px; /* 限制最大高度 */
+    overflow-y: auto;
+    border: 1px solid #fde68a;
+    background-color: #fefce8;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.85em;
+    resize: vertical; /* 允许垂直调整 */
+    box-sizing: border-box;
+}
+.danger-zone .tool-card .tool-output textarea,
+.danger-zone .tool-card .tool-output .scrollable-list-adv {
+    border-color: #ffb8c5;
+    background-color: #fff5f7;
+}
+.tool-card .tool-output button { margin-top: 10px; }
+
+#advancedManagementPane h2 {
+    color: var(--error-color);
+    border-bottom: 2px solid var(--error-color);
+    font-size: 1.8em;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    flex-shrink: 0;  
+    }
+
+    #advanced-mgmt-button {
+    margin-top: 45px;
+    background: #616161;
+    color: #ff8a80;
+    border-color: #e57373;
+    font-weight: 700;
+    transition: all 0.3s ease;  
+    }
+    #advanced-mgmt-button:hover {
+    background: #757575;
+    color: #ff5252;
+    border-color: #ff5252;
+    transform: rotate(-1deg) scale(1.07);
+    }
+    #advanced-mgmt-button.active {
+    background: linear-gradient(135deg, #ef5350, #d32f2f);
+    color: white;
+    border-color: #c62828;
+    transform: scale(1.1);
+    box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4);
+    } 

@@ -1,0 +1,347 @@
+/* ===================================== */
+/* == GuTools - MD5 校准视图样式 == */
+/* ===================================== */
+
+/* MD5 视图布局容器 */
+#md5PaneView .md5-layout-wrapper {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f0f4f8; /* ★★★ 淡蓝灰色背景 ★★★ */
+    padding: 20px; /* 确保内边距 */
+    border-radius: 0 0 16px 16px; /* 底部圆角，匹配面板 */
+    border-top: 2px solid #e9ecef; /* 保留顶部边框 */
+}
+
+/* MD5 列通用样式 */
+#md5PaneView .md5-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* 列内元素间距 */
+    padding: 20px;
+    background-color: #ffffff; /* 白色背景 */
+    border: 2px solid #ced4da; /* 边框 */
+    border-radius: 16px; /* 卡通风圆角 */
+    box-shadow: 4px 4px 0px #adb5bd; /* 硬阴影 */
+    overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 左侧列 (JSON 列表) */
+#md5PaneView .md5-left-column {
+    flex: 1 1 40%; /* 占据约 40% 宽度 */
+    min-width: 300px; /* 最小宽度 */
+}
+
+/* 中间列 (控制与状态) */
+#md5PaneView .md5-middle-column {
+    flex: 0 0 340px; /* 固定宽度 */
+    justify-content: flex-start; /* 内容顶部对齐 */
+}
+
+/* 右侧列 (不一致列表) */
+#md5PaneView .md5-right-column {
+    flex: 1 1 40%; /* 占据约 40% 宽度 */
+    min-width: 300px; /* 最小宽度 */
+}
+
+/* 列标题样式 (复用 .column-title) */
+#md5PaneView .column-title {
+    font-size: 1.4em !important;
+    font-weight: 700 !important;
+    color: #495057 !important;
+    margin-bottom: 15px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 3px solid #dee2e6 !important;
+    text-align: center;
+    background: none !important; -webkit-background-clip: initial !important; -webkit-text-fill-color: initial !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0; /* 防止标题被压缩 */
+}
+#md5PaneView .column-title span { /* 标题中的计数 */
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
+/* 左侧 JSON 列表容器 */
+#md5PaneView #jsonMd5ListContainer {
+    flex-grow: 1; /* 占据剩余空间 */
+    overflow-y: auto; /* 允许滚动 */
+    border: 1px solid #e9ecef; /* 细边框 */
+    border-radius: 8px; /* 圆角 */
+    background-color: #f8f9fa; /* 浅灰背景 */
+    padding: 5px; /* 内边距 */
+    /* 继承 .scrollable-list 的滚动条样式 */
+}
+#md5PaneView #jsonMd5ListContainer .list-placeholder { /* 空列表提示 */
+    text-align: center;
+    color: var(--secondary-text-color);
+    padding: 20px;
+    font-style: italic;
+}
+
+/* JSON 列表项 */
+#md5PaneView .json-md5-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px; /* 内边距 */
+    border-bottom: 1px dashed #dee2e6; /* 虚线分隔 */
+    transition: background-color 0.15s ease;
+    font-size: 0.9em;
+}
+#md5PaneView .json-md5-item:last-child {
+    border-bottom: none;
+}
+#md5PaneView .json-md5-item:hover {
+    background-color: #e9ecef; /* 悬停背景色 */
+}
+/* 列表项 - 文件名 */
+#md5PaneView .json-md5-item .item-name {
+    color: #495057;
+    font-weight: 500;
+    margin-right: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1; /* 允许被压缩 */
+}
+/* 列表项 - MD5 */
+#md5PaneView .json-md5-item .item-md5 {
+    color: #868e96; /* 灰色 */
+    font-family: 'Consolas', 'Courier New', monospace; /* 等宽字体 */
+    font-size: 0.9em; /* 稍小字体 */
+    text-align: right;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0; /* 不压缩 */
+}
+/* 列表项 - 不匹配高亮 */
+#md5PaneView .json-md5-item.mismatched {
+    background-color: #fff5f5; /* 淡红色背景 */
+    border-left: 5px solid #f03e3e; /* 左侧红边框 */
+    padding-left: 7px; /* 调整左内边距 */
+    border-bottom-color: #ffa8a8; /* 分隔线颜色 */
+}
+#md5PaneView .json-md5-item.mismatched .item-name {
+    color: #c92a2a; /* 深红色文字 */
+    font-weight: 600;
+}
+#md5PaneView .json-md5-item.mismatched .item-md5 {
+    color: #e03131; /* 红色 MD5 */
+    font-weight: 500;
+}
+
+/* 中间列 - 校准控制区域 */
+#md5PaneView .md5-calibration-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* 内部元素间距 */
+    flex-grow: 1; /* 占据剩余空间 */
+    overflow: hidden; /* 防止内部溢出 */
+}
+
+/* 中间列 - 按钮容器 */
+#md5PaneView .calibration-controls.full-width-buttons {
+    width: 100%;
+    display: flex;
+    gap: 10px; /* 按钮间距 */
+    margin-bottom: 10px;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+#md5PaneView .calibration-controls.full-width-buttons .tool-button {
+    flex-grow: 1; /* 按钮均分宽度 */
+    flex-basis: 0;
+    margin-right: 0;
+    border-radius: 10px;
+}
+/* 中间列 - 修复按钮 */
+#md5PaneView .fix-button.full-width-button {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 1.1em;
+    align-self: stretch;
+    margin-right: 0;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+
+/* 中间列 - 状态显示区域 */
+#md5PaneView .calibration-status {
+    background-color: #e7f5ff; /* 淡蓝色背景 */
+    border: 2px solid #a5d8ff; /* 边框 */
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    flex-shrink: 0; /* 防止被压缩 */
+}
+#md5PaneView .calibration-status p {
+    color: #364fc7; /* 深蓝色文字 */
+    margin: 5px 0;
+    line-height: 1.5;
+    font-size: 0.95em;
+}
+#md5PaneView .calibration-status span { /* 状态数字 */
+    font-weight: 700;
+    color: #1864ab; /* 蓝色 */
+}
+/* 不一致计数特殊颜色 */
+#md5PaneView .calibration-status #mismatchedMD5Count,
+#md5PaneView .calibration-status #mismatchedCountDisplay {
+    color: #d9480f !important; /* 橙红色 */
+}
+/* 进度文本 */
+#md5PaneView #md5CalibrationProgress {
+    color: #1c7ed6; /* 蓝色 */
+    font-weight: 500;
+    min-height: 1.2em; /* 防止跳动 */
+    margin-top: 8px;
+    font-size: 0.9em;
+    word-break: break-all; /* 长文件名换行 */
+}
+
+/* 进度条 */
+#md5PaneView #md5CalibrationProgressBar {
+    width: 100%;
+    height: 18px;
+    border-radius: 9px;
+    border: 2px solid #adb5bd;
+    background-color: #e9ecef;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,0.1);
+    margin-top: 10px;
+    display: none; /* 初始隐藏 */
+    flex-shrink: 0;
+}
+#md5PaneView #md5CalibrationProgressBar::-webkit-progress-bar {
+    background-color: #e9ecef;
+    border-radius: 7px;
+}
+#md5PaneView #md5CalibrationProgressBar::-webkit-progress-value {
+    background: linear-gradient(to right, #4dabf7, #1c7ed6); /* 蓝色渐变 */
+    border-radius: 7px;
+    box-shadow: inset 0 -1px 1px rgba(0,0,0,0.15);
+    transition: width 0.2s ease-out; /* 平滑过渡 */
+}
+#md5PaneView #md5CalibrationProgressBar::-moz-progress-bar { /* Firefox */
+    background: linear-gradient(to right, #4dabf7, #1c7ed6);
+    border-radius: 7px;
+    box-shadow: inset 0 -1px 1px rgba(0,0,0,0.15);
+}
+
+/* 中间列 - 额外信息区域 (文件不在 JSON 中) */
+#md5PaneView .extra-info-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* 占据剩余空间 */
+    min-height: 0; /* 防止 flex item 溢出 */
+    background-color: #f1f3f5; /* 浅灰色背景 */
+    border: 1px dashed #ced4da; /* 虚线边框 */
+    border-radius: 10px;
+    padding: 12px 15px;
+}
+#md5PaneView .md5-middle-column .calibration-controls .tool-button {
+
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    border: 2px solid #495057;
+    border-radius: 10px;
+    background-color: #e9ecef;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    box-shadow: 2px 2px 0px #adb5bd;
+    text-align: center;
+}
+
+/* 确保中止按钮的特殊颜色和隐藏/显示正常 */
+#md5PaneView .md5-middle-column .tool-button#abortMD5Calibration {
+    /* 复用 .abort-button 的颜色 */
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-color: #f87171;
+    box-shadow: 2px 2px 0px #fca5a5;
+}
+#md5PaneView .md5-middle-column .tool-button#abortMD5Calibration:hover:not(:disabled) {
+    background-color: #fecaca;
+    box-shadow: 3px 3px 0px #ef4444;
+}
+#md5PaneView .md5-middle-column .tool-button#abortMD5Calibration.hidden {
+    display: none !important; /* 确保隐藏生效 */
+}
+
+/* 确保禁用状态生效 */
+#md5PaneView .md5-middle-column .tool-button:disabled,
+#md5PaneView .md5-middle-column .tool-button.disabled {
+    background-color: #f1f3f5 !important;
+    color: #adb5bd !important;
+    border-color: #e9ecef !important;
+    box-shadow: none !important;
+    transform: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.8 !important;
+}
+/* 额外信息标题 */
+#md5PaneView .extra-info-title {
+    font-size: 1em;
+    font-weight: 700;
+    color: #6c757d; /* 灰色标题 */
+    margin: 0 0 10px 0;
+    flex-shrink: 0;
+}
+#md5PaneView .extra-info-title span { /* 计数 */
+    font-weight: 600;
+    color: #868e96;
+}
+/* 额外信息列表 (Textarea) */
+#md5PaneView .extra-info-list {
+    flex-grow: 1; /* 填充剩余空间 */
+    border: 1px solid #dee2e6; /* 边框 */
+    background-color: white;
+    border-radius: 6px;
+    margin-top: 0;
+    min-height: 80px; /* 最小高度 */
+    max-height: none; /* 移除最大高度限制 */
+    font-size: 0.85em; /* 稍小字体 */
+    color: #495057;
+    /* 继承 .scrollable-list 的字体和滚动条样式 */
+}
+
+/* 右侧列 - 不一致列表 (Textarea) */
+#md5PaneView #mismatchedMD5List {
+    flex-grow: 1; /* 填充剩余空间 */
+    border-color: #ffa8a8; /* 红色边框 */
+    background-color: #fff5f5; /* 淡红色背景 */
+    color: #c92a2a; /* 深红色文字 */
+    font-size: 0.85em;
+    /* 继承 .scrollable-list 的字体和滚动条样式 */
+}
+
+/* 通用滚动列表/Textarea (复用自 GuTools_Main 或定义在此处) */
+#md5PaneView .scrollable-list,
+#md5PaneView .extra-info-list,
+#md5PaneView .mismatched-list {
+    overflow-y: auto;
+    padding: 10px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    resize: none; /* 禁止用户调整大小 */
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd #f1f3f5;
+}
+#md5PaneView .scrollable-list::-webkit-scrollbar,
+#md5PaneView .extra-info-list::-webkit-scrollbar,
+#md5PaneView .mismatched-list::-webkit-scrollbar { width: 10px; }
+#md5PaneView .scrollable-list::-webkit-scrollbar-track,
+#md5PaneView .extra-info-list::-webkit-scrollbar-track,
+#md5PaneView .mismatched-list::-webkit-scrollbar-track { background: #f1f3f5; border-radius: 5px; }
+#md5PaneView .scrollable-list::-webkit-scrollbar-thumb,
+#md5PaneView .extra-info-list::-webkit-scrollbar-thumb,
+#md5PaneView .mismatched-list::-webkit-scrollbar-thumb { background-color: #adb5bd; border-radius: 5px; border: 2px solid #f1f3f5; }
+#md5PaneView .scrollable-list::-webkit-scrollbar-thumb:hover,
+#md5PaneView .extra-info-list::-webkit-scrollbar-thumb:hover,
+#md5PaneView .mismatched-list::-webkit-scrollbar-thumb:hover { background-color: #868e96; }

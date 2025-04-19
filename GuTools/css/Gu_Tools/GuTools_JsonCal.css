@@ -1,0 +1,203 @@
+/* ===================================== */
+/* == GuTools - JSON 校准视图样式 == */
+/* ===================================== */
+
+/* JSON 校准视图布局容器 */
+#jsonCalibrationPaneView .json-calibration-layout-wrapper {
+    display: flex;
+    gap: 20px; /* 列间距 */
+    background-color: #f5f3ff; /* 淡紫色背景 */
+    padding: 20px;
+    height: 100%; /* 填充父容器高度 */
+    overflow: hidden; /* 防止内部滚动影响外部 */
+    /* 从 .tool-content-wrapper 继承 */
+}
+
+/* JSON 校准列通用样式 */
+#jsonCalibrationPaneView .json-calibration-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* 列内元素间距 */
+    padding: 20px;
+    background-color: #ffffff; /* 白色背景 */
+    border: 2px solid #dcd7ff; /* 紫色边框 */
+    border-radius: 16px; /* 卡通风圆角 */
+    box-shadow: 4px 4px 0px #c4b5fd; /* 紫色硬阴影 */
+    overflow: hidden; /* 防止内容溢出 */
+}
+
+/* 左侧列 (控制) */
+#jsonCalibrationPaneView .json-calibration-left {
+    flex: 0 0 340px; /* 固定宽度 */
+    justify-content: flex-start; /* 内容顶部对齐 */
+}
+
+/* 右侧列 (缺失列表) */
+#jsonCalibrationPaneView .json-calibration-right {
+    flex: 1 1 60%; /* 占据剩余宽度 */
+    min-width: 300px; /* 最小宽度 */
+    display: flex; /* 确保内部元素可以 flex */
+    flex-direction: column;
+}
+
+/* 列标题样式 (复用 .column-title) */
+#jsonCalibrationPaneView .column-title {
+    font-size: 1.4em !important;
+    font-weight: 700 !important;
+    color: #5b21b6 !important; /* 深紫色 */
+    margin-bottom: 15px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 3px solid #c4b5fd !important; /* 紫色下边框 */
+    text-align: center;
+    background: none !important; -webkit-background-clip: initial !important; -webkit-text-fill-color: initial !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+#jsonCalibrationPaneView .column-title span { /* 标题中的计数 */
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #7c3aed; /* 紫色 */
+}
+
+/* 左侧控制区域容器 */
+#jsonCalibrationPaneView .json-calibration-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* 内部元素间距 */
+    flex-grow: 1; /* 占据剩余空间 */
+    overflow: hidden; /* 防止内部溢出 */
+}
+
+/* 开始校准按钮 */
+#jsonCalibrationPaneView .tool-button#startJsonCalibration { /* 复用通用按钮样式 */
+    /* 特殊颜色 */
+    background-color: #c4b5fd; /* 淡紫色 */
+    color: #5b21b6; /* 深紫色文字 */
+    border-color: #a78bfa; /* 边框色 */
+    box-shadow: 2px 2px 0px #ddd6fe; /* 阴影 */
+    align-self: stretch; /* 宽度撑满 */
+    margin-right: 0;
+    padding: 12px 20px;
+    font-size: 1.05em;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+#jsonCalibrationPaneView .tool-button#startJsonCalibration:hover:not(:disabled) {
+    background-color: #a78bfa;
+    box-shadow: 3px 3px 0px #8b5cf6;
+}
+
+/* 校准状态显示区域 */
+#jsonCalibrationPaneView .calibration-status {
+    background-color: #f5f3ff; /* 非常浅的紫色 */
+    border: 2px solid #dcd7ff; /* 边框 */
+    border-radius: 12px; /* 圆角 */
+    padding: 15px;
+    min-height: 140px; /* 固定最小高度 */
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    flex-shrink: 0; /* 防止被压缩 */
+    display: flex; /* 使用 flex 布局 */
+    flex-direction: column; /* 垂直排列 */
+    justify-content: center; /* 垂直居中 */
+}
+#jsonCalibrationPaneView .calibration-status p {
+    color: #6d28d9; /* 紫色文字 */
+    margin: 4px 0; /* 调整行间距 */
+    line-height: 1.4;
+    font-size: 0.95em;
+}
+#jsonCalibrationPaneView .calibration-status span { /* 状态数字 */
+    font-weight: 700;
+    color: #5b21b6; /* 深紫色 */
+}
+/* 缺失计数特殊颜色 */
+#jsonCalibrationPaneView .calibration-status #missingFilesCount {
+    color: #dc2626 !important; /* 红色 */
+}
+/* 进度文本 */
+#jsonCalibrationPaneView #jsonCalibrationProgress {
+    color: #7c3aed; /* 紫色 */
+    font-weight: 500;
+    min-height: 1.2em; /* 防止跳动 */
+    margin-top: 5px;
+    font-size: 0.9em;
+    word-break: break-all;
+}
+
+/* 进度条 */
+#jsonCalibrationPaneView #jsonCalibrationProgressBar {
+    width: 100%;
+    height: 16px;
+    border-radius: 8px;
+    border: 2px solid #c4b5fd;
+    background-color: #ede9fe;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,0.1);
+    display: none; /* 初始隐藏 */
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+#jsonCalibrationPaneView #jsonCalibrationProgressBar::-webkit-progress-bar {
+    background-color: #ede9fe;
+    border-radius: 6px; /* 内部圆角 */
+}
+#jsonCalibrationPaneView #jsonCalibrationProgressBar::-webkit-progress-value {
+    background: linear-gradient(to right, #a78bfa, #7c3aed); /* 紫色渐变 */
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 1px rgba(0,0,0,0.15);
+    transition: width 0.2s ease-out;
+}
+#jsonCalibrationPaneView #jsonCalibrationProgressBar::-moz-progress-bar { /* Firefox */
+    background: linear-gradient(to right, #a78bfa, #7c3aed);
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 1px rgba(0,0,0,0.15);
+}
+
+/* 移除缺失记录按钮 */
+#jsonCalibrationPaneView .fix-button.full-width-button { /* 复用修复按钮基类 */
+    width: 100%;
+    margin-top: auto; /* 推到底部 */
+    padding: 12px 20px;
+    font-size: 1.05em;
+    align-self: stretch;
+    margin-right: 0;
+    /* 特殊颜色 (危险操作) */
+    background-color: #fda4af; /* 淡红色 */
+    color: #be123c; /* 深红色文字 */
+    border-color: #fb7185; /* 边框色 */
+    box-shadow: 2px 2px 0px #fecaca; /* 阴影 */
+    flex-shrink: 0; /* 防止被压缩 */
+}
+#jsonCalibrationPaneView .fix-button.full-width-button:hover:not(:disabled) {
+    background-color: #fb7185;
+    box-shadow: 3px 3px 0px #f43f5e;
+}
+
+/* 右侧缺失列表 (Textarea) */
+#jsonCalibrationPaneView #missingFilesList {
+    flex-grow: 1; /* 占据剩余空间 */
+    border-color: #fda4af; /* 红色边框 */
+    background-color: #fff1f2; /* 非常浅的红色 */
+    color: #be123c; /* 深红色文字 */
+    font-size: 0.9em; /* 稍大字体 */
+    line-height: 1.6;
+    /* 继承 .scrollable-list 的字体和滚动条样式 */
+}
+
+/* 滚动列表/Textarea (复用) */
+#jsonCalibrationPaneView .scrollable-list {
+    overflow-y: auto;
+    padding: 10px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    resize: none;
+    box-sizing: border-box;
+    border: 1px solid; /* 基类需要边框 */
+    border-radius: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #fb7185 #fff1f2; /* 红色滚动条 */
+}
+#jsonCalibrationPaneView .scrollable-list::-webkit-scrollbar { width: 10px; }
+#jsonCalibrationPaneView .scrollable-list::-webkit-scrollbar-track { background: #fff1f2; border-radius: 5px; }
+#jsonCalibrationPaneView .scrollable-list::-webkit-scrollbar-thumb { background-color: #fb7185; border-radius: 5px; border: 2px solid #fff1f2; }
+#jsonCalibrationPaneView .scrollable-list::-webkit-scrollbar-thumb:hover { background-color: #f43f5e; }

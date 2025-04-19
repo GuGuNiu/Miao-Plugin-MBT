@@ -1,0 +1,269 @@
+/* ===================================== */
+/* == GuTools - 图片入库视图样式 (卡通风格) == */
+/* ===================================== */
+
+/* --- 导入视图 (#importPaneView) --- */
+#importPaneView .import-content-wrapper {
+    display: flex;
+    gap: 25px;
+    width: 100%;
+    flex-grow: 1;
+    overflow: hidden;
+    padding: 15px;
+    background-color: #f0f9ff; 
+    border-radius: 0 0 16px 16px; /* 底部圆角 */
+    border-top: 2px solid #d6eeff; /* 匹配背景的边框 */
+}
+
+
+/* 导入左右面板通用样式 - 卡通风格 */
+#importPaneView .import-left-panel,
+#importPaneView .import-right-panel {
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto; /* ★★★ 允许独立滚动 ★★★ */
+    padding: 20px;
+    background-color: #fffefb; /* 非常浅的黄色 */
+    border-radius: 16px; /* 卡通风圆角 */
+    border: 2px solid #ffe8cc; /* 橙色系边框 */
+    box-shadow: 4px 4px 0px #ffc98a; /* 橙色硬阴影 */
+    min-width: 0;
+}
+
+/* 左面板 */
+#importPaneView .import-left-panel {
+    align-items: stretch;
+}
+
+/* 表单组 */
+#importPaneView .form-group {
+    width: 100%;
+    margin-bottom: 18px;
+    position: relative;
+}
+#importPaneView label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700; /* 卡通风格加粗 */
+    font-size: 0.95em;
+    color: #a16207; /* 暗黄色 */
+}
+
+/* 卡通输入框 */
+#importPaneView input[type="text"],
+#importPaneView input[type="search"] {
+    width: 100%;
+    padding: 10px 16px;
+    border: 2px solid #ffd5a1; /* 橙色边框 */
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: var(--text-color);
+    background-color: #fff;
+    min-height: 44px;
+    box-sizing: border-box;
+    outline: none;
+    box-shadow: inset 1px 1px 3px rgba(180, 120, 50, 0.1);
+    font-family: 'Baloo 2', sans-serif;
+}
+#importPaneView input[type="text"]:focus,
+#importPaneView input[type="search"]:focus {
+    border-color: var(--sun-orange);
+    box-shadow: 0 0 0 3px rgba(255, 171, 115, 0.3), inset 1px 1px 3px rgba(180, 120, 50, 0.1);
+}
+
+/* 待入库搜索框 (只读) */
+#importPaneView #tempImageSearchInput[readonly] {
+    background-color: #fff3e0 !important;
+    cursor: pointer !important;
+    color: #e65100 !important;
+    border-color: #ffcc80 !important;
+    font-weight: 600;
+}
+#importPaneView #tempImageSearchInput[readonly]::placeholder {
+    color: #e65100 !important;
+    opacity: 0.9 !important;
+}
+#importPaneView #tempImageSearchInput:disabled {
+    background-color: var(--disabled-bg) !important;
+    color: var(--disabled-color) !important;
+    border-color: var(--border-color) !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+}
+
+/* 最终文件名输入框 */
+#importPaneView #finalFilenameInput[readonly]:not(.editable) {
+    background-color: #fff8e1 !important;
+    color: var(--secondary-text-color) !important;
+    cursor: default !important;
+    border-color: #ffe0b2 !important;
+    box-shadow: none !important;
+    font-style: italic;
+}
+#importPaneView #finalFilenameInput.editable {
+    background-color: #fff !important;
+    color: var(--text-color) !important;
+    cursor: text !important;
+    padding-right: 35px !important;
+    border-color: var(--sun-orange) !important;
+    box-shadow: 0 0 0 3px rgba(255, 171, 115, 0.3) !important;
+    font-style: normal;
+}
+#importPaneView .filename-input-wrapper { position: relative; display: flex; align-items: center; }
+#importPaneView .edit-filename-btn {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; font-size: 1.3em; cursor: pointer; padding: 5px;
+    color: #ffcc80; transition: color 0.2s ease; display: none; flex-shrink: 0;
+}
+#importPaneView .edit-filename-btn.visible { display: inline-block; }
+#importPaneView .edit-filename-btn:hover { color: var(--sun-orange); }
+
+/* 建议列表 - 卡通风格 */
+#importPaneView .search-wrapper-import { position: relative; width: 100%; }
+#importPaneView .suggestions-import {
+    border: 2px solid #ffe8cc !important;
+    border-radius: 10px !important;
+    background-color: #fffaf0 !important;
+    box-shadow: 3px 3px 0px #ffe0b2 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    z-index: 100 !important;
+    position: absolute; top: calc(100% + 6px); left: 0; width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sun-orange) #fffaf0;
+}
+#importPaneView .suggestions-import::-webkit-scrollbar { width: 8px; }
+#importPaneView .suggestions-import::-webkit-scrollbar-track { background: #fffaf0; border-radius: 4px;}
+#importPaneView .suggestions-import::-webkit-scrollbar-thumb { background-color: var(--sun-orange); border-radius: 4px; border: 2px solid #fffaf0; }
+#importPaneView .suggestions-import .suggestion-item {
+    padding: 9px 15px !important;
+    border-bottom: 1px dashed #ffe8cc !important;
+    font-size: 0.9em !important;
+    font-weight: 500;
+    color: #a16207;
+    cursor: pointer !important;
+    transition: background-color 0.15s ease !important;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#importPaneView .suggestions-import .suggestion-item:last-child { border-bottom: none !important; }
+#importPaneView .suggestions-import .suggestion-item:hover {
+    background-color: #fff3e0 !important;
+    color: #e65100;
+}
+
+/* 预览区域 - 卡通风格 */
+#importPaneView #tempImagePreviewArea {
+    padding: 20px;
+    background-color: rgba(255, 250, 240, 0.8);
+    border-radius: 14px;
+    border: 3px dashed var(--sun-orange);
+    min-height: 250px;
+    margin-top: 10px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    flex-grow: 1; width: 100%; text-align: center; overflow: hidden;
+}
+#importPaneView #tempImagePreviewArea p { font-size: 1.1em; color: #e65100; font-weight: 600; margin-bottom: 15px; }
+#importPaneView #tempImagePreview {
+    max-height: 300px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    margin-top: 10px; background-color: #fff; padding: 5px; border: 1px solid #ffe0b2;
+    display: block; max-width: 100%; width: auto; height: auto; object-fit: contain;
+}
+
+/* 属性面板 - 卡通风格 */
+#importPaneView #importAttributesPanel {
+    padding: 20px 25px; border: 2px solid #ffe8cc !important; border-radius: 14px;
+    background-color: rgba(255, 250, 245, 0.85); margin-bottom: 20px !important;
+    flex-shrink: 0;
+    /* 确保默认可见 */
+    display: block !important; opacity: 1 !important; visibility: visible !important;
+    height: auto !important; overflow: visible !important; transform: none !important;
+}
+#importPaneView #importAttributesPanel h4 {
+    font-size: 1.4em !important; font-weight: 700 !important; margin-bottom: 18px !important;
+    color: #e65100 !important; border-bottom: 2px solid #ffcc80 !important;
+    padding-bottom: 10px !important; text-align: center !important; background: none !important;
+    -webkit-background-clip: initial !important; -webkit-text-fill-color: initial !important;
+}
+#importPaneView #importAttributesPanel .attribute-groups-wrapper { gap: 25px !important; display: flex !important; margin-bottom: 0 !important; flex-wrap: wrap !important;}
+#importPaneView #importAttributesPanel .attribute-group { min-width: 170px; flex: 1; border: none; padding: 0; border-radius: 0; background-color: transparent; margin-bottom: 0; }
+#importPaneView #importAttributesPanel .attribute-group .group-label { font-size: 1.1em; color: #ef6c00; font-weight: 700; margin-bottom: 12px; display: block;}
+#importPaneView #importAttributesPanel .attribute-group label { font-weight: 600; display: flex; align-items: center; font-size: 1em; cursor: pointer; color: var(--text-color); margin-bottom: 8px; padding: 3px 0; transition: color 0.2s ease; }
+#importPaneView #importAttributesPanel .attribute-group label:hover { color: #f57c00; }
+/* 自定义 Radio/Checkbox */
+#importPaneView #importAttributesPanel .attribute-group input[type="radio"],
+#importPaneView #importAttributesPanel .attribute-group input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none; margin: 0 10px 0 0; width: 22px; height: 22px;
+    border: 3px solid #ffcc80; border-radius: 50%; display: inline-block; position: relative;
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); background-color: #fff;
+    flex-shrink: 0; vertical-align: middle;
+}
+#importPaneView #importAttributesPanel .attribute-group input[type="checkbox"] { border-radius: 7px; }
+#importPaneView #importAttributesPanel .attribute-group input[type="radio"]:checked,
+#importPaneView #importAttributesPanel .attribute-group input[type="checkbox"]:checked {
+    border-color: var(--sun-orange); background-color: var(--sun-yellow);
+    transform: scale(1.1); box-shadow: 0 2px 5px rgba(255, 171, 115, 0.4);
+}
+#importPaneView #importAttributesPanel .attribute-group input[type="radio"]:checked::after {
+    content: ''; display: block; width: 10px; height: 10px; border-radius: 50%;
+    background-color: var(--sun-orange); position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0); animation: popIn 0.3s ease forwards;
+}
+#importPaneView #importAttributesPanel .attribute-group input[type="checkbox"]:checked::after {
+    content: '⭐'; color: var(--sun-orange); font-size: 16px; line-height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    transform: scale(0) rotate(-15deg); animation: popInStar 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 命名区域 - 卡通风格 */
+#importPaneView .naming-section {
+    width: 100%; transition: opacity 0.3s ease, transform 0.3s ease;
+    border-top: 2px dashed #ffe8cc; padding-top: 20px; margin-top: 15px;
+    opacity: 0.5; pointer-events: none; transform: translateY(10px);
+    max-width: 100%; box-sizing: border-box; /* 防止溢出 */
+}
+#importPaneView .naming-section.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+#importPaneView .naming-input-row { display: flex; gap: 15px; align-items: flex-start; flex-wrap: wrap; }
+#importPaneView .naming-input-row .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+
+/* 添加按钮 - 卡通风格 */
+#importPaneView .action-area-import { margin-top: auto; padding-top: 20px; border-top: 2px solid #ffe8cc; width: 100%; flex-shrink: 0; }
+#importPaneView #addToGalleryButton {
+    background: linear-gradient(135deg, var(--sun-yellow) 0%, var(--sun-orange) 100%) !important;
+    color: white !important; padding: 12px 25px !important; border: none !important;
+    border-radius: 25px !important; font-size: 1.1em !important; font-weight: 700 !important;
+    width: 100% !important; transition: all 0.3s ease !important;
+    box-shadow: 3px 3px 0px #ffb74d, 0 5px 10px rgba(255, 171, 115, 0.4) !important; /* 硬阴影 + 柔和阴影 */
+    text-transform: uppercase !important; letter-spacing: 1px !important; cursor: pointer !important;
+}
+#importPaneView #addToGalleryButton:hover:not(:disabled) {
+    box-shadow: 4px 4px 0px #ffa726, 0 7px 15px rgba(255, 171, 115, 0.5) !important;
+    filter: brightness(1.1) !important; transform: translate(-1px, -1px) !important;
+}
+#importPaneView #addToGalleryButton:active:not(:disabled) {
+    box-shadow: 1px 1px 0px #ffb74d, inset 0 2px 4px rgba(0,0,0,0.1) !important;
+    transform: translate(1px, 1px) !important;
+}
+#importPaneView #addToGalleryButton:disabled {
+    background: var(--disabled-bg) !important; color: var(--disabled-color) !important;
+    cursor: not-allowed !important; box-shadow: none !important; transform: none !important;
+    filter: none !important; opacity: 0.7 !important; border-radius: 10px !important; /* 禁用时变方形 */
+    text-transform: none !important; letter-spacing: normal !important;
+}
+
+/* 导入消息区域 */
+#importPaneView #importMessageArea { margin-top: 18px !important; font-size: 0.95em !important; min-height: 2.8em !important; border-radius: 8px !important; font-weight: 600 !important; }
+
+/* 滚动条 - 卡通风格 */
+#importPaneView .import-left-panel::-webkit-scrollbar,
+#importPaneView .import-right-panel::-webkit-scrollbar { width: 10px; }
+#importPaneView .import-left-panel::-webkit-scrollbar-track,
+#importPaneView .import-right-panel::-webkit-scrollbar-track { background: #fffaf0; border-radius: 5px; }
+#importPaneView .import-left-panel::-webkit-scrollbar-thumb,
+#importPaneView .import-right-panel::-webkit-scrollbar-thumb { background-color: #ffcc80; border-radius: 5px; border: 2px solid #fffaf0; }
+#importPaneView .import-left-panel::-webkit-scrollbar-thumb:hover,
+#importPaneView .import-right-panel::-webkit-scrollbar-thumb:hover { background-color: var(--sun-orange); }

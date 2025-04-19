@@ -1,0 +1,126 @@
+/* ======================
+   🎯 核心工具类 
+   (直接影响布局与交互)
+   ====================== */
+
+/* 强制隐藏元素 - 用于需要彻底移除元素的情况
+   ▶ 使用场景：DOM需要但不可见的元素 */
+   .hidden {
+      display: none !important; /* 强制覆盖其他样式 */
+      visibility: hidden !important; /* 双重保险 */
+  }
+  
+  /* 初始隐藏元素 - 支持淡入动画的隐藏方式
+     ▶ 使用场景：需要JS控制显示的元素
+     ▶ 配合：element.classList.remove('initially-hidden') */
+  .initially-hidden {
+      opacity: 0;
+      pointer-events: none; /* 禁用交互 */
+      height: 0;
+      overflow: hidden;
+      margin: 0;
+      border: none;
+      padding: 0;
+      transition: opacity 0.3s ease; /* 为显示时添加过渡效果 */
+  }
+  
+  /* ======================
+     🎬 动画效果库
+     (按功能模块分类)
+     ====================== */
+  
+  /* 模块：外部图库交互反馈 ---------------------------- */
+  
+  /* 手势提示弹跳动画
+     ▶ 绑定元素：#externalPreviewPlaceholder的伪元素
+     ▶ 触发方式：永久循环 */
+  @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { 
+          transform: translateY(0) rotate(-5deg); /* 增加轻微旋转 */
+      }
+      40% { 
+          transform: translateY(-15px) rotate(5deg); /* 弹跳高点 */
+      }
+      60% { 
+          transform: translateY(-7px) rotate(-2deg); 
+      }
+  }
+  
+  /* 模块：表单编辑器交互 ------------------------------ */
+  
+  /* 单选按钮选中动画
+     ▶ 绑定元素：.options-container input[type="radio"]:checked::after
+     ▶ 触发方式：选中状态 */
+  @keyframes popIn {
+      from { 
+          transform: translate(-50%, -50%) scale(0.3); 
+          opacity: 0;
+      }
+      to { 
+          transform: translate(-50%, -50%) scale(1); 
+          opacity: 1;
+      }
+  }
+  
+  /* 复选框星星动画
+     ▶ 绑定元素：.options-container input[type="checkbox"]:checked::after
+     ▶ 触发方式：选中状态 */
+  @keyframes popInStar {
+      0% { 
+          transform: scale(0) rotate(-25deg); 
+          opacity: 0;
+      }
+      70% { 
+          transform: scale(1.1) rotate(10deg); /* 过冲效果 */
+      }
+      100% { 
+          transform: scale(1) rotate(0deg); 
+          opacity: 1;
+      }
+  }
+  
+  /* 模块：数据计算状态 -------------------------------- */
+  
+  /* MD5计算中的呼吸光效
+     ▶ 绑定元素：计算中的输入框
+     ▶ 触发方式：添加.calculating类 */
+  @keyframes calculating-glow {
+      0%, 100% { 
+          box-shadow: 0 0 5px rgba(255, 218, 99, 0.3);
+      }
+      50% { 
+          box-shadow: 0 0 15px rgba(255, 218, 99, 0.8); /* 增强光效 */
+      }
+  }
+  
+  /* 错误状态微震动
+     ▶ 绑定元素：验证失败的输入框
+     ▶ 触发方式：添加.error-shake类 */
+  @keyframes error-subtle-shake {
+      0%, 100% { 
+          transform: translateX(0); 
+      }
+      20%, 60% { 
+          transform: translateX(-2px); 
+      }
+      40%, 80% { 
+          transform: translateX(2px); 
+      }
+  }
+  
+  /* ======================
+     🛠️ 动画工具类
+     (即插即用)
+     ====================== */
+  
+  .animate-bounce {
+      animation: bounce 1.8s infinite ease-in-out;
+  }
+  
+  .animate-glow {
+      animation: calculating-glow 2s infinite alternate;
+  }
+  
+  .shake-on-error {
+      animation: error-subtle-shake 0.4s 1 linear;
+  }
