@@ -1,0 +1,107 @@
+/* ===================================== */
+/* == GuTools 主框架与模式切换样式 == */
+/* ===================================== */
+
+/* GuTools 整体容器 */
+#GuTools {
+    /* 保留背景图 */
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23bce0f5' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-size: 60px 60px, cover;
+    position: relative; /* 确保相对定位 */
+    height: 100%;
+    display: flex;
+    flex-direction: column; /* 垂直布局：标题栏 + 视图区 */
+}
+
+/* GuTools 顶部标题栏 (包含模式按钮) */
+.gu-tools-title-bar {
+    display: flex;
+    justify-content: space-between; /* 如果右侧有其他元素，则左右分布 */
+    align-items: center;
+    padding: 10px 15px 10px; /* 上、左右、下 内边距 */
+    border-bottom: 1px solid var(--border-color, #eee); /* 细分隔线 */
+    background-color: rgba(255, 255, 255, 0.7); /* 半透明背景，与面板区分 */
+    flex-shrink: 0; /* 不压缩高度 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 轻微阴影 */
+    border-radius: 12px 12px 0 0; /* 顶部圆角 */
+}
+
+/* GuTools 模式切换按钮组 */
+.gu-tools-mode-buttons {
+    display: flex;
+    gap: 10px; /* 按钮间距 */
+}
+
+/* GuTools 模式切换按钮 */
+.mode-button {
+    padding: 8px 16px; /* 按钮内边距 */
+    font-size: 0.95em; /* 字体大小 */
+    font-weight: 600;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: var(--border-radius-medium, 12px);
+    background-color: var(--cloud-white, #fff);
+    color: var(--secondary-text-color, #888);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap; /* 防止文字换行 */
+    box-shadow: var(--shadow-soft);
+    line-height: 1.4; /* 确保文字垂直居中 */
+}
+.mode-button:hover {
+    border-color: var(--sky-blue-mid, #81cfe0);
+    background-color: var(--suggestion-hover-bg, #e0f7fa);
+    color: var(--sky-blue-dark, #56a3d5);
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-1px); /* 轻微上移 */
+}
+.mode-button.active {
+    background-color: var(--sky-blue-mid, #81cfe0);
+    color: white;
+    border-color: var(--sky-blue-dark, #56a3d5);
+    font-weight: 700;
+    cursor: default; /* 激活状态不可点 */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); /* 内阴影 */
+    transform: none; /* 取消上移 */
+}
+.mode-button:disabled,
+.mode-button.disabled { /* 通用禁用样式 */
+     background-color: var(--disabled-bg) !important;
+     color: var(--disabled-color) !important;
+     border-color: #e0e0e0 !important;
+     box-shadow: none !important;
+     transform: none !important;
+     cursor: not-allowed !important;
+     opacity: 0.7 !important;
+}
+
+
+/* GuTools 主要视图容器 (所有子视图的通用容器) */
+.gu-tools-view {
+    width: 100%;
+    flex-grow: 1; /* 占据剩余空间 */
+    display: flex; /* 使用 flex 布局，让内部元素可以更好地控制 */
+    flex-direction: column; /* 默认垂直布局 */
+    overflow: hidden; /* 隐藏视图容器自身的滚动条，由内部决定是否滚动 */
+    position: relative; /* 用于可能的内部绝对定位 */
+    /* 添加一些通用内边距，避免内容紧贴边缘 */
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+/* 隐藏视图的样式 */
+.gu-tools-view.hidden {
+    display: none !important; /* 强制隐藏 */
+}
+
+
+.gu-tools-view {
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    opacity: 1;
+    transform: translateX(0);
+}
+.gu-tools-view.hidden {
+    opacity: 0;
+    transform: translateX(-20px);
+    position: absolute; 
+    pointer-events: none;
+}
