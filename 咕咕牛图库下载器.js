@@ -25,20 +25,7 @@ export class MiaoPluginMBT extends plugin {
             dsc: '『咕咕牛🐂』图库管理器',
             event: 'message',
             priority: 1000,
-            rule: [
-                { reg: /^#(代理)?下载咕咕牛$/, fnc: 'GallaryDownload' },
-                { reg: /^#(强制)?更新咕咕牛$/, fnc: 'GallaryUpdate' },
-                { reg: /^#(删除|重置)咕咕牛$/, fnc: 'ManageGallary', permission: 'master' },
-                { reg: /^#检查咕咕牛$/, fnc: 'CheckFolder' },
-                { reg: /^#(启用|禁用)(咕咕牛|官方立绘)$/, fnc: 'GalleryOption', permission: 'master' },
-                { reg: /^#(ban(加|删)|咕咕牛(封(?!禁列表)|解)禁|(?:ban|咕咕牛封禁)列表|清空咕咕牛封禁)(.*)?$/, fnc: 'BanRole', permission: 'master' },
-                { reg: /^#(确认)?净化咕咕牛$/, fnc: 'RemoveBadimages', permission: 'master' },
-                { reg: /^#检查净化图片$/, fnc: 'CheckR18Photo' },
-                { reg: /^#咕咕牛导出(.+)$/, fnc: 'ExportSingleImage' },
-                { reg: /^#查看(.+)$/, fnc: 'FindRoleSplash' },
-                { reg: /^#咕咕牛帮助$/, fnc: 'GuHelp' },
-                { reg: /^#咕咕牛$/, fnc: 'GuGuNiu' }
-            ]
+            rule: GUGUNIU_RULES
         });
 
         this.task = {
@@ -1421,20 +1408,21 @@ export class MiaoPluginMBT extends plugin {
             logger.warn(`『咕咕牛』 获取内存/负载使用情况失败: ${e.message}`);
         }
     }
-const GUGUNIU_RULES = [
-    { reg: /^#(代理)?下载咕咕牛$/, fnc: 'GallaryDownload' },
-    { reg: /^#(强制)?更新咕咕牛$/, fnc: 'GallaryUpdate' },
-    { reg: /^#(删除|重置)咕咕牛$/, fnc: 'ManageGallary', permission: 'master' },
-    { reg: /^#检查咕咕牛$/, fnc: 'CheckFolder' },
-    { reg: /^#(启用|禁用)(咕咕牛|官方立绘)$/, fnc: 'GalleryOption', permission: 'master' },
-    { reg: /^#(ban(加|删)|咕咕牛(封(?!禁列表)|解)禁|(?:ban|咕咕牛封禁)列表|清空咕咕牛封禁)(.*)?$/, fnc: 'BanRole', permission: 'master' },
-    { reg: /^#(确认)?净化咕咕牛$/, fnc: 'RemoveBadimages', permission: 'master' },
-    { reg: /^#检查净化图片$/, fnc: 'CheckR18Photo' },
-    { reg: /^#咕咕牛导出(.+)$/, fnc: 'ExportSingleImage' },
-    { reg: /^#查看(.+)$/, fnc: 'FindRoleSplash' },
-    { reg: /^#咕咕牛帮助$/, fnc: 'GuHelp' },
-    { reg: /^#咕咕牛$/, fnc: 'GuGuNiu' }
-];
 
 
 
+
+    const GUGUNIU_RULES = [
+        { reg: /^#(代理)?下载咕咕牛$/, fnc: 'GallaryDownload' },
+        { reg: /^#(强制)?更新咕咕牛$/, fnc: 'GallaryUpdate' },
+        { reg: /^#(删除|重置)咕咕牛$/, fnc: 'ManageGallary', permission: 'master' },
+        { reg: /^#检查咕咕牛$/, fnc: 'CheckFolder' },
+        { reg: /^#(启用|禁用)(咕咕牛|官方立绘)$/, fnc: 'GalleryOption', permission: 'master' },
+        { reg: /^#(ban(加|删)|咕咕牛(封(?!禁列表)|解)禁|(?:ban|咕咕牛封禁)列表|清空咕咕牛封禁)(.*)?$/, fnc: 'BanRole', permission: 'master' },
+        { reg: /^#(确认)?净化咕咕牛$/, fnc: 'RemoveBadimages', permission: 'master' },
+        { reg: /^#检查净化图片$/, fnc: 'CheckR18Photo' },
+        { reg: /^#咕咕牛导出(.+)$/, fnc: 'ExportSingleImage' },
+        { reg: /^#查看(.+)$/, fnc: 'FindRoleSplash' },
+        { reg: /^#咕咕牛帮助$/, fnc: 'GuHelp' },
+        { reg: /^#咕咕牛$/, fnc: 'GuGuNiu' }
+    ];
