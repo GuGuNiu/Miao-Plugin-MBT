@@ -784,7 +784,7 @@ export class MiaoPluginMBT extends plugin {
       await e.reply(`${this.logPrefix} 状态异常！二号仓库存在一号仓库缺失！建议 #重置。`)
       return true
     }
-    await e.reply(`${this.logPrefix} 下载图库...`)
+    //await e.reply(`${this.logPrefix} 下载图库...`)
     this.isGitRunning = true
     const startTime = Date.now()
     let overallSuccess = true
@@ -794,7 +794,7 @@ export class MiaoPluginMBT extends plugin {
     try {
       if (!Repo1Exists) {
         this.logger.info(`${this.logPrefix} 下载 Repo 1...`)
-        await e.reply(`${this.logPrefix} 下载核心文件...`)
+        //await e.reply(`${this.logPrefix} 下载核心文件...`)
         const result1 = await MiaoPluginMBT.DownloadSingleRepo(
           e,
           1,
@@ -2363,10 +2363,10 @@ export class MiaoPluginMBT extends plugin {
       success = false
     try {
       if (RepoNum === 1 && e) {
-        await e.reply(`${logPrefix} 测试网络...`)
+        //await e.reply(`${logPrefix} 测试网络...`)
         const speeds = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, loggerInstance)
         bestProxyInfo = MiaoPluginMBT.SelectBestProxy(speeds, loggerInstance)
-        let speedMsg = `${logPrefix} 节点测速:\n`
+        let speedMsg = `${logPrefix} 节点测速:\n\n`
         speeds.forEach(s => {
           speedMsg += `${s.name}: ${s.speed === Infinity ? '超时❌' : `${s.speed}ms✅`} (P:${s.priority ?? 'N'})\n`
         })
@@ -2379,13 +2379,13 @@ export class MiaoPluginMBT extends plugin {
             if (['http:', 'https:'].includes(parsedPrefix.protocol)) proxyForEnv = parsedPrefix.origin
           } catch {}
           loggerInstance.info(`${logPrefix} [下载仓库] ${RepoName} 选定代理: ${nodeName}`)
-          await e.reply(speedMsg + `\n✅ 优选: ${bestProxyInfo.name}(${bestProxyInfo.speed}ms)\n⏳ 下载${RepoName}...`)
+          await e.reply(speedMsg + `\n✅ 优选: ${bestProxyInfo.name}(${bestProxyInfo.speed}ms)\n⏳ 开始下载了.......`)
         } else {
           cloneUrl = RepoUrl
           nodeName = 'GitHub(直连)'
           proxyForEnv = null
           loggerInstance.warn(`${logPrefix} [下载仓库] ${RepoName} 代理超时`)
-          await e.reply(speedMsg + '\n\n⚠️ 代理超时！🚨 尝试直连...')
+          await e.reply(speedMsg + '\n\n⚠️代理超时🚨尝试直连Github')
         }
       } else {
         cloneUrl = RepoUrl
