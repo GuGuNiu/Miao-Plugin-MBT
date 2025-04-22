@@ -10,7 +10,7 @@ import common from '../../lib/common/common.js'
 
 /**
  * Miao-Plugin-MBT 图库管理器 - 双仓库版
- * Version: 4.7.1-Fix-Final
+ * Version: 4.7.2-Final
  *          基于v4.1.10单仓魔改v4.6.6版本
  * Description: 结构化调试信息，角色详情转发，结构化测试日志，回滚数据，智能寻找，数据防干扰。
  */
@@ -373,7 +373,7 @@ export class MiaoPluginMBT extends plugin {
 
   constructor() {
     super({
-      name: '『咕咕牛🐂』图库管理器 v4.7.1',
+      name: '『咕咕牛🐂』图库管理器 v4.7.2',
       dsc: '『咕咕牛🐂』图库管理器',
       event: 'message',
       priority: 500,
@@ -2396,7 +2396,6 @@ export class MiaoPluginMBT extends plugin {
       const cloneArgs = [
         'clone',
         `--depth=${Default_Config.gitCloneDepth}`,
-        `--branch=${branch}`,
         '--progress',
         cloneUrl,
         localPath,
@@ -2673,6 +2672,7 @@ export class MiaoPluginMBT extends plugin {
       `${Default_Config.logPrefix} [同步角色] 完成: 复制${copied}, 跳过(封禁${banned}+源丢失${missingSource}+无目标${noTarget})。`
     )
   }
+
   static async CleanTargetCharacterDirs(targetPluginDir, loggerInstance = global.logger || console) {
     if (!targetPluginDir) return
     loggerInstance.info(`${Default_Config.logPrefix} [清理目标] ${targetPluginDir}`)
@@ -2749,51 +2749,87 @@ export class MiaoPluginMBT extends plugin {
     }
   }
   static async TestProxies(rawBaseUrl = RAW_URL_Repo1, loggerInstance = global.logger || console) {
-    const testFile = Default_Config.proxyTestFile
-    const timeout = Default_Config.proxyTestTimeout
-    const results = []
-    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 基准: ${rawBaseUrl}`)
-    const testTasks = Default_Config.proxies.map(async proxy => {
-      let testUrl = '',
-        speed = Infinity
+    const testFile = Default_Config.proxyTestFile;
+    const timeoutDuration = 3000;
+    const results = [];
+    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 基准: ${rawBaseUrl} (使用 AbortController, ${timeoutDuration}ms 超时)`);
+
+    const testTasks = Default_Config.proxies.map(async (proxy) => {
+      let testUrl = '';
+      let speed = Infinity;
+      const proxyName = proxy.name;
+
       try {
         if (proxy.name === 'GitHub') {
-          testUrl = rawBaseUrl + testFile
+          testUrl = rawBaseUrl + testFile;
         } else if (proxy.testUrlPrefix) {
+
+          testUrl = proxy.testUrlPrefix + testFile;
+
           try {
-            testUrl = new URL(
-              testFile,
-              `${proxy.testUrlPrefix.replace(/\/$/, '')}/${rawBaseUrl.replace(/^https?:\/\//, '').replace(/^\//, '')}/`
-            ).toString()
-          } catch {
-            testUrl = `${proxy.testUrlPrefix}${rawBaseUrl.replace(/^https?:\/\//, '/')}${testFile}`
+             testUrl = new URL(testUrl).toString();
+          } catch(urlError) {
+             loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] 构造的代理URL (${testUrl}) 格式可能不规范:`, urlError.message);
           }
-        } else return
-        const startTime = Date.now()
-        const response = await fetch(testUrl, { method: 'HEAD', timeout: timeout })
-        speed = Date.now() - startTime
-        if (!response.ok) speed = Infinity
-      } catch {
-        speed = Infinity
+        } else {
+           loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] 代理 ${proxyName} 缺少 testUrlPrefix，跳过测试。`);
+           results.push({ name: proxyName, speed: Infinity, priority: proxy.priority ?? 0, cloneUrlPrefix: proxy.cloneUrlPrefix });
+           return;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+           loggerInstance.debug(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时触发 (>${timeoutDuration}ms)`);
+           controller.abort();
+        }, timeoutDuration);
+        
+
+        const startTime = Date.now();
+        try {
+            const response = await fetch(testUrl, { method: 'GET', signal: controller.signal });
+            clearTimeout(timeoutId);
+            speed = Date.now() - startTime;
+            if (!response.ok) {
+                loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 请求成功但状态码非 OK: ${response.status}`);
+                speed = Infinity;
+            }
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                 speed = Infinity;
+            } else {
+                 loggerInstance.error(`${Default_Config.logPrefix} [网络测速] 节点 ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message} (Cause: ${fetchError.cause?.code || fetchError.cause?.message || 'N/A'})`);
+                 speed = Infinity;
+            }
+        }
+
+      } catch (error) {
+          loggerInstance.error(`${Default_Config.logPrefix} [网络测速] 处理节点 ${proxyName} 时出错:`, error);
+          speed = Infinity;
       }
+
       results.push({
-        name: proxy.name,
+        name: proxyName,
         speed: speed,
         priority: proxy.priority ?? 0,
         cloneUrlPrefix: proxy.cloneUrlPrefix,
-      })
-    })
-    await Promise.all(testTasks)
+      });
+    });
+
+    await Promise.all(testTasks);
     results.sort((a, b) => {
-      if (a.speed === Infinity && b.speed !== Infinity) return 1
-      if (a.speed !== Infinity && b.speed === Infinity) return -1
-      if (a.speed === Infinity && b.speed === Infinity) return (a.priority ?? 999) - (b.priority ?? 999)
-      if (a.priority !== b.priority) return (a.priority ?? 999) - (b.priority ?? 999)
-      return a.speed - b.speed
-    })
-    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 完成。`)
-    return results
+        if (a.speed === Infinity && b.speed !== Infinity) return 1;
+        if (a.speed !== Infinity && b.speed === Infinity) return -1;
+        if (a.speed === Infinity && b.speed === Infinity) return (a.priority ?? 999) - (b.priority ?? 999);
+        if (a.priority !== b.priority) return (a.priority ?? 999) - (b.priority ?? 999);
+        return a.speed - b.speed;
+      });
+
+    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 完成 (使用 AbortController, 已理解配置并修正拼接)。`);
+    return results;
   }
+
+
   static SelectBestProxy(speeds, loggerInstance = global.logger || console) {
     if (!speeds || speeds.length === 0) return null
     const available = speeds.filter(s => s.speed !== Infinity && (s.name === 'GitHub' || s.cloneUrlPrefix))
@@ -2813,9 +2849,9 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, '..', 'package.json')
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      return pkg.version || '4.7.1-Fix'
+      return pkg.version || '4.7.2'
     } catch {
-      return '4.7.1-Fix'
+      return '4.7.2'
     }
   }
 } 
