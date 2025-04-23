@@ -953,7 +953,7 @@ export class MiaoPluginMBT extends plugin {
             if (!finalUserMessage) finalUserMessage = '『咕咕牛』更新成功！'
             if (gitLogRepo1) {
               try {
-                const forwardMsg = await common.makeForwardMsg(e, [`一号仓库最新记录：\n${gitLogRepo1}`], '更新详情')
+                const forwardMsg = await common.makeForwardMsg(e, [`一号仓库最新记录：\n${gitLogRepo1}`], '『咕咕牛』更新详情')
                 if (forwardMsg) await e.reply(forwardMsg)
                 else await e.reply(finalUserMessage + ' (一号仓库日志发送失败)')
               } catch (fwdErr) {
