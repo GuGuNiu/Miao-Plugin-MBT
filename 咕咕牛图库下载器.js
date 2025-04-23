@@ -1075,7 +1075,7 @@ export class MiaoPluginMBT extends plugin {
     //await e.reply(`${this.logPrefix} 统计中...`);
 
     try {
-      let checkMessage = `----『咕咕牛🐂』状态报告 (V${this.GetVersion()}) ----\n`;
+      let checkMessage = `----『咕咕牛🐂』状态----\n`;
 
       let TotalImagesMeta = 0;
       const GameImagesMeta = { 原神: 0, 星铁: 0, 绝区零: 0, 鸣潮: 0 };
@@ -1094,7 +1094,7 @@ export class MiaoPluginMBT extends plugin {
         });
       }
       const TotalRolesMeta = characterSet.size;
-      checkMessage += `【元数据统计】\n角色: ${TotalRolesMeta}名, 图片: ${TotalImagesMeta}张\n`;
+      checkMessage += `\n【元数据统计】\n角色: ${TotalRolesMeta}名, 图片: ${TotalImagesMeta}张\n`;
       for (const GameName in GameImagesMeta) checkMessage += `  |_ ${GameName}: ${GameImagesMeta[GameName]}张\n`;
 
 
@@ -1130,7 +1130,7 @@ export class MiaoPluginMBT extends plugin {
      
  
       const Repo1 = RepoStatsScan[1];
-      checkMessage += `---- ${Repo1.name} (${Repo1.exists ? '已下载' : '未下载!'}) ----\n`;
+      checkMessage += `\n---- ${Repo1.name} (${Repo1.exists ? '已下载' : '未下载!'}) ----\n`;
       if (Repo1.exists) {
         checkMessage += `  文件: ${FormatBytes(Repo1.size - Repo1.gitSize)}\n`; 
         checkMessage += `  Git: ${FormatBytes(Repo1.gitSize)}\n`;
@@ -1146,7 +1146,7 @@ export class MiaoPluginMBT extends plugin {
           checkMessage += `  占用: ${FormatBytes(Repo2.size)}\n`;
         }
       }
-      checkMessage += `\n总文件(扫描): ${FormatBytes(TotalSizeScan - TotalGitSizeScan)}\nGit缓存(扫描): ${FormatBytes(TotalGitSizeScan)}\n总占用(扫描): ${FormatBytes(TotalSizeScan)}\n\n`; 
+      checkMessage += `\n总文件(扫描): ${FormatBytes(TotalSizeScan - TotalGitSizeScan)}\nGit缓存(扫描): ${FormatBytes(TotalGitSizeScan)}\n总占用(扫描): ${FormatBytes(TotalSizeScan)}\n`; 
 
       const tuKuOP = MiaoPluginMBT.MBTConfig?.TuKuOP ?? Default_Config.defaultTuKuOp;
       const PFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
@@ -1357,7 +1357,7 @@ export class MiaoPluginMBT extends plugin {
         if (!saved) {
           if (isAdding) MiaoPluginMBT.#userBanSet.delete(targetRelativePath)
           else MiaoPluginMBT.#userBanSet.add(targetRelativePath)
-          await e.reply(`『咕』${actionVerb}失败：无法保存！`, true)
+          await e.reply(`『咕咕牛』${actionVerb}失败：无法保存！`, true)
           return
         }
         setImmediate(async () => {
@@ -1377,7 +1377,7 @@ export class MiaoPluginMBT extends plugin {
   }
   async FindRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true
-    if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) return e.reply('『咕』核心库未下载！', true)
+    if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) return e.reply('『咕咕牛』核心库未下载！', true)
     const match = e.msg.match(/^#查看\s*(.+)$/i)
     if (!match?.[1]) return e.reply('例：#查看花火', true)
     const roleNameInput = match[1].trim()
@@ -1442,7 +1442,7 @@ export class MiaoPluginMBT extends plugin {
   }
   async ExportSingleImage(e) {
     if (!(await this.CheckInit(e))) return true
-    if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) return e.reply('『咕』核心库未下载！', true)
+    if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) return e.reply('『咕咕牛』核心库未下载！', true)
     const match = e.msg.match(/^#咕咕牛导出\s*(.+)/i)
     if (!match?.[1]) return e.reply('例：#咕导出心海1', true)
     const targetIdentifierRaw = match[1].trim()
@@ -1676,7 +1676,7 @@ export class MiaoPluginMBT extends plugin {
         msg += `${s.name}: ${s.speed === Infinity ? '超时❌' : `${s.speed}ms✅`} (P:${s.priority ?? 'N'}) \n`
       })
       const best = MiaoPluginMBT.SelectBestProxy(speeds)
-      msg += `\n优选: ${best ? `${best.name} (${best.speed}ms)` : '无'}`
+      msg += `\n✅优选: ${best ? `${best.name} (${best.speed}ms)` : '无'}`
       return msg.trim()
     }
     try {
@@ -2416,7 +2416,7 @@ export class MiaoPluginMBT extends plugin {
               ;[10, 50, 90].forEach(t => {
                 if (progress >= t && !progressReported[t]) {
                   progressReported[t] = true
-                  const msg = t === 90 ? `『咕』${RepoName}下载: 90%...` : `『咕』${RepoName}下载: ${t}%`
+                  const msg = t === 90 ? `『咕咕牛』${RepoName}下载: 90%...` : `『咕咕牛』${RepoName}下载: ${t}%`
                   e.reply(msg).catch(() => {})
                 }
               })
