@@ -354,6 +354,7 @@ export class MiaoPluginMBT extends plugin {
     filesToSyncToCommonRes: [
       { sourceSubPath: 'GuGuNiu-Gallery/help.png', destFileName: 'help.png' },
       { sourceSubPath: 'GuGuNiu-Gallery/imagedata.json', destFileName: 'imagedata.json' },
+      { sourceSubPath: 'GuGuNiu-Gallery/GalleryConfig.yaml', destFileName: 'GalleryConfig.yaml', copyIfExists: false }
     ],
     filesToSyncSpecific: [
       {
