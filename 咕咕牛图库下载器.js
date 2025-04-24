@@ -6,6 +6,7 @@ import { fileURLToPath, URL } from 'node:url'
 import os from 'node:os'
 import yaml from 'yaml'
 import common from '../../lib/common/common.js'
+import puppeteer from '../../lib/puppeteer/puppeteer.js';
 
 
 /**
@@ -333,7 +334,7 @@ export class MiaoPluginMBT extends plugin {
     configFilePath: path.join(YunzaiPath, 'resources', 'GuGuNiu-Gallery', 'GalleryConfig.yaml'),
     imageDataPath: path.join(YunzaiPath, 'resources', 'GuGuNiu-Gallery', 'imagedata.json'),
     banListPath: path.join(YunzaiPath, 'resources', 'GuGuNiu-Gallery', 'banlist.json'),
-    helpImagePath: path.join(YunzaiPath, 'resources', 'GuGuNiu-Gallery', 'help.png'),
+    helpImagePath: path.join(YunzaiPath, 'resources', 'GuGuNiu-Gallery', 'help.webp'),
     target: {
       miaoChar: path.join(YunzaiPath, 'plugins', 'miao-plugin', 'resources', 'profile', 'normal-character'),
       zzzChar: path.join(YunzaiPath, 'plugins', 'ZZZ-Plugin', 'resources', 'images', 'panel'),
@@ -352,7 +353,7 @@ export class MiaoPluginMBT extends plugin {
       gallery: 'GuGuNiu-Gallery',
     },
     filesToSyncToCommonRes: [
-      { sourceSubPath: 'GuGuNiu-Gallery/help.png', destFileName: 'help.png' },
+      { sourceSubPath: 'GuGuNiu-Gallery/help.webp', destFileName: 'help.webp' },
       { sourceSubPath: 'GuGuNiu-Gallery/imagedata.json', destFileName: 'imagedata.json' },
       { sourceSubPath: 'GuGuNiu-Gallery/GalleryConfig.yaml', destFileName: 'GalleryConfig.yaml', copyIfExists: false }
     ],
@@ -1056,118 +1057,228 @@ export class MiaoPluginMBT extends plugin {
     }
     return true
   }
+
   async CheckStatus(e) {
     if (!(await this.CheckInit(e))) return true;
+    this.logger.info(`${this.logPrefix} [检查状态] 开始生成状态报告...`);
 
     const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
     const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
     const Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
-
-    if (!Repo1Exists && (!Repo2UrlConfigured || !Repo2Exists)) {
-      return e.reply("『咕咕牛🐂』图库未下载！", true);
-    }
-     if (Repo1Exists && Repo2UrlConfigured && !Repo2Exists) {
-       return e.reply("『咕咕牛🐂』一号仓库存在，二号仓库缺失。", true);
-    }
-     if (!Repo1Exists && Repo2Exists) {
-       return e.reply("『咕咕牛🐂』状态异常！二号仓库存在，一号仓库缺失！", true);
-    }
-
-    //await e.reply(`${this.logPrefix} 统计中...`);
-
+    this.logger.info(`${this.logPrefix} [检查状态] 仓库状态 - 一号: ${Repo1Exists ? '存在' : '不存在'}, 二号: ${Repo2UrlConfigured ? (Repo2Exists ? '存在' : '未下载') : '未配置'}`);
+    let savePath = '';
     try {
-      let checkMessage = `----『咕咕牛🐂』状态----\n`;
-
-      let TotalImagesMeta = 0;
-      const GameImagesMeta = { 原神: 0, 星铁: 0, 绝区零: 0, 鸣潮: 0 };
-      const GameFoldersMap = { 'gs': '原神', 'sr': '星铁', 'zzz': '绝区零', 'waves': '鸣潮' };
+      const pluginVersion = this.GetVersion();
+      const GameFoldersMap = { 'gs': '原神', 'sr': '星铁', 'zzz': '绝区零', 'waves': '鸣潮' }; 
+      const stats = {
+        meta: { 
+          roles: 0,
+          images: 0,
+          games: {},
+        },
+        scan: { 
+          roles: 0, images: 0, gameImages: {}, gameRoles: {}, gameSizes: {}, gameSizesFormatted: {},
+          totalSize: 0, totalGitSize: 0, totalFilesSize: 0,
+          totalSizeFormatted: '0 B', totalGitSizeFormatted: '0 B', totalFilesSizeFormatted: '0 B'
+        },
+        repos: {
+          '1': { name: "一号仓库", exists: Repo1Exists, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: 'N/A', gitSizeFormatted: 'N/A', filesSizeFormatted: 'N/A' },
+          '2': { name: "二号仓库", exists: Repo2Exists && Repo2UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: 'N/A', gitSizeFormatted: 'N/A', filesSizeFormatted: 'N/A' }
+        },
+      };
+      Object.values(GameFoldersMap).forEach(gameName => { 
+          stats.meta.games[gameName] = 0; stats.scan.gameImages[gameName] = 0; stats.scan.gameRoles[gameName] = 0; stats.scan.gameSizes[gameName] = 0; stats.scan.gameSizesFormatted[gameName] = '0 B';
+      });
+      const config = {
+        enabled: MiaoPluginMBT.MBTConfig?.TuKuOP ?? Default_Config.defaultTuKuOp,
+        pflLevel: MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl,
+        activeBans: MiaoPluginMBT.#activeBanSet?.size ?? 0,
+        userBans: MiaoPluginMBT.#userBanSet?.size ?? 0,
+        purifiedBans: 0,
+        enabledText: '',
+        pflDesc: '',
+      };
+      config.enabledText = config.enabled ? '已启用' : '已禁用';
+      config.purifiedBans = Math.max(0, config.activeBans - config.userBans);
+      config.pflDesc = Purify_Level.getDescription(config.pflLevel);
       const characterSet = new Set();
-      if (MiaoPluginMBT.#imgDataCache?.length > 0) {
-        TotalImagesMeta = MiaoPluginMBT.#imgDataCache.length;
+      if (Array.isArray(MiaoPluginMBT.#imgDataCache) && MiaoPluginMBT.#imgDataCache.length > 0) {
+        stats.meta.images = MiaoPluginMBT.#imgDataCache.length;
         MiaoPluginMBT.#imgDataCache.forEach(item => {
-          if (item.characterName) characterSet.add(item.characterName);
-          const PathParts = item.path?.split('/');
+          if (item && item.characterName) { characterSet.add(item.characterName); }
+          const PathParts = item?.path?.split('/');
           if (PathParts?.length > 0) {
             const GameKey = PathParts[0].split('-')[0];
             const GameName = GameFoldersMap[GameKey];
-            if (GameName) GameImagesMeta[GameName] = (GameImagesMeta[GameName] || 0) + 1;
+            if (GameName) stats.meta.games[GameName] = (stats.meta.games[GameName] || 0) + 1; 
           }
         });
       }
-      const TotalRolesMeta = characterSet.size;
-      checkMessage += `\n【元数据统计】\n角色: ${TotalRolesMeta}名, 图片: ${TotalImagesMeta}张\n`;
-      for (const GameName in GameImagesMeta) checkMessage += `  |_ ${GameName}: ${GameImagesMeta[GameName]}张\n`;
-
-
-      let TotalSizeScan = 0, TotalGitSizeScan = 0;
+      stats.meta.roles = characterSet.size;
+      this.logger.info(`${this.logPrefix} [检查状态] 元数据统计完成: ${stats.meta.roles}个角色, ${stats.meta.images}张图片`);
       const RepoStatsScan = {
-        1: { name: "一号仓库", path: MiaoPluginMBT.paths.LocalTuKuPath, gitPath: MiaoPluginMBT.paths.gitFolderPath, exists: Repo1Exists, size: 0, gitSize: 0 },
-        2: { name: "二号仓库", path: MiaoPluginMBT.paths.LocalTuKuPath2, gitPath: MiaoPluginMBT.paths.gitFolderPath2, exists: Repo2Exists, size: 0, gitSize: 0 },
+        1: { path: MiaoPluginMBT.paths.LocalTuKuPath, gitPath: MiaoPluginMBT.paths.gitFolderPath, exists: Repo1Exists },
+        2: { path: MiaoPluginMBT.paths.LocalTuKuPath2, gitPath: MiaoPluginMBT.paths.gitFolderPath2, exists: Repo2Exists && Repo2UrlConfigured },
       };
-      const ScannedRoleImageCounts = {};
-      checkMessage += `\n【本地文件扫描】\n`;
-      await Promise.all(Object.keys(RepoStatsScan).map(async (RepoNum) => {
-        const Repo = RepoStatsScan[RepoNum];
-        if (!Repo.exists || (RepoNum === '2' && !Repo2UrlConfigured)) return;
-        Repo.size = await FolderSize(Repo.path);
-        Repo.gitSize = await FolderSize(Repo.gitPath);
-        TotalSizeScan += Repo.size;
-        TotalGitSizeScan += Repo.gitSize;
-        for (const GameKey in GameFoldersMap) {
-            const GameName = GameFoldersMap[GameKey]; const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[GameKey]; if (!sourceFolderName || GameKey === 'gallery') continue; const gameFolderPath = path.join(Repo.path, sourceFolderName); try { await fsPromises.access(gameFolderPath); const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true }); if (!ScannedRoleImageCounts[GameName]) ScannedRoleImageCounts[GameName] = {}; for (const charDir of characterDirs) { if (charDir.isDirectory()) { const characterName = charDir.name; const charFolderPath = path.join(gameFolderPath, characterName); let imageCount = 0; try { const imageFiles = await fsPromises.readdir(charFolderPath); imageCount = imageFiles.filter(f => f.toLowerCase().endsWith('.webp')).length; } catch {} ScannedRoleImageCounts[GameName][characterName] = (ScannedRoleImageCounts[GameName][characterName] || 0) + imageCount; } } } catch {}
-         }
-      }));
+      const ScannedRoleImageCounts = {}; 
+      const ScannedGameSizes = {};       
+      Object.values(GameFoldersMap).forEach(gameName => { ScannedRoleImageCounts[gameName] = {}; ScannedGameSizes[gameName] = 0; }); 
+      let totalGitSizeScan = 0; 
 
-     
-      let totalImageScanCount = 0, totalRoleScanCount = 0;
-      const GameImageScanCounts = { 原神: 0, 星铁: 0, 绝区零: 0, 鸣潮: 0 };
-      const GameRoleScanCounts = { 原神: 0, 星铁: 0, 绝区零: 0, 鸣潮: 0 };
-      const roleDetailsForward = [];
-      for (const GameName in ScannedRoleImageCounts) {
-        let gameMsg = `------ ${GameName} ------\n`; const roles = ScannedRoleImageCounts[GameName]; const roleNames = Object.keys(roles).sort((a, b) => a.localeCompare(b, 'zh', { sensitivity: 'base' })); GameRoleScanCounts[GameName] = roleNames.length; totalRoleScanCount += roleNames.length; let gameImageCount = 0; if (roleNames.length === 0) { gameMsg += "(无角色)\n"; } else { for (const roleName of roleNames) { const count = roles[roleName]; gameImageCount += count; gameMsg += `${roleName}：${count}张\n`; } } GameImageScanCounts[GameName] = gameImageCount; totalImageScanCount += gameImageCount; roleDetailsForward.push(gameMsg.trim());
-       }
-      checkMessage += `角色(扫描): ${totalRoleScanCount}名, 图片(扫描): ${totalImageScanCount}张\n`;
-      for (const GameName in GameImageScanCounts) checkMessage += `  |_ ${GameName}: ${GameImageScanCounts[GameName]}张 (${GameRoleScanCounts[GameName]}角色)\n`;
-     
- 
-      const Repo1 = RepoStatsScan[1];
-      checkMessage += `\n---- ${Repo1.name} (${Repo1.exists ? '已下载' : '未下载!'}) ----\n`;
-      if (Repo1.exists) {
-        checkMessage += `  文件: ${FormatBytes(Repo1.size - Repo1.gitSize)}\n`; 
-        checkMessage += `  Git: ${FormatBytes(Repo1.gitSize)}\n`;
-        checkMessage += `  占用: ${FormatBytes(Repo1.size)}\n`; 
+      //this.logger.info(`${this.logPrefix} [检查状态] 开始扫描本地仓库文件...`);
+      for (const RepoNum of Object.keys(RepoStatsScan)) {
+          const Repo = RepoStatsScan[RepoNum];
+          if (!Repo.exists) {
+              this.logger.info(`${this.logPrefix} [检查状态] 跳过不存在的仓库 ${RepoNum}`);
+              continue; 
+          }
+          //this.logger.info(`${this.logPrefix} [检查状态] 正在扫描仓库 ${RepoNum} (${Repo.path})`);
+          try {
+              const repoGitSize = await FolderSize(Repo.gitPath);
+              totalGitSizeScan += repoGitSize; 
+              stats.repos[RepoNum].gitSize = repoGitSize;
+              stats.repos[RepoNum].gitSizeFormatted = FormatBytes(repoGitSize);
+              //this.logger.info(`${this.logPrefix} [检查状态] 仓库 ${RepoNum} Git 目录大小: ${stats.repos[RepoNum].gitSizeFormatted}`);
+          } catch (sizeError) {
+              this.logger.error(`${this.logPrefix} [检查状态] 计算仓库 ${RepoNum} Git 大小失败:`, sizeError);
+              stats.repos[RepoNum].gitSizeFormatted = '错误';
+          }
+          for (const GameKey in GameFoldersMap) { 
+              const GameName = GameFoldersMap[GameKey];
+              const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[GameKey];
+              if (!sourceFolderName || GameKey === 'gallery') continue; 
+              const gameFolderPath = path.join(Repo.path, sourceFolderName);
+              try {
+                  await fsPromises.access(gameFolderPath);
+                  const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true });
+                  for (const charDir of characterDirs) {
+                      if (charDir.isDirectory()) {
+                          const characterName = charDir.name;
+                          const charFolderPath = path.join(gameFolderPath, characterName);
+                          let imageCountInCharDir = 0;
+                          try {
+                              await fsPromises.access(charFolderPath); 
+                              const imageFiles = await fsPromises.readdir(charFolderPath, { withFileTypes: true });
+                              for (const imageFile of imageFiles) {
+                                  if (imageFile.isFile() && imageFile.name.toLowerCase().endsWith('.webp')) {
+                                      imageCountInCharDir++;
+                                      const imagePath = path.join(charFolderPath, imageFile.name);
+                                      try {
+                                          const fileStat = await fsPromises.stat(imagePath);
+                                          ScannedGameSizes[GameName] = (ScannedGameSizes[GameName] || 0) + fileStat.size;
+                                      } catch (statErr) {
+                                          if (statErr.code !== 'ENOENT') this.logger.warn(`${this.logPrefix} [检查状态] 获取文件大小失败 ${imagePath}:`, statErr.code);
+                                      }
+                                  }
+                              }
+                          } catch (readCharErr) {
+                              if (readCharErr.code !== 'ENOENT') this.logger.warn(`${this.logPrefix} [检查状态] 读取角色目录失败 ${charFolderPath}:`, readCharErr.code);
+                          }
+                          if (imageCountInCharDir > 0) {
+                              ScannedRoleImageCounts[GameName][characterName] = (ScannedRoleImageCounts[GameName][characterName] || 0) + imageCountInCharDir;
+                          }
+                      }
+                  }
+              } catch (accessGameErr) {
+                  if (accessGameErr.code !== 'ENOENT') {
+                      this.logger.warn(`${this.logPrefix} [检查状态] 访问游戏目录失败 ${gameFolderPath}:`, accessGameErr.code);
+                  }
+              }
+          } 
+          //this.logger.info(`${this.logPrefix} [检查状态] 仓库 ${RepoNum} 扫描完成。`);
+      } 
+      //this.logger.info(`${this.logPrefix} [检查状态] 所有本地仓库文件扫描结束。`);
+      //this.logger.info(`${this.logPrefix} [检查状态] 开始汇总扫描结果...`);
+      const scanResult = {
+          roles: 0, images: 0, gameImages: {}, gameRoles: {}, gameSizes: {}, gameSizesFormatted: {},
+          totalSize: 0, totalGitSize: totalGitSizeScan, totalFilesSize: 0, 
+          totalSizeFormatted: '0 B', totalGitSizeFormatted: FormatBytes(totalGitSizeScan), totalFilesSizeFormatted: '0 B'
+      };
+       Object.values(GameFoldersMap).forEach(gameName => {
+           scanResult.gameImages[gameName] = 0; scanResult.gameRoles[gameName] = 0; scanResult.gameSizes[gameName] = 0; scanResult.gameSizesFormatted[gameName] = '0 B';
+       });
+
+      for (const GameName of Object.values(GameFoldersMap)) {
+          const rolesInGame = ScannedRoleImageCounts[GameName] || {}; 
+          const roleNames = Object.keys(rolesInGame);
+          const roleCount = roleNames.length;
+          let gameImageCount = 0;
+          for (const roleName of roleNames) { gameImageCount += rolesInGame[roleName] || 0; }
+          scanResult.gameRoles[GameName] = roleCount;
+          scanResult.gameImages[GameName] = gameImageCount;
+          scanResult.roles += roleCount;
+          scanResult.images += gameImageCount;
+
+          const gameSizeBytes = ScannedGameSizes[GameName] || 0;
+          scanResult.gameSizes[GameName] = gameSizeBytes;
+          scanResult.gameSizesFormatted[GameName] = FormatBytes(gameSizeBytes);
+          scanResult.totalFilesSize += gameSizeBytes;
+
+          //this.logger.info(`${this.logPrefix} [检查状态] 汇总 ${GameName}: ${roleCount}个角色, ${gameImageCount}张图片, 大小 ${scanResult.gameSizesFormatted[GameName]}`);
       }
-
-      if (Repo2UrlConfigured) {
-        const Repo2 = RepoStatsScan[2];
-        checkMessage += `---- ${Repo2.name} (${Repo2.exists ? '已下载' : '未下载/未配置'}) ----\n`;
-        if (Repo2.exists) {
-          checkMessage += `  文件: ${FormatBytes(Repo2.size - Repo2.gitSize)}\n`;
-          checkMessage += `  Git: ${FormatBytes(Repo2.gitSize)}\n`;
-          checkMessage += `  占用: ${FormatBytes(Repo2.size)}\n`;
-        }
+      scanResult.totalSize = scanResult.totalFilesSize + scanResult.totalGitSize;
+      scanResult.totalFilesSizeFormatted = FormatBytes(scanResult.totalFilesSize);
+      scanResult.totalSizeFormatted = FormatBytes(scanResult.totalSize);
+      //this.logger.info(`${this.logPrefix} [检查状态] 扫描结果汇总完成。总计: ${scanResult.roles}个角色, ${scanResult.images}张图片, 文件总大小: ${scanResult.totalFilesSizeFormatted}`);
+      //this.logger.info(`${this.logPrefix} [检查状态] 将汇总结果更新到最终数据结构...`);
+      stats.scan = scanResult;
+      //this.logger.info(`${this.logPrefix} [检查状态] 开始计算各仓库总占用大小...`);
+      for(const repoNum in stats.repos) {
+          if (stats.repos[repoNum].exists) {
+              try {
+                  const repoTotalSize = await FolderSize(RepoStatsScan[repoNum].path);
+                  const repoGitSize = stats.repos[repoNum].gitSize; 
+                  stats.repos[repoNum].size = repoTotalSize;
+                  stats.repos[repoNum].filesSize = Math.max(0, repoTotalSize - repoGitSize);
+                  stats.repos[repoNum].sizeFormatted = FormatBytes(repoTotalSize);
+                  stats.repos[repoNum].filesSizeFormatted = FormatBytes(stats.repos[repoNum].filesSize);
+                  //this.logger.info(`${this.logPrefix} [检查状态] 仓库 ${repoNum} 总占用: ${stats.repos[repoNum].sizeFormatted}, 文件占用: ${stats.repos[repoNum].filesSizeFormatted}`);
+              } catch (finalSizeError) {
+                  this.logger.error(`${this.logPrefix} [检查状态] 计算仓库 ${repoNum} 总占用大小失败:`, finalSizeError);
+                  stats.repos[repoNum].sizeFormatted = '错误';
+                  stats.repos[repoNum].filesSizeFormatted = '错误';
+              }
+          }
       }
-      checkMessage += `\n总文件(扫描): ${FormatBytes(TotalSizeScan - TotalGitSizeScan)}\nGit缓存(扫描): ${FormatBytes(TotalGitSizeScan)}\n总占用(扫描): ${FormatBytes(TotalSizeScan)}\n`; 
-
-      const tuKuOP = MiaoPluginMBT.MBTConfig?.TuKuOP ?? Default_Config.defaultTuKuOp;
-      const PFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
-      const purifiedCount = Math.max(0, MiaoPluginMBT.#activeBanSet.size - MiaoPluginMBT.#userBanSet.size);
-      checkMessage += `\n---- 配置状态 ----\n`;
-      checkMessage += `启用状态: ${tuKuOP ? '已启用' : '已禁用'}\n`;
-      checkMessage += `净化等级: ${PFL}(${Purify_Level.getDescription(PFL)})\n`;
-      checkMessage += `生效屏蔽: ${MiaoPluginMBT.#activeBanSet.size}张 (手动 ${MiaoPluginMBT.#userBanSet.size} + 净化 ${purifiedCount})\n`;
-
-      await e.reply(checkMessage.trim());
-      if (roleDetailsForward.length > 0) {
-        try {
-            const forwardMsg = await common.makeForwardMsg(e, roleDetailsForward, '本地图片详情 (扫描)'); if (forwardMsg) await e.reply(forwardMsg); else await e.reply("无法生成详情列表。");
-        } catch (fwdErr) { await e.reply("发送详情列表出错。"); }
-      } else { await e.reply("未扫描到本地角色图片。"); }
-
+      //this.logger.info(`${this.logPrefix} [检查状态] 各仓库总占用大小计算完成。`);
+      const repoCount = Object.values(stats.repos || {}).filter(repo => repo?.exists).length;
+      const renderData = { pluginVersion, stats, config, repoCount };
+      //this.logger.info(`${this.logPrefix} [检查状态] 最终准备渲染的数据:`);
+      //this.logger.info(JSON.stringify(renderData, null, 2)); 
+      const templatePath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'status.html');
+      savePath = path.join(os.tmpdir(), `guguniu_status_${Date.now()}.png`);
+      this.logger.info(`${this.logPrefix} [检查状态] 开始调用 Puppeteer 生成截图...`);
+      const img = await puppeteer.screenshot('guguniu-status', {
+        tplFile: templatePath,
+        savePath: savePath,
+        imgType: 'png',
+        pageGotoParams: { waitUntil: 'networkidle0' },
+        ...renderData, 
+        screenshotOptions: { fullPage: false },
+        pageBoundingRect: { selector: 'body', padding: 0 },
+        width: 740
+      });
+      if (img) {
+        await e.reply(img);
+        this.logger.info(`${this.logPrefix} [检查状态] 状态报告图片已发送。`);
+      } else {
+        this.logger.error(`${this.logPrefix} [检查状态] Puppeteer 未能成功生成图片。`);
+        await e.reply("生成状态报告图片失败 (截图环节出错)，请查看日志。");
+      }
     } catch (error) {
-      await this.ReportError(e, "检查图库状态", error);
+      this.logger.error(`${this.logPrefix} [检查状态] 生成状态报告时发生严重错误:`, error);
+      await this.ReportError(e, "生成状态报告图片", error);
+    } finally {
+      if (savePath && fs.existsSync(savePath)) {
+          try {
+              await fsPromises.unlink(savePath);
+              this.logger.info(`${this.logPrefix} [检查状态] 已删除临时截图文件: ${savePath}`);
+          } catch (unlinkErr) {
+              if (unlinkErr.code !== 'ENOENT') this.logger.warn(`${this.logPrefix} [检查状态] 删除临时截图失败: ${savePath}`, unlinkErr);
+          }
+      }
     }
-    return true;
+    return true; 
   }
   async ManageTuKuOption(e) {
     if (!(await this.CheckInit(e))) return true
@@ -1248,33 +1359,79 @@ export class MiaoPluginMBT extends plugin {
     if ((msg.startsWith('#咕咕牛封禁 ') || msg.startsWith('#咕咕牛解禁 ') || msg === '#清空咕咕牛封禁') && !isMaster)
       return e.reply(`${this.logPrefix} 仅主人可操作。`)
     if (msg === '#ban列表' || msg === '#咕咕牛封禁列表') {
-      if (MiaoPluginMBT.#activeBanSet.size === 0) return e.reply('当前无生效封禁。', true)
-      const level = MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl
-      const userBanCount = MiaoPluginMBT.#userBanSet.size
-      const activeBanCount = MiaoPluginMBT.#activeBanSet.size
-      const purifiedCount = Math.max(0, activeBanCount - userBanCount)
-      const banDisplayList = Array.from(MiaoPluginMBT.#activeBanSet)
-        .sort()
-        .map(item => {
-          const fileName = path.basename(item)
-          const label = MiaoPluginMBT.#userBanSet.has(item) ? '' : ' -[🌱净化]'
-          return `${fileName}${label}`
-        })
-      const forwardMsgContent = [
-        `当前生效封禁: ${activeBanCount}张 (手动 ${userBanCount} / 净化 ${purifiedCount}, PFL=${level})`,
-        `--- 生效列表 ---`,
-        banDisplayList.join('\n'),
-      ]
-      try {
-        const forwardMsg = await common.makeForwardMsg(e, forwardMsgContent, '生效封禁列表')
-        if (forwardMsg) await e.reply(forwardMsg)
-        else {
-          await e.reply(forwardMsgContent.join('\n').substring(0, 500) + '...')
-        }
-      } catch (fwdErr) {
-        await e.reply('发送列表失败')
+      const activeBanCount = MiaoPluginMBT.#activeBanSet.size;
+      const userBanCount = MiaoPluginMBT.#userBanSet.size;
+      const purifiedCount = Math.max(0, activeBanCount - userBanCount);
+      const level = MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl;
+
+      if (activeBanCount === 0) {
+        return e.reply('当前无生效封禁。', true);
       }
-      return true
+      await e.reply(`正在分别生成列表,请稍后...`, true);
+
+      const purifiedBans = [];
+      const userBans = []; 
+
+      const sortedActiveBans = Array.from(MiaoPluginMBT.#activeBanSet).sort();
+      for (const relativePath of sortedActiveBans) {
+          const fileName = path.basename(relativePath);
+          if (MiaoPluginMBT.#userBanSet.has(relativePath)) {
+              userBans.push(fileName);
+          } else {
+              purifiedBans.push(fileName);
+          }
+      }
+
+      let sentCount = 0; 
+      if (purifiedBans.length > 0) {
+          const purifiedContent = [
+              `--- 🌱净化屏蔽 (${purifiedBans.length}张) ---`,
+              purifiedBans.join('\n')
+          ];
+          try {
+              const forwardMsg = await common.makeForwardMsg(e, purifiedContent, '净化屏蔽列表');
+              if (forwardMsg) {
+                  await e.reply(forwardMsg);
+                  sentCount++;
+              } else {
+                   logger.warn(`${this.logPrefix} 创建净化屏蔽列表合并消息失败。`);
+                   await e.reply("无法生成净化屏蔽列表。");
+              }
+          } catch (fwdErr) {
+              logger.error(`${this.logPrefix} 发送净化屏蔽列表失败:`, fwdErr);
+              await e.reply("发送净化屏蔽列表时出错。");
+          }
+      } else {
+          await e.reply("--- 🌱净化屏蔽 (0张) ---", true);
+          sentCount++; 
+      }
+
+      if (purifiedBans.length > 0 && userBans.length > 0) {
+          await common.sleep(500); 
+      }
+      if (userBans.length > 0) {
+          const userContent = [
+              `--- 🚫手动封禁 (${userBans.length}张) ---`,
+              userBans.join('\n')
+          ];
+          try {
+              const forwardMsg = await common.makeForwardMsg(e, userContent, '手动封禁列表');
+              if (forwardMsg) {
+                  await e.reply(forwardMsg);
+                  sentCount++;
+              } else {
+                  logger.warn(`${this.logPrefix} 创建手动封禁列表合并消息失败。`);
+                  await e.reply("无法生成手动封禁列表。");
+              }
+          } catch (fwdErr) {
+              logger.error(`${this.logPrefix} 发送手动封禁列表失败:`, fwdErr);
+              await e.reply("发送手动封禁列表时出错。");
+          }
+      } else {
+          await e.reply("--- 🚫手动封禁 (0张) ---", true);
+          sentCount++; 
+      }
+      return true; 
     }
     if (msg === '#清空咕咕牛封禁') {
       if (MiaoPluginMBT.#userBanSet.size === 0) return e.reply('手动封禁已空。', true)
@@ -1484,20 +1641,28 @@ export class MiaoPluginMBT extends plugin {
         return e.reply(`文件 ${targetFileName} 状态异常。`, true)
       }
       this.logger.info(`${this.logPrefix} 用户 ${e.user_id} 导出: ${targetFileName}`)
-      await e.reply([`📦 导出成功：${targetFileName}`, segment.image(`file://${absolutePath}`)])
+      await e.reply([`📦 导出成功：${targetFileName}`, segment.file(absolutePath)])
     } catch (sendErr) {
       this.logger.error(`${this.logPrefix} 导出 ${targetFileName || targetIdentifierRaw} 失败:`, sendErr)
-      if (
-        sendErr?.message?.includes('highway') ||
-        sendErr?.message?.includes('file size') ||
-        sendErr?.code === -36 ||
-        sendErr?.code === 210005
-      )
-        await e.reply(`导出失败：文件 ${targetFileName || targetIdentifierRaw} 过大或网络问题。`, true)
-      else await this.ReportError(e, `导出图片 ${targetFileName || targetIdentifierRaw}`, sendErr)
+      try { 
+        if (
+            sendErr?.message?.includes('highway') ||
+            sendErr?.message?.includes('file size') ||
+            sendErr?.code === -36 ||
+            sendErr?.code === 210005 || 
+            sendErr?.code === 210003
+        ){
+            await e.reply(`发送文件失败：QQ文件上传通道出错(${sendErr.code || '未知'}),可能是签名API拒绝了本次传输`, true);
+        }else{
+            
+            await this.ReportError(e, `导出文件 ${targetFileName || targetIdentifierRaw}`, sendErr);
+        }
+        } catch (replyError) { 
+        this.logger.error(`${this.logPrefix} 发送导出失败提示时也出错:`, replyError);
+      }
     }
-    return true
-  }
+    return true;
+    }
   async Help(e) {
     const networkHelpUrl = 'https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png'
     const localHelpPath = MiaoPluginMBT.paths.helpImagePath
