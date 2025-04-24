@@ -1,4 +1,3 @@
-Px18img-type: 1
-Rx18img-type: 1
-GGOP: 1
-MihoyoOption: 0
+TuKuOP: true
+PFL: 0
+cronUpdate: 0 5 */3 * *

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛状态</title>
+    <style>
+        @font-face {
+            font-family: 'CuteFont';
+            src: local('YouYuan'), local('Microsoft YaHei UI Rounded'), local('Arial Rounded MT Bold'), sans-serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'CuteFont', sans-serif;
+            width: 500px;
+            margin: 10px auto;
+            padding: 20px 25px;
+            background: linear-gradient(to bottom, #e6f7ff 0%, #ffffff 85%);
+
+            color: #444;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0077cc;
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cceeff;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        h1 .ox-emoji {
+            display: inline-block;
+            margin: 0 5px;
+            vertical-align: -4px;
+            font-size: 26px;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        h1 .version-text {
+            display: block;
+            font-size: 0.7em;
+            margin-top: 3px;
+            color: #779ecc;
+            font-weight: normal;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .stats-block {
+            flex: 1;
+            min-width: 0;
+            background-color: rgba(255, 255, 255, 0.75);
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid #d0e8ff;
+        }
+
+        h2 {
+            color: #4682b4;
+            margin-top: 0;
+            margin-bottom: 8px;
+            border-left: 4px solid #4682b4;
+            padding-left: 8px;
+            font-size: 17px;
+            font-weight: bold;
+        }
+        h2 .icon { margin-right: 5px; vertical-align: -3px; font-size: 17px; }
+
+        ul { list-style: none; padding-left: 0px; margin-top: 5px; }
+        li {
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #f0f4f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 18px;
+        }
+        li:last-child { border-bottom: none; }
+
+        .label {
+            color: #6a7a8a;
+            margin-right: 8px;
+            white-space: nowrap;
+            font-size: 0.95em;
+        }
+        .value {
+            font-weight: bold;
+            color: #0056b3;
+            text-align: right;
+            font-size: 0.95em;
+        }
+        strong { color: #20c997; }
+
+        .game-stats {
+            margin-left: 8px;
+            margin-top: 4px;
+            padding-left: 8px;
+            border-left: 2px solid #d1eaff;
+        }
+        .game-stats:empty {
+            display: none;
+        }
+        .game-stats li {
+            font-size: 0.9em;
+            padding-bottom: 1px;
+            margin-bottom: 1px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            border-bottom: none;
+        }
+        .game-stats .label { min-width: 40px; flex-shrink: 0; margin-right: 5px; }
+        .game-details {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-grow: 1;
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+        .game-details .value {
+            text-align: left;
+            margin-right: 0;
+            min-width: 40px;
+            white-space: nowrap;
+        }
+        .game-size { color: #777; font-weight: normal; }
+
+        .storage-details-block {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding: 15px 0px;
+            border-radius: 15px;
+            background-color: #f5faff;
+            border: 1px solid #c1d9ff;
+        }
+        .storage-columns {
+            display: flex;
+            justify-content: space-around;
+            gap: 0;
+        }
+        .storage-column {
+            flex: 1;
+            min-width: 0;
+            padding: 0 15px;
+            position: relative;
+        }
+        .storage-column:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            bottom: 15%;
+            right: 0;
+            width: 1px;
+            background-color: #d0e0f0;
+        }
+
+        .storage-column h3 {
+            color: #6495ed;
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 1px solid #d1eaff;
+            padding-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .storage-column h3 .icon { margin-right: 5px; vertical-align: -2px; font-size: 16px; }
+        .storage-column ul { margin-top: 4px; padding-left: 0; }
+        .storage-column li { font-size: 0.9em; margin-bottom: 4px; padding-bottom: 2px; }
+        .storage-column li:last-child { border-bottom: none; }
+        .storage-column .label { color: #6a7a8a; }
+        .storage-column .value { color: #0056b3; }
+        .storage-column strong { color: #20c997; }
+        .storage-summary-column h3 { color: #5f9ea0; }
+
+        .config-section {
+            margin-top: 15px;
+            background-color: #fff8f0;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid #ffe0bd;
+        }
+        .config-section h2 {
+            color: #ff7f50;
+            border-left-color: #ff7f50;
+            font-size: 18px;
+        }
+        .config-section li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.75em;
+            color: #a0b0c0;
+            border-top: 1px solid #e0e8f0;
+            padding-top: 8px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1.0); }
+            50% { transform: translateY(-4px) scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        咕咕牛的状态报告
+
+    </h1>
+
+    <div class="stats-row">
+        <div class="stats-block">
+            <h2><span class="icon">📊</span>元数据统计</h2>
+            <ul>
+                <li><span class="label">角色:</span> <span class="value"><strong>{{ stats.meta.roles || 0 }}</strong> 名</span></li>
+                <li><span class="label">图片:</span> <span class="value"><strong>{{ stats.meta.images || 0 }}</strong> 张</span></li>
+                <ul class="game-stats">
+                    {{ each stats.meta.games gameCount gameName }}
+                    <li>
+                        <span class="label">{{ gameName }}:</span>
+                        <div class="game-details">
+                            <span class="value">{{ gameCount }} 张</span>
+                        </div>
+                    </li>
+                    {{ /each }}
+                </ul>
+            </ul>
+        </div>
+
+        <div class="stats-block">
+            <h2><span class="icon">📁</span>本地文件扫描</h2>
+            <ul>
+                <li><span class="label">角色(扫描):</span> <span class="value"><strong>{{ stats.scan.roles || 0 }}</strong> 名</span></li>
+                <li><span class="label">图片(扫描):</span> <span class="value"><strong>{{ stats.scan.images || 0 }}</strong> 张</span></li>
+                <ul class="game-stats">
+                    {{ each stats.scan.gameImages gameCount gameName }}
+                    <li>
+                        <span class="label">{{ gameName }}:</span>
+                        <div class="game-details">
+                            <span class="value">{{ gameCount }} 张</span>
+                            <span class="value">{{ stats.scan.gameRoles[gameName] || 0 }} 名</span>
+                            <span class="value game-size">{{ stats.scan.gameSizesFormatted[gameName] || '0 B' }}</span>
+                        </div>
+                    </li>
+                    {{ /each }}
+                </ul>
+            </ul>
+        </div>
+    </div>
+
+    <div class="storage-details-block">
+        <div class="storage-columns">
+            <div class="storage-column">
+                {{ if stats.repos['1'] }}
+                    <h3><span class="icon">📦</span>{{ stats.repos['1'].name }}</h3>
+                    {{ if stats.repos['1'].exists }}
+                    <ul>
+                        <li><span class="label">文件:</span> <span class="value">{{ stats.repos['1'].filesSizeFormatted || 'N/A' }}</span></li>
+                        <li><span class="label">Git:</span> <span class="value">{{ stats.repos['1'].gitSizeFormatted || 'N/A' }}</span></li>
+                        <li><span class="label">占用:</span> <span class="value">{{ stats.repos['1'].sizeFormatted || 'N/A' }}</span></li>
+                    </ul>
+                    {{ else MOUSE_CLICKED
+                    {{ else }}
+                    <p style="text-align: center; color: #aaa; font-size:0.9em;">(未下载)</p>
+                    {{ /if }}
+                {{ /if }}
+            </div>
+
+            <div class="storage-column">
+                {{ if stats.repos['2'] }}
+                    <h3><span class="icon">📦</span>{{ stats.repos['2'].name }}</h3>
+                    {{ if stats.repos['2'].exists }}
+                    <ul>
+                        <li><span class="label">文件:</span> <span class="value">{{ stats.repos['2'].filesSizeFormatted || 'N/A' }}</span></li>
+                        <li><span class="label">Git:</span> <span class="value">{{ stats.repos['2'].gitSizeFormatted || 'N/A' }}</span></li>
+                        <li><span class="label">占用:</span> <span class="value">{{ stats.repos['2'].sizeFormatted || 'N/A' }}</span></li>
+                    </ul>
+                    {{ else }}
+                    <p style="text-align: center; color: #aaa; font-size:0.9em;">(未下载)</p>
+                    {{ /if }}
+                {{ /if }}
+            </div>
+
+            <div class="storage-column storage-summary-column">
+                <h3><span class="icon">💾</span>存储总览</h3>
+                <ul>
+                    <li><span class="label">总文件:</span> <span class="value"><strong>{{ stats.scan.totalFilesSizeFormatted || '0 B' }}</strong></span></li>
+                    <li><span class="label">Git缓存:</span> <span class="value"><strong>{{ stats.scan.totalGitSizeFormatted || '0 B' }}</strong></span></li>
+                    <li><span class="label">总占用:</span> <span class="value"><strong>{{ stats.scan.totalSizeFormatted || '0 B' }}</strong></span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h2><span class="icon">⚙️</span>配置状态</h2>
+        <ul>
+            <li><span class="label">启用状态:</span> <span class="value">{{ config.enabledText }}</span></li>
+            <li><span class="label">净化等级:</span> <span class="value">{{ config.pflLevel }} ({{ config.pflDesc }})</span></li>
+            <li><span class="label">生效屏蔽:</span> <span class="value"><strong>{{ config.activeBans || 0 }}</strong> 张 (手动 {{ config.userBans || 0 }} + 净化 {{ config.purifiedBans || 0 }})</span></li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        Miao-Plugin-MBT v{{ pluginVersion }} by GuGuNiu<br>
+    </div>
+</body>
+</html>
