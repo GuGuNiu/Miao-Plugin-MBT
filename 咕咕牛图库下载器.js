@@ -2925,7 +2925,7 @@ export class MiaoPluginMBT extends plugin {
     const testFile = Default_Config.proxyTestFile;
     const timeoutDuration = 3000;
     const results = [];
-    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 基准: ${rawBaseUrl} (使用 AbortController, ${timeoutDuration}ms 超时)`);
+    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 基准: ${rawBaseUrl} (${timeoutDuration}ms 超时)`);
 
     const testTasks = Default_Config.proxies.map(async (proxy) => {
       let testUrl = '';
@@ -2998,7 +2998,7 @@ export class MiaoPluginMBT extends plugin {
         return a.speed - b.speed;
       });
 
-    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 完成 (使用 AbortController, 已理解配置并修正拼接)。`);
+    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 完成。`);
     return results;
   }
 
