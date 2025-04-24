@@ -11,7 +11,7 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js';
 
 /**
  * Miao-Plugin-MBT 图库管理器 - 双仓库版
- * Version: 4.7.2-Final
+ * Version: 4.7.4
  *          基于v4.1.10单仓魔改v4.6.6版本
  * Description: 结构化调试信息，角色详情转发，结构化测试日志，回滚数据，智能寻找，数据防干扰。
  */
@@ -85,7 +85,7 @@ const Default_Config = {
   ],
   proxyTestFile: '/README.md',
   proxyTestTimeout: 5000,
-  gitCloneTimeout: 300000,
+  gitCloneTimeout: 600000,
   gitPullTimeout: 120000,
   gitCloneDepth: 1,
   cronUpdate: '0 5 */3 * *',
@@ -180,97 +180,115 @@ async function copyFolderRecursiveWebpOnly(source, target, ignoreSet = new Set()
 }
 function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onStdOut) {
   return new Promise((resolve, reject) => {
-    const logger = global.logger || console
-    const cmdStr = `${command} ${args.join(' ')}`
-    const cwd = options.cwd || process.cwd()
-    logger.debug(`${Default_Config.logPrefix} [执行命令] > ${cmdStr} (CWD: ${cwd})`)
-    let proc
+    const logger = global.logger || console;
+    const cmdStr = `${command} ${args.join(' ')}`;
+    const cwd = options.cwd || process.cwd();
+    logger.debug(`${Default_Config.logPrefix} [执行命令] > ${cmdStr} (CWD: ${cwd})`);
+    let proc;
     try {
-      proc = spawn(command, args, { stdio: 'pipe', ...options })
+      proc = spawn(command, args, { stdio: 'pipe', ...options });
     } catch (spawnError) {
-      logger.error(`${Default_Config.logPrefix} [执行命令] 启动失败 [${cmdStr}]:`, spawnError)
-      return reject(spawnError)
+      logger.error(`${Default_Config.logPrefix} [执行命令] 启动失败 [${cmdStr}]:`, spawnError);
+      return reject(spawnError);
     }
-    let stdout = ''
-    let stderr = ''
-    let timer = null
-    let killed = false
-    let exited = false
+
+    let stdout = '';
+    let stderr = '';
+    let timer = null;
+    let killed = false;
+    let exited = false; 
+    let promiseSettled = false; 
+
+    const settlePromise = (resolver, value) => {
+        if (promiseSettled) return; 
+        promiseSettled = true;
+        clearTimeout(timer); 
+        resolver(value);
+    };
+
     const killProc = (signal = 'SIGTERM') => {
-      if (!killed && !exited && proc.pid && !proc.killed) {
-        logger.warn(`${Default_Config.logPrefix} [执行命令] 发送 ${signal} 到 ${proc.pid} (${cmdStr})`)
+      if (proc && proc.pid && !killed && !exited && !proc.killed) {
+        logger.warn(`${Default_Config.logPrefix} [执行命令] 发送 ${signal} 到 ${proc.pid} (${cmdStr})`);
         try {
-          process.kill(proc.pid, signal)
+          process.kill(proc.pid, signal);
+          if (signal === 'SIGKILL') {
+              killed = true;
+          }
         } catch (killError) {
-          if (killError.code !== 'ESRCH')
-            logger.error(`${Default_Config.logPrefix} [执行命令] kill ${proc.pid} 失败:`, killError)
+          if (killError.code !== 'ESRCH') 
+            logger.error(`${Default_Config.logPrefix} [执行命令] kill ${proc.pid} 失败:`, killError);
         }
       }
-    }
+    };
+
     if (timeout > 0) {
       timer = setTimeout(() => {
-        if (exited) return
-        killed = true
-        logger.warn(`${Default_Config.logPrefix} [执行命令] 命令 [${cmdStr}] 超时 (${timeout}ms)，终止...`)
-        killProc('SIGTERM')
+        if (exited || promiseSettled) return; 
+        killed = true; 
+        logger.warn(`${Default_Config.logPrefix} [执行命令] 命令 [${cmdStr}] 超时 (${timeout}ms)，终止...`);
+        killProc('SIGTERM');
         setTimeout(() => {
-          if (!exited) killProc('SIGKILL')
-        }, 2000)
-        const err = new Error(`Command timed out after ${timeout}ms: ${cmdStr}`)
-        err.code = ERROR_CODES.Timeout
-        err.stdout = stdout
-        err.stderr = stderr
-        reject(err)
-      }, timeout)
+            if (!exited) killProc('SIGKILL');
+        }, 2000);
+
+        const err = new Error(`Command timed out after ${timeout}ms: ${cmdStr}`);
+        err.code = ERROR_CODES.Timeout;
+        err.stdout = stdout;
+        err.stderr = stderr;
+        settlePromise(reject, err); 
+      }, timeout);
     }
+
     proc.stdout?.on('data', data => {
-      const output = data.toString()
-      stdout += output
+
+      if (exited || killed || promiseSettled) return;
+      const output = data.toString();
+      stdout += output;
       if (onStdOut)
         try {
-          onStdOut(output)
+          onStdOut(output);
         } catch (e) {
-          logger.warn(`${Default_Config.logPrefix} onStdOut 回调出错:`, e)
+          logger.warn(`${Default_Config.logPrefix} onStdOut 回调出错:`, e);
         }
-    })
+    });
+
     proc.stderr?.on('data', data => {
-      const output = data.toString()
-      stderr += output
+
+      if (exited || killed || promiseSettled) return;
+      const output = data.toString();
+      stderr += output;
       if (onStdErr)
         try {
-          onStdErr(output)
+          onStdErr(output);
         } catch (e) {
-          logger.warn(`${Default_Config.logPrefix} onStdErr 回调出错:`, e)
+          logger.warn(`${Default_Config.logPrefix} onStdErr 回调出错:`, e);
         }
-    })
+    });
+
     proc.on('error', err => {
-      if (exited || killed) return
-      clearTimeout(timer)
-      exited = true
-      logger.error(`${Default_Config.logPrefix} [执行命令] 进程错误 [${cmdStr}]:`, err)
-      reject(err)
-    })
+      if (promiseSettled) return; 
+      exited = true; 
+      logger.error(`${Default_Config.logPrefix} [执行命令] 进程错误 [${cmdStr}]:`, err);
+      settlePromise(reject, err); 
+    });
+
     proc.on('close', (code, signal) => {
-      if (exited) return
-      if (killed && !exited) {
-        exited = true
-        clearTimeout(timer)
-        return
-      }
-      exited = true
-      clearTimeout(timer)
+      if (exited) return; 
+      exited = true; 
+
+      if (promiseSettled) return; 
       if (code === 0) {
-        resolve({ code: 0, signal, stdout, stderr })
+        settlePromise(resolve, { code: 0, signal, stdout, stderr });
       } else {
-        const err = new Error(`Command failed (${code}): ${cmdStr}`)
-        err.code = code ?? 'UNKNOWN'
-        err.signal = signal
-        err.stdout = stdout
-        err.stderr = stderr
-        reject(err)
+        const err = new Error(`Command failed with code ${code}: ${cmdStr}`);
+        err.code = code ?? 'UNKNOWN';
+        err.signal = signal;
+        err.stdout = stdout;
+        err.stderr = stderr;
+        settlePromise(reject, err);
       }
-    })
-  })
+    });
+  });
 }
 async function FolderSize(folderPath) {
   let totalSize = 0
@@ -375,7 +393,7 @@ export class MiaoPluginMBT extends plugin {
 
   constructor() {
     super({
-      name: '『咕咕牛🐂』图库管理器 v4.7.2',
+      name: '『咕咕牛🐂』图库管理器 v4.7.4',
       dsc: '『咕咕牛🐂』图库管理器',
       event: 'message',
       priority: 500,
@@ -413,38 +431,29 @@ export class MiaoPluginMBT extends plugin {
     }
   }
   async ManualRunUpdateTask(e) {
-    // 1. 检查初始化和权限 (虽然规则已限制主人，双重保险)
     if (!(await this.CheckInit(e))) return true;
-    if (!e.isMaster) return e.reply("抱歉，只有主人才能手动执行此任务。"); // 理论上不会触发
+    if (!e.isMaster) return e.reply("抱歉，只有主人才能手动执行此任务。");
 
     this.logger.info(`${this.logPrefix} 用户 ${e.user_id} 手动触发定时更新任务...`);
     await e.reply(`${this.logPrefix} 正在手动执行定时更新任务，请稍候...`);
-
-    // 2. 调用实际的定时更新任务函数
-    // 注意：这里不关心 RunUpdateTask 的返回值 (是否有更新)
     let taskError = null;
     try {
-      await this.RunUpdateTask(); // 执行定时任务的核心逻辑
+      await this.RunUpdateTask(); 
       this.logger.info(`${this.logPrefix} 手动执行的定时更新任务逻辑已完成。`);
     } catch (error) {
-      taskError = error; // 捕获任务执行中的错误
+      taskError = error; 
       this.logger.error(`${this.logPrefix} 手动执行定时更新任务时发生错误:`, error);
-      // 仍然尝试发送通知，但附带错误信息
     }
 
-    // 3. 强制发送完成通知给主人
     this.logger.info(`${this.logPrefix} 准备向主人发送手动任务完成通知...`);
     let notifyMsg = "";
     if (taskError) {
-      // 如果任务出错，通知包含错误信息
-      const shortErrMsg = String(taskError.message || taskError).substring(0, 100); // 截断错误信息
+      const shortErrMsg = String(taskError.message || taskError).substring(0, 100); 
       notifyMsg = `『咕咕牛🐂』手动更新任务执行时遇到错误！\n错误(部分): ${shortErrMsg}\n请检查控制台日志获取详细信息。`;
     } else {
-      // 如果任务正常结束，发送包含最新日志的通知
       const latestLog = await MiaoPluginMBT.GetTuKuLog(1, MiaoPluginMBT.paths.localTuKuPath, this.logger);
       let formattedLog = latestLog || "无法获取日志";
       if (formattedLog && formattedLog !== "无法获取日志") {
-          // ... (格式化日志逻辑不变) ...
           const match = formattedLog.match(/^(\d{2}-\d{2}\s+\d{2}:\d{2})\s+\[([a-f0-9]{7,})\]\s+(.*)$/);
           if (match) {
             const dateTime = match[1]; const hash = match[2].substring(0, 7); const messageSummary = match[3].substring(0, 30) + (match[3].length > 30 ? '...' : '');
@@ -456,10 +465,8 @@ export class MiaoPluginMBT extends plugin {
        notifyMsg = `『咕咕牛🐂』手动更新任务已执行完成。\n最新提交：${formattedLog}`;
     }
 
-    // 调用静态方法发送通知
     const sent = await MiaoPluginMBT.SendMasterMsg(notifyMsg, undefined, 1000, this.logger);
 
-    // 4. 回复用户执行结果
     if (taskError) {
         await e.reply(`${this.logPrefix} 手动更新任务执行过程中遇到错误，已尝试通知主人。请检查控制台日志。`, true);
     } else {
@@ -3015,9 +3022,9 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, '..', 'package.json')
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      return pkg.version || '4.7.2'
+      return pkg.version || '4.7.4'
     } catch {
-      return '4.7.2'
+      return '4.7.4'
     }
   }
 } 
