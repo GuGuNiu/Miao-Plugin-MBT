@@ -11,7 +11,7 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js';
 
 /**
  * Miao-Plugin-MBT 图库管理器 - 双仓库版
- * Version: 4.7.4
+ * Version: 4.7.5
  *          基于v4.1.10单仓魔改v4.6.6版本
  * Description: 结构化调试信息，角色详情转发，结构化测试日志，回滚数据，智能寻找，数据防干扰。
  */
@@ -32,57 +32,86 @@ const Default_Config = {
   Main_Github_URL: 'https://github.com/GuGuNiu/Miao-Plugin-MBT/',
   Ass_Github_URL: 'https://github.com/GuGuNiu/Miao-Plugin-MBT-2/',
   SepositoryBranch: 'main',
-  proxies: [
-    { name: 'GitHub', priority: 300, testUrlPrefix: RAW_URL_Repo1, cloneUrlPrefix: 'https://github.com/' },
+  proxies: [ 
     {
-      name: 'Gitmirror',
-      priority: 100,
-      testUrlPrefix: 'https://raw.gitmirror.com/GuGuNiu/Miao-Plugin-MBT/main',
-      cloneUrlPrefix: null,
+        name: 'Moeyy',
+        priority: 0,
+        testUrlPrefix: `https://github.moeyy.xyz/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://github.moeyy.xyz/'
     },
     {
-      name: 'Ghfast',
-      priority: 80,
-      testUrlPrefix: `https://ghfast.top/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://ghfast.top/',
+        name: 'Ghfast',
+        priority: 10,
+        testUrlPrefix: `https://ghfast.top/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://ghfast.top/'
     },
     {
-      name: 'Ghp',
-      priority: 40,
-      testUrlPrefix: `https://ghp.ci/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://ghp.ci/',
+        name: 'Ghp',
+        priority: 20,
+        testUrlPrefix: `https://ghp.ci/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://ghp.ci/'
     },
     {
-      name: 'Ghgo',
-      priority: 40,
-      testUrlPrefix: `https://ghgo.xyz/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://ghgo.xyz/',
+        name: 'Ghgo',
+        priority: 20,
+        testUrlPrefix: `https://ghgo.xyz/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://ghgo.xyz/'
     },
     {
-      name: 'GhproxyCom',
-      priority: 50,
-      testUrlPrefix: `https://ghproxy.com/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://ghproxy.com/',
+        name: 'Yumenaka',
+        priority: 30,
+        testUrlPrefix: `https://git.yumenaka.net/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://git.yumenaka.net/'
     },
     {
-      name: 'GhproxyNet',
-      priority: 50,
-      testUrlPrefix: `https://ghproxy.net/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://ghproxy.net/',
+        name: 'GhConSh',
+        priority: 35,
+        testUrlPrefix: `https://gh.con.sh/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://gh.con.sh/'
     },
     {
-      name: 'Moeyy',
-      priority: 0,
-      testUrlPrefix: `https://github.moeyy.xyz/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://github.moeyy.xyz/',
+        name: 'GhpsCc',
+        priority: 45,
+        testUrlPrefix: `https://ghps.cc/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://ghps.cc/'
     },
     {
-      name: 'Yumenaka',
-      priority: 40,
-      testUrlPrefix: `https://git.yumenaka.net/${RAW_URL_Repo1}`,
-      cloneUrlPrefix: 'https://git.yumenaka.net/',
+        name: 'GhproxyCom',
+        priority: 50,
+        testUrlPrefix: `https://ghproxy.com/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://ghproxy.com/'
     },
-  ],
+    {
+        name: 'GhproxyNet',
+        priority: 50,
+        testUrlPrefix: `https://ghproxy.net/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://ghproxy.net/'
+    },
+    {
+        name: 'GhDdlcTop',
+        priority: 55,
+        testUrlPrefix: `https://gh.ddlc.top/${RAW_URL_Repo1}`,
+        cloneUrlPrefix: 'https://gh.ddlc.top/'
+    },
+    {
+        name: 'GitClone',
+        priority: 70,
+        testUrlPrefix: null,
+        cloneUrlPrefix: 'https://gitclone.com/'
+    },
+    {
+        name: 'Gitmirror',
+        priority: 80,
+        testUrlPrefix: `https://raw.gitmirror.com/GuGuNiu/Miao-Plugin-MBT/main`,
+        cloneUrlPrefix: 'https://hub.gitmirror.com/'
+    },
+    {
+        name: 'GitHub',
+        priority: 300,
+        testUrlPrefix: RAW_URL_Repo1,
+        cloneUrlPrefix: 'https://github.com/'
+    }
+  ], 
   proxyTestFile: '/README.md',
   proxyTestTimeout: 5000,
   gitCloneTimeout: 600000,
@@ -178,12 +207,18 @@ async function copyFolderRecursiveWebpOnly(source, target, ignoreSet = new Set()
     throw error
   }
 }
+
 function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onStdOut) {
   return new Promise((resolve, reject) => {
     const logger = global.logger || console;
     const cmdStr = `${command} ${args.join(' ')}`;
     const cwd = options.cwd || process.cwd();
     logger.debug(`${Default_Config.logPrefix} [执行命令] > ${cmdStr} (CWD: ${cwd})`);
+
+    const gitDebugEnv = { GIT_CURL_VERBOSE: "1", GIT_TRACE: "1" };
+    options.env = { ...process.env, ...(options.env || {}), ...gitDebugEnv };
+    // logger.debug(`${Default_Config.logPrefix} [执行命令] with env: ${JSON.stringify(options.env)}`); // 可选的调试日志
+
     let proc;
     try {
       proc = spawn(command, args, { stdio: 'pipe', ...options });
@@ -192,104 +227,60 @@ function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onSt
       return reject(spawnError);
     }
 
-    let stdout = '';
-    let stderr = '';
-    let timer = null;
-    let killed = false;
-    let exited = false; 
-    let promiseSettled = false; 
+    let stdout = ''; let stderr = ''; let timer = null;
+    let killed = false; let exited = false; let promiseSettled = false;
 
     const settlePromise = (resolver, value) => {
-        if (promiseSettled) return; 
-        promiseSettled = true;
-        clearTimeout(timer); 
-        resolver(value);
+        if (promiseSettled) return;
+        promiseSettled = true; clearTimeout(timer); resolver(value);
     };
-
     const killProc = (signal = 'SIGTERM') => {
       if (proc && proc.pid && !killed && !exited && !proc.killed) {
         logger.warn(`${Default_Config.logPrefix} [执行命令] 发送 ${signal} 到 ${proc.pid} (${cmdStr})`);
-        try {
-          process.kill(proc.pid, signal);
-          if (signal === 'SIGKILL') {
-              killed = true;
-          }
-        } catch (killError) {
-          if (killError.code !== 'ESRCH') 
-            logger.error(`${Default_Config.logPrefix} [执行命令] kill ${proc.pid} 失败:`, killError);
-        }
+        try { process.kill(proc.pid, signal); if (signal === 'SIGKILL') killed = true; }
+        catch (killError) { if (killError.code !== 'ESRCH') logger.error(`${Default_Config.logPrefix} [执行命令] kill ${proc.pid} 失败:`, killError); }
       }
     };
 
     if (timeout > 0) {
       timer = setTimeout(() => {
-        if (exited || promiseSettled) return; 
-        killed = true; 
-        logger.warn(`${Default_Config.logPrefix} [执行命令] 命令 [${cmdStr}] 超时 (${timeout}ms)，终止...`);
-        killProc('SIGTERM');
-        setTimeout(() => {
-            if (!exited) killProc('SIGKILL');
-        }, 2000);
-
+        if (exited || promiseSettled) return;
+        killed = true; logger.warn(`${Default_Config.logPrefix} [执行命令] 命令 [${cmdStr}] 超时 (${timeout}ms)，终止...`);
+        killProc('SIGTERM'); setTimeout(() => { if (!exited) killProc('SIGKILL'); }, 2000);
         const err = new Error(`Command timed out after ${timeout}ms: ${cmdStr}`);
-        err.code = ERROR_CODES.Timeout;
-        err.stdout = stdout;
-        err.stderr = stderr;
-        settlePromise(reject, err); 
+        err.code = ERROR_CODES.Timeout; err.stdout = stdout; err.stderr = stderr;
+        settlePromise(reject, err);
       }, timeout);
     }
 
     proc.stdout?.on('data', data => {
-
       if (exited || killed || promiseSettled) return;
-      const output = data.toString();
-      stdout += output;
-      if (onStdOut)
-        try {
-          onStdOut(output);
-        } catch (e) {
-          logger.warn(`${Default_Config.logPrefix} onStdOut 回调出错:`, e);
-        }
+      const output = data.toString(); stdout += output;
+      if (onStdOut) try { onStdOut(output); } catch (e) { logger.warn(`${Default_Config.logPrefix} onStdOut 回调出错:`, e); }
     });
-
     proc.stderr?.on('data', data => {
-
       if (exited || killed || promiseSettled) return;
-      const output = data.toString();
-      stderr += output;
-      if (onStdErr)
-        try {
-          onStdErr(output);
-        } catch (e) {
-          logger.warn(`${Default_Config.logPrefix} onStdErr 回调出错:`, e);
-        }
+      const output = data.toString(); stderr += output;
+      if (onStdErr) try { onStdErr(output); } catch (e) { logger.warn(`${Default_Config.logPrefix} onStdErr 回调出错:`, e); }
     });
-
     proc.on('error', err => {
-      if (promiseSettled) return; 
-      exited = true; 
-      logger.error(`${Default_Config.logPrefix} [执行命令] 进程错误 [${cmdStr}]:`, err);
-      settlePromise(reject, err); 
+      if (promiseSettled) return;
+      exited = true; logger.error(`${Default_Config.logPrefix} [执行命令] 进程错误 [${cmdStr}]:`, err);
+      settlePromise(reject, err);
     });
-
     proc.on('close', (code, signal) => {
-      if (exited) return; 
-      exited = true; 
-
-      if (promiseSettled) return; 
-      if (code === 0) {
-        settlePromise(resolve, { code: 0, signal, stdout, stderr });
-      } else {
+      if (exited || promiseSettled) return;
+      exited = true;
+      if (code === 0) { settlePromise(resolve, { code: 0, signal, stdout, stderr }); }
+      else {
         const err = new Error(`Command failed with code ${code}: ${cmdStr}`);
-        err.code = code ?? 'UNKNOWN';
-        err.signal = signal;
-        err.stdout = stdout;
-        err.stderr = stderr;
+        err.code = code ?? 'UNKNOWN'; err.signal = signal; err.stdout = stdout; err.stderr = stderr;
         settlePromise(reject, err);
       }
     });
   });
 }
+
 async function FolderSize(folderPath) {
   let totalSize = 0
   const logger = global.logger || console
@@ -430,6 +421,7 @@ export class MiaoPluginMBT extends plugin {
       this.isPluginInited = false
     }
   }
+
   async ManualRunUpdateTask(e) {
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply("抱歉，只有主人才能手动执行此任务。");
@@ -477,6 +469,7 @@ export class MiaoPluginMBT extends plugin {
         }
     }  return true; 
   }
+
   static async InitializePlugin(loggerInstance = global.logger || console) {
     if (MiaoPluginMBT.initializationPromise) return MiaoPluginMBT.initializationPromise
     if (MiaoPluginMBT.isGloballyInitialized) return Promise.resolve()
@@ -540,6 +533,7 @@ export class MiaoPluginMBT extends plugin {
     await MiaoPluginMBT.ApplyBanList(effectiveBanSet, loggerInstance)
     //loggerInstance.info(`${Default_Config.logPrefix} [封禁处理] 应用完成。`)
   }
+
   static GenerateBanList(imageData, loggerInstance = global.logger || console) {
     const effectiveBans = new Set(MiaoPluginMBT.#userBanSet)
     const level = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl
@@ -567,6 +561,138 @@ export class MiaoPluginMBT extends plugin {
     MiaoPluginMBT.#activeBanSet = effectiveBans
     return MiaoPluginMBT.#activeBanSet
   }
+
+  static async DownloadRepoWithFallback(repoNum, repoUrl, branch, localPath, eForProgress, loggerInstance) {
+    const logPrefix = Default_Config.logPrefix;
+    const repoName = repoNum === 1 ? '一号仓库' : '二号仓库';
+    const baseRawUrl = repoNum === 1 ? RAW_URL_Repo1 : RAW_URL_Repo2;
+
+    //loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 开始下载: ${repoUrl}`);
+
+    let sourcesToTry = [];
+    let allTestResults = []; 
+    try {
+        allTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance); 
+        sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance); 
+    } catch (testError) {
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 代理测速失败:`, testError);
+        const githubSource = Default_Config.proxies.find(p => p.name === 'GitHub');
+        if (githubSource) {
+            sourcesToTry.push({...githubSource, speed: Infinity});
+            allTestResults = Default_Config.proxies.map(p => ({...p, speed: Infinity}));
+        }
+    }
+
+    if (eForProgress && repoNum === 1 && allTestResults.length > 0) {
+        try {
+            let speedMsg = `${logPrefix} 节点测速:\n\n`;
+            allTestResults.sort((a, b) => {
+                const prioA = a.priority ?? 999; const prioB = b.priority ?? 999;
+                if (prioA !== prioB) return prioA - prioB;
+                const speedA = a.speed === Infinity || a.testUrlPrefix === null ? Infinity : a.speed;
+                const speedB = b.speed === Infinity || b.testUrlPrefix === null ? Infinity : b.speed;
+                return speedA - speedB;
+            });
+            allTestResults.forEach(s => {
+                let status = '';
+                if (s.testUrlPrefix === null) {
+                    status = 'N/A ⚠️'; 
+                } else if (s.speed === Infinity) {
+                    status = '超时❌';
+                } else {
+                    status = `${s.speed}ms✅`;
+                }
+                speedMsg += `${s.name}: ${status} (P:${s.priority ?? 'N'})\n`;
+            });
+
+            const bestSource = sourcesToTry[0];
+            if (bestSource) {
+                 let bestSpeed = '';
+                 if (bestSource.testUrlPrefix === null) bestSpeed = 'N/A';
+                 else if (bestSource.speed === Infinity) bestSpeed = 'Timeout'; 
+                 else bestSpeed = `${bestSource.speed}ms`;
+                 speedMsg += `\n✅ 优选: ${bestSource.name}(${bestSpeed})`;
+            } else {
+                 speedMsg += `\n❌ 无可用下载源`;
+            }
+            speedMsg += `\n⏳ 开始下载了.......`;
+            await eForProgress.reply(speedMsg).catch(()=>{});
+        } catch (replyError) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 回复测速结果失败:`, replyError);
+        }
+    }
+
+
+    if (sourcesToTry.length === 0) {
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 没有任何可用的下载源！`);
+        return { success: false, nodeName: '无可用源' };
+    }
+
+    let lastError = null;
+    for (const source of sourcesToTry) {
+        const nodeName = source.name === 'GitHub' ? 'GitHub(直连)' : `${source.name}(代理)`;
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 尝试使用源: ${nodeName}`);
+    
+        let cloneUrl = ''; let proxyForEnv = null;
+        if (source.name === 'GitHub') { cloneUrl = repoUrl; }
+        else if (source.cloneUrlPrefix) {
+            if (source.name === 'GitClone') { cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl.replace(/^https?:\/\//, '')}`; }
+            else { cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl}`; }
+        } else { loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 源 ${source.name} 没有有效的 cloneUrlPrefix，跳过。`); continue; }
+        if (source.name !== 'GitHub' && source.cloneUrlPrefix) {
+             try {
+                const proxyUrl = new URL(source.cloneUrlPrefix);
+                if (['http:', 'https:'].includes(proxyUrl.protocol)) proxyForEnv = proxyUrl.origin;
+             } catch (urlError) { loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 无法解析代理 ${source.name} 的 cloneUrlPrefix: ${urlError.message}`); }
+        }
+        const cloneArgs = ['clone', `--depth=${Default_Config.gitCloneDepth}`, '--progress', cloneUrl, localPath];
+        const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+        if (proxyForEnv) {
+            gitOptions.env = { ...process.env, HTTP_PROXY: proxyForEnv, HTTPS_PROXY: proxyForEnv };
+           // loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 为 Git 命令设置了代理环境变量: ${proxyForEnv}`);
+        } else { 
+          //loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 未设置代理环境变量。`);
+         }
+
+
+        try {
+             let progressReported = { 10: false, 50: false, 90: false };
+             const cloneResult = await ExecuteCommand(
+                 'git', cloneArgs, gitOptions, Default_Config.gitCloneTimeout,
+                 stderrChunk => {
+                     if (repoNum === 1 && eForProgress) {
+                         const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
+                         if (match?.[1]) {
+                             const progress = parseInt(match[1], 10);
+                             [10, 50, 90].forEach(t => {
+                                 if (progress >= t && !progressReported[t]) {
+                                     progressReported[t] = true;
+                                     const msg = t === 90 ? `『咕咕牛』${repoName}下载: 90%... (${nodeName})` : `『咕咕牛』${repoName}下载: ${t}% (${nodeName})`;
+                                     eForProgress.reply(msg).catch(() => {});
+                                 }
+                             });
+                         }
+                     } else if (repoNum !== 1) { const match = stderrChunk.match(/(Receiving objects|Resolving deltas):\s*(\d+)%/); if (match) loggerInstance.debug(`${logPrefix} [下载进度 ${repoName}] (${nodeName}) ${match[1]}: ${match[2]}%`); }
+                 }
+             );
+            loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载成功！`);
+            return { success: true, nodeName: nodeName }; 
+
+        } catch (error) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载失败。`); loggerInstance.error(error);
+            lastError = error;
+            loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 尝试清理失败的目录: ${localPath}`);
+            await safeDelete(localPath);
+            await common.sleep(1000);
+            if (eForProgress && repoNum === 1) await eForProgress.reply(`${logPrefix} 使用 ${nodeName} 下载 ${repoName} 失败，尝试下一个源...`).catch(()=>{});
+        }
+    } 
+    loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 尝试了所有可用源，均下载失败！`);
+    if (repoNum === 1 && eForProgress) { await MiaoPluginMBT.ReportError(eForProgress, `下载${repoName}`, lastError || new Error("所有源下载失败"), `尝试源: ${sourcesToTry.map(s=>s.name).join(', ')}`, loggerInstance); }
+    else { loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 最终错误:`, lastError || "未知错误"); }
+    return { success: false, nodeName: '所有源失败', error: lastError };
+  }
+
   static CheckIfPurifiedByLevel(imgDataItem, purifyLevel) {
     if (!imgDataItem?.attributes) return false
     const attrs = imgDataItem.attributes
@@ -576,6 +702,7 @@ export class MiaoPluginMBT extends plugin {
     if (purifyLevel >= Purify_Level.PX18_PLUS && isPx18) return true
     return false
   }
+
   static async CheckIfPurified(relativePath, loggerInstance = global.logger || console) {
     const normalizedPath = relativePath?.replace(/\\/g, '/')
     if (!normalizedPath) return false
@@ -588,6 +715,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return false
   }
+
   static async ReportError(e, operationName, error, context = '', loggerInstance = global.logger || console) {
     const Report = MiaoPluginMBT.FormatError(operationName, error, context)
     loggerInstance.error(
@@ -644,6 +772,7 @@ export class MiaoPluginMBT extends plugin {
       loggerInstance.error(`${Default_Config.logPrefix} === 原始错误 (${operationName}) ===`, error)
     }
   }
+
   static FormatError(operationName, error, context = '') {
     const Report = {
       summary: `${Default_Config.logPrefix} 操作 [${operationName}] 失败！`,
@@ -725,6 +854,7 @@ export class MiaoPluginMBT extends plugin {
       return false;
     }
   }
+
   async CheckInit(e) {
     if (!MiaoPluginMBT.initializationPromise && !MiaoPluginMBT.isGloballyInitialized) {
       this.logger.info(`${this.logPrefix} [核心检查] 首次触发，初始化...`)
@@ -775,100 +905,114 @@ export class MiaoPluginMBT extends plugin {
     }
     return true
   }
+
   async ReportError(e, operationName, error, context = '') {
     await MiaoPluginMBT.ReportError(e, operationName, error, context, this.logger)
   }
+
   async DownloadTuKu(e) {
-    if (!(await this.CheckInit(e))) return true
-    if (this.isGitRunning) return e.reply(`${this.logPrefix} Git 操作进行中...`)
-    const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1)
-    const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL
-    const Repo2Exists = Repo2UrlConfigured ? await MiaoPluginMBT.IsTuKuDownloaded(2) : false
-    if (Repo1Exists && (!Repo2UrlConfigured || Repo2Exists)) return e.reply(`${this.logPrefix} 图库已存在。`)
-    if (Repo1Exists && Repo2UrlConfigured && !Repo2Exists) {
-      await e.reply(`${this.logPrefix} 一号仓库存在，二号仓库缺失，建议 #重置。`)
-      return true
-    }
-    if (!Repo1Exists && Repo2Exists) {
-      await e.reply(`${this.logPrefix} 状态异常！二号仓库存在一号仓库缺失！建议 #重置。`)
-      return true
-    }
-    //await e.reply(`${this.logPrefix} 下载图库...`)
-    this.isGitRunning = true
-    const startTime = Date.now()
-    let overallSuccess = true
-    let finalUserMessage = ''
-    let nodeName1 = '未知',
-      nodeName2 = '未处理'
+    if (!(await this.CheckInit(e))) return true;
+    if (this.isGitRunning) return e.reply(`${this.logPrefix} Git 操作进行中，请稍后再试...`);
+
+    this.isGitRunning = true;
+    const startTime = Date.now();
+    let overallSuccess = false;
+    let repo1Result = { repo: 1, success: false, nodeName: '未执行', error: null };
+    let repo2Result = { repo: 2, success: true, nodeName: '未处理', error: null };
+
     try {
-      if (!Repo1Exists) {
-        this.logger.info(`${this.logPrefix} 下载 Repo 1...`)
-        //await e.reply(`${this.logPrefix} 下载核心文件...`)
-        const result1 = await MiaoPluginMBT.DownloadSingleRepo(
-          e,
-          1,
-          Default_Config.Main_Github_URL,
-          MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch,
-          MiaoPluginMBT.paths.LocalTuKuPath,
-          this.logger
-        )
-        nodeName1 = result1.nodeName || '未知(失败)'
-        if (!result1.success) {
-          overallSuccess = false
-          finalUserMessage = '核心文件下载失败。'
-        } else {
-          this.logger.info(`${this.logPrefix} 一号仓库下载成功 (${nodeName1})`)
+        const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
+        const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
+        const Repo2Exists = Repo2UrlConfigured ? await MiaoPluginMBT.IsTuKuDownloaded(2) : false;
+
+        if (Repo1Exists && (!Repo2UrlConfigured || Repo2Exists)) {
+            this.isGitRunning = false;
+            return e.reply(`${this.logPrefix} 图库已完整存在。`);
         }
-      } else {
-        nodeName1 = '本地'
-      }
-      if (overallSuccess && Repo2UrlConfigured && !Repo2Exists) {
-        nodeName2 = '未知'
-        this.logger.info(`${this.logPrefix} 下载 Repo 2...`)
-        const result2 = await MiaoPluginMBT.DownloadSingleRepo(
-          null,
-          2,
-          MiaoPluginMBT.MBTConfig.Ass_Github_URL,
-          MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch,
-          MiaoPluginMBT.paths.LocalTuKuPath2,
-          this.logger
-        )
-        nodeName2 = result2.nodeName || '未知(失败)'
-        if (!result2.success) {
-          this.logger.warn(`${this.logPrefix} 二号仓库下载失败。`)
-          if (!finalUserMessage) finalUserMessage = '核心文件OK，扩展文件下载失败。'
-        } else {
-          this.logger.info(`${this.logPrefix} 二号仓库下载成功 (${nodeName2})`)
+        if (!Repo1Exists && Repo2Exists) {
+            this.isGitRunning = false;
+            await e.reply(`${this.logPrefix} 状态异常！二号仓库存在一号仓库缺失！建议 #重置。`);
+            return true;
         }
-      } else if (Repo2UrlConfigured && Repo2Exists) {
-        nodeName2 = '本地'
-      } else if (!Repo2UrlConfigured) {
-        nodeName2 = '未配置'
-      }
-      if (overallSuccess) {
-        const duration = ((Date.now() - startTime) / 1000).toFixed(1)
-        this.logger.info(`${this.logPrefix} 下载流程完成，耗时 ${duration} 秒。`)
-        this.logger.info(`${this.logPrefix} 执行下载后设置...`)
-        await MiaoPluginMBT.RunPostDownloadSetup(e, this.logger)
-        this.logger.info(`${this.logPrefix} 下载后处理完成。`)
-        if (!finalUserMessage) finalUserMessage = '『咕咕牛』成功进入喵喵里面！'
-        await e.reply(finalUserMessage)
+
+        //await e.reply(`${this.logPrefix} 开始并行下载图库仓库...`).catch(()=>{});
+        //this.logger.info(`${this.logPrefix} [并行下载] 开始...`);
+
+        const downloadPromises = [];
+
+        if (!Repo1Exists) {
+            //this.logger.info(`${this.logPrefix} [并行下载] 添加一号仓库下载任务。`);
+            downloadPromises.push( MiaoPluginMBT.DownloadRepoWithFallback( 1, Default_Config.Main_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, MiaoPluginMBT.paths.LocalTuKuPath, e, this.logger ).then(result => ({ repo: 1, ...result })) );
+        } else {
+            this.logger.info(`${this.logPrefix} [并行下载] 一号仓库已存在，跳过下载。`);
+            downloadPromises.push(Promise.resolve({ repo: 1, success: true, nodeName: '本地' }));
+        }
+
+        if (Repo2UrlConfigured && !Repo2Exists) {
+           // this.logger.info(`${this.logPrefix} [并行下载] 添加二号仓库下载任务。`);
+            downloadPromises.push( MiaoPluginMBT.DownloadRepoWithFallback( 2, MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, MiaoPluginMBT.paths.LocalTuKuPath2, null, this.logger ).then(result => ({ repo: 2, ...result })) );
+        } else if (Repo2UrlConfigured && Repo2Exists) {
+             this.logger.info(`${this.logPrefix} [并行下载] 二号仓库已存在，跳过下载。`);
+             downloadPromises.push(Promise.resolve({ repo: 2, success: true, nodeName: '本地' }));
+        } else {
+             this.logger.info(`${this.logPrefix} [并行下载] 二号仓库未配置，跳过下载。`);
+             downloadPromises.push(Promise.resolve({ repo: 2, success: true, nodeName: '未配置' }));
+        }
+
+        const results = await Promise.allSettled(downloadPromises);
+        this.logger.info(`${this.logPrefix} [并行下载] 所有下载任务已完成 (settled)。`);
+
+        repo1Result = results.find(r => r.status === 'fulfilled' && r.value.repo === 1)?.value || results.find(r => r.status === 'rejected' && r.reason.repo === 1)?.reason || { repo: 1, success: false, nodeName: '未知错误', error: new Error('Repo 1 promise missing') };
+        repo2Result = results.find(r => r.status === 'fulfilled' && r.value.repo === 2)?.value || results.find(r => r.status === 'rejected' && r.reason.repo === 2)?.reason || { repo: 2, success: true, nodeName: '未处理', error: new Error('Repo 2 promise missing') };
+
+        if (results[0]?.status === 'rejected') { repo1Result = { 
+          repo: 1, success: false, nodeName: '执行异常', error: results[0].reason }; 
+          //this.logger.error(`${this.logPrefix} [并行下载] 一号仓库 Promise rejected:`, results[0].reason); 
+        }
+        if (results[1]?.status === 'rejected') { repo2Result = { 
+          repo: 2, success: false, nodeName: '执行异常', error: results[1].reason }; 
+         // this.logger.error(`${this.logPrefix} [并行下载] 二号仓库 Promise rejected:`, results[1].reason); 
+        }
+
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        this.logger.info(`${this.logPrefix} [并行下载] 流程结束，耗时 ${duration} 秒。`);
+        this.logger.info(`${this.logPrefix} [并行下载] 结果 - Repo 1: ${repo1Result.success ? '成功' : '失败'} (${repo1Result.nodeName}), Repo 2: ${repo2Result.success ? '成功' : '失败'} (${repo2Result.nodeName})`);
+
+        let finalUserMessage = '';
+        overallSuccess = repo1Result.success;
+
+        if (overallSuccess) {
+          let repoStatusMessage = `『咕咕牛』\n一号仓库状态: 下载成功 (${repo1Result.nodeName})。`;
+          if (Repo2UrlConfigured) {
+              if (repo2Result.success) {
+                  repoStatusMessage += `\n二号仓库状态: ${repo2Result.nodeName === '本地' ? '已存在' : (repo2Result.nodeName === '未配置' ? '未配置' : '下载成功 ('+repo2Result.nodeName+')')}。`;
+              } else {
+                  repoStatusMessage += `\n⚠️ 二号仓库下载失败 (${repo2Result.nodeName})。`;
+                  this.logger.error(`${this.logPrefix} [并行下载] 二号仓库下载失败详情:`, repo2Result.error);
+              }
+          }
+          await e.reply(repoStatusMessage).catch(()=>{});
+          this.logger.info(`${this.logPrefix} [并行下载] 执行下载后设置...`);
+          await MiaoPluginMBT.RunPostDownloadSetup(e, this.logger);
+          this.logger.info(`${this.logPrefix} [并行下载] 下载后处理完成。`);
+          finalUserMessage = "『咕咕牛』成功进入喵喵里面！";
+          await e.reply(finalUserMessage).catch(()=>{});
+
       } else {
-        if (!finalUserMessage) finalUserMessage = '『咕咕牛』下载失败。'
-        await e.reply(finalUserMessage)
-        if (!Repo1Exists) await safeDelete(MiaoPluginMBT.paths.LocalTuKuPath)
-        if (Repo2UrlConfigured && !Repo2Exists) await safeDelete(MiaoPluginMBT.paths.LocalTuKuPath2)
+          finalUserMessage = `『咕咕牛』核心仓库下载失败 (${repo1Result.nodeName})。请检查日志或网络后重试。`;
+          await e.reply(finalUserMessage).catch(()=>{}); 
       }
     } catch (error) {
-      this.logger.error(`${this.logPrefix} 下载流程错误:`, error)
-      await MiaoPluginMBT.ReportError(e, '下载图库', error, `主:${nodeName1}, 副:${nodeName2}`, this.logger)
-      if (!Repo1Exists) await safeDelete(MiaoPluginMBT.paths.LocalTuKuPath)
-      if (Repo2UrlConfigured && !Repo2Exists) await safeDelete(MiaoPluginMBT.paths.LocalTuKuPath2)
+        this.logger.error(`${this.logPrefix} [DownloadTuKu] 顶层执行出错:`, error);
+        await this.ReportError(e, '下载图库顶层', error);
+        overallSuccess = false;
     } finally {
-      this.isGitRunning = false
+        this.isGitRunning = false;
+        //this.logger.info(`${this.logPrefix} [并行下载] isGitRunning 标志已重置为 false。`);
     }
-    return true
+    return true;
   }
+
   async UpdateTuKu(e, isScheduled = false) {
     if (!isScheduled && !(await this.CheckInit(e))) return false
     if (this.isGitRunning) {
@@ -1007,6 +1151,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return overallHasChanges
   }
+
   async ManageTuKu(e) {
     if (!(await this.CheckInit(e))) return true
     if (!e.isMaster) return e.reply(`${this.logPrefix} 仅主人可操作。`)
@@ -1287,6 +1432,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return true; 
   }
+
   async ManageTuKuOption(e) {
     if (!(await this.CheckInit(e))) return true
     if (!e.isMaster) return e.reply(`${this.logPrefix} 仅主人可操作。`)
@@ -1334,6 +1480,7 @@ export class MiaoPluginMBT extends plugin {
     await e.reply(message, true)
     return true
   }
+  
   async SetPurificationLevel(e) {
     if (!(await this.CheckInit(e))) return true
     if (!e.isMaster) return e.reply(`${this.logPrefix} 仅主人可操作。`)
@@ -1359,6 +1506,7 @@ export class MiaoPluginMBT extends plugin {
     })
     return true
   }
+
   async ManageUserBans(e) {
     if (!(await this.CheckInit(e))) return true
     const msg = e.msg.trim()
@@ -1490,6 +1638,7 @@ export class MiaoPluginMBT extends plugin {
     await this.PerformBanOperation(e, isAdding, targetRelativePath, targetFileName, actionVerb)
     return true
   }
+
   async PerformBanOperation(e, isAdding, targetRelativePath, targetFileName, actionVerb) {
     try {
       let configChanged = false
@@ -1540,6 +1689,7 @@ export class MiaoPluginMBT extends plugin {
       await this.ReportError(e, `${actionVerb}图片`, error, `目标: ${targetFileName}`)
     }
   }
+
   async FindRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true
     if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) return e.reply('『咕咕牛』核心库未下载！', true)
@@ -1605,6 +1755,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return true
   }
+
   async ExportSingleImage(e) {
     if (!(await this.CheckInit(e))) return true
     if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) return e.reply('『咕咕牛』核心库未下载！', true)
@@ -1669,7 +1820,8 @@ export class MiaoPluginMBT extends plugin {
       }
     }
     return true;
-    }
+  }
+
   async Help(e) {
     const networkHelpUrl = 'https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png'
     const localHelpPath = MiaoPluginMBT.paths.helpImagePath
@@ -1690,6 +1842,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return true
   }
+
   async PluginInfo(e) {
     if (!(await this.CheckInit(e))) return true
     const version = this.GetVersion()
@@ -1759,6 +1912,7 @@ export class MiaoPluginMBT extends plugin {
     await e.reply(systemInfo)
     return true
   }
+  
   async TriggerError(e) {
     if (!e.isMaster) return e.reply('仅限主人测试。')
     const match = e.msg.match(/#咕咕牛触发错误(?:\s*(git|fs|config|data|ref|type|Repo1|Repo2|notify|other))?/i)
@@ -1832,6 +1986,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return true
   }
+
   async ManualTestProxies(e) {
     if (!(await this.CheckInit(e))) return true
     await e.reply(`${this.logPrefix} 开始代理测速...`)
@@ -1874,6 +2029,7 @@ export class MiaoPluginMBT extends plugin {
   GetVersion() {
     return MiaoPluginMBT.GetVersionStatic()
   }
+
   async RunUpdateTask() {
     this.logger.info(`${this.logPrefix} 定时更新启动...`)
     if (!MiaoPluginMBT.isGloballyInitialized) {
@@ -1910,6 +2066,7 @@ export class MiaoPluginMBT extends plugin {
       }
     }
   }
+  
   async NotifyMasterUpdateSuccess(gitLog = '无日志') {
     const masters = Array.isArray(global.Bot?.master) ? global.Bot.master : [global.Bot?.master].filter(Boolean)
     if (!masters || masters.length === 0) {
@@ -1979,6 +2136,7 @@ export class MiaoPluginMBT extends plugin {
     )
     return MiaoPluginMBT.MBTConfig
   }
+
   static async SaveTuKuConfig(configData, loggerInstance = global.logger || console) {
     const dataToSave = { TuKuOP: configData.TuKuOP, PFL: configData.PFL, cronUpdate: configData.cronUpdate }
     try {
@@ -1993,6 +2151,7 @@ export class MiaoPluginMBT extends plugin {
       return false
     }
   }
+
   static async LoadImageData(forceReload = false, loggerInstance = global.logger || console) {
     if (MiaoPluginMBT.#imgDataCache?.length > 0 && !forceReload) return MiaoPluginMBT.#imgDataCache
     let data = null
@@ -2079,6 +2238,7 @@ export class MiaoPluginMBT extends plugin {
       return []
     }
   }
+
   static async ScanLocalImagesToBuildCache(loggerInstance = global.logger || console) {
     const fallbackCache = []
     const ReposToScan = []
@@ -2270,6 +2430,7 @@ export class MiaoPluginMBT extends plugin {
       return false
     }
   }
+
   static async SaveUserBans(loggerInstance = global.logger || console) {
     const sortedBans = Array.from(MiaoPluginMBT.#userBanSet).sort()
     try {
@@ -2372,6 +2533,7 @@ export class MiaoPluginMBT extends plugin {
       `${Default_Config.logPrefix} [应用封禁] 完成: 处理 ${deletePromises.length} 项, 删除 ${deletedCount} 文件。`
     )
   }
+
   static async DetermineTargetPath(relativePath) {
     if (!relativePath) return null
     const logger = global.logger || console
@@ -2412,6 +2574,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return null
   }
+
   static async FindImageAbsolutePath(relativePath) {
     if (!relativePath) return null
     const normalizedPath = relativePath.replace(/\\/g, '/')
@@ -2441,6 +2604,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return null
   }
+
   static async FindRoleAlias(inputName, loggerInstance = global.logger || console) {
     const cleanInput = inputName?.trim()
     if (!cleanInput) return { mainName: null, exists: false }
@@ -2465,6 +2629,7 @@ export class MiaoPluginMBT extends plugin {
     const dirExists = await MiaoPluginMBT.CheckRoleDirExists(cleanInput)
     return { mainName: cleanInput, exists: dirExists }
   }
+
   static async CheckRoleDirExists(roleName) {
     if (!roleName) return false
     const gameFolders = Object.values(MiaoPluginMBT.paths.sourceFolders).filter(
@@ -2525,96 +2690,132 @@ export class MiaoPluginMBT extends plugin {
       return null
     }
   }
-  static async DownloadSingleRepo(e, RepoNum, RepoUrl, branch, localPath, loggerInstance) {
-    const logPrefix = Default_Config.logPrefix
-    const RepoName = RepoNum === 1 ? '一号仓库' : '二号仓库'
-    loggerInstance.info(`${logPrefix} [下载仓库] ${RepoName}: ${RepoUrl}`)
-    let bestProxyInfo = null,
-      cloneUrl = '',
-      nodeName = '未知',
-      proxyForEnv = null,
-      success = false
+  
+  static async DownloadRepoWithFallback(repoNum, repoUrl, branch, localPath, eForProgress, loggerInstance) {
+    const logPrefix = Default_Config.logPrefix;
+    const repoName = repoNum === 1 ? '一号仓库' : '二号仓库';
+    const baseRawUrl = repoNum === 1 ? RAW_URL_Repo1 : RAW_URL_Repo2;
+    loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 开始下载: ${repoUrl}`);
+    let sourcesToTry = [];
+    let allTestResults = [];
     try {
-      if (RepoNum === 1 && e) {
-        //await e.reply(`${logPrefix} 测试网络...`)
-        const speeds = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, loggerInstance)
-        bestProxyInfo = MiaoPluginMBT.SelectBestProxy(speeds, loggerInstance)
-        let speedMsg = `${logPrefix} 节点测速:\n\n`
-        speeds.forEach(s => {
-          speedMsg += `${s.name}: ${s.speed === Infinity ? '超时❌' : `${s.speed}ms✅`} (P:${s.priority ?? 'N'})\n`
-        })
-        if (bestProxyInfo) {
-          cloneUrl =
-            bestProxyInfo.name === 'GitHub' ? RepoUrl : `${bestProxyInfo.cloneUrlPrefix.replace(/\/$/, '')}/${RepoUrl}`
-          nodeName = `${bestProxyInfo.name}(代理)`
-          try {
-            const parsedPrefix = new URL(bestProxyInfo.cloneUrlPrefix)
-            if (['http:', 'https:'].includes(parsedPrefix.protocol)) proxyForEnv = parsedPrefix.origin
-          } catch {}
-          loggerInstance.info(`${logPrefix} [下载仓库] ${RepoName} 选定代理: ${nodeName}`)
-          await e.reply(speedMsg + `\n✅ 优选: ${bestProxyInfo.name}(${bestProxyInfo.speed}ms)\n⏳ 开始下载了.......`)
-        } else {
-          cloneUrl = RepoUrl
-          nodeName = 'GitHub(直连)'
-          proxyForEnv = null
-          loggerInstance.warn(`${logPrefix} [下载仓库] ${RepoName} 代理超时`)
-          await e.reply(speedMsg + '\n\n⚠️代理超时🚨尝试直连Github')
+        allTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance);
+        sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+    } catch (testError) {
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 代理测速失败:`, testError);
+        const githubSource = Default_Config.proxies.find(p => p.name === 'GitHub');
+        if (githubSource) {
+            sourcesToTry.push({...githubSource, speed: Infinity});
+            allTestResults = Default_Config.proxies.map(p => ({...p, speed: Infinity}));
         }
-      } else {
-        cloneUrl = RepoUrl
-        nodeName = 'GitHub(直连)'
-        proxyForEnv = null
-      }
-      await fsPromises.mkdir(path.dirname(localPath), { recursive: true })
-      const cloneArgs = [
-        'clone',
-        `--depth=${Default_Config.gitCloneDepth}`,
-        '--progress',
-        cloneUrl,
-        localPath,
-      ]
-      const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false }
-      if (proxyForEnv) gitOptions.env = { ...process.env, HTTPS_PROXY: proxyForEnv, HTTP_PROXY: proxyForEnv }
-      let progressReported = { 10: false, 50: false, 90: false }
-      const cloneResult = await ExecuteCommand(
-        'git',
-        cloneArgs,
-        gitOptions,
-        Default_Config.gitCloneTimeout,
-        stderrChunk => {
-          if (RepoNum === 1 && e) {
-            const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/)
-            if (match?.[1]) {
-              const progress = parseInt(match[1], 10)
-              ;[10, 50, 90].forEach(t => {
-                if (progress >= t && !progressReported[t]) {
-                  progressReported[t] = true
-                  const msg = t === 90 ? `『咕咕牛』${RepoName}下载: 90%...` : `『咕咕牛』${RepoName}下载: ${t}%`
-                  e.reply(msg).catch(() => {})
-                }
-              })
-            }
-          }
-        }
-      )
-      loggerInstance.info(`${logPrefix} [下载仓库] ${RepoName} clone 成功 (${nodeName})`)
-      success = true
-    } catch (error) {
-      loggerInstance.error(`${logPrefix} [下载仓库] ${RepoName} 操作失败。`)
-      success = false
-      if (RepoNum === 1 && e)
-        await MiaoPluginMBT.ReportError(
-          e,
-          `下载${RepoName}`,
-          error,
-          `节点:${nodeName}, URL:${cloneUrl}`,
-          loggerInstance
-        )
-      else loggerInstance.error(error)
-      await safeDelete(localPath)
     }
-    return { success, nodeName }
+
+    if (eForProgress && repoNum === 1 && allTestResults.length > 0) {
+        try {
+            let speedMsg = `${logPrefix} 节点测速:\n\n`;
+            allTestResults.sort((a, b) => {
+                const prioA = a.priority ?? 999; const prioB = b.priority ?? 999;
+                if (prioA !== prioB) return prioA - prioB;
+                const speedA = a.speed === Infinity || a.testUrlPrefix === null ? Infinity : a.speed;
+                const speedB = b.speed === Infinity || b.testUrlPrefix === null ? Infinity : b.speed;
+                return speedA - speedB;
+            });
+            allTestResults.forEach(s => {
+                let status = '';
+                if (s.testUrlPrefix === null) { status = 'N/A ⚠️'; }
+                else if (s.speed === Infinity) { status = '超时❌'; }
+                else { status = `${s.speed}ms✅`; }
+                speedMsg += `${s.name}: ${status} (P:${s.priority ?? 'N'})\n`;
+            });
+            const bestSource = sourcesToTry[0];
+            if (bestSource) {
+                 let bestSpeed = '';
+                 if (bestSource.testUrlPrefix === null) bestSpeed = 'N/A';
+                 else if (bestSource.speed === Infinity) bestSpeed = 'Timeout';
+                 else bestSpeed = `${bestSource.speed}ms`;
+                 speedMsg += `\n✅ 优选: ${bestSource.name}(${bestSpeed})`;
+            } else { speedMsg += `\n❌ 无可用下载源`; }
+            speedMsg += `\n⏳ 开始下载了.......`;
+            await eForProgress.reply(speedMsg).catch(()=>{});
+        } catch (replyError) { 
+          loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 回复测速结果失败:`, replyError); 
+        }
+    }
+
+    if (sourcesToTry.length === 0) {
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 没有任何可用的下载源！`);
+        return { success: false, nodeName: '无可用源' };
+    }
+
+    let lastError = null;
+    for (const source of sourcesToTry) {
+        const nodeName = source.name === 'GitHub' ? 'GitHub(直连)' : `${source.name}(代理)`;
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 尝试使用源: ${nodeName}`);
+        let cloneUrl = ''; let proxyForEnv = null;
+        if (source.name === 'GitHub') { cloneUrl = repoUrl; }
+        else if (source.cloneUrlPrefix) {
+            if (source.name === 'GitClone') { cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl.replace(/^https?:\/\//, '')}`; }
+            else { cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl}`; }
+        } else {
+           loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 源 ${source.name} 没有有效的 cloneUrlPrefix，跳过。`); 
+           continue; 
+          }
+        if (source.name !== 'GitHub' && source.cloneUrlPrefix) {
+             try {
+                const proxyUrl = new URL(source.cloneUrlPrefix);
+                if (['http:', 'https:'].includes(proxyUrl.protocol)) proxyForEnv = proxyUrl.origin;
+             } catch (urlError) { 
+              loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 无法解析代理 ${source.name} 的 cloneUrlPrefix: ${urlError.message}`); 
+            }
+        }
+        const cloneArgs = ['clone', `--depth=${Default_Config.gitCloneDepth}`, '--progress', cloneUrl, localPath];
+        const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+        if (proxyForEnv) {
+            gitOptions.env = { ...process.env, HTTP_PROXY: proxyForEnv, HTTPS_PROXY: proxyForEnv };
+            //loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 为 Git 命令设置了代理环境变量: ${proxyForEnv}`);
+        } else {
+           loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 未设置代理环境变量。`); 
+          }
+        try {
+            let progressReported = { 10: false, 50: false, 90: false };
+            const cloneResult = await ExecuteCommand(
+                'git', cloneArgs, gitOptions, Default_Config.gitCloneTimeout,
+                stderrChunk => {
+                    if (repoNum === 1 && eForProgress) {
+                        const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
+                        if (match?.[1]) {
+                            const progress = parseInt(match[1], 10);
+                            [10, 50, 90].forEach(t => {
+                                if (progress >= t && !progressReported[t]) {
+                                    progressReported[t] = true;
+                                    const msg = `『咕咕牛』聚合下载: ${t}%... (${nodeName})`;
+                                    eForProgress.reply(msg).catch(() => {});
+                                }
+                            });
+                        }
+                    } else if (repoNum !== 1) { const match = stderrChunk.match(/(Receiving objects|Resolving deltas):\s*(\d+)%/); if (match) loggerInstance.debug(`${logPrefix} [下载进度 ${repoName}] (${nodeName}) ${match[1]}: ${match[2]}%`); }
+                }
+            );
+            loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载成功！`);
+            return { success: true, nodeName: nodeName };
+        } catch (error) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载失败。`); loggerInstance.error(error);
+            lastError = error;
+            loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 尝试清理失败的目录: ${localPath}`);
+            await safeDelete(localPath);
+            await common.sleep(1000);
+            if (eForProgress && repoNum === 1) await eForProgress.reply(`${logPrefix} 使用 ${nodeName} 下载 ${repoName} 失败，尝试下一个源...`).catch(()=>{});
+        }
+    }
+    loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 尝试了所有可用源，均下载失败！`);
+    if (repoNum === 1 && eForProgress) {
+       await MiaoPluginMBT.ReportError(eForProgress, `下载${repoName}`, lastError || new Error("所有源下载失败"), `尝试源: ${sourcesToTry.map(s=>s.name).join(', ')}`, loggerInstance); 
+      
+    }else{
+       loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 最终错误:`, lastError || "未知错误"); }
+    return { success: false, nodeName: '所有源失败', error: lastError };
   }
+
   static async UpdateSingleRepo(e, RepoNum, localPath, RepoName, RepoUrl, branch, isScheduled, loggerInstance) {
     const logPrefix = Default_Config.logPrefix
     loggerInstance.info(`${logPrefix} [更新仓库] ${RepoName}: ${localPath}`)
@@ -2691,6 +2892,7 @@ export class MiaoPluginMBT extends plugin {
     }
     return { success, hasChanges, log: latestLog }
   }
+
   static async RunPostDownloadSetup(e, loggerInstance = global.logger || console) {
     loggerInstance.info(`${Default_Config.logPrefix} [下载后设置] 开始...`)
     try {
@@ -2715,6 +2917,7 @@ export class MiaoPluginMBT extends plugin {
       if (e) await MiaoPluginMBT.ReportError(e, '安装后设置', error, '', loggerInstance)
     }
   }
+
   static async RunPostUpdateSetup(e, isScheduled = false, loggerInstance = global.logger || console) {
     //loggerInstance.info(`${Default_Config.logPrefix} [更新后设置] 开始...`)
     try {
@@ -2745,6 +2948,7 @@ export class MiaoPluginMBT extends plugin {
       }
     }
   }
+
   static async SyncFilesToCommonRes(loggerInstance = global.logger || console) {
     await fsPromises.mkdir(MiaoPluginMBT.paths.commonResPath, { recursive: true })
     let s = 0,
@@ -2767,6 +2971,7 @@ export class MiaoPluginMBT extends plugin {
     }
     loggerInstance.info(`${Default_Config.logPrefix} [同步公共] 完成: ${s}成功, ${f}失败/跳过。`)
   }
+
   static async SyncSpecificFiles(loggerInstance = global.logger || console) {
     let s = 0,
       f = 0
@@ -2791,6 +2996,7 @@ export class MiaoPluginMBT extends plugin {
     }
     loggerInstance.info(`${Default_Config.logPrefix} [同步特定] 完成: ${s}成功, ${f}失败/跳过。`)
   }
+
   static async SyncCharacterFolders(loggerInstance = global.logger || console) {
     //loggerInstance.info(`${Default_Config.logPrefix} [同步角色] 开始...`)
     //loggerInstance.info(`${Default_Config.logPrefix} [同步角色] 清理目标...`)
@@ -2902,6 +3108,7 @@ export class MiaoPluginMBT extends plugin {
         loggerInstance.error(`${Default_Config.logPrefix} [清理目标] 读取 ${targetPluginDir} 失败:`, readBaseErr)
     }
   }
+
   static async RestoreFileFromSource(relativePath, loggerInstance = global.logger || console) {
     const sourcePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath)
     if (!sourcePath) {
@@ -2921,103 +3128,97 @@ export class MiaoPluginMBT extends plugin {
       return false
     }
   }
-  static async TestProxies(rawBaseUrl = RAW_URL_Repo1, loggerInstance = global.logger || console) {
-    const testFile = Default_Config.proxyTestFile;
-    const timeoutDuration = 3000;
-    const results = [];
-    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 基准: ${rawBaseUrl} (${timeoutDuration}ms 超时)`);
 
-    const testTasks = Default_Config.proxies.map(async (proxy) => {
+  static async TestProxies(baseRawUrl, loggerInstance = global.logger || console) {
+    const testFile = Default_Config.proxyTestFile;
+    const timeoutDuration = Default_Config.proxyTestTimeout;
+    //loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 基准: ${baseRawUrl} (${timeoutDuration}ms 超时)`);
+    const testPromises = Default_Config.proxies.map(async (proxy) => { 
       let testUrl = '';
       let speed = Infinity;
-      const proxyName = proxy.name;
+      if (!proxy || typeof proxy !== 'object') {
+          loggerInstance.error(`${Default_Config.logPrefix} [网络测速] 遇到无效的代理配置项: ${proxy}`);
+          return { name: '无效配置', speed: Infinity, priority: 9999, cloneUrlPrefix: null, testUrlPrefix: null };
+      }
+
+      const proxyName = proxy.name || '未命名'; 
+      if (proxy.testUrlPrefix === null) {
+          loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 代理 ${proxyName} 配置为不可测速，跳过。`);
+          return { name: proxyName, speed: Infinity, priority: proxy.priority ?? 999, cloneUrlPrefix: proxy.cloneUrlPrefix, testUrlPrefix: null };
+      }
 
       try {
         if (proxy.name === 'GitHub') {
-          testUrl = rawBaseUrl + testFile;
+          testUrl = baseRawUrl + testFile;
         } else if (proxy.testUrlPrefix) {
-
-          testUrl = proxy.testUrlPrefix + testFile;
-
-          try {
-             testUrl = new URL(testUrl).toString();
-          } catch(urlError) {
-             loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] 构造的代理URL (${testUrl}) 格式可能不规范:`, urlError.message);
-          }
+          testUrl = proxy.testUrlPrefix.replace(/\/$/, '') + testFile;
+          try { new URL(testUrl); } catch(urlError) { loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] 构造的代理URL (${testUrl}) 格式可能不规范:`, urlError.message); }
         } else {
            loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] 代理 ${proxyName} 缺少 testUrlPrefix，跳过测试。`);
-           results.push({ name: proxyName, speed: Infinity, priority: proxy.priority ?? 0, cloneUrlPrefix: proxy.cloneUrlPrefix });
-           return;
+           return { name: proxyName, speed: Infinity, priority: proxy.priority ?? 999, cloneUrlPrefix: proxy.cloneUrlPrefix, testUrlPrefix: proxy.testUrlPrefix };
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-           loggerInstance.debug(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时触发 (>${timeoutDuration}ms)`);
-           controller.abort();
-        }, timeoutDuration);
-        
-
+        const timeoutId = setTimeout(() => { controller.abort(); }, timeoutDuration);
         const startTime = Date.now();
+
         try {
             const response = await fetch(testUrl, { method: 'GET', signal: controller.signal });
             clearTimeout(timeoutId);
             speed = Date.now() - startTime;
             if (!response.ok) {
-                loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 请求成功但状态码非 OK: ${response.status}`);
+                loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 状态码非 OK: ${response.status}`);
                 speed = Infinity;
             }
         } catch (fetchError) {
             clearTimeout(timeoutId);
             if (fetchError.name === 'AbortError') {
                  speed = Infinity;
+                 loggerInstance.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时 (>${timeoutDuration}ms)`);
             } else {
-                 loggerInstance.error(`${Default_Config.logPrefix} [网络测速] 节点 ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message} (Cause: ${fetchError.cause?.code || fetchError.cause?.message || 'N/A'})`);
+                 loggerInstance.error(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message}`);
                  speed = Infinity;
             }
         }
-
       } catch (error) {
           loggerInstance.error(`${Default_Config.logPrefix} [网络测速] 处理节点 ${proxyName} 时出错:`, error);
           speed = Infinity;
       }
 
-      results.push({
+      return {
         name: proxyName,
         speed: speed,
-        priority: proxy.priority ?? 0,
+        priority: proxy.priority ?? 999,
         cloneUrlPrefix: proxy.cloneUrlPrefix,
-      });
+        testUrlPrefix: proxy.testUrlPrefix
+      };
     });
+    const results = await Promise.all(testPromises);
 
-    await Promise.all(testTasks);
-    results.sort((a, b) => {
-        if (a.speed === Infinity && b.speed !== Infinity) return 1;
-        if (a.speed !== Infinity && b.speed === Infinity) return -1;
-        if (a.speed === Infinity && b.speed === Infinity) return (a.priority ?? 999) - (b.priority ?? 999);
-        if (a.priority !== b.priority) return (a.priority ?? 999) - (b.priority ?? 999);
-        return a.speed - b.speed;
-      });
-
-    loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 完成。`);
-    return results;
+    //loggerInstance.info(`${Default_Config.logPrefix} [网络测速] 完成。`);
+    return results; 
   }
 
-
-  static SelectBestProxy(speeds, loggerInstance = global.logger || console) {
-    if (!speeds || speeds.length === 0) return null
-    const available = speeds.filter(s => s.speed !== Infinity && (s.name === 'GitHub' || s.cloneUrlPrefix))
-    if (available.length === 0) return null
+  static GetSortedAvailableSources(speeds, includeUntestable = false, loggerInstance = global.logger || console) {
+    if (!speeds || speeds.length === 0) return [];
+    const available = speeds.filter(s => {
+      const testedOK = s.speed !== Infinity && (s.name === 'GitHub' || s.cloneUrlPrefix);
+      const untestableButValid = includeUntestable && s.testUrlPrefix === null && s.cloneUrlPrefix;
+      return testedOK || untestableButValid;
+    });
+    if (available.length === 0) { loggerInstance.warn(`${Default_Config.logPrefix} [选择源] 没有找到可用的下载源！`); return []; }
     available.sort((a, b) => {
-      const prioA = a.priority ?? 0
-      const prioB = b.priority ?? 0
-      if (prioA !== prioB) return prioA - prioB
-      return a.speed - b.speed
-    })
-    const best = available[0]
-    if (best) loggerInstance.info(`${Default_Config.logPrefix} [选择代理] 最佳: ${best.name} (${best.speed}ms)`)
-    else loggerInstance.warn(`${Default_Config.logPrefix} [选择代理] 无可用代理！`)
-    return best
+      const prioA = a.priority ?? 999; const prioB = b.priority ?? 999;
+      if (prioA !== prioB) return prioA - prioB;
+      const speedA = a.speed === Infinity || a.testUrlPrefix === null ? Infinity : a.speed;
+      const speedB = b.speed === Infinity || b.testUrlPrefix === null ? Infinity : b.speed;
+      return speedA - speedB;
+    });
+    const sourceNames = available.map(s => `${s.name}(P:${s.priority ?? 'N'}${s.speed !== Infinity ? `, ${s.speed}ms` : (s.testUrlPrefix === null ? ', N/A' : ', Timeout')})`);
+    loggerInstance.info(`${Default_Config.logPrefix} [选择源] 可用源排序: ${sourceNames.join(' > ')}`);
+    return available;
   }
+
   static GetVersionStatic() {
     try {
       const pkgPath = path.resolve(__dirname, '..', 'package.json')
