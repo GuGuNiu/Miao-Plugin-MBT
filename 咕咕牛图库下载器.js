@@ -93,7 +93,7 @@ const Default_Config = {
         cloneUrlPrefix: 'https://ghproxy.net/'
     },
     {
-        name: 'GhDdlcTop',
+        name: 'GhddlcTop',
         priority: 55,
         testUrlPrefix: `https://gh.ddlc.top/${RAW_URL_Repo1}`,
         cloneUrlPrefix: 'https://gh.ddlc.top/'
@@ -2903,6 +2903,16 @@ export class MiaoPluginMBT extends plugin {
     try {
       await MiaoPluginMBT.LoadTuKuConfig(true, loggerInstance)
       await MiaoPluginMBT.SyncFilesToCommonRes(loggerInstance)
+      const sourceHtmlDir = path.join(MiaoPluginMBT.paths.LocalTuKuPath, 'GuGuNiu-Gallery', 'html');
+      const targetHtmlDir = path.join(MiaoPluginMBT.paths.commonResPath, 'html');
+      loggerInstance.info(`${Default_Config.logPrefix} [下载后设置] 同步 HTML 资源文件夹...`);
+      try {
+          await copyFolderRecursive(sourceHtmlDir, targetHtmlDir, loggerInstance); 
+          loggerInstance.info(`${Default_Config.logPrefix} [下载后设置] HTML 资源文件夹同步成功。`);
+      } catch (htmlSyncError) {
+          loggerInstance.error(`${Default_Config.logPrefix} [下载后设置] 同步 HTML 资源文件夹失败:`, htmlSyncError);
+          if (e) await MiaoPluginMBT.ReportError(e, '同步HTML资源', htmlSyncError, '', loggerInstance);
+      }
       const imageData = await MiaoPluginMBT.LoadImageData(true, loggerInstance)
       MiaoPluginMBT.#imgDataCache = Object.freeze(imageData)
       await MiaoPluginMBT.LoadUserBans(true, loggerInstance)
@@ -2929,6 +2939,17 @@ export class MiaoPluginMBT extends plugin {
       //loggerInstance.info(`${Default_Config.logPrefix} [更新后设置] 加载配置数据...`)
       await MiaoPluginMBT.LoadTuKuConfig(true, loggerInstance)
       await MiaoPluginMBT.SyncFilesToCommonRes(loggerInstance)
+      const sourceHtmlDir = path.join(MiaoPluginMBT.paths.LocalTuKuPath, 'GuGuNiu-Gallery', 'html');
+      const targetHtmlDir = path.join(MiaoPluginMBT.paths.commonResPath, 'html');
+      loggerInstance.info(`${Default_Config.logPrefix} [更新后设置] 同步 HTML 资源文件夹...`);
+      try {
+          await copyFolderRecursive(sourceHtmlDir, targetHtmlDir, loggerInstance);
+          loggerInstance.info(`${Default_Config.logPrefix} [更新后设置] HTML 资源文件夹同步成功。`);
+      } catch (htmlSyncError) {
+          loggerInstance.error(`${Default_Config.logPrefix} [更新后设置] 同步 HTML 资源文件夹失败:`, htmlSyncError);
+          if (!isScheduled && e) await MiaoPluginMBT.ReportError(e, '同步HTML资源', htmlSyncError, '', loggerInstance);
+          else if (isScheduled) loggerInstance.error(`${Default_Config.logPrefix} [定时更新] 同步 HTML 失败: ${htmlSyncError.message}`);
+      }
       const imageData = await MiaoPluginMBT.LoadImageData(true, loggerInstance)
       MiaoPluginMBT.#imgDataCache = Object.freeze(imageData)
       await MiaoPluginMBT.LoadUserBans(true, loggerInstance)
