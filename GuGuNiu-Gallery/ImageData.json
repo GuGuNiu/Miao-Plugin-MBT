@@ -20575,5 +20575,214 @@
         },
         "timestamp": "2025-04-23T04:21:54.169Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "gid": "3059951933",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦蕾莎Gu2.webp",
+        "attributes": {
+            "filename": "瓦蕾莎Gu2.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3659c70a708ddb7c98f20626ebc6e0fc",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:29.724Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "5459243204",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu4.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu4.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "435dbf82f757b1d3a6c0507c6f51667f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:33.851Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "3120139003",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu5.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu5.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fc12e058f5b57b14a2da862918120c19",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:36.371Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "2844141391",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu6.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu6.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f4d4a4bfc35fde04f405087f163bb82f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:38.946Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "1808419342",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu7.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu7.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f2762039db333663ec1d94e1ca1a02d0",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:41.458Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "2315649557",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu8.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu8.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "ca49b1c29d2d07ffd1f1ca81f1401687",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:45.372Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "6956880574",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu9.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu9.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c6706cbc5c551fa2eba3a9abdbf0b066",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:47.835Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "3203643014",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu10.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu10.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0af749f847d583ba16468b8b10162695",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:50.426Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "1292471009",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu11.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu11.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "afd5c3a01f5791deb2ee8622585738fe",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:52.972Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "7153938564",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu12.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu12.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0a93903ff4417baadd69166901f2edd5",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:55.514Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "gid": "1622322762",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu13.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu13.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6703791071797a98ae1dcbd021628063",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-04-26T02:25:58.034Z",
+        "sourceGallery": "gs-character"
     }
 ]
