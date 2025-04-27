@@ -38,7 +38,6 @@ const SPEEDTEST_HTML_TEMPLATE = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛测速报告</title>
     <style>
-        /* CSS 样式保持不变 */
         body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e0f2f7, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 500px; box-sizing: border-box; }
         .container { padding: 15px; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #0077cc; margin: 0 0 15px 0; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -2417,7 +2416,7 @@ export class MiaoPluginMBT extends plugin {
               `${logPrefix} [可视化] Puppeteer 生成第 ${batchNum}/${totalBatches} 批截图失败:`,
               screenshotError
             )
-            // 错误处理逻辑保持不变
+            // 错误处理逻辑
             if (screenshotError.message?.includes('加载html错误：undefined')) {
               logger.error(
                 `${logPrefix} [可视化] 批次 ${batchNum}: 截图失败，错误为 '加载html错误：undefined'。使用 tplFile 方式本不应发生此错误。`
