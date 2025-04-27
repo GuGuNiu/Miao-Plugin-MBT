@@ -11,7 +11,7 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js'
 
 /**
  * @description 咕咕牛图库管理器 - 双仓库增强版
- * @version 4.8.2-Mercury
+ * @version 4.8.2-Mercury-FIX
  * @based v4.1.10 & v4.6.6
  * @description_details
  *    - 实现双仓库并行下载及自动镜像源切换重试 (Fallback)。
@@ -24,7 +24,7 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js'
  *    - 结构化调试信息，角色详情转发，结构化测试日志，回滚数据，智能寻找，数据防干扰。
  *    - 内置SpeedTest测速模板
  *    - 检测本地冲突强制绕过用户更新
- *    - 可视化插件的全部格式的面板图
+ *    - 可视化插件内的全部格式的面板图
  */
 
 /**
@@ -555,7 +555,7 @@ export class MiaoPluginMBT extends plugin {
    */
   constructor() {
     super({
-      name: '『咕咕牛🐂』图库管理器 v4.8.2-Mercury',
+      name: '『咕咕牛🐂』图库管理器 v4.8.2-Mercury-FIX',
       dsc: '『咕咕牛🐂』图库管理器',
       event: 'message',
       priority: 500,
@@ -2081,7 +2081,7 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #查看 命令，显示指定角色的所有图片及状态。
-   *              【V4.8.2-Mercury 修正】实现分批发送合并转发消息，解决群聊发送限制问题。
+   *              【V4.8.2-Mercury-FIX 修正】实现分批发送合并转发消息，解决群聊发送限制问题。
    */
   async FindRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true
@@ -2678,139 +2678,103 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #咕咕牛测速 命令，测试代理节点速度并发送图片报告。
-   *              使用内置 HTML 模板，手动渲染后写入临时文件再截图。
+   *              使用外部 HTML 模板，手动渲染后写入临时文件再截图。
    */
   async ManualTestProxies(e) {
-    if (!(await this.CheckInit(e))) return true
-    await e.reply(`${this.logPrefix} 收到！开始火力全开测试网络节点...`, true)
-    const startTime = Date.now()
-    let speeds1 = [],
-      best1 = null
-    let tempHtmlFilePath = ''
-    let tempImgFilePath = ''
-    let renderedHtml = ''
+    if (!(await this.CheckInit(e))) return true;
+    await e.reply(`${this.logPrefix} 收到！开始火力全开测试网络节点...`, true);
+    const startTime = Date.now();
+    let speeds1 = [], best1 = null;
+    let tempHtmlFilePath = ''; 
+    let tempImgFilePath = '';
 
     try {
-      speeds1 = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, this.logger)
-      const available1 = MiaoPluginMBT.GetSortedAvailableSources(speeds1, true, this.logger)
-      best1 = available1[0] || null
-      const duration = ((Date.now() - startTime) / 1000).toFixed(1)
-      const processSpeeds = speeds => {
-        /* ... */ return speeds
+      speeds1 = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, this.logger);
+      const available1 = MiaoPluginMBT.GetSortedAvailableSources(speeds1, true, this.logger);
+      best1 = available1[0] || null;
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      const processSpeeds = speeds => { 
+        return speeds
           .map(s => {
-            let statusText = 'timeout'
-            if (s.testUrlPrefix === null) {
-              statusText = 'na'
-            } else if (Number.isFinite(s.speed) && s.speed >= 0) {
-              statusText = 'ok'
-            }
-            return { ...s, statusText }
+            let statusText = 'timeout';
+            if (s.testUrlPrefix === null) statusText = 'na';
+            else if (Number.isFinite(s.speed) && s.speed >= 0) statusText = 'ok';
+            return { ...s, statusText };
           })
-          .sort(
-            (a, b) =>
+          .sort((a, b) =>
               (a.priority ?? 999) - (b.priority ?? 999) ||
-              (a.speed === Infinity ? 1 : b.speed === Infinity ? -1 : a.speed - b.speed)
-          )
-      }
-      const processedSpeeds1 = processSpeeds(speeds1)
-      const renderData = { speeds1: processedSpeeds1, best1: best1, duration: duration }
+              (a.speed === Infinity || a.statusText === 'na' ? 1 : (b.speed === Infinity || b.statusText === 'na' ? -1 : a.speed - b.speed))
+          );
+      };
+      const processedSpeedsResult = processSpeeds(speeds1);
+      const renderData = { speeds1: processedSpeedsResult, best1: best1, duration: duration };
 
+      // 获取外部模板文件路径
+      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'speedtest.html');
       try {
-        // 检查或加载 art-template
-        if (typeof template !== 'function') {
-          try {
-            const artTemplate = await import('art-template')
-            template = artTemplate.default || artTemplate
-          } catch (tmplErr) {
-            throw new Error('无法加载 art-template 模板引擎')
-          }
-        }
-        // 渲染模板
-        renderedHtml = template.render(SPEEDTEST_HTML_TEMPLATE, renderData)
-        if (typeof renderedHtml !== 'string' || renderedHtml.length === 0) {
-          this.logger.error(`【调试】HTML 模板渲染失败或返回空字符串！类型: ${typeof renderedHtml}`)
-          throw new Error('模板渲染失败或返回空')
-        }
-        this.logger.debug(`${this.logPrefix} [手动测速] HTML 模板渲染完成，长度: ${renderedHtml.length}`)
-      } catch (renderErr) {
-        this.logger.error(`${this.logPrefix} [手动测速] 使用 art-template 渲染 HTML 失败:`, renderErr)
-        await e.reply('生成测速报告失败：模板渲染出错。').catch(() => {})
-        return true
+          await fsPromises.access(sourceHtmlPath); // 检查模板是否存在
+          this.logger.debug(`${this.logPrefix} [手动测速] 使用外部模板: ${sourceHtmlPath}`);
+      } catch (err) {
+          logger.error(`${this.logPrefix} [手动测速] 找不到外部模板文件: ${sourceHtmlPath}`, err);
+          await e.reply('生成测速报告失败：缺少 speedtest.html 模板文件。').catch(() => {});
+          return true;
       }
 
-      await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true })
+
+      await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
       tempHtmlFilePath = path.join(
         MiaoPluginMBT.paths.tempHtmlPath,
-        `speedtest-rendered-${Date.now()}-${Math.random().toString(16).slice(2)}.html`
-      )
+        `speedtest-manual-${Date.now()}-${Math.random().toString(16).slice(2)}.html`
+      );
       try {
-        await fsPromises.writeFile(tempHtmlFilePath, renderedHtml, 'utf8')
-        this.logger.debug(`${this.logPrefix} [手动测速] 已将渲染后的 HTML 写入临时文件: ${tempHtmlFilePath}`)
-      } catch (writeErr) {
-        this.logger.error(`${this.logPrefix} [手动测速] 写入渲染后的临时 HTML 文件失败:`, writeErr)
-        await e.reply('生成测速报告失败：无法创建渲染后的临时文件。').catch(() => {})
-        // 尝试清理可能已创建的空文件
-        if (fs.existsSync(tempHtmlFilePath)) {
-          try {
-            await fsPromises.unlink(tempHtmlFilePath)
-          } catch (e) {}
-        }
-        return true
+        await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath); 
+        this.logger.debug(`${this.logPrefix} [手动测速] 已将外部模板复制到临时文件: ${tempHtmlFilePath}`);
+      } catch (copyErr) {
+        this.logger.error(`${this.logPrefix} [手动测速] 复制模板文件失败:`, copyErr);
+        await e.reply('生成测速报告失败：无法创建临时模板文件。').catch(() => {});
+        return true;
       }
 
-      // 准备截图保存路径
-      await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true })
+
+      // 准备截图路径
+      await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
       tempImgFilePath = path.join(
         MiaoPluginMBT.paths.tempImgPath,
         `speedtest-${Date.now()}-${Math.random().toString(16).slice(2)}.png`
-      )
+      );
 
-      // 调用 Puppeteer，使用 tplFile 参数指向渲染后的临时 HTML 文件
       const img = await puppeteer.screenshot('guguniu-speedtest', {
-        tplFile: tempHtmlFilePath, // 指向包含数据的临时 HTML 文件
+        tplFile: tempHtmlFilePath, 
         savePath: tempImgFilePath,
         imgType: 'png',
         pageGotoParams: { waitUntil: 'networkidle0' },
+        ...renderData,           
         screenshotOptions: { fullPage: false },
         pageBoundingRect: { selector: 'body', padding: 0 },
         width: 540,
-      })
+      });
 
       if (img) {
-        await e.reply(img)
+        await e.reply(img);
       } else {
-        this.logger.error(`${this.logPrefix} [手动测速] 生成截图失败。`)
-        await e.reply('生成测速报告图片失败了，请看看日志。')
+        this.logger.error(`${this.logPrefix} [手动测速] 生成截图失败。`);
+        await e.reply('生成测速报告图片失败了，请看看日志。');
       }
     } catch (error) {
-      await this.ReportError(e, '手动网络测速', error)
+      await this.ReportError(e, '手动网络测速', error, `测速结果(原始): ${JSON.stringify(speeds1)}`);
     } finally {
-      // 清理临时的 HTML 和 PNG 文件
       if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) {
-        try {
-          await fsPromises.unlink(tempHtmlFilePath)
-        } catch (unlinkErr) {}
+        try { await fsPromises.unlink(tempHtmlFilePath); } catch (unlinkErr) {}
       }
       if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-        try {
-          await fsPromises.unlink(tempImgFilePath)
-        } catch (unlinkErr) {}
+        try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
       }
-      // 清理 Puppeteer 可能残留的别名目录
-      const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-speedtest')
+      const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-speedtest');
       if (fs.existsSync(possiblePuppeteerTempDir)) {
-        this.logger.warn(`${this.logPrefix} [清理] 检测到 Puppeteer 残留目录 ${possiblePuppeteerTempDir}，尝试删除...`)
-        try {
-          await safeDelete(possiblePuppeteerTempDir)
-        } catch (deleteErr) {
-          this.logger.error(
-            `${this.logPrefix} [清理] 删除 Puppeteer 残留目录 ${possiblePuppeteerTempDir} 失败:`,
-            deleteErr
-          )
-        }
+        try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) { }
       }
     }
-    return true
+    return true;
   }
 
   // --- 静态辅助方法 ---
@@ -4568,9 +4532,9 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, '..', 'package.json')
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      return pkg.version || '4.8.2-Mercury'
+      return pkg.version || '4.8.2-Mercury-FIX'
     } catch {
-      return '4.8.2-Mercury'
+      return '4.8.2-Mercury-FIX'
     }
   }
 }
