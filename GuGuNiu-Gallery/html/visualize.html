@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      角色图片可视化 - {{ characterName }} (第 {{ batchNum }}/{{ totalBatches }}批)
+    </title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 15px;
+        background-color: #f0f8ff;
+      }
+      .container {
+        max-width: 780px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 20px;
+      }
+      .sub-title {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+        padding: 0;
+        list-style: none;
+        grid-auto-rows: minmax(180px, auto);
+      }
+
+      .image-item {
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 8px;
+        background-color: #fff;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .image-item img {
+        display: block;
+        max-width: 100%;
+        max-height: 120px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 3px;
+        margin: auto;
+      }
+
+      .image-item .filename {
+        font-size: 11px;
+        color: #555;
+        word-break: break-all;
+        line-height: 1.3;
+        margin-top: auto;
+        padding-top: 8px;
+        flex-shrink: 0;
+      }
+
+      .filename.highlight-gu {
+        background-color: #f8d7da; 
+        color: #721c24;        
+        font-weight: bold;
+        padding: 2px 5px;     
+        border-radius: 3px;    
+        display: inline-block;  
+        margin-left: auto;    
+        margin-right: auto;   
+      }
+
+      .image-item .error-placeholder {
+        width: 100%;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+        color: #999;
+        font-size: 12px;
+        border-radius: 3px;
+        margin: auto;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 12px;
+        color: #aaa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>『{{ characterName }}』 已应用在插件内的面板图可视化</h1>
+      <div class="sub-title">
+        共 {{ imageCount }} 张 | 当前第 {{ batchNum }}/{{ totalBatches }} 批
+      </div>
+      <div class="image-grid">
+        {{ if images && images.length > 0 }}
+          {{ each images item index }}
+          <div class="image-item">
+            <img
+              src="{{ item.filePath }}"
+              alt="{{ item.fileName }}"
+              onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);"
+            />
+            <div class="filename {{if item.isGu}}highlight-gu{{/if}}">
+              {{ item.originalIndex + 1 }}. {{ item.fileName }}
+            </div>
+          </div>
+          {{ /each }}
+        {{ else }}
+          <p style="text-align: center; color: #888">
+            未能加载当前批次的图片信息。
+          </p>
+        {{ /if }}
+      </div>
+      <div class="footer">GuGuNiu-Gallery | v{{ pluginVersion }} by GuGuNiu</div>
+    </div>
+  </body>
+</html>
