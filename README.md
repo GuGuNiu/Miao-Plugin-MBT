@@ -8,8 +8,26 @@
   
 </div>
 
-## 📄支持的游戏
-- [✅] 原神   - [✅] 星铁    - [✅] 绝区零  - [✅] 鸣潮
+<br>
+
+## 📄简介
+
+&emsp;&emsp;图库管理器是咕咕牛图库的专用Js，本地冲突将会自动强制重置，所有操作都携带有结构化日志以及问题建议，80%操作都以图形化显示，支持多个原仓+多个镜像站全自动测速最优下载，图库已使用JSON作为索引数据源，请不要手动删除图库下载的任何文件，否则将无法通过Js初始化自检，自2025年起将提供超高清以上面板图
+
+> [!TIP]
+> 支持的插件列表：
+> - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
+> - 鹤望兰星铁插件正在适配中 
+> - ✅️原神 & ✅️星铁 & ✅️鸣潮 & ✅️绝区零 
+
+####  关于封禁 & 净化面板图
+
+> [!WARNING]
+> 如果不希望出现容易引起封号的面板图可以使用 #设置咕咕牛净化等级
+> - 0：无过滤
+> - 1：仅过滤R18，不过滤暗示和低挑逗性面板图
+> - 2：最高等级净化，过滤JSON数据内的全部被标记的敏感内容<br> <br>
+> - #咕咕牛封禁xxx 针对某一个面板图进行封禁，后续操作会围绕封禁列表，直至解封
 
 
 ## ⚠️ 使用须知
@@ -18,7 +36,7 @@
 
 ❗ **输入 #咕咕牛帮助 查看使用方式**
 
-## 🛠️ 安装指南
+## 🛠️ 安装
 
 ###  [Yunzai/Miao-Yunzai/TRSS-Yunzai]根目录下执行以下指令：
 
@@ -31,3 +49,13 @@ curl -sL "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕�
 ```bash
 curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js" -o "./plugins/example/咕咕牛图库下载器.js"
 ```
+<br>
+
+<div align="center">
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
+    <img src="https://s2.loli.net/2025/04/28/7b8ZwBKVhY6Xdny.webp" 
+         alt="帮助" 
+         width="1200" 
+         style="display: block; border-radius: 8px;">
+  </a>
+</div>
