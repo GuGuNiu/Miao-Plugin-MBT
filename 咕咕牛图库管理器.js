@@ -11,7 +11,7 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js'
 
 /**
  * @description 咕咕牛图库管理器 - 双仓库增强版
- * @version 4.8.2-Mercury-FIX
+ * @version 4.8.3
  * @based v4.1.10 & v4.6.6
  * @description_details
  *    - 实现双仓库并行下载及自动镜像源切换重试 (Fallback)。
@@ -31,59 +31,58 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js'
  * @description  测速报告内置模板
  */
 const SPEEDTEST_HTML_TEMPLATE = `
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛测速报告</title>
-    <style>
-        body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e0f2f7, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 500px; box-sizing: border-box; }
-        .container { padding: 15px; background-color: rgba(255, 255, 255, 0.8); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #0077cc; margin: 0 0 15px 0; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        h2 { font-size: 16px; color: #333; margin: 15px 0 10px 0; border-left: 4px solid #0077cc; padding-left: 8px; }
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px dashed #eee; }
-        li:last-child { border-bottom: none; }
-        .node-name { font-weight: bold; color: #555; flex-basis: 120px; flex-shrink: 0; }
-        .node-status { text-align: right; flex-grow: 1; }
-        .status-ok { color: #28a745; font-weight: bold; }
-        .status-timeout { color: #dc3545; font-weight: bold; }
-        .status-na { color: #aaa; }
-        .priority { color: #777; font-size: 0.9em; margin-left: 5px; }
-        .best-choice { margin-top: 15px; text-align: center; font-weight: bold; color: #0077cc; }
-        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>咕咕牛网络测速报告</h1>
-
-        {{ if speeds1 && speeds1.length > 0 }}
-        <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
-        <ul>
-            {{ each speeds1 s }}
-            <li>
-                <span class="node-name">{{ s.name }}</span>
-                <span class="node-status">
-                    {{ if s.statusText === 'ok' }}
-                        <span class="status-ok">{{ s.speed }}ms ✅</span>
-                    {{ else if s.statusText === 'na' }}
-                        <span class="status-na">N/A ⚠️</span>
-                    {{ else }}
-                        <span class="status-timeout">超时 ❌</span>
-                    {{ /if }}
-                    <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
-                </span>
-            </li>
-            {{ /each }}
-        </ul>
-        <div class="best-choice">✅ 优选: {{ best1 ? \`\${best1.name}(\${best1.testUrlPrefix === null ? 'N/A' : (Number.isFinite(best1.speed) && best1.speed >= 0 ? best1.speed + 'ms' : '超时')})\` : '无可用源' }}</div>
-        {{ /if }}
-        <div class="footer">测速耗时: {{ duration }}s | GuGuNiu</div>
-    </div>
-</body>
-</html>
+  <!DOCTYPE html>
+  <html lang="zh-CN">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>咕咕牛测速报告</title>
+      <style>
+          body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e0f2f7, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 500px; box-sizing: border-box; }
+          .container {padding: 15px;background-color: rgba(255, 255, 255, 0.8);border-radius: 10px;border: 1px rgba(0, 255, 85, 0.8) solid;box-shadow: 5px 5px 0 0 rgba(0, 255, 85, 0.3);}
+          h1 { text-align: center; color: rgba(7, 131, 48, 0.8); margin: 0 0 15px 0; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+          h2 { font-size: 16px; color: #333; margin: 15px 0 10px 0; border-left: 4px solid #0077cc; padding-left: 8px; }
+          ul { list-style: none; padding: 0; margin: 0; }
+          li { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px dashed #eee; }
+          li:last-child { border-bottom: none; }
+          .node-name { font-weight: bold; color: #555; flex-basis: 120px; flex-shrink: 0; }
+          .node-status { text-align: right; flex-grow: 1; }
+          .status-ok { color: #28a745; font-weight: bold; }
+          .status-timeout { color: #dc3545; font-weight: bold; }
+          .status-na { color: #aaa; }
+          .priority { color: #777; font-size: 0.9em; margin-left: 5px; }
+          .best-choice { margin-top: 20px;text-align: center;font-weight: 600;color: #00cc55;font-size: 1.05em;padding: 8px;background-color: rgba(0, 255, 64, 0.05);border-radius: 6px;}
+          .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <h1>咕咕牛网络测速报告</h1>
+          {{ if speeds1 && speeds1.length > 0 }}
+          <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
+          <ul>
+              {{ each speeds1 s }}
+              <li>
+                  <span class="node-name">{{ s.name }}</span>
+                  <span class="node-status">
+                      {{ if s.statusText === 'ok' }}
+                          <span class="status-ok">{{ s.speed }}ms ✅</span>
+                      {{ else if s.statusText === 'na' }}
+                          <span class="status-na">N/A ⚠️</span>
+                      {{ else }}
+                          <span class="status-timeout">超时 ❌</span>
+                      {{ /if }}
+                      <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
+                  </span>
+              </li>
+              {{ /each }}
+          </ul>
+          <div class="best-choice">✅ 优选: {{ best1 ? \`\${best1.name}(\${best1.testUrlPrefix === null ? 'N/A' : (Number.isFinite(best1.speed) && best1.speed >= 0 ? best1.speed + 'ms' : '超时')})\` : '无可用源' }}</div>
+          {{ /if }}
+          <div class="footer">测速耗时: {{ duration }}s | GuGuNiu</div>
+      </div>
+  </body>
+  </html>
 `
 
 // --- 全局常量与配置 ---
@@ -98,7 +97,7 @@ const Purify_Level = {
   NONE: 0,
   RX18_ONLY: 1,
   PX18_PLUS: 2,
-  getDescription: level => ({ 0: '不过滤', 1: '过滤 R18', 2: '过滤 R18 及 P18' }[level] ?? '未知'),
+  getDescription: level => ({ 0: '不过滤', 1: '过滤R18', 2: '过滤R18及P18' }[level] ?? '未知'),
 }
 
 /** @description Raw URL 测速 */
@@ -129,7 +128,11 @@ const Default_Config = {
       testUrlPrefix: `https://ghfast.top/${RAW_URL_Repo1}`,
       cloneUrlPrefix: 'https://ghfast.top/',
     },
-    { name: 'Ghp', priority: 20, testUrlPrefix: `https://ghp.ci/${RAW_URL_Repo1}`, cloneUrlPrefix: 'https://ghp.ci/' },
+    { name: 'Ghp',
+      priority: 20, 
+      testUrlPrefix: `https://ghp.ci/${RAW_URL_Repo1}`, 
+      cloneUrlPrefix: 'https://ghp.ci/' 
+    },
     {
       name: 'Ghgo',
       priority: 20,
@@ -173,7 +176,11 @@ const Default_Config = {
       cloneUrlPrefix: 'https://gh.ddlc.top/',
     },
     //----------- 不参与测速---不支持测速  Gitclone---------//
-    { name: 'GitClone', priority: 70, testUrlPrefix: null, cloneUrlPrefix: 'https://gitclone.com/' },
+    { name: 'GitClone', 
+      priority: 70, 
+      testUrlPrefix: null, 
+      cloneUrlPrefix: 'https://gitclone.com/' 
+    },
     //----------- 不参与测速---不支持测速  Gitclone---------//
     {
       name: 'Mirror',
@@ -216,12 +223,8 @@ const ERROR_CODES = {
 }
 
 // ========================================================================= //
-// ========================= 公共工具函数区域 ============================ //
+// ========================= 公共工具函数区域 =============================== //
 // ========================================================================= //
-/**
- * @description 通用工具
- */
-
 /**
  * @description 安全地递归删除文件或目录，带重试逻辑。
  */
@@ -241,9 +244,7 @@ async function safeDelete(targetPath, maxAttempts = 3, delay = 1000) {
           throw err
         }
         logger.warn(
-          `${Default_Config.logPrefix} [安全删除] ${targetPath} 失败 (${attempts}/${maxAttempts}): ${err.code}, ${
-            delay / 1000
-          }s 后重试...`
+          `${Default_Config.logPrefix} [安全删除] ${targetPath} 失败 (${attempts}/${maxAttempts}): ${err.code}, ${delay / 1000}s 后重试...`
         )
         await new Promise(resolve => setTimeout(resolve, delay))
       } else {
@@ -471,7 +472,9 @@ function FormatBytes(bytes, decimals = 1) {
   return `${formattedValue} ${sizes[i]}`
 }
 
+// ================================================================= //
 // ======================= 公共函数区域结束 ========================== //
+// ================================================================= //
 
 export class MiaoPluginMBT extends plugin {
   // --- 静态属性 ---
@@ -555,7 +558,7 @@ export class MiaoPluginMBT extends plugin {
    */
   constructor() {
     super({
-      name: '『咕咕牛🐂』图库管理器 v4.8.2-Mercury-FIX',
+      name: '『咕咕牛🐂』图库管理器 v4.8.3',
       dsc: '『咕咕牛🐂』图库管理器',
       event: 'message',
       priority: 500,
@@ -1529,69 +1532,88 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #启用/禁用咕咕牛 命令。
+   *              【V4.8.3 v4】修复状态未变时仍发送文字的问题。
    */
   async ManageTuKuOption(e) {
-    if (!(await this.CheckInit(e))) return true
-    if (!e.isMaster) return e.reply(`${this.logPrefix} 只有主人才能开关图库啦~`)
+    if (!(await this.CheckInit(e))) return true;
+    if (!e.isMaster) return e.reply(`${this.logPrefix} 只有主人才能开关图库啦~`);
 
-    const match = e.msg.match(/^#(启用|禁用)咕咕牛$/i)
-    if (!match) return false // 不是目标命令
+    const match = e.msg.match(/^#(启用|禁用)咕咕牛$/i);
+    if (!match) return false;
 
-    const action = match[1]
-    const enable = action === '启用'
-    let configChanged = false
-    let message = ''
+    const action = match[1];
+    const enable = action === '启用';
+    let configChanged = false;
+    let asyncError = null;
+    let saveWarning = '';
 
-    // 加载最新配置
-    await MiaoPluginMBT.LoadTuKuConfig(true, this.logger)
+    await MiaoPluginMBT.LoadTuKuConfig(true, this.logger);
+    const currentStatus = MiaoPluginMBT.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
 
-    // 检查是否已经是目标状态
-    if (MiaoPluginMBT.MBTConfig.TuKuOP === enable) {
-      message = `${this.logPrefix} 图库已经是「${action}」状态了，不用再设置啦。`
-    } else {
-      // 更新配置
-      MiaoPluginMBT.MBTConfig.TuKuOP = enable
-      configChanged = true
-      message = `${this.logPrefix} 图库已设为「${action}」。`
-      this.logger.info(`${this.logPrefix} 图库开关状态变更为 -> ${enable}`)
+    if (currentStatus === enable) {
+      // 优先尝试显示面板 
+      try {
+        await this.ShowSettingsPanel(e);
+        // 如果面板显示成功，就不需要再发文字了
+      } catch (panelError) {
+        this.logger.error(`${this.logPrefix} [${action}咕咕牛] 显示当前状态面板失败，发送文本回退:`, panelError);
+        await e.reply(`${this.logPrefix} 图库已经是「${action}」状态了，无需更改。`, true);
+      }
+      return true; 
+    }
 
-      // 根据启用/禁用执行相应操作
+    //await e.reply(`${this.logPrefix} 正在处理「${action}咕咕牛」请求，请稍候...`, true); 
+
+    configChanged = true;
+    MiaoPluginMBT.MBTConfig.TuKuOP = enable;
+    this.logger.info(`${this.logPrefix} 图库开关状态变更为 -> ${enable}`);
+
+    try {
+      this.logger.info(`${this.logPrefix} [${action}咕咕牛] 开始执行后台操作...`);
       if (enable) {
-        await e.reply(`${this.logPrefix} 正在启用图库并同步图片，请稍候...`)
-        try {
-          //启用时需要同步图片并应用封禁
-          await MiaoPluginMBT.SyncCharacterFolders(this.logger)
-          await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT.#imgDataCache, this.logger)
-          message += '\n图片已开始同步到插件目录。'
-        } catch (syncError) {
-          message += '\n⚠️ 但是同步图片时出错了！'
-          await this.ReportError(e, '启用同步', syncError)
-        }
+        await MiaoPluginMBT.SyncCharacterFolders(this.logger);
+        await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT.#imgDataCache, this.logger);
       } else {
-        await e.reply(`${this.logPrefix} 正在禁用图库并清理相关图片，请稍候...`)
-        try {
-          //禁用时需要清理目标插件目录
-          await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, this.logger)
-          await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, this.logger)
-          await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, this.logger)
-          message += '\n已清理插件目录中的图库图片。'
-        } catch (cleanError) {
-          message += '\n⚠️ 但是清理图片时出错了！'
-          await this.ReportError(e, '禁用清理', cleanError)
-        }
+        await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, this.logger);
+        await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, this.logger);
+        await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, this.logger);
+      }
+      this.logger.info(`${this.logPrefix} [${action}咕咕牛] 后台操作完成。`);
+    } catch (error) {
+      asyncError = error;
+      this.logger.error(`${this.logPrefix} [${action}咕咕牛] 后台操作失败:`, error);
+    }
+
+    if (configChanged) {
+      const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, this.logger);
+      if (!saveSuccess) {
+        saveWarning = '⚠️ 配置保存失败！设置可能不会持久生效。';
       }
     }
 
-    // 如果配置有变动，保存配置
-    if (configChanged) {
-      const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, this.logger)
-      if (!saveSuccess) message += '\n⚠️ 注意：配置保存失败了！'
+    let panelSent = false;
+    try {
+      let extraPanelMsg = '';
+      if (asyncError) extraPanelMsg += `\n(后台${action === '启用' ? '同步' : '清理'}时遇到问题)`;
+      if (saveWarning) extraPanelMsg += `\n${saveWarning}`;
+      await this.ShowSettingsPanel(e, extraPanelMsg.trim());
+      panelSent = true;
+    } catch (panelError) {
+      this.logger.error(`${this.logPrefix} [${action}咕咕牛] 显示设置面板失败，将发送文本回退:`, panelError);
+      panelSent = false;
     }
 
-    await e.reply(message, true)
-    return true
+    if (!panelSent) {
+      let finalUserMessage = `${this.logPrefix} 图库已设为「${action}」。`;
+      if (asyncError) finalUserMessage += `\n(但后台${enable ? '同步' : '清理'}时遇到问题，详见日志)`;
+      if (saveWarning) finalUserMessage += `\n${saveWarning}`;
+      await e.reply(finalUserMessage, true);
+    }
+
+    return true;
   }
 
+  
   /**
    * @description 处理 #咕咕牛 命令，显示插件版本、安装时间和系统信息。
    *
@@ -1646,10 +1668,10 @@ export class MiaoPluginMBT extends plugin {
       logMessages.push('--- 一号仓库未下载 ---')
     }
 
-    // 【新增】检查并获取二号仓库日志
+    // 检查并获取二号仓库日志
     if (Repo2Exists) {
       // 只有在二号仓库确实存在时才获取
-      const gitLog2 = await MiaoPluginMBT.GetTuKuLog(50, MiaoPluginMBT.paths.LocalTuKuPath2, this.logger) // 注意路径是 LocalTuKuPath2
+      const gitLog2 = await MiaoPluginMBT.GetTuKuLog(50, MiaoPluginMBT.paths.LocalTuKuPath2, this.logger) 
       if (gitLog2) {
         logMessages.push(`--- 二号仓库最近 50 条更新记录 ---\n${gitLog2}`)
       } else {
@@ -1707,53 +1729,88 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #设置咕咕牛净化等级 命令。
+   *              【V4.8.3 v4】修复状态未变时仍发送文字的问题。
    */
   async SetPurificationLevel(e) {
-    if (!(await this.CheckInit(e))) return true
-    if (!e.isMaster) return e.reply(`${this.logPrefix} 只有主人才能设置净化等级哦~`)
+    if (!(await this.CheckInit(e))) return true;
+    if (!e.isMaster) return e.reply(`${this.logPrefix} 只有主人才能设置净化等级哦~`);
 
-    const match = e.msg.match(/^(?:#设置咕咕牛净化等级|#设定净化)\s*([012])$/i)
-    if (!match?.[1]) return e.reply('格式不对哦，请用: #设置咕咕牛净化等级 [0/1/2]', true)
+    const match = e.msg.match(/^(?:#设置咕咕牛净化等级|#设定净化)\s*([012])$/i);
+    if (!match?.[1]) return e.reply('格式不对哦，请用: #设置咕咕牛净化等级 [0/1/2]', true);
 
-    const level = parseInt(match[1], 10)
-    // 校验等级是否有效
+    const level = parseInt(match[1], 10);
     if (isNaN(level) || !Purify_Level.getDescription(level))
-      return e.reply(`无效的净化等级: ${level}，只能是 0, 1, 或 2。`, true)
+      return e.reply(`无效的净化等级: ${level}，只能是 0, 1, 或 2。`, true);
 
-    // 加载最新配置
-    await MiaoPluginMBT.LoadTuKuConfig(true, this.logger)
-    const currentLevel = MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl
+    await MiaoPluginMBT.LoadTuKuConfig(true, this.logger);
+    const currentLevel = MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl;
 
-    // 检查是否已经是目标等级
-    if (level === currentLevel)
-      return e.reply(`${this.logPrefix} 净化等级已经是 ${level} (${Purify_Level.getDescription(level)}) 啦。`, true)
-
-    // 更新配置
-    MiaoPluginMBT.MBTConfig.PFL = level
-    this.logger.info(`${this.logPrefix} 净化等级设置为 -> ${level} (${Purify_Level.getDescription(level)})`)
-
-    // 保存配置
-    const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, this.logger)
-    let replyMessage = `${this.logPrefix} 净化等级已设为 ${level} (${Purify_Level.getDescription(level)})。`
-    // 添加 Px18 的解释
-    if (level === Purify_Level.PX18_PLUS) {
-      replyMessage += '\n(Px18 指轻微性暗示或低度挑逗性图片)'
+    if (level === currentLevel) {
+       // 优先尝试显示面板
+       try {
+           await this.ShowSettingsPanel(e);
+       } catch (panelError) {
+           this.logger.error(`${this.logPrefix} [净化设置] 显示当前状态面板失败，发送文本回退:`, panelError);
+           // 面板失败时发送文本 
+           await e.reply(`${this.logPrefix} 净化等级已经是 ${level} (${Purify_Level.getDescription(level)}) 啦。`, true);
+       }
+       return true;
     }
-    if (!saveSuccess) replyMessage += '\n⚠️ 但是配置保存失败了！设置可能不会持久生效。'
-    await e.reply(replyMessage, true)
 
-    // 异步在后台重新生成并应用封禁列表
+    //await e.reply(`${this.logPrefix} 正在设置净化等级为 ${level} 并应用更改，请稍候...`, true); // 保留这个简单的处理中提示
+
+    MiaoPluginMBT.MBTConfig.PFL = level;
+    this.logger.info(`${this.logPrefix} 净化等级设置为 -> ${level} (${Purify_Level.getDescription(level)})`);
+
+    const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, this.logger);
+    let saveWarning = '';
+    if (!saveSuccess) {
+        saveWarning = '⚠️ 但是配置保存失败了！设置可能不会持久生效。';
+    }
+
     setImmediate(async () => {
+      const logger = this.logger;
+      const logPrefix = this.logPrefix;
+      let asyncError = null;
       try {
-        await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT.#imgDataCache, this.logger)
-        this.logger.info(`${this.logPrefix} [净化设置] 新的净化等级 ${level} 已在后台应用。`)
+        logger.info(`${logPrefix} [净化设置] 后台开始应用新的净化等级 ${level}...`);
+        await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT.#imgDataCache, logger);
+        logger.info(`${logPrefix} [净化设置] 新的生效封禁列表已应用。`);
+        if (MiaoPluginMBT.MBTConfig.TuKuOP) {
+            logger.info(`${logPrefix} [净化设置] 图库已启用，开始重新同步角色文件夹...`);
+            await MiaoPluginMBT.SyncCharacterFolders(logger);
+            logger.info(`${logPrefix} [净化设置] 角色文件夹重新同步完成。`);
+        } else {
+             logger.info(`${logPrefix} [净化设置] 图库已禁用，跳过角色文件夹同步。`);
+        }
       } catch (applyError) {
-        this.logger.error(`${this.logPrefix} [净化设置] 后台应用新净化等级时出错:`, applyError)
-        // 在这里考虑是否需要通知主人后台任务失败
-      }
-    })
+        logger.error(`${logPrefix} [净化设置] 后台应用或同步时出错:`, applyError);
+        asyncError = applyError;
+      } finally {
+          let panelSent = false;
+          try {
+              let extraPanelMsg = '';
+              if (asyncError) extraPanelMsg += `\n(后台应用时遇到问题)`;
+              if (saveWarning) extraPanelMsg += `\n${saveWarning}`;
+              await this.ShowSettingsPanel(e, extraPanelMsg.trim());
+              panelSent = true;
+          } catch (panelError) {
+              logger.error(`${logPrefix} [净化设置] 显示设置面板失败，将发送文本回退:`, panelError);
+              panelSent = false;
+          }
 
-    return true
+          if (!panelSent) {
+              let finalUserMessage = `${this.logPrefix} 净化等级已设为 ${level} (${Purify_Level.getDescription(level)})。`;
+              if (level === Purify_Level.PX18_PLUS) finalUserMessage += '\n(Px18 指轻微性暗示或低度挑逗性图片)';
+              if (saveWarning) finalUserMessage += `\n${saveWarning}`;
+              if (asyncError) finalUserMessage += '\n(后台应用时出错，详见日志)';
+              await e.reply(finalUserMessage, true);
+          }
+      }
+    });
+
+
+    return true; 
   }
 
   /**
@@ -1830,7 +1887,7 @@ export class MiaoPluginMBT extends plugin {
             pageGotoParams: { waitUntil: 'networkidle0' },
             ...renderDataManual,
             screenshotOptions: { fullPage: true },
-            width: 640, // 截图宽度
+            width: 640, 
           })
           if (img) {
             await e.reply(img)
@@ -2081,7 +2138,7 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #查看 命令，显示指定角色的所有图片及状态。
-   *              【V4.8.2-Mercury-FIX 修正】实现分批发送合并转发消息，解决群聊发送限制问题。
+   *              【V4.8.3 修正】实现分批发送合并转发消息，解决群聊发送限制问题。
    */
   async FindRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true
@@ -2104,7 +2161,7 @@ export class MiaoPluginMBT extends plugin {
       }
 
       await e.reply(
-        `${this.logPrefix} 找到了！正在整理 [${standardMainName}] 的图片 (${roleImageData.length} 张)，可能需要分批发给你...`
+        `${this.logPrefix} 正在整理 [${standardMainName}] 的图片 (${roleImageData.length} 张)`
       )
 
       roleImageData.sort(
@@ -2312,7 +2369,7 @@ export class MiaoPluginMBT extends plugin {
         `${logPrefix} [可视化] 找到 ${totalImageCount} 张图片，将分 ${totalBatches} 批发送 (每批最多 ${BATCH_SIZE} 张)...`
       )
       await e.reply(
-        `${logPrefix} 找到了 ${totalImageCount} 张『${standardMainName}』的图片，将分 ${totalBatches} 批发给你，请注意查收~`
+        `${logPrefix} 正在整理${totalImageCount} 张[${standardMainName}]的图片,分${totalBatches}批发送,请注意查收~`
       )
       await common.sleep(500)
 
@@ -2604,7 +2661,7 @@ export class MiaoPluginMBT extends plugin {
       // 有些旧版本的 segment 可能需要不同的构造方式，例如：
       // const fileSegment = segment.file(`base64://${fileBuffer.toString('base64')}`, targetFileName);
       // segment.file({ file: fileBuffer, name: targetFileName });
-      // 这里我们先用最可能兼容的方式
+      // 这里用最可能兼容的方式
 
       await e.reply(fileSegment)
     } catch (sendErr) {
@@ -2638,7 +2695,7 @@ export class MiaoPluginMBT extends plugin {
    * @description 处理 #咕咕牛帮助 命令。
    */
   async Help(e) {
-    const networkHelpUrl = 'https://s2.loli.net/2024/06/28/LQnN3oPCl1vgXIS.png'
+    const networkHelpUrl = 'https://s2.loli.net/2025/04/28/7b8ZwBKVhY6Xdny.webp'
     const localHelpPath = MiaoPluginMBT.paths.helpImagePath
 
     try {
@@ -2777,7 +2834,106 @@ export class MiaoPluginMBT extends plugin {
     return true;
   }
 
-  // --- 静态辅助方法 ---
+  /**
+   * @description 显示设置面板图片。
+   * @param {import('yunzai').GroupMessage | import('yunzai').PrivateMessage} e 消息事件对象
+   * @param {string} [extraMsg=''] 附加的提示信息 (例如 "设置已更新！")
+   */
+  async ShowSettingsPanel(e, extraMsg = '') {
+    if (!(await this.CheckInit(e))) return true; // 确保初始化
+
+    const logger = this.logger;
+    const logPrefix = this.logPrefix;
+
+    let tempHtmlFilePath = '';
+    let tempImgFilePath = '';
+    const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'settings_panel.html');
+
+    try {
+        // 检查模板文件
+        try {
+            await fsPromises.access(sourceHtmlPath);
+        } catch (err) {
+             logger.error(`${logPrefix} [设置面板] 找不到模板文件: ${sourceHtmlPath}`, err);
+             await e.reply('无法显示设置面板：缺少 settings_panel.html 模板文件。');
+             return true;
+        }
+
+        // 准备渲染数据
+        const config = MiaoPluginMBT.MBTConfig; // 获取当前配置
+        const tuKuEnabled = config?.TuKuOP ?? Default_Config.defaultTuKuOp;
+        const pflLevel = config?.PFL ?? Default_Config.defaultPfl;
+
+        const renderData = {
+            pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+            tuKuStatus: {
+                text: tuKuEnabled ? '已启用' : '已禁用',
+                class: tuKuEnabled ? 'value-enabled' : 'value-disabled'
+            },
+            pflStatus: {
+                level: pflLevel,
+                description: Purify_Level.getDescription(pflLevel),
+                class: `value-level-${pflLevel}` // 用于 CSS 控制颜色
+            },
+            // 未来开关的占位数据 (如果模板需要)
+            // horizontalMode: { text: '未启用', class: 'value-disabled' },
+            // aiFeature: { text: '未启用', class: 'value-disabled' }
+        };
+
+        // 创建临时文件并复制模板
+        await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+        await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+        tempHtmlFilePath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `settings-${Date.now()}.html`);
+        tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `settings-${Date.now()}.png`);
+        await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath);
+
+        // 生成截图
+        logger.info(`${logPrefix} [设置面板] 开始生成设置面板截图...`);
+        const img = await puppeteer.screenshot('guguniu-settings-panel', {
+            tplFile: tempHtmlFilePath,
+            savePath: tempImgFilePath,
+            imgType: 'png',
+            pageGotoParams: { waitUntil: 'networkidle0' },
+            ...renderData,
+            screenshotOptions: { fullPage: false },
+            pageBoundingRect: { selector: '.panel', padding: 15 }, 
+            width: 480 
+        });
+
+        // 发送截图
+        if (img) {
+            if (extraMsg) { // 如果有附加消息，先发送
+                await e.reply(extraMsg, true);
+                await common.sleep(300); // 短暂延迟
+            }
+            await e.reply(img);
+            logger.info(`${logPrefix} [设置面板] 设置面板图片已发送。`);
+        } else {
+            logger.error(`${logPrefix} [设置面板] Puppeteer 未能成功生成图片。`);
+            await e.reply('生成设置面板图片失败，请查看日志。');
+        }
+
+    } catch (error) {
+        logger.error(`${logPrefix} [设置面板] 生成或发送面板时发生错误:`, error);
+        await this.ReportError(e, '显示设置面板', error);
+    } finally {
+        // 清理临时文件
+        if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) {
+            try { await fsPromises.unlink(tempHtmlFilePath); } catch (unlinkErr) {}
+        }
+        if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
+            try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
+        }
+        // 清理 Puppeteer 临时目录
+        const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-settings-panel');
+         if (fs.existsSync(possiblePuppeteerTempDir)) {
+            try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {}
+         }
+    }
+    return true;
+  }
+
+// --- 静态辅助方法 ---
 
  /**
    * @description 插件全局静态初始化入口。
@@ -3882,7 +4038,7 @@ export class MiaoPluginMBT extends plugin {
             savePath: tempImgFilePath,
             imgType: 'png',
             pageGotoParams: { waitUntil: 'networkidle0' },
-            data: renderData, // 传递数据
+            data: renderData, 
             screenshotOptions: { fullPage: false },
             pageBoundingRect: { selector: 'body', padding: 0 },
             width: 540,
@@ -4331,54 +4487,58 @@ export class MiaoPluginMBT extends plugin {
    * @description 清理目标插件目录中由本插件创建的图片文件。
    */
   static async CleanTargetCharacterDirs(targetPluginDir, logger = global.logger || console) {
-    if (!targetPluginDir) return
-    logger.info(`${Default_Config.logPrefix} [清理目标] ${targetPluginDir}`)
-    let cleanedCount = 0
+    if (!targetPluginDir) return;
+    logger.info(`${Default_Config.logPrefix} [清理目标] ${targetPluginDir}`);
+    let cleanedCount = 0;
     try {
-      await fsPromises.access(targetPluginDir)
-      const entries = await fsPromises.readdir(targetPluginDir, { withFileTypes: true })
+      await fsPromises.access(targetPluginDir);
+      const entries = await fsPromises.readdir(targetPluginDir, { withFileTypes: true });
       for (const entry of entries) {
-        const entryPath = path.join(targetPluginDir, entry.name)
+        const entryPath = path.join(targetPluginDir, entry.name);
         if (entry.isDirectory()) {
-          const characterPath = entryPath
+          // 如果是子目录（角色目录）
+          const characterPath = entryPath;
           try {
-            const files = await fsPromises.readdir(characterPath)
+            const files = await fsPromises.readdir(characterPath);
             const filesToDelete = files.filter(
-              f => f.toLowerCase().startsWith('gu') && f.toLowerCase().endsWith('.webp')
-            )
+              f => f.toLowerCase().includes('gu') && f.toLowerCase().endsWith('.webp')
+            );
             for (const fileToDelete of filesToDelete) {
-              const filePath = path.join(characterPath, fileToDelete)
+              const filePath = path.join(characterPath, fileToDelete);
               try {
-                await fsPromises.unlink(filePath)
-                cleanedCount++
+                await fsPromises.unlink(filePath);
+                cleanedCount++;
+                // logger.debug(`${Default_Config.logPrefix} [清理目标] 已删除: ${filePath}`); // 调试用
               } catch (unlinkErr) {
                 if (unlinkErr.code !== ERROR_CODES.NotFound)
-                  logger.warn(`${Default_Config.logPrefix} [清理目标] 删除 ${filePath} 失败:`, unlinkErr.code)
+                  logger.warn(`${Default_Config.logPrefix} [清理目标] 删除文件 ${filePath} 失败:`, unlinkErr.code);
               }
             }
           } catch (readSubErr) {
             if (![ERROR_CODES.NotFound, ERROR_CODES.Access].includes(readSubErr.code))
-              logger.warn(`${Default_Config.logPrefix} [清理目标] 读取 ${characterPath} 失败:`, readSubErr.code)
+              logger.warn(`${Default_Config.logPrefix} [清理目标] 读取角色子目录 ${characterPath} 失败:`, readSubErr.code);
           }
         } else if (
+  
           entry.isFile() &&
-          entry.name.toLowerCase().startsWith('gu') &&
+          entry.name.toLowerCase().includes('gu') && 
           entry.name.toLowerCase().endsWith('.webp')
         ) {
-          const rootFilePath = entryPath
+          const rootFilePath = entryPath;
           try {
-            await fsPromises.unlink(rootFilePath)
-            cleanedCount++
+            await fsPromises.unlink(rootFilePath);
+            cleanedCount++;
+            // logger.debug(`${Default_Config.logPrefix} [清理目标] 已删除根目录文件: ${rootFilePath}`); // 调试用
           } catch (delErr) {
             if (delErr.code !== ERROR_CODES.NotFound)
-              logger.warn(`${Default_Config.logPrefix} [清理目标] 删除根文件 ${rootFilePath} 失败:`, delErr.code)
+              logger.warn(`${Default_Config.logPrefix} [清理目标] 删除根目录文件 ${rootFilePath} 失败:`, delErr.code);
           }
         }
       }
-      logger.info(`${Default_Config.logPrefix} [清理目标] 完成: ${targetPluginDir}, 清理 ${cleanedCount} 文件。`)
+      logger.info(`${Default_Config.logPrefix} [清理目标] 清理完成: ${targetPluginDir}, 共清理 ${cleanedCount} 个包含 'Gu' 的 .webp 文件。`);
     } catch (readBaseErr) {
       if (readBaseErr.code !== ERROR_CODES.NotFound && readBaseErr.code !== ERROR_CODES.Access)
-        logger.error(`${Default_Config.logPrefix} [清理目标] 读取 ${targetPluginDir} 失败:`, readBaseErr)
+        logger.error(`${Default_Config.logPrefix} [清理目标] 读取目标插件目录 ${targetPluginDir} 失败:`, readBaseErr);
     }
   }
 
@@ -4403,6 +4563,80 @@ export class MiaoPluginMBT extends plugin {
       logger.error(`${Default_Config.logPrefix} [恢复文件] ${relativePath} 失败:`, copyError)
       return false
     }
+  }
+
+  async TriggerError(e) {
+    if (!e.isMaster) return e.reply('仅限主人测试。')
+    const match = e.msg.match(/#咕咕牛触发错误(?:\s*(git|fs|config|data|ref|type|Repo1|Repo2|notify|other))?/i)
+    const errorType = match?.[1]?.toLowerCase() || 'other'
+    let mockError = new Error(`模拟错误 (${errorType})`)
+    this.logger.warn(`${this.logPrefix} 用户 ${e.user_id} 触发模拟错误: "${errorType}"...`)
+    await e.reply(`${this.logPrefix} 触发类型 "${errorType}" ...`)
+    try {
+      switch (errorType) {
+        case 'git':
+          mockError.message = '模拟Git失败'
+          mockError.code = 128
+          mockError.stderr = 'fatal: Repo not found'
+          throw mockError
+        case 'fs':
+          mockError = new Error('模拟FS错误')
+          mockError.code = ERROR_CODES.NotFound
+          await fsPromises.access('/non/existent/path')
+          break
+        case 'config':
+          mockError = new Error('模拟配置失败')
+          mockError.code = 'YAMLParseError'
+          throw mockError
+        case 'data':
+          mockError = new Error('模拟元数据失败')
+          mockError.code = 'JSONParseError'
+          throw mockError
+        case 'ref':
+          mockError = new ReferenceError('模拟引用错误')
+          console.log(someUndefinedVariable)
+          break
+        case 'type':
+          mockError = new TypeError('模拟类型错误')
+          ;(123).iDontExist()
+          break
+        case 'Repo1':
+          mockError = new Error('模拟一号仓库访问失败')
+          mockError.code = ERROR_CODES.NotFound
+          await fsPromises.access(path.join(MiaoPluginMBT.paths.LocalTuKuPath, 'non-existent'))
+          break
+        case 'Repo2':
+          mockError = new Error('模拟二号仓库访问失败')
+          mockError.code = ERROR_CODES.NotFound
+          if (await MiaoPluginMBT.IsTuKuDownloaded(2))
+            await fsPromises.access(path.join(MiaoPluginMBT.paths.LocalTuKuPath2, 'non-existent'))
+          else throw new Error('二号仓库未下载')
+          break
+        case 'notify':
+          this.logger.info(`${this.logPrefix} [触发错误] 模拟通知主人...`)
+          const fakeCommitHash = Math.random().toString(16).substring(2, 9)
+          const fakeDate = new Date()
+            .toLocaleString('zh-CN', {
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            })
+            .replace(',', '')
+          const fakeLog = `${fakeDate.replace('/', '-')} [${fakeCommitHash}] fix: 这是一个模拟的更新成功通知`
+          const notifyMsg = `『咕咕牛🐂』定时更新成功！\n最新提交：${fakeLog}`
+          await MiaoPluginMBT.SendMasterMsg(notifyMsg, undefined, 1000, this.logger)
+          await e.reply(`${this.logPrefix} 已尝试发送模拟通知。`)
+          return true
+        default:
+          throw mockError
+      }
+      throw mockError
+    } catch (error) {
+      await this.ReportError(e, `模拟错误 (${errorType})`, error, `用户触发: ${e.msg}`)
+    }
+    return true
   }
 
   /**
@@ -4532,9 +4766,9 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, '..', 'package.json')
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      return pkg.version || '4.8.2-Mercury-FIX'
+      return pkg.version || '4.8.3'
     } catch {
-      return '4.8.2-Mercury-FIX'
+      return '4.8.3'
     }
   }
 }
@@ -4561,4 +4795,5 @@ const GUGUNIU_RULES = [
   },
   { reg: /^#咕咕牛测速$/i, fnc: 'ManualTestProxies' },
   { reg: /^#执行咕咕牛更新$/i, fnc: 'ManualRunUpdateTask', permission: 'master' },
+  { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: 'ShowSettingsPanel' },
 ]
