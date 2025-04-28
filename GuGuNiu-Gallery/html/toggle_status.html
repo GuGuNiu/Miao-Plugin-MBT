@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛图库状态</title>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            margin: 0;
+            padding: 15px; /* 调整内边距 */
+            background: linear-gradient(135deg, #e0f2f7 0%, #d1e6f0 100%); /* 渐变背景 */
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            width: 420px; /* 调整宽度 */
+            box-sizing: border-box;
+            display: flex; /* 使用 Flex 居中 */
+            justify-content: center;
+            align-items: center;
+            min-height: 150px; /* 保证最小高度 */
+        }
+        .card {
+            width: 100%;
+            padding: 25px; /* 增加内边距 */
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px; /* 更大的圆角 */
+            box-shadow: 0 5px 15px rgba(0, 80, 150, 0.15); /* 更明显的阴影 */
+            text-align: center;
+            border: 1px solid rgba(0, 123, 255, 0.2); /* 浅蓝色边框 */
+            animation: fadeIn 0.5s ease-out; /* 淡入动画 */
+            position: relative; /* 为了伪元素定位 */
+            overflow: hidden; /* 隐藏溢出的装饰 */
+        }
+        /* 添加装饰性背景元素 */
+        .card::before {
+            content: '🐂'; /* 牛头表情 */
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            font-size: 60px;
+            opacity: 0.08;
+            transform: rotate(-15deg);
+            color: #0077cc;
+        }
+         .card::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            right: -30px;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(0, 123, 255, 0.05);
+            border-radius: 50%;
+            z-index: 0;
+         }
+
+        .content {
+            position: relative; /* 保证内容在装饰之上 */
+            z-index: 1;
+        }
+
+        .icon {
+            font-size: 50px; /* 稍微调整图标大小 */
+            margin-bottom: 12px;
+            line-height: 1; /* 避免额外行高 */
+        }
+        .status-text {
+            font-size: 20px; /* 增大状态文字 */
+            font-weight: 600; /* 稍细一点的粗体 */
+            margin-bottom: 12px;
+            letter-spacing: 1px; /* 增加字间距 */
+        }
+        .status-enabled { color: #198754; } /* 更深的绿色 */
+        .status-disabled { color: #dc3545; } /* 保持红色 */
+        .status-already { color: #0d6efd; } /* 蓝色表示已知状态 */
+
+        .message {
+            font-size: 14px;
+            color: #495057; /* 稍深的灰色 */
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+        .message-extra {
+            font-size: 13px;
+            color: #6c757d; /* 灰色 */
+        }
+        .warning, .error {
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 12px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block; /* 让背景包裹文字 */
+        }
+        .warning {
+            background-color: #fff3cd; /* 淡黄色背景 */
+            color: #664d03;       /* 深黄色文字 */
+            border: 1px solid #ffecb5;
+        }
+        .error {
+            background-color: #f8d7da; /* 淡红色背景 */
+            color: #58151c;       /* 深红色文字 */
+            border: 1px solid #f1aeae;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 25px; /* 增加与卡片的距离 */
+            font-size: 11px;
+            color: #adb5bd; /* 更浅的灰色 */
+            width: 100%; /* 让页脚也居中 */
+            position: absolute; /* 绝对定位到底部 */
+            bottom: 10px; /* 距离底部10px */
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="content">
+            {{ if status === 'enabled' }}
+                <div class="icon">✅</div>
+                <div class="status-text status-enabled">图库已启用</div>
+                <div class="message">{{ messageMain }}</div>
+                {{ if messageExtra }}<div class="message-extra">{{ messageExtra }}</div>{{ /if }}
+            {{ else if status === 'disabled' }}
+                <div class="icon">🚫</div>
+                <div class="status-text status-disabled">图库已禁用</div>
+                <div class="message">{{ messageMain }}</div>
+                {{ if messageExtra }}<div class="message-extra">{{ messageExtra }}</div>{{ /if }}
+            {{ else }} <!-- 对应已经是目标状态的情况 -->
+                 <div class="icon">💡</div>
+                 <div class="status-text status-already">{{ messageMain }}</div>
+            {{ /if }}
+
+            {{ if warningMessage }}
+                <div class="warning">⚠️ {{ warningMessage }}</div>
+            {{ /if }}
+            {{ if errorMessage }}
+                <div class="error">❌ {{ errorMessage }}</div>
+            {{ /if }}
+        </div>
+    </div>
+    <!-- 页脚移到卡片外部，使其在整个截图区域底部 -->
+    <div class="footer">GuGuNiu-Gallery | v{{ pluginVersion }}</div>
+</body>
+</html>
