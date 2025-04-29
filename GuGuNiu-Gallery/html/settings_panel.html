@@ -5,227 +5,424 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛设置面板</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap');
+        
+        html { height: 100%; }
         body {
-            font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Rajdhani', 'Orbitron', 'Segoe UI', sans-serif;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #f0f4f8, #e6eaf0);
-            color: #2c3e50;
+            color: #e0e0e0;
             font-size: 14px;
             line-height: 1.6;
             width: 520px;
             box-sizing: border-box;
+            position: relative;
+            z-index: 0;
+            min-height: calc(100vh - 40px);
+            background: none;
+            overflow: hidden;
         }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, #0a0a1a 0%, #121225 100%);
+            /* background-image: url('{{ backgroundImageUrl }}'); */ /* 随机背景 */
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            opacity: 0.8;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: 
+                linear-gradient(90deg, rgba(100, 255, 218, 0.05) 1px, transparent 1px),
+                linear-gradient(rgba(100, 255, 218, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+        }
+        
         .panel {
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(5px);
-            border-radius: 10px;
-            box-shadow: 5px 5px 0 0 rgba(0, 191, 255, 0.3);
-            padding: 25px;
-            border: 1px solid rgba(0, 191, 255, 0.3);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-            border-bottom: 1px solid rgba(0, 191, 255, 0.2);
-            padding-bottom: 15px;
-        }
-        .header h1 {
-            font-size: 22px;
-            color: #0077cc;
-            margin: 0 0 5px 0;
-            font-weight: 700;
-        }
-        .header .version {
-            font-size: 11px;
-            color: #888;
-        }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
-        }
-
-        .setting-item {
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(15, 20, 30, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            width: 480px;
+            max-width: 100%;
+            margin: 0 auto;
             border-radius: 8px;
-            padding: 15px;
-            border: 1px solid rgba(200, 200, 220, 0.5);
-            transition: transform 0.2s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 20px rgba(100, 255, 218, 0.15),
+                        0 8px 40px rgba(0, 0, 0, 0.3);
+            padding: 25px 30px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+            border-image: linear-gradient(45deg, #64ffda, #00bfff) 1;
+            overflow: visible;
+        }
+        
+        .panel::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(100, 255, 218, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(100, 255, 218, 0.8), 
+                rgba(0, 191, 255, 0.8), 
+                transparent);
+            animation: scanline 3s linear infinite;
+            z-index: 2;
+        }
+        
+        .decor-circle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .decor-circle-1 {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: -40px;
+            background: radial-gradient(circle, rgba(79, 195, 247, 0.1) 0%, transparent 70%);
+            border: 1px dashed rgba(79, 195, 247, 0.3);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        .decor-circle-2 {
+            width: 120px;
+            height: 120px;
+            bottom: -60px;
+            right: -60px;
+            background: radial-gradient(circle, rgba(149, 117, 205, 0.1) 0%, transparent 70%);
+            border: 1px dashed rgba(149, 117, 205, 0.3);
+            animation: rotate 12s linear infinite;
+        }
+        
+        .decor-circle-3 {
+            width: 60px;
+            height: 60px;
+            bottom: 30%;
+            left: -30px;
+            background: radial-gradient(circle, rgba(255, 183, 77, 0.1) 0%, transparent 70%);
+            border: 1px dashed rgba(255, 183, 77, 0.3);
+            animation: float 5s ease-in-out infinite;
+        }
+       
+        .header { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid rgba(100, 255, 218, 0.3); 
+            position: relative;
+        }
+        
+        .header h1 { 
+            font-size: 28px; 
+            color: #64ffda; 
+            margin: 0 0 8px 0; 
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 15px rgba(100, 255, 218, 0.5);
+            letter-spacing: 2px;
+            position: relative;
+        }
+        
+        .header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 25%;
+            width: 50%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #64ffda, transparent);
+        }
+        
+        .header::after {
+            content: 'SYSTEM CONTROL TERMINAL';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            right: 0;
+            font-size: 8px;
+            color: rgba(100, 255, 218, 0.6);
+            letter-spacing: 2px;
+        }
+        
+        .setting-item {
+            background-color: rgba(25, 30, 45, 0.7);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(100, 255, 218, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .setting-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--item-color), #64ffda);
+            z-index: 1;
+        }
+        
+        .setting-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--status-color), transparent);
+            z-index: 1;
+        }
+        
+        .item-left {
             display: flex;
             flex-direction: column;
-            min-height: 115px;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+            align-items: flex-start;
+            margin-right: 15px;
+            flex-grow: 1;
+            position: relative;
+            z-index: 2;
         }
-        .setting-item:hover {
-            transform: translateY(-3px) scale(1.01);
-            border-color: #ff00ff;
-            background-color: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 5px 12px rgba(255, 0, 255, 0.2);
-        }
-
-         .setting-item.card-enabled {
-             border-left: 4px solid #00ff9d;
-             padding-left: 11px;
-         }
-         .setting-item.card-disabled {
-             border-left: 4px solid #ff4d6d;
-             padding-left: 11px;
-             opacity: 0.85;
-         }
-        .setting-item.card-level-0 {
-            border-left: 4px solid #343a40;
-            padding-left: 11px;
-        }
-        .setting-item.card-level-1 {
-            border-left: 4px solid #ff7f7f;
-            padding-left: 11px;
-        }
-        .setting-item.card-level-2 {
-            border-left: 4px solid #ffaf7f;
-            padding-left: 11px;
-        }
-
+        
         .setting-item .label {
             font-weight: 600;
-            color: #34495e;
+            color: var(--item-color);
             display: flex;
             align-items: center;
-            font-size: 14px;
-            flex-shrink: 0;
-            margin-bottom: 8px;
+            font-size: 15px;
+            margin-bottom: 6px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(var(--item-color-rgb), 0.3);
         }
+        
         .setting-item .label::before {
-            content: '';
+            content: '◈';
             display: inline-block;
-            width: 2px;
-            height: 16px;
-            background-color: #ff00ff;
-            border-radius: 0;
-            margin-right: 8px;
-            flex-shrink: 0;
-            box-shadow: 0 0 5px #ff00ff;
+            margin-right: 10px;
+            color: var(--item-color);
+            font-size: 14px;
         }
-        .setting-item:nth-child(1) .label::before { background-color: #00ff9d; box-shadow: 0 0 5px #00ff9d; }
-        .setting-item:nth-child(2) .label::before { background-color: #ffdd00; box-shadow: 0 0 5px #ffdd00; }
-        .setting-item:nth-child(3) .label::before { background-color: #7b00ff; box-shadow: 0 0 5px #7b00ff; }
-        .setting-item:nth-child(4) .label::before { background-color: #00d4ff; box-shadow: 0 0 5px #00d4ff; }
-
-        .item-divider {
-            border: none;
-            height: 1px;
-            background: linear-gradient(to right, rgba(255, 0, 255, 0), rgba(255, 0, 255, 0.5), rgba(255, 0, 255, 0));
-            margin-top: 0;
-            margin-bottom: 8px;
-            width: 100%;
-            flex-shrink: 0;
-        }
-
-        .content-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding-top: 5px;
-            text-align: center;
-        }
-
-        .setting-item .value {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: #1d3557;
-        }
-        .value-enabled { color: #00c875; }
-        .value-disabled { color: #ff4d6d; }
-        .value-level-0 { color: #007bff; }
-        .value-level-1 { color: #ffab00; }
-        .value-level-2 { color: #ff6f00; }
-        .value-coming-soon {
-            color: #6c757d;
-            font-style: normal;
-            font-size: 16px;
-            font-weight: 500;
-        }
-
+        
         .value-description {
-            font-size: 11px;
-            color: #5a6a7a;
-            margin-top: 10px;
+            font-size: 12px;
+            color: rgba(200, 220, 255, 0.7);
+            line-height: 1.5;
+            padding-left: 24px;
+            font-family: 'Rajdhani', sans-serif;
         }
-
+        
+        .item-right {
+            text-align: right;
+            flex-shrink: 0;
+            min-width: 90px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .setting-item .value {
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            padding: 6px 12px;
+            border-radius: 4px;
+            background-color: rgba(0, 0, 0, 0.3);
+            display: inline-block;
+            border: 1px solid var(--status-border);
+            color: var(--status-color);
+            text-shadow: 0 0 5px var(--status-glow);
+            box-shadow: 0 0 10px var(--status-glow);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .item-tuku { --item-color: #64ffda; --item-color-rgb: 100, 255, 218; }
+        .item-pfl { --item-color: #ffb74d; --item-color-rgb: 255, 183, 77; }
+        .item-hewanglan { --item-color: #ff8a65; --item-color-rgb: 255, 138, 101; }
+        .item-fullscreen { --item-color: #4fc3f7; --item-color-rgb: 79, 195, 247; }
+        .item-easteregg { --item-color: #9575cd; --item-color-rgb: 149, 117, 205; }
+        .item-ai { --item-color: #f06292; --item-color-rgb: 240, 98, 146; }
+        
+        .value-enabled {
+            --status-color: #64ffda;
+            --status-border: rgba(100, 255, 218, 0.3);
+            --status-glow: rgba(100, 255, 218, 0.2);
+        }
+        
+        .value-disabled {
+            --status-color: #ff5252;
+            --status-border: rgba(255, 82, 82, 0.3);
+            --status-glow: rgba(255, 82, 82, 0.2);
+        }
+        
+        .value-level-0 {
+            --status-color: #b0bec5;
+            --status-border: rgba(176, 190, 197, 0.3);
+            --status-glow: rgba(176, 190, 197, 0.2);
+        }
+        
+        .value-level-1 {
+            --status-color: #ffb74d;
+            --status-border: rgba(255, 183, 77, 0.3);
+            --status-glow: rgba(255, 183, 77, 0.2);
+        }
+        
+        .value-level-2 {
+            --status-color: #ff5252;
+            --status-border: rgba(255, 82, 82, 0.3);
+            --status-glow: rgba(255, 82, 82, 0.2);
+        }
+        
+        .value-coming-soon {
+            --status-color: rgba(200, 220, 255, 0.7);
+            --status-border: rgba(200, 220, 255, 0.2);
+            --status-glow: rgba(200, 220, 255, 0.1);
+            font-style: italic;
+            font-weight: normal;
+        }
+        
         .footer {
             text-align: center;
-            margin-top: 25px;
-            font-size: 11px;
-            color: #8a9aaa;
+            margin-top: 30px;
+            font-size: 12px;
+            color: rgba(100, 255, 218, 0.6);
+            padding-top: 15px;
+            border-top: 1px solid rgba(100, 255, 218, 0.2);
+            letter-spacing: 1px;
+            font-family: 'Orbitron', sans-serif;
+            position: relative;
         }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #64ffda 0%, transparent 70%);
+            box-shadow: 0 0 10px #64ffda;
+        }
+    
+        .value:not(.value-coming-soon) {
+            animation: pulse 2s infinite;
+        }
+        
     </style>
 </head>
-<body>
+<body style="{{scaleStyleValue}}">
     <div class="panel">
+        <div class="decor-circle decor-circle-1"></div>
+        <div class="decor-circle decor-circle-2"></div>
+        <div class="decor-circle decor-circle-3"></div>
+        
         <div class="header">
             <h1>咕咕牛设置面板</h1>
         </div>
-        <div class="settings-grid">
-            <div class="setting-item {{ if tuKuStatus.text === '已启用' }}card-enabled{{ else if tuKuStatus.text === '已禁用' }}card-disabled{{ /if }}">
-                <span class="label">图库功能</span>
-                <hr class="item-divider">
-                <div class="content-area">
-                    <span class="value {{ tuKuStatus.class }}">{{ tuKuStatus.text }}</span>
-                    <div class="value-description">是否同步图库面板图</div>
-                </div>
+        <div class="setting-item item-tuku">
+            
+            <div class="item-left">
+                <span class="label">图库状态</span>
+                <div class="value-description">同步图库面板图至插件内的文件夹</div>
             </div>
-
-            <div class="setting-item {{ if pflStatus.level === 0 }}card-level-0{{ else if pflStatus.level === 1 }}card-level-1{{ else if pflStatus.level === 2 }}card-level-2{{ /if }}">
-                <span class="label">净化等级</span>
-                <hr class="item-divider">
-                <div class="content-area">
-                    <span class="value {{ pflStatus.class }}">{{ pflStatus.level }}</span>
-                    <div class="value-description">{{ pflStatus.description }}</div>
-                </div>
-            </div>
-
-            <div class="setting-item {{ if tuKuStatus.text === '已启用' }}card-enabled{{ else if tuKuStatus.text === '已禁用' }}card-disabled{{ /if }}">
-                <span class="label">鹤望兰&星铁Plugin</span>
-                <hr class="item-divider">
-                <div class="content-area">
-                    <span class="value {{ tuKuStatus.class }}">{{ tuKuStatus.text }}</span>
-                    <div class="value-description">是否同步鹤望兰星铁插件</div>
-                </div>
-            </div>
-
-            <div class="setting-item">
-                <span class="label">全屏幕图</span>
-                <hr class="item-divider">
-                <div class="content-area">
-                    <span class="value value-coming-soon">敬请期待</span>
-                    <div class="value-description">未来集成</div>
-                </div>
-            </div>
-
-            <div class="setting-item">
-                <span class="label">彩蛋图</span>
-                <hr class="item-divider">
-                <div class="content-area">
-                    <span class="value value-coming-soon">敬请期待</span>
-                    <div class="value-description">未来集成</div>
-                </div>
-            </div>
-
-             <div class="setting-item">
-                <span class="label">AI图</span>
-                <hr class="item-divider">
-                <div class="content-area">
-                    <span class="value value-coming-soon">敬请期待</span>
-                    <div class="value-description">未来集成</div>
-                </div>
+            <div class="item-right">
+                <span class="value {{ tuKuStatus.class }}">{{ tuKuStatus.text }}</span>
             </div>
         </div>
-         <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
+        <div class="setting-item item-pfl">
+            
+            <div class="item-left">
+                <span class="label">净化等级</span>
+                <div class="value-description">{{ pflStatus.description }}</div>
+            </div>
+            <div class="item-right">
+                <span class="value {{ pflStatus.class }}">{{ pflStatus.level }}</span>
+            </div>
+        </div>
+        <div class="setting-item item-hewanglan">
+            
+            <div class="item-left">
+                <span class="label">鹤望兰&星铁Plugin</span>
+                <div class="value-description">同步专用面板图至鹤望兰星铁插件</div>
+            </div>
+            <div class="item-right">
+                <span class="value value-coming-soon">敬请期待</span>
+            </div>
+        </div>
+        <div class="setting-item item-fullscreen">
+            
+            <div class="item-left">
+                <span class="label">全屏幕图</span>
+                <div class="value-description">全屏展示的面板图,渲染速度会慢一点</div>
+            </div>
+            <div class="item-right">
+                <span class="value value-coming-soon">敬请期待</span>
+            </div>
+        </div>
+        <div class="setting-item item-easteregg">
+            
+            <div class="item-left">
+                <span class="label">彩蛋图</span>
+                <div class="value-description">角色彩蛋部分图含有轻微性暗示或限制级内容</div>
+            </div>
+            <div class="item-right">
+                <span class="value value-coming-soon">敬请期待</span>
+            </div>
+        </div>
+        <div class="setting-item item-ai">
+            
+            <div class="item-left">
+                <span class="label">Ai图</span>
+                <div class="value-description">Ai生成的面板图</div>
+            </div>
+            <div class="item-right">
+                <span class="value value-coming-soon">敬请期待</span>
+            </div>
+        </div>
+        <div class="footer"> Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
     </div>
 </body>
 </html>
