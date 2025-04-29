@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>角色图片可视化 - {{ characterName }} (第 {{ batchNum }}/{{ totalBatches }}批)</title>
     <style>
-        body {
+      body {
             font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 15px;
@@ -19,18 +19,18 @@
             background-color: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(5px);
             border-radius: 10px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            box-shadow: 5px 5px 0 0 rgb(50 83 207 / 50%);
             padding: 20px; 
-            border: 1px solid rgba(0, 191, 255, 0.3);
+            border: 1px solid rgb(50 83 207 / 80%);
             max-width: 780px; 
             margin: 0 auto;
         }
         h1 {
             text-align: center;
-            color: #0077cc;
+            color: rgb(50 83 207 / 100%);
             margin-top: 0;
             margin-bottom: 10px;
-            font-size: 20px; 
+            font-size: 25px; 
             font-weight: 700;
         }
         .sub-title {
@@ -87,8 +87,8 @@
         }
 
         .filename.highlight-gu {
-            background-color: rgba(255, 0, 255, 0.1);
-            color: #a100a1; 
+            background-color: rgba(0, 60, 255, 0.1);
+            color: #0058a1; 
             font-weight: bold;
             padding: 2px 5px;
             border-radius: 3px;
@@ -118,8 +118,8 @@
         }
     </style>
   </head>
-  <body>
-    <div class="container">
+  <body style="{{scaleStyleValue}}">
+      <div class="container">
       <h1>『{{ characterName }}』 已应用在插件内的面板图可视化</h1>
       <div class="sub-title">
         共 {{ imageCount }} 张 | 当前第 {{ batchNum }}/{{ totalBatches }} 批
