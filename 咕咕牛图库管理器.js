@@ -11,20 +11,28 @@ import puppeteer from '../../lib/puppeteer/puppeteer.js'
 
 /**
  * @description 咕咕牛图库管理器 - 双仓库增强版
- * @version 4.8.3
+ * @version 4.8.4
  * @based v4.1.10 & v4.6.6
  * @description_details
  *    - 实现双仓库并行下载及自动镜像源切换重试 (Fallback)。
- *    - 扩展并优化代理列表与优先级配置。修复代理测试与选择逻辑。
- *    - 确保代理环境变量正确传递给 Git 子进程。解决下载超时/失败后仍报告进度的时序问题。
+ *    - 扩展并优化代理列表与优先级配置，修复代理测试与选择逻辑。
+ *    - 确保代理环境变量正确传递给 Git 子进程，解决下载超时/失败后仍报告进度的时序问题。
  *    - 增强下载错误报告（显示尝试列表）。
  *    - #检查咕咕牛, #咕咕牛测速, #ban列表 命令改为图片渲染输出。
- *    - 修复净化等级1错误屏蔽Px18图片的问题。
+ *    - 新增 #咕咕牛设置 命令，提供可视化配置面板。
+ *    - 优化设置类命令 (#启用/禁用咕咕牛, #设置咕咕牛净化等级) 交互，优先发送面板图片，失败则回退文本。
+ *    - 优化 #查看 命令，结果过长时自动分批发送合并转发消息。
+ *    - 优化 #导出 命令，改用 Buffer 发送并指定文件名，提高 OneBot v11/v12 兼容性。
+ *    - 修复 #可视化 命令分批截图失败问题，优化截图样式并高亮含 "Gu" 文件名，页脚添加版本号。
+ *    - 修复净化等级1错误屏蔽 Px18 图片的问题。
  *    - 优化 #ban列表 图片发送顺序和空列表处理逻辑。
+ *    - 优化插件初始化逻辑，解决启动时日志重复打印问题，并自动延迟清理旧版插件文件。
  *    - 结构化调试信息，角色详情转发，结构化测试日志，回滚数据，智能寻找，数据防干扰。
- *    - 内置SpeedTest测速模板
- *    - 检测本地冲突强制绕过用户更新
- *    - 可视化插件内的全部格式的面板图
+ *    - 内置 SpeedTest 测速模板，并确保所有 HTML 模板在更新时同步。
+ *    - Git 更新时自动检测本地冲突并强制覆盖。
+ *    - #可视化 支持插件内所有常见图片格式。
+ *    - 全局渲染精度配置 (renderScale)，通过 CSS transform:scale 提高所有截图清晰度。
+
  */
 
 /**
@@ -55,7 +63,7 @@ const SPEEDTEST_HTML_TEMPLATE = `
           .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; }
       </style>
   </head>
-  <body>
+  <body style="{{scaleStyleValue}}">
       <div class="container">
           <h1>咕咕牛网络测速报告</h1>
           {{ if speeds1 && speeds1.length > 0 }}
@@ -206,6 +214,8 @@ const Default_Config = {
   logPrefix: '『咕咕牛🐂』',
   gitLogFormat: '%cd [%h] %s',
   gitLogDateFormat: 'format:%m-%d %H:%M',
+  renderScale: 300,  // Puppeteer 渲染精度
+
 }
 
 /**
@@ -485,6 +495,7 @@ export class MiaoPluginMBT extends plugin {
   static #userBanSet = new Set()
   static #activeBanSet = new Set()
   static #aliasData = null
+  static #backgroundImages = []; 
 
   /**
    * @description 存储所有重要的路径常量
@@ -504,6 +515,7 @@ export class MiaoPluginMBT extends plugin {
     tempPath: path.join(YunzaiPath, 'temp', 'html', 'guguniu'),
     tempHtmlPath: path.join(YunzaiPath, 'temp', 'html', 'guguniu'),
     tempImgPath: path.join(YunzaiPath, 'temp', 'html', 'guguniu', 'img'),
+    backgroundImgPath: path.join(YunzaiPath, 'resources', 'GuGuNiu-Gallery', 'html', 'img'),
     target: {
       miaoChar: path.join(YunzaiPath, 'plugins', 'miao-plugin', 'resources', 'profile', 'normal-character'),
       zzzChar: path.join(YunzaiPath, 'plugins', 'ZZZ-Plugin', 'resources', 'images', 'panel'),
@@ -558,7 +570,7 @@ export class MiaoPluginMBT extends plugin {
    */
   constructor() {
     super({
-      name: '『咕咕牛🐂』图库管理器 v4.8.3',
+      name: '『咕咕牛🐂』图库管理器 v4.8.4',
       dsc: '『咕咕牛🐂』图库管理器',
       event: 'message',
       priority: 500,
@@ -759,7 +771,7 @@ export class MiaoPluginMBT extends plugin {
    */
   async DownloadTuKu(e) {
     if (!(await this.CheckInit(e))) return true
-    if (this.isGitRunning) return e.reply(`${this.logPrefix} Git 操作进行中，请稍后再试...`)
+    if (this.isGitRunning) return logger.info(`${this.logPrefix} Git 操作进行中，请稍后再试...`)
 
     this.isGitRunning = true
     const startTime = Date.now()
@@ -1465,6 +1477,8 @@ export class MiaoPluginMBT extends plugin {
       //  准备渲染数据
       const repoCount = Object.values(stats.repos || {}).filter(repo => repo?.exists).length
       const renderData = { pluginVersion, stats, config, repoCount } // 传递给模板的数据
+      const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
+
 
       // 创建临时目录和文件路径
       await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true })
@@ -1484,7 +1498,6 @@ export class MiaoPluginMBT extends plugin {
       // 复制模板文件到临时路径
       await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath)
 
-      // 调用 Puppeteer 生成截图
       this.logger.info(`${this.logPrefix} [检查状态] 开始调用 Puppeteer 生成状态报告截图...`)
       const img = await puppeteer.screenshot('guguniu-status', {
         tplFile: tempHtmlFilePath, 
@@ -1492,6 +1505,7 @@ export class MiaoPluginMBT extends plugin {
         imgType: 'png',
         pageGotoParams: { waitUntil: 'networkidle0' }, 
         ...renderData, 
+        scaleStyleValue: scaleStyleValue,
         screenshotOptions: { fullPage: false }, 
         pageBoundingRect: { selector: '.container', padding: 0 }, 
         width: 540, 
@@ -1820,28 +1834,30 @@ export class MiaoPluginMBT extends plugin {
     if (!(await this.CheckInit(e))) return true
     const msg = e.msg.trim()
     const isMaster = e.isMaster
+    const logPrefix = this.logPrefix;
+    const logger = this.logger;
 
     // 权限检查：封禁/解禁操作仅限主人
     if ((msg.startsWith('#咕咕牛封禁 ') || msg.startsWith('#咕咕牛解禁 ')) && !isMaster)
-      return e.reply(`${this.logPrefix} 只有主人才能进行封禁或解禁操作哦~`)
+      return e.reply(`${logPrefix} 只有主人才能进行封禁或解禁操作哦~`)
 
-    // 处理 #ban列表 或 #咕咕牛封禁列表
+    // --- 处理 #ban列表 或 #咕咕牛封禁列表 ---
     if (msg === '#ban列表' || msg === '#咕咕牛封禁列表') {
       const activeBanCount = MiaoPluginMBT.#activeBanSet.size
       const userBanCount = MiaoPluginMBT.#userBanSet.size
+      const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Purify_Level.NONE; // 获取当前净化等级
 
       if (activeBanCount === 0) {
-        return e.reply('太棒了！当前没有任何图片被封禁。', true)
+        return e.reply('当前没有任何图片被封禁。', true)
       }
-      // 移除 #清空咕咕牛封禁 的检查和处理逻辑
 
-      await e.reply(`收到！正在生成封禁列表图片，可能需要一点时间...`, true)
+      await e.reply(`正在整理列表，可能需要一点时间...`, true)
 
       const purifiedBansData = [] // 存放净化屏蔽的图片信息
       const userBansData = [] // 存放手动封禁的图片信息
       const pluginVersion = MiaoPluginMBT.GetVersionStatic()
 
-      // 遍历当前生效的封禁列表
+      // 遍历当前生效的封禁列表，区分手动和净化
       const sortedActiveBans = Array.from(MiaoPluginMBT.#activeBanSet).sort()
       await Promise.all(
         sortedActiveBans.map(async relativePath => {
@@ -1849,7 +1865,7 @@ export class MiaoPluginMBT extends plugin {
           const fileNameNoExt = fileName.replace(/\.webp$/i, '') // 去掉后缀
           // 尝试获取本地路径用于缩略图
           const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath)
-          const thumbnailPath = absolutePath ? `file://${absolutePath}` : '' // 如果本地文件存在，生成 file:// URI
+          const thumbnailPath = absolutePath ? `file://${absolutePath.replace(/\\/g, '/')}` : '' // 确保是 file:// URI 且用 /
           const itemData = { fileNameNoExt, thumbnailPath } // 存储文件名和缩略图路径
 
           // 判断是手动封禁还是净化屏蔽
@@ -1861,128 +1877,182 @@ export class MiaoPluginMBT extends plugin {
         })
       )
 
-      let manualSent = false // 标记手动列表是否发送成功
-      let purifiedSent = false // 标记净化列表是否发送成功
-      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'banlist.html')
-      let tempHtmlFilePath = ''
-      let tempImgFilePath = ''
+      let manualSent = false; // 标记手动列表是否已发送
+      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'banlist.html');
+      const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
 
-      // 优先发送手动封禁列表（如果有）
+      // 1. 处理并发送手动封禁列表 (如果存在)
       if (userBansData.length > 0) {
-        this.logger.info(`${this.logPrefix} [封禁列表] 准备生成手动列表图片 (${userBansData.length}项)...`)
-        const renderDataManual = {
-          pluginVersion: pluginVersion,
-          purifiedBans: [],
-          userBans: userBansData,
-          listType: '手动封禁',
-        } // 传递类型
-        tempHtmlFilePath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `banlist-manual-${Date.now()}.html`)
-        tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `banlist-manual-${Date.now()}.png`)
+        logger.info(`${logPrefix} [封禁列表] 准备生成手动列表图片 (${userBansData.length}项)...`)
+        let tempHtmlFilePathManual = '';
+        let tempImgFilePathManual = '';
         try {
-          await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath) // 复制模板
-          const img = await puppeteer.screenshot('guguniu-banlist-manual', {
-            tplFile: tempHtmlFilePath,
-            savePath: tempImgFilePath,
-            imgType: 'png',
-            pageGotoParams: { waitUntil: 'networkidle0' },
-            ...renderDataManual,
-            screenshotOptions: { fullPage: true },
-            width: 640, 
-          })
-          if (img) {
-            await e.reply(img)
-            manualSent = true
-            // 如果后面还有净化列表，稍微等一下再发
-            if (purifiedBansData.length > 0) await common.sleep(500)
-          } else {
-            this.logger.error(`${this.logPrefix} [封禁列表] 生成手动列表截图失败。`)
-          }
-        } catch (renderError) {
-          this.logger.error(`${this.logPrefix} [封禁列表] 生成手动列表截图时出错:`, renderError)
-        } finally {
-          // 清理临时文件
-          if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) {
-            try {
-              await fsPromises.unlink(tempHtmlFilePath)
-            } catch (unlinkErr) {}
-          }
-          if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-            try {
-              await fsPromises.unlink(tempImgFilePath)
-            } catch (unlinkErr) {}
-          }
-        }
-      } else {
-        // 如果没有手动封禁，也回复一下
-        this.logger.info(`${this.logPrefix} [封禁列表] 无手动封禁项。`)
-        if (purifiedBansData.length === 0) {
-          // 如果净化列表也为空（理论上 activeBanCount > 0 不会到这里）
-          await e.reply('当前无手动封禁。', true)
-        }
-      }
+          const renderDataManual = {
+            pluginVersion: pluginVersion,
+            purifiedBans: [], // 手动列表不显示净化内容
+            userBans: userBansData,
+            listType: '手动封禁',
+            scaleStyleValue: scaleStyleValue, // 传递缩放值
+            // 批次信息对单张图无意义，可以不传或传默认值
+            batchInfo: ''
+          };
 
-      // 再发送净化屏蔽列表（如果有）
-      if (purifiedBansData.length > 0) {
-        this.logger.info(`${this.logPrefix} [封禁列表] 准备生成净化列表图片 (${purifiedBansData.length}项)...`)
-        const renderDataPurified = {
-          pluginVersion: pluginVersion,
-          purifiedBans: purifiedBansData,
-          userBans: [],
-          listType: '净化屏蔽',
-        } // 传递类型
-        tempHtmlFilePath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `banlist-purified-${Date.now()}.html`)
-        tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `banlist-purified-${Date.now()}.png`)
-        try {
-          await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath)
-          const img = await puppeteer.screenshot('guguniu-banlist-purified', {
-            tplFile: tempHtmlFilePath,
-            savePath: tempImgFilePath,
+          await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+          await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+          const timestampManual = Date.now();
+          tempHtmlFilePathManual = path.join(MiaoPluginMBT.paths.tempHtmlPath, `banlist-manual-${timestampManual}.html`);
+          tempImgFilePathManual = path.join(MiaoPluginMBT.paths.tempImgPath, `banlist-manual-${timestampManual}.png`);
+
+          await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePathManual); // 复制模板
+          const img = await puppeteer.screenshot('guguniu-banlist-manual', {
+            tplFile: tempHtmlFilePathManual,
+            savePath: tempImgFilePathManual,
             imgType: 'png',
             pageGotoParams: { waitUntil: 'networkidle0' },
-            ...renderDataPurified,
+            ...renderDataManual, // 传递渲染数据
             screenshotOptions: { fullPage: true },
             width: 640,
-          })
+          });
           if (img) {
-            await e.reply(img)
-            purifiedSent = true
+            await e.reply(img);
+            manualSent = true;
+            logger.info(`${logPrefix} [封禁列表] 手动封禁列表图片已发送。`);
+            // 如果后面可能有净化列表，稍微等一下
+            if (currentPFL > Purify_Level.NONE && purifiedBansData.length > 0) {
+                await common.sleep(1000); // 增加延迟到1秒
+            }
           } else {
-            this.logger.error(`${this.logPrefix} [封禁列表] 生成净化列表截图失败。`)
+            logger.error(`${logPrefix} [封禁列表] 生成手动列表截图失败。`);
           }
         } catch (renderError) {
-          this.logger.error(`${this.logPrefix} [封禁列表] 生成净化列表截图时出错:`, renderError)
+          logger.error(`${logPrefix} [封禁列表] 生成手动列表截图时出错:`, renderError);
         } finally {
-          // 清理临时文件
-          if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) {
-            try {
-              await fsPromises.unlink(tempHtmlFilePath)
-            } catch (unlinkErr) {}
+          // 清理手动列表的临时文件
+          if (tempHtmlFilePathManual && fs.existsSync(tempHtmlFilePathManual)) {
+            try { await fsPromises.unlink(tempHtmlFilePathManual); } catch (unlinkErr) {}
           }
-          if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-            try {
-              await fsPromises.unlink(tempImgFilePath)
-            } catch (unlinkErr) {}
+          if (tempImgFilePathManual && fs.existsSync(tempImgFilePathManual)) {
+            try { await fsPromises.unlink(tempImgFilePathManual); } catch (unlinkErr) {}
           }
         }
       } else {
-        this.logger.info(`${this.logPrefix} [封禁列表] 无净化屏蔽项。`)
+         logger.info(`${logPrefix} [封禁列表] 无手动封禁项。`);
       }
 
-      // 如果两个列表都尝试发送但都失败了，给个提示
-      if (userBansData.length > 0 && !manualSent && purifiedBansData.length > 0 && !purifiedSent) {
-        await e.reply('生成封禁列表图片失败了，请检查日志。', true)
-      } else if (userBansData.length > 0 && !manualSent && purifiedBansData.length === 0 && purifiedSent) {
-        // 只有手动失败
-        await e.reply('生成手动封禁列表图片失败，请检查日志。', true)
-      } else if (purifiedBansData.length > 0 && !purifiedSent && userBansData.length === 0 && manualSent) {
-        // 只有净化失败
-        await e.reply('生成净化屏蔽列表图片失败，请查看日志。', true)
+      // 2. 处理并发送净化屏蔽列表 (如果 PFL > 0 且存在净化项)
+      if (currentPFL > Purify_Level.NONE && purifiedBansData.length > 0) {
+        logger.info(`${logPrefix} [封禁列表] 检测到净化等级 ${currentPFL} 且有 ${purifiedBansData.length} 项净化屏蔽，开始分批处理...`);
+
+        const ITEMS_PER_BATCH = 28; // 每批数量
+        const totalItemsPurified = purifiedBansData.length;
+        const totalBatchesPurified = Math.ceil(totalItemsPurified / ITEMS_PER_BATCH);
+        const forwardListPurified = []; // 存储用于合并转发的消息段
+
+        // 添加合并转发的标题
+        const forwardTitle = `[净化屏蔽 (等级${currentPFL}, 共 ${totalItemsPurified} 项)]`;
+        forwardListPurified.push([forwardTitle]);
+
+        for (let batchNum = 1; batchNum <= totalBatchesPurified; batchNum++) {
+          const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
+          const endIndex = Math.min(startIndex + ITEMS_PER_BATCH, totalItemsPurified);
+          const currentBatchData = purifiedBansData.slice(startIndex, endIndex);
+
+          logger.info(`${logPrefix} [封禁列表] 准备生成净化列表第 ${batchNum}/${totalBatchesPurified} 批 (${currentBatchData.length} 项)...`);
+
+          let tempHtmlFilePathPurified = '';
+          let tempImgFilePathPurified = '';
+          const timestampPurified = `${Date.now()}-batch${batchNum}`;
+
+          try {
+            const renderDataPurifiedBatch = {
+              pluginVersion: pluginVersion,
+              purifiedBans: currentBatchData, // 当前批次的净化数据
+              userBans: [], // 净化列表不显示手动内容
+              listType: '净化屏蔽',
+              scaleStyleValue: scaleStyleValue, // 传递缩放值
+              batchInfo: `(第 ${batchNum} / ${totalBatchesPurified} 批)` // 传递批次信息给模板页脚
+            };
+
+            await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+            await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+            tempHtmlFilePathPurified = path.join(MiaoPluginMBT.paths.tempHtmlPath, `banlist-purified-${timestampPurified}.html`);
+            tempImgFilePathPurified = path.join(MiaoPluginMBT.paths.tempImgPath, `banlist-purified-${timestampPurified}.png`);
+
+            await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePathPurified); // 复制模板
+
+            const imgBatch = await puppeteer.screenshot(`guguniu-banlist-purified-batch${batchNum}`, {
+              tplFile: tempHtmlFilePathPurified,
+              savePath: tempImgFilePathPurified,
+              imgType: 'png',
+              pageGotoParams: { waitUntil: 'networkidle0' },
+              ...renderDataPurifiedBatch, // 传递当前批次数据
+              screenshotOptions: { fullPage: true },
+              width: 640,
+            });
+
+            if (imgBatch) {
+              forwardListPurified.push(imgBatch); // 将图片 segment 添加到待合并列表
+              logger.info(`${logPrefix} [封禁列表] 净化列表第 ${batchNum}/${totalBatchesPurified} 批图片生成成功。`);
+            } else {
+              logger.error(`${logPrefix} [封禁列表] 生成净化列表第 ${batchNum}/${totalBatchesPurified} 批截图失败。`);
+              forwardListPurified.push(`[❌ 第 ${batchNum}/${totalBatchesPurified} 批渲染失败]`); // 添加错误占位符
+            }
+          } catch (renderBatchError) {
+            logger.error(`${logPrefix} [封禁列表] 生成净化列表第 ${batchNum}/${totalBatchesPurified} 批截图时出错:`, renderBatchError);
+            forwardListPurified.push(`[❌ 第 ${batchNum}/${totalBatchesPurified} 批处理出错]`); // 添加错误占位符
+          } finally {
+            // 清理当前批次的临时文件
+            if (tempHtmlFilePathPurified && fs.existsSync(tempHtmlFilePathPurified)) {
+              try { await fsPromises.unlink(tempHtmlFilePathPurified); } catch (unlinkErr) {}
+            }
+            if (tempImgFilePathPurified && fs.existsSync(tempImgFilePathPurified)) {
+              try { await fsPromises.unlink(tempImgFilePathPurified); } catch (unlinkErr) {}
+            }
+          }
+        } // 结束净化列表批次循环
+
+        // 发送合并后的净化列表消息
+        if (forwardListPurified.length > 1) { // 确保除了标题还有内容
+          try {
+            const forwardMsgPurified = await common.makeForwardMsg(e, forwardListPurified, '净化屏蔽列表详情');
+            if (forwardMsgPurified) {
+              await e.reply(forwardMsgPurified);
+              logger.info(`${logPrefix} [封禁列表] 合并的净化屏蔽列表消息已发送。`);
+            } else {
+              logger.error(`${logPrefix} [封禁列表] 创建净化列表合并消息失败 (makeForwardMsg 返回空)。`);
+              await e.reply('生成合并的净化列表消息失败 (内部错误)。', true);
+            }
+          } catch (sendForwardError) {
+            logger.error(`${logPrefix} [封禁列表] 发送净化列表合并消息失败:`, sendForwardError);
+            await e.reply('发送合并的净化列表消息失败，请查看日志。', true);
+          }
+        } else {
+           logger.warn(`${logPrefix} [封禁列表] 净化列表处理后为空（仅含标题），未发送合并消息。`);
+        }
+
+      } else if (currentPFL == Purify_Level.NONE) {
+          logger.info(`${logPrefix} [封禁列表] 当前净化等级为 0，跳过显示净化屏蔽列表。`);
+          if (!manualSent && userBansData.length === 0 && purifiedBansData.length > 0) {
+              // 只有净化项，但 PFL=0 不显示，需要告知用户
+              await e.reply(`当前净化等级为 0，虽然有 ${purifiedBansData.length} 项符合净化规则，但不会被屏蔽。`, true);
+          }
+      } else {
+          // PFL > 0 但 purifiedBansData 为空
+          logger.info(`${logPrefix} [封禁列表] 净化等级为 ${currentPFL}，但没有被净化规则屏蔽的图片。`);
+          if (!manualSent) { // 如果手动列表也没发送，且净化列表为空
+              await e.reply('当前没有手动封禁，也没有被净化规则屏蔽的图片。', true);
+          }
       }
 
-      return true
+      // 最终检查，如果尝试发送图片但都失败了，给个提示
+      if (userBansData.length > 0 && !manualSent && !(currentPFL > Purify_Level.NONE && purifiedBansData.length > 0)) {
+          await e.reply('生成手动封禁列表图片失败了，请检查日志。', true);
+      } // 净化列表的失败已在合并消息中处理
+
+      return true; // #ban列表 命令处理完成
     }
 
-    // 处理 #咕咕牛封禁 / #咕咕牛解禁
+    // --- 处理 #咕咕牛封禁 / #咕咕牛解禁 ---
     const addMatch = msg.match(/^#咕咕牛封禁\s*(.+)/i)
     const delMatch = msg.match(/^#咕咕牛解禁\s*(.+)/i)
     if (addMatch || delMatch) {
@@ -2003,7 +2073,7 @@ export class MiaoPluginMBT extends plugin {
       const { mainName: rawMainName, imageNumber } = parsedId
 
       // 查找标准角色名
-      const aliasResult = await MiaoPluginMBT.FindRoleAlias(rawMainName, this.logger)
+      const aliasResult = await MiaoPluginMBT.FindRoleAlias(rawMainName, logger)
       const standardMainName = aliasResult.exists ? aliasResult.mainName : rawMainName
 
       // 在元数据缓存中查找对应的图片信息
@@ -2139,6 +2209,7 @@ export class MiaoPluginMBT extends plugin {
   /**
    * @description 处理 #查看 命令，显示指定角色的所有图片及状态。
    *              【V4.8.3 修正】实现分批发送合并转发消息，解决群聊发送限制问题。
+   *              按每批 28 项分割渲染并合并为一条转发消息发送
    */
   async FindRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true
@@ -2160,9 +2231,9 @@ export class MiaoPluginMBT extends plugin {
         else return e.reply(`图库里好像没有『${standardMainName}』这个角色呢。`)
       }
 
-      await e.reply(
-        `${this.logPrefix} 正在整理 [${standardMainName}] 的图片 (${roleImageData.length} 张)`
-      )
+      // await e.reply(
+      //   `${this.logPrefix} 正在整理 [${standardMainName}] 的图片 (${roleImageData.length} 张)`
+      // )
 
       roleImageData.sort(
         (a, b) =>
@@ -2170,7 +2241,7 @@ export class MiaoPluginMBT extends plugin {
           parseInt(b.path?.match(/Gu(\d+)\.webp$/i)?.[1] || '0')
       )
 
-      const ITEMS_PER_BATCH = 30 // 设置合并内容
+      const ITEMS_PER_BATCH = 28 // 设置合并内容
       const totalItems = roleImageData.length
       const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH)
 
@@ -2426,6 +2497,8 @@ export class MiaoPluginMBT extends plugin {
             }
           })
           const pluginVersion = MiaoPluginMBT.GetVersionStatic() // 获取插件版本
+          const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
+
           const renderData = {
             pluginVersion: pluginVersion,
             characterName: standardMainName,
@@ -2434,6 +2507,7 @@ export class MiaoPluginMBT extends plugin {
             batchNum: batchNum,
             totalBatches: totalBatches,
             batchStartIndex: startIndex,
+            scaleStyleValue: scaleStyleValue,
           }
           // logger.debug(`${logPrefix} [可视化] 批次 ${batchNum} 数据已准备.`); // 减少冗余日志
 
@@ -2765,6 +2839,7 @@ export class MiaoPluginMBT extends plugin {
       };
       const processedSpeedsResult = processSpeeds(speeds1);
       const renderData = { speeds1: processedSpeedsResult, best1: best1, duration: duration };
+      const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
 
       // 获取外部模板文件路径
       const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'speedtest.html');
@@ -2806,6 +2881,7 @@ export class MiaoPluginMBT extends plugin {
         imgType: 'png',
         pageGotoParams: { waitUntil: 'networkidle0' },
         ...renderData,           
+        scaleStyleValue: scaleStyleValue,
         screenshotOptions: { fullPage: false },
         pageBoundingRect: { selector: 'body', padding: 0 },
         width: 540,
@@ -2863,6 +2939,9 @@ export class MiaoPluginMBT extends plugin {
         const config = MiaoPluginMBT.MBTConfig; // 获取当前配置
         const tuKuEnabled = config?.TuKuOP ?? Default_Config.defaultTuKuOp;
         const pflLevel = config?.PFL ?? Default_Config.defaultPfl;
+        const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
+        const randomBgImageUrl = MiaoPluginMBT.getRandomBgImageUrl();
+        //logger.info(`${logPrefix} [设置面板] 获取到的随机背景图 URL: [${randomBgImageUrl}]`);
 
         const renderData = {
             pluginVersion: MiaoPluginMBT.GetVersionStatic(),
@@ -2873,9 +2952,11 @@ export class MiaoPluginMBT extends plugin {
             pflStatus: {
                 level: pflLevel,
                 description: Purify_Level.getDescription(pflLevel),
-                class: `value-level-${pflLevel}` // 用于 CSS 控制颜色
+                class: `value-level-${pflLevel}`
             },
-            // 未来开关的占位数据 (如果模板需要)
+            scaleStyleValue: scaleStyleValue,
+            backgroundImageUrl: randomBgImageUrl,
+            // 未来开关的占位数据
             // horizontalMode: { text: '未启用', class: 'value-disabled' },
             // aiFeature: { text: '未启用', class: 'value-disabled' }
         };
@@ -2887,7 +2968,6 @@ export class MiaoPluginMBT extends plugin {
         tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `settings-${Date.now()}.png`);
         await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath);
 
-        // 生成截图
         logger.info(`${logPrefix} [设置面板] 开始生成设置面板截图...`);
         const img = await puppeteer.screenshot('guguniu-settings-panel', {
             tplFile: tempHtmlFilePath,
@@ -2895,9 +2975,9 @@ export class MiaoPluginMBT extends plugin {
             imgType: 'png',
             pageGotoParams: { waitUntil: 'networkidle0' },
             ...renderData,
-            screenshotOptions: { fullPage: false },
-            pageBoundingRect: { selector: '.panel', padding: 15 }, 
-            width: 480 
+            screenshotOptions: { fullPage: true  },
+            pageBoundingRect: { selector: '.panel', padding: 15}, 
+            width: 480
         });
 
         // 发送截图
@@ -3000,6 +3080,30 @@ export class MiaoPluginMBT extends plugin {
         await MiaoPluginMBT.GenerateAndApplyBanList(localImgDataCache, logger); 
         MiaoPluginMBT.#imgDataCache = Object.freeze(localImgDataCache);
 
+        try {
+          //logger.debug(`${logPrefix} [初始化] 尝试访问背景图目录: ${MiaoPluginMBT.paths.backgroundImgPath}`);
+          await fsPromises.access(MiaoPluginMBT.paths.backgroundImgPath);
+          const files = await fsPromises.readdir(MiaoPluginMBT.paths.backgroundImgPath);
+          //logger.debug(`${logPrefix} [初始化] 读取到文件列表: ${files.join(', ')}`);
+          MiaoPluginMBT.#backgroundImages = files.filter(file => /\.webp$/i.test(file));
+          //logger.debug(`${logPrefix} [初始化] 筛选后的背景图列表 (#backgroundImages): ${MiaoPluginMBT.#backgroundImages.join(', ')}`);
+
+          if (MiaoPluginMBT.#backgroundImages.length > 0) {
+              logger.info(`${logPrefix} [初始化] 加载了 ${MiaoPluginMBT.#backgroundImages.length} 张背景图`);
+          } else {
+              //logger.warn(`${logPrefix} [初始化] 背景图片目录 (${MiaoPluginMBT.paths.backgroundImgPath}) 为空或不包含 .webp 图片。`);
+              //errors.push('警告：未找到背景图片');
+          }
+        } catch (err) {
+            if (err.code === ERROR_CODES.NotFound) {
+                //logger.warn(`${logPrefix} [初始化] 背景图片目录未找到: ${MiaoPluginMBT.paths.backgroundImgPath}`);
+            } else {
+                //logger.error(`${logPrefix} [初始化] 读取背景图片目录时出错:`, err);
+            }
+            MiaoPluginMBT.#backgroundImages = [];
+            //errors.push('警告：加载背景图片失败'); 
+        }
+
         // 标记初始化完成
         MiaoPluginMBT.isGloballyInitialized = true;
         logger.info(`${logPrefix} 全局初始化成功。${errors.length > 0 ? ' 警告: ' + errors.join('; ') : ''}`);
@@ -3031,7 +3135,6 @@ export class MiaoPluginMBT extends plugin {
                 // 不需要重置 scheduled 标志，初始化理论上只成功一次
             }, delaySeconds * 1000); 
         }
-
       } catch (error) {
         fatalError = error;
         MiaoPluginMBT.isGloballyInitialized = false;
@@ -3058,6 +3161,7 @@ export class MiaoPluginMBT extends plugin {
 
     return MiaoPluginMBT.initializationPromise; 
   }
+
 
   /**
    * @description 生成并应用当前的生效封禁列表（合并用户封禁和净化规则）。
@@ -3117,6 +3221,20 @@ export class MiaoPluginMBT extends plugin {
     }
     return false
   }
+
+  /**
+   * @description 获取随机背景图片的 file:// URI
+   * @returns {string} 随机背景图片的 URI，如果无可用图片则返回空字符串
+   */
+  static getRandomBgImageUrl() {
+    if (!MiaoPluginMBT.#backgroundImages || MiaoPluginMBT.#backgroundImages.length === 0) {
+        return ''; 
+    }
+    const randomIndex = Math.floor(Math.random() * MiaoPluginMBT.#backgroundImages.length);
+    const randomFileName = MiaoPluginMBT.#backgroundImages[randomIndex];
+    const absolutePath = path.join(MiaoPluginMBT.paths.backgroundImgPath, randomFileName);
+    return `file://${absolutePath.replace(/\\/g, '/')}`;
+}
 
   /**
    * @description 检查给定相对路径的图片是否被当前生效的封禁列表（手动或净化）屏蔽。
@@ -3942,243 +4060,231 @@ export class MiaoPluginMBT extends plugin {
     }
   }
 
-  /**
-   * @description 下载单个仓库，包含代理选择和 Fallback 重试逻辑。
-   *              使用内置 HTML 模板，先写入临时文件再渲染。
+   /**
+   * @description 下载单个仓库，包含代理选择、GitHub 直连优先判断和 Fallback 重试逻辑。
+   *              【V4.8.3 修正】移除失败切换时的用户提示，改为仅记录日志。
    */
-  static async DownloadRepoWithFallback(repoNum, repoUrl, branch, localPath, eForProgress, loggerInstance) {
-    const logPrefix = Default_Config.logPrefix
-    const repoName = repoNum === 1 ? '一号仓库' : '二号仓库'
-    const baseRawUrl = RAW_URL_Repo1 // 测速统一用 Repo1 的 Raw URL
-    loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 开始下载: ${repoUrl}`)
+   static async DownloadRepoWithFallback(repoNum, repoUrl, branch, localPath, eForProgress, loggerInstance) {
+    const logPrefix = Default_Config.logPrefix;
+    const repoName = repoNum === 1 ? '一号仓库' : '二号仓库';
+    const baseRawUrl = RAW_URL_Repo1;
+    loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 开始下载: ${repoUrl}`);
 
-    let sourcesToTry = [] // 按优先级和速度排序的可尝试下载源
-    let allTestResults = [] // 存储所有代理的测速结果，用于生成报告
-    const startTime = Date.now()
-    let tempHtmlFilePath = ''
-    let tempImgFilePath = ''
-    let canGenerateReport = true // 标记是否可以生成报告，默认为 true
+    let sourcesToTry = [];
+    let allTestResults = [];
+    const startTime = Date.now();
+    let tempHtmlFilePath = '';
+    let tempImgFilePath = '';
+    let canGenerateReport = true;
+    let lastError = null;
 
-    // 测试代理速度
     try {
-      allTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance)
-      sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance)
+      allTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance);
     } catch (testError) {
-      loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 代理测速失败:`, testError)
-      const githubSource = Default_Config.proxies.find(p => p.name === 'GitHub')
+      loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 代理测速失败:`, testError);
+      const githubSource = Default_Config.proxies.find(p => p.name === 'GitHub');
       if (githubSource) {
-        sourcesToTry.push({ ...githubSource, speed: Infinity })
-        allTestResults = Default_Config.proxies.map(p => ({ ...p, speed: Infinity }))
+        allTestResults = [{ ...githubSource, speed: Infinity }];
       }
     }
 
-    // 如果是主仓库下载，尝试写入临时 HTML 并生成报告
     if (eForProgress && repoNum === 1 && allTestResults.length > 0) {
-      await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true }) // 确保 html 目录存在
-      tempHtmlFilePath = path.join(
-        MiaoPluginMBT.paths.tempHtmlPath,
-        `dl-speedtest-temp-${Date.now()}-${Math.random().toString(16).slice(2)}.html`
-      )
-      try {
-        // 将内置模板常量的内容写入临时文件
-        if (typeof SPEEDTEST_HTML_TEMPLATE !== 'string' || SPEEDTEST_HTML_TEMPLATE.length === 0) {
-          throw new Error('SPEEDTEST_HTML_TEMPLATE 常量未定义或为空！')
-        }
-        await fsPromises.writeFile(tempHtmlFilePath, SPEEDTEST_HTML_TEMPLATE, 'utf8')
-        loggerInstance.debug(`${logPrefix} [下载流程 ${repoName}] 已将内置模板写入临时文件: ${tempHtmlFilePath}`)
-        canGenerateReport = true // 标记可以生成报告
-      } catch (writeErr) {
-        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 写入临时 HTML 文件失败:`, writeErr)
-        await eForProgress.reply('生成测速报告失败：无法创建临时模板文件。').catch(() => {})
-        canGenerateReport = false // 标记无法生成报告
-      }
-
-      // 只有成功写入临时 HTML 文件才进行截图
-      if (canGenerateReport) {
+        await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+        tempHtmlFilePath = path.join(
+            MiaoPluginMBT.paths.tempHtmlPath,
+            `dl-speedtest-temp-${Date.now()}-${Math.random().toString(16).slice(2)}.html`
+        );
         try {
-          const bestSource = sourcesToTry[0] || null
-          const duration = ((Date.now() - startTime) / 1000).toFixed(1)
-          const processSpeeds = speeds => {
-            return speeds
-              .map(s => {
-                let statusText = 'timeout'
-                if (s.testUrlPrefix === null) {
-                  // 如果 testUrlPrefix 为 null，标记为不可用 'na'
-                  statusText = 'na'
-                } else if (Number.isFinite(s.speed) && s.speed >= 0) {
-                  // 如果 speed 是一个有效的非负数字，标记为成功 'ok'
-                  statusText = 'ok'
-                }
-                // 返回一个新的对象，包含原始信息和新增的 statusText
-                return { ...s, statusText }
-              })
-              .sort((a, b) => {
-                const prioA = a.priority ?? 999
-                const prioB = b.priority ?? 999
-                if (prioA !== prioB) return prioA - prioB
-
-                // 优先级相同，再按速度排序
-                // 将 Infinity 和 'na' 状态的速度视为无穷大，排在后面
-                const speedA = a.statusText === 'ok' ? a.speed : Infinity
-                const speedB = b.statusText === 'ok' ? b.speed : Infinity
-                return speedA - speedB
-              })
-          }
-          const processedSpeeds1 = processSpeeds(speeds1)
-          const renderData = { speeds1: processedSpeeds1, best1: bestSource, duration: duration }
-
-          await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true })
-          tempImgFilePath = path.join(
-            MiaoPluginMBT.paths.tempImgPath,
-            `dl-speedtest-${Date.now()}-${Math.random().toString(16).slice(2)}.png`
-          )
-
-          const img = await puppeteer.screenshot('guguniu-dl-speedtest', {
-            tplFile: tempHtmlFilePath, // 使用临时的 HTML 文件
-            savePath: tempImgFilePath,
-            imgType: 'png',
-            pageGotoParams: { waitUntil: 'networkidle0' },
-            data: renderData, 
-            screenshotOptions: { fullPage: false },
-            pageBoundingRect: { selector: 'body', padding: 0 },
-            width: 540,
-          })
-
-          if (img) {
-            await eForProgress.reply(img)
-            await common.sleep(500)
-          } else {
-            loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 生成测速截图失败。`)
-            await eForProgress.reply(`${logPrefix} 生成测速报告失败，将直接开始下载...`).catch(() => {})
-          }
-        } catch (renderOrReplyError) {
-          loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 回复测速结果失败:`, renderOrReplyError)
-          await eForProgress.reply(`${logPrefix} 处理测速报告时出错，将直接开始下载...`).catch(() => {})
-        } finally {
-          // 清理临时文件
-          if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) {
-            try {
-              await fsPromises.unlink(tempHtmlFilePath)
-            } catch (unlinkErr) {}
-          }
-          if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-            try {
-              await fsPromises.unlink(tempImgFilePath)
-            } catch (unlinkErr) {}
-          }
-          // 清理 Puppeteer 可能残留的别名目录
-          const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-dl-speedtest')
-          if (fs.existsSync(possiblePuppeteerTempDir)) {
-            try {
-              await safeDelete(possiblePuppeteerTempDir)
-            } catch (deleteErr) {}
-          }
+            if (typeof SPEEDTEST_HTML_TEMPLATE !== 'string' || SPEEDTEST_HTML_TEMPLATE.length === 0) {
+                throw new Error('SPEEDTEST_HTML_TEMPLATE 常量未定义或为空！');
+            }
+            await fsPromises.writeFile(tempHtmlFilePath, SPEEDTEST_HTML_TEMPLATE, 'utf8');
+            loggerInstance.debug(`${logPrefix} [下载流程 ${repoName}] 已将内置模板写入临时文件: ${tempHtmlFilePath}`);
+            canGenerateReport = true;
+        } catch (writeErr) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 写入临时 HTML 文件失败:`, writeErr);
+            await eForProgress.reply('生成测速报告失败：无法创建临时模板文件。').catch(() => {});
+            canGenerateReport = false;
         }
+
+        if (canGenerateReport) {
+            try {
+                const reportSources = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+                const bestSourceForReport = reportSources[0] || null;
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                const processSpeeds = speeds => {  return speeds.map(s => ({...s, statusText: s.testUrlPrefix === null ? 'na' : (Number.isFinite(s.speed) && s.speed >= 0 ? 'ok' : 'timeout')})).sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999) || (a.speed === Infinity || a.statusText === 'na' ? 1 : (b.speed === Infinity || b.statusText === 'na' ? -1 : a.speed - b.speed))); };
+                const processedSpeedsResult = processSpeeds(allTestResults);
+                const renderData = { speeds1: processedSpeedsResult, best1: bestSourceForReport, duration: duration };
+
+                await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+                tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `dl-speedtest-${Date.now()}.png`);
+
+                const img = await puppeteer.screenshot('guguniu-dl-speedtest', {
+                    tplFile: tempHtmlFilePath, 
+                    savePath: tempImgFilePath, 
+                    imgType: 'png',
+                    pageGotoParams: { waitUntil: 'networkidle0' }, 
+                    data: { ...renderData, scaleStyle: scaleStyle },
+                    screenshotOptions: { fullPage: false }, 
+                    pageBoundingRect: { selector: 'body', padding: 0 },
+                     width: 540,
+                });
+
+                if (img) {
+                    await eForProgress.reply(img); await common.sleep(500);
+                } else {
+                    loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 生成测速截图失败。`);
+                    await eForProgress.reply(`${logPrefix} 生成测速报告失败，继续下载...`).catch(() => {});
+                }
+            } catch (renderOrReplyError) {
+                loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 回复测速结果失败:`, renderOrReplyError);
+                await eForProgress.reply(`${logPrefix} 处理测速报告时出错，继续下载...`).catch(() => {});
+            } finally {
+                 if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) { try { await fsPromises.unlink(tempHtmlFilePath); } catch (unlinkErr) {} }
+                 if (tempImgFilePath && fs.existsSync(tempImgFilePath)) { try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {} }
+                 const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-dl-speedtest');
+                 if (fs.existsSync(possiblePuppeteerTempDir)) { try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {} }
+            }
+        }
+    }
+
+    //  GitHub 直连优先判断 
+    const githubResult = allTestResults.find(r => r.name === 'GitHub');
+    let githubDirectAttempted = false; // 标记是否尝试了 GitHub 直连
+
+    if (githubResult && githubResult.speed !== Infinity && githubResult.speed <= 300) {
+        githubDirectAttempted = true; // 标记尝试
+        const nodeName = 'GitHub(直连-优先)';
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 检测到 GitHub 直连延迟 (${githubResult.speed}ms) <= 300ms，优先尝试直连...`);
+        if (eForProgress && repoNum === 1) await eForProgress.reply(`⚡ 检测到 GitHub 低延迟，优先尝试直连下载 ${repoName}...`).catch(() => {});
+
+        const cloneArgsDirect = ['clone', `--depth=${Default_Config.gitCloneDepth}`, '--progress', repoUrl, localPath];
+        const gitOptionsDirect = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+
+        try {
+            let progressReportedDirect = { 10: false, 50: false, 90: false };
+            await ExecuteCommand(
+                'git', cloneArgsDirect, gitOptionsDirect, Default_Config.gitCloneTimeout,
+                stderrChunk => { // 进度报告回调
+                    if (repoNum === 1 && eForProgress) {
+                        const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
+                        if (match?.[1]) {
+                            const progress = parseInt(match[1], 10);
+                            [10, 50, 90].forEach(t => {
+                                if (progress >= t && !progressReportedDirect[t]) {
+                                    progressReportedDirect[t] = true;
+                                    eForProgress.reply(`『咕咕牛』${repoName} GitHub 直连下载: ${t}%...`).catch(() => {});
+                                }
+                            });
+                        }
+                    }
+                }
+            );
+            loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 使用 ${nodeName} 下载成功！`);
+            return { success: true, nodeName: nodeName }; // 直连成功，直接返回
+        } catch (error) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 优先尝试 ${nodeName} 下载失败。将继续尝试其他源...`);
+            loggerInstance.error(error);
+            lastError = error;
+            loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 尝试清理直连失败产生的目录: ${localPath}`);
+            await safeDelete(localPath);
+            await common.sleep(1000);
       }
-      // 无论是否生成报告，都提示开始下载
-      const bestSourceForMsg = sourcesToTry[0] || null
-      await eForProgress
-        .reply(`✅ 优选: ${bestSourceForMsg ? bestSourceForMsg.name : '无可用源'}\n⏳ 开始下载 ${repoName}...`)
-        .catch(() => {})
-    } else if (eForProgress && repoNum === 1) {
-      // 如果没有测速结果或无法生成报告，提示直接下载
-      await eForProgress
-        .reply(`${logPrefix} ${canGenerateReport ? '测速失败' : '无法生成测速报告'}，直接开始下载 ${repoName}...`)
-        .catch(() => {})
+    } else if (githubResult) {
+         loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] GitHub 直连延迟 (${githubResult.speed === Infinity ? '超时/失败' : githubResult.speed + 'ms'}) > 300ms，按优先级选择节点。`);
+         if (eForProgress && repoNum === 1) await eForProgress.reply(`⏳ GitHub 延迟较高，开始尝试其他下载节点...`).catch(()=>{});
+    } else {
+         loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 未找到 GitHub 测速结果，按优先级选择节点。`);
+         if (eForProgress && repoNum === 1) await eForProgress.reply(`⏳ 开始尝试下载节点...`).catch(()=>{});
     }
 
-    // 检查是否有可用下载源
+
+    sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+
     if (sourcesToTry.length === 0) {
-      loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 没有任何可用的下载源！`)
-      return { success: false, nodeName: '无可用源' }
+      loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 没有任何可用的下载源！(包括 GitHub 直连尝试后)`);
+      return { success: false, nodeName: '无可用源', error: lastError };
     }
 
-    // 依次尝试可用下载源
-    let lastError = null // 记录最后一次失败的错误
-    for (const source of sourcesToTry) {
-      const nodeName = source.name === 'GitHub' ? 'GitHub(直连)' : `${source.name}(代理)`
-      loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 尝试使用源: ${nodeName}`)
+    loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 开始尝试列表: ${sourcesToTry.map(s => s.name).join(', ')}`);
 
-      // 构造 Clone URL 和代理环境变量
-      let cloneUrl = ''
-      let proxyForEnv = null
+    for (const source of sourcesToTry) {
+      // 如果是 GitHub 源，之前已经成功尝试过直连（无论成功失败），则跳过这次循环
+      // 为了避免在 GitHub 直连失败后，又通过代理列表轮到 GitHub 时再次尝试直连。
+      if (source.name === 'GitHub' && githubDirectAttempted) {
+          loggerInstance.debug(`${logPrefix} [下载流程 ${repoName}] 已优先尝试过 GitHub 直连，跳过本次列表中的 GitHub 源。`);
+          continue;
+      }
+
+      const nodeName = source.name === 'GitHub' ? 'GitHub(直连)' : `${source.name}(代理)`;
+      loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 尝试使用源: ${nodeName}`);
+
+      let cloneUrl = '';
+      let proxyForEnv = null;
       if (source.name === 'GitHub') {
-        cloneUrl = repoUrl
+        cloneUrl = repoUrl;
       } else if (source.cloneUrlPrefix) {
         if (source.name === 'GitClone') {
-          cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl.replace(/^https?:\/\//, '')}`
+          cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl.replace(/^https?:\/\//, '')}`;
         } else {
-          cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl}`
+          cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, '')}/${repoUrl}`;
         }
         try {
-          const proxyUrl = new URL(source.cloneUrlPrefix)
-          if (['http:', 'https:'].includes(proxyUrl.protocol)) proxyForEnv = proxyUrl.origin
+          const proxyUrl = new URL(source.cloneUrlPrefix);
+          if (['http:', 'https:'].includes(proxyUrl.protocol)) proxyForEnv = proxyUrl.origin;
         } catch (urlError) {
-          loggerInstance.warn(
-            `${logPrefix} [下载流程 ${repoName}] 无法解析代理 ${source.name} 的 cloneUrlPrefix 用于环境变量: ${urlError.message}`
-          )
+          loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 无法解析代理 ${source.name} 的 cloneUrlPrefix: ${urlError.message}`);
         }
       } else {
-        loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 源 ${source.name} 没有有效的 cloneUrlPrefix，跳过。`)
-        continue
+        loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 源 ${source.name} 没有 cloneUrlPrefix，跳过。`);
+        continue;
       }
 
-      const cloneArgs = ['clone', `--depth=${Default_Config.gitCloneDepth}`, '--progress', cloneUrl, localPath]
-      const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false }
+      const cloneArgs = ['clone', `--depth=${Default_Config.gitCloneDepth}`, '--progress', cloneUrl, localPath];
+      const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
       if (proxyForEnv) {
-        gitOptions.env = { ...process.env, HTTP_PROXY: proxyForEnv, HTTPS_PROXY: proxyForEnv }
-        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 为 Git 命令设置了代理环境变量: ${proxyForEnv}`)
-      } else {
-        /* loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 未设置代理环境变量。`); */
-        // 调试用
+        gitOptions.env = { ...process.env, HTTP_PROXY: proxyForEnv, HTTPS_PROXY: proxyForEnv };
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 为 Git 命令设置代理: ${proxyForEnv}`);
       }
 
       try {
-        let progressReported = { 10: false, 50: false, 90: false }
-        const cloneResult = await ExecuteCommand(
-          'git',
-          cloneArgs,
-          gitOptions,
-          Default_Config.gitCloneTimeout,
-          stderrChunk => {
+        let progressReported = { 10: false, 50: false, 90: false };
+        await ExecuteCommand(
+          'git', cloneArgs, gitOptions, Default_Config.gitCloneTimeout,
+          stderrChunk => { // 进度报告
             if (repoNum === 1 && eForProgress) {
-              const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/)
+              const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
               if (match?.[1]) {
-                const progress = parseInt(match[1], 10)
-                ;[10, 50, 90].forEach(t => {
+                const progress = parseInt(match[1], 10);
+                [10, 50, 90].forEach(t => {
                   if (progress >= t && !progressReported[t]) {
-                    progressReported[t] = true
-                    const msg = `『咕咕牛』聚合下载: ${t}%... (${nodeName})`
-                    eForProgress.reply(msg).catch(() => {})
+                    progressReported[t] = true;
+                    eForProgress.reply(`『咕咕牛』${repoName} (${nodeName}) 下载: ${t}%...`).catch(() => {});
                   }
-                })
+                });
               }
             } else if (repoNum !== 1) {
-              const match = stderrChunk.match(/(Receiving objects|Resolving deltas):\s*(\d+)%/)
-              if (match)
-                loggerInstance.debug(`${logPrefix} [下载进度 ${repoName}] (${nodeName}) ${match[1]}: ${match[2]}%`)
+              const match = stderrChunk.match(/(Receiving objects|Resolving deltas):\s*(\d+)%/);
+              if (match) loggerInstance.debug(`${logPrefix} [下载进度 ${repoName}] (${nodeName}) ${match[1]}: ${match[2]}%`);
             }
           }
-        )
-        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载成功！`)
-        return { success: true, nodeName: nodeName }
+        );
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载成功！`);
+        return { success: true, nodeName: nodeName };
       } catch (error) {
-        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载失败。`)
-        loggerInstance.error(error)
-        lastError = error
-        loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 尝试清理失败下载产生的目录: ${localPath}`)
-        await safeDelete(localPath)
-        await common.sleep(1000)
-        // 失败切换时只记录日志，不回复用户
-        loggerInstance.warn(`${logPrefix} 使用源 ${nodeName} 下载 ${repoName} 失败，尝试下一个源...`)
-        // if (eForProgress && repoNum === 1) await eForProgress.reply(`${logPrefix} 使用 ${nodeName} 下载 ${repoName} 失败，尝试下一个源...`).catch(()=>{});  //暂时不使用
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 使用源 ${nodeName} 下载失败。`);
+        loggerInstance.error(error);
+        lastError = error;
+        loggerInstance.warn(`${logPrefix} [下载流程 ${repoName}] 尝试清理失败下载产生的目录: ${localPath}`);
+        await safeDelete(localPath);
+        await common.sleep(1000);
+        loggerInstance.warn(`${logPrefix} 使用源 ${nodeName} 下载 ${repoName} 失败，尝试下一个源...`);
       }
     }
 
-    // 最终失败处理
     loggerInstance.error(
       `${logPrefix} [下载流程 ${repoName}] 尝试了所有可用源 (${sourcesToTry.map(s => s.name).join(', ')})，均下载失败！`
-    )
+    );
     if (repoNum === 1 && eForProgress) {
       await MiaoPluginMBT.ReportError(
         eForProgress,
@@ -4186,12 +4292,11 @@ export class MiaoPluginMBT extends plugin {
         lastError || new Error('所有源下载失败'),
         `尝试源: ${sourcesToTry.map(s => s.name).join(', ')}`,
         loggerInstance
-      )
+      );
     } else {
-      loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 最终错误:`, lastError || '未知错误')
+      loggerInstance.error(`${logPrefix} [下载流程 ${repoName}] 最终错误:`, lastError || '未知错误');
     }
-    return { success: false, nodeName: '所有源失败', error: lastError }
-    xs
+    return { success: false, nodeName: '所有源失败', error: lastError };
   }
 
   /**
@@ -4565,6 +4670,13 @@ export class MiaoPluginMBT extends plugin {
     }
   }
 
+  static getScaleStyleValue(baseScale = 1) { 
+    const scalePercent = MiaoPluginMBT.MBTConfig?.renderScale ?? Default_Config.renderScale;
+    const scaleFactor = Math.min(2, Math.max(0.5, (Number(scalePercent) || 100) / 100));
+    const finalScale = baseScale * scaleFactor;
+    return `transform:scale(${finalScale}); transform-origin: top left;`;
+  }
+
   async TriggerError(e) {
     if (!e.isMaster) return e.reply('仅限主人测试。')
     const match = e.msg.match(/#咕咕牛触发错误(?:\s*(git|fs|config|data|ref|type|Repo1|Repo2|notify|other))?/i)
@@ -4766,9 +4878,9 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, '..', 'package.json')
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      return pkg.version || '4.8.3'
+      return pkg.version || '4.8.4'
     } catch {
-      return '4.8.3'
+      return '4.8.4'
     }
   }
 }
