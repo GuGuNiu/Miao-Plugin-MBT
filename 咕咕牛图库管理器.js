@@ -4892,6 +4892,7 @@ const GUGUNIU_RULES = [
   { reg: /^#检查咕咕牛$/i, fnc: 'CheckStatus' },
   { reg: /^#(启用|禁用)咕咕牛$/i, fnc: 'ManageTuKuOption', permission: 'master' },
   { reg: /^#(?:设置咕咕牛净化等级|设定净化)\s*([012])$/i, fnc: 'SetPurificationLevel', permission: 'master' },
+  { reg: /^#咕咕牛(开启|关闭)PM18\s*.+$/i, fnc: 'PM18IMGOP', permission: 'master' },
   { reg: /^#咕咕牛封禁\s*.+$/i, fnc: 'ManageUserBans', permission: 'master' },
   { reg: /^#咕咕牛解禁\s*.+$/i, fnc: 'ManageUserBans', permission: 'master' },
   { reg: /^#(?:ban|咕咕牛封禁)列表$/i, fnc: 'ManageUserBans' },
