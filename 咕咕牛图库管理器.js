@@ -773,6 +773,7 @@ export class MiaoPluginMBT extends plugin {
     if (!(await this.CheckInit(e))) return true
     if (this.isGitRunning) return logger.info(`${this.logPrefix} Git 操作进行中，请稍后再试...`)
 
+    let finalUserMessage = '';
     this.isGitRunning = true
     const startTime = Date.now()
     let overallSuccess = false
