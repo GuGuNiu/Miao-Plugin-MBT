@@ -1,5 +1,3 @@
-'use strict'; // 启用严格模式
-
 const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
