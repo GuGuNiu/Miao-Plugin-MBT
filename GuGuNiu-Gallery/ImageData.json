@@ -20879,5 +20879,25 @@
         },
         "timestamp": "2025-04-23T04:21:49.027Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5034678144",
+        "characterName": "爱可菲",
+        "path": "gs-character/爱可菲/爱可菲Gu1.webp",
+        "attributes": {
+            "filename": "爱可菲Gu1.webp",
+            "parentFolder": "爱可菲",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "78bb9b7754a850de40e34194f6012be1",
+            "Downloaded_From": "local_generation"
+        },
+        "timestamp": "2025-05-03T04:09:17.758Z",
+        "sourceGallery": "gs-character"
     }
 ]
