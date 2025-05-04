@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛设置面板</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap');
-        
+         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap');
         html { height: 100%; }
         body {
             font-family: 'Rajdhani', 'Orbitron', 'Segoe UI', sans-serif;
@@ -46,13 +45,13 @@
             right: 0;
             bottom: 0;
             z-index: -1;
-            background: 
+            background:
                 linear-gradient(90deg, rgba(100, 255, 218, 0.05) 1px, transparent 1px),
                 linear-gradient(rgba(100, 255, 218, 0.05) 1px, transparent 1px);
             background-size: 24px 24px;
             pointer-events: none;
         }
-        
+
         .panel {
             background-color: rgba(15, 20, 30, 0.9);
             backdrop-filter: blur(8px);
@@ -71,7 +70,7 @@
             border-image: linear-gradient(45deg, #64ffda, #00bfff) 1;
             overflow: visible;
         }
-        
+
         .panel::after {
             content: '';
             position: absolute;
@@ -84,7 +83,7 @@
             z-index: -1;
             animation: float 6s ease-in-out infinite;
         }
-        
+
         .panel::before {
             content: '';
             position: absolute;
@@ -92,22 +91,22 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(100, 255, 218, 0.8), 
-                rgba(0, 191, 255, 0.8), 
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(100, 255, 218, 0.8),
+                rgba(0, 191, 255, 0.8),
                 transparent);
             animation: scanline 3s linear infinite;
             z-index: 2;
         }
-        
+
         .decor-circle {
             position: absolute;
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
         }
-        
+
         .decor-circle-1 {
             width: 80px;
             height: 80px;
@@ -117,7 +116,7 @@
             border: 1px dashed rgba(79, 195, 247, 0.3);
             animation: pulse 4s ease-in-out infinite;
         }
-        
+
         .decor-circle-2 {
             width: 120px;
             height: 120px;
@@ -127,7 +126,7 @@
             border: 1px dashed rgba(149, 117, 205, 0.3);
             animation: rotate 12s linear infinite;
         }
-        
+
         .decor-circle-3 {
             width: 60px;
             height: 60px;
@@ -137,26 +136,26 @@
             border: 1px dashed rgba(255, 183, 77, 0.3);
             animation: float 5s ease-in-out infinite;
         }
-       
-        .header { 
-            text-align: center; 
-            margin-bottom: 25px; 
-            padding-bottom: 15px; 
-            border-bottom: 1px solid rgba(100, 255, 218, 0.3); 
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(100, 255, 218, 0.3);
             position: relative;
         }
-        
-        .header h1 { 
-            font-size: 28px; 
-            color: #64ffda; 
-            margin: 0 0 8px 0; 
+
+        .header h1 {
+            font-size: 28px;
+            color: #64ffda;
+            margin: 0 0 8px 0;
             font-weight: 700;
             font-family: 'Orbitron', sans-serif;
             text-shadow: 0 0 15px rgba(100, 255, 218, 0.5);
             letter-spacing: 2px;
             position: relative;
         }
-        
+
         .header h1::after {
             content: '';
             position: absolute;
@@ -166,7 +165,7 @@
             height: 1px;
             background: linear-gradient(90deg, transparent, #64ffda, transparent);
         }
-        
+
         .header::after {
             content: 'SYSTEM CONTROL TERMINAL';
             position: absolute;
@@ -177,7 +176,7 @@
             color: rgba(100, 255, 218, 0.6);
             letter-spacing: 2px;
         }
-        
+
         .setting-item {
             background-color: rgba(25, 30, 45, 0.7);
             border-radius: 6px;
@@ -192,7 +191,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .setting-item::before {
             content: '';
             position: absolute;
@@ -203,7 +202,7 @@
             background: linear-gradient(to bottom, var(--item-color), #64ffda);
             z-index: 1;
         }
-        
+
         .setting-item::after {
             content: '';
             position: absolute;
@@ -214,7 +213,7 @@
             background: linear-gradient(to bottom, var(--status-color), transparent);
             z-index: 1;
         }
-        
+
         .item-left {
             display: flex;
             flex-direction: column;
@@ -224,7 +223,7 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .setting-item .label {
             font-weight: 600;
             color: var(--item-color);
@@ -236,7 +235,7 @@
             letter-spacing: 1px;
             text-shadow: 0 0 5px rgba(var(--item-color-rgb), 0.3);
         }
-        
+
         .setting-item .label::before {
             content: '◈';
             display: inline-block;
@@ -244,7 +243,7 @@
             color: var(--item-color);
             font-size: 14px;
         }
-        
+
         .value-description {
             font-size: 12px;
             color: rgba(200, 220, 255, 0.7);
@@ -252,7 +251,7 @@
             padding-left: 24px;
             font-family: 'Rajdhani', sans-serif;
         }
-        
+
         .item-right {
             text-align: right;
             flex-shrink: 0;
@@ -260,7 +259,7 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .setting-item .value {
             font-size: 15px;
             font-weight: 700;
@@ -276,52 +275,42 @@
             position: relative;
             z-index: 2;
         }
-        
+
         .item-tuku { --item-color: #64ffda; --item-color-rgb: 100, 255, 218; }
         .item-pfl { --item-color: #ffb74d; --item-color-rgb: 255, 183, 77; }
-        .item-hewanglan { --item-color: #ff8a65; --item-color-rgb: 255, 138, 101; }
-        .item-fullscreen { --item-color: #4fc3f7; --item-color-rgb: 79, 195, 247; }
+        .item-layout { --item-color: #4fc3f7; --item-color-rgb: 79, 195, 247; } 
         .item-easteregg { --item-color: #9575cd; --item-color-rgb: 149, 117, 205; }
         .item-ai { --item-color: #f06292; --item-color-rgb: 240, 98, 146; }
-        
+
         .value-enabled {
             --status-color: #64ffda;
             --status-border: rgba(100, 255, 218, 0.3);
             --status-glow: rgba(100, 255, 218, 0.2);
         }
-        
+
         .value-disabled {
             --status-color: #ff5252;
             --status-border: rgba(255, 82, 82, 0.3);
             --status-glow: rgba(255, 82, 82, 0.2);
         }
-        
+
         .value-level-0 {
             --status-color: #b0bec5;
             --status-border: rgba(176, 190, 197, 0.3);
             --status-glow: rgba(176, 190, 197, 0.2);
         }
-        
+
         .value-level-1 {
             --status-color: #ffb74d;
             --status-border: rgba(255, 183, 77, 0.3);
             --status-glow: rgba(255, 183, 77, 0.2);
         }
-        
+
         .value-level-2 {
             --status-color: #ff5252;
             --status-border: rgba(255, 82, 82, 0.3);
             --status-glow: rgba(255, 82, 82, 0.2);
         }
-        
-        .value-coming-soon {
-            --status-color: rgba(200, 220, 255, 0.7);
-            --status-border: rgba(200, 220, 255, 0.2);
-            --status-glow: rgba(200, 220, 255, 0.1);
-            font-style: italic;
-            font-weight: normal;
-        }
-        
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -333,7 +322,7 @@
             font-family: 'Orbitron', sans-serif;
             position: relative;
         }
-        
+
         .footer::before {
             content: '';
             position: absolute;
@@ -346,11 +335,16 @@
             background: radial-gradient(circle, #64ffda 0%, transparent 70%);
             box-shadow: 0 0 10px #64ffda;
         }
-    
+
         .value:not(.value-coming-soon) {
             animation: pulse 2s infinite;
         }
-        
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(calc(100% + 3px)); } }
+
     </style>
 </head>
 <body style="{{scaleStyleValue}}">
@@ -358,12 +352,11 @@
         <div class="decor-circle decor-circle-1"></div>
         <div class="decor-circle decor-circle-2"></div>
         <div class="decor-circle decor-circle-3"></div>
-        
+
         <div class="header">
             <h1>咕咕牛设置面板</h1>
         </div>
         <div class="setting-item item-tuku">
-            
             <div class="item-left">
                 <span class="label">图库状态</span>
                 <div class="value-description">同步图库面板图至插件内的文件夹</div>
@@ -373,7 +366,6 @@
             </div>
         </div>
         <div class="setting-item item-pfl">
-            
             <div class="item-left">
                 <span class="label">净化等级</span>
                 <div class="value-description">{{ pflStatus.description }}</div>
@@ -382,44 +374,31 @@
                 <span class="value {{ pflStatus.class }}">{{ pflStatus.level }}</span>
             </div>
         </div>
-        <div class="setting-item item-hewanglan">
-            
+        <div class="setting-item item-ai">
             <div class="item-left">
-                <span class="label">鹤望兰&星铁Plugin</span>
-                <div class="value-description">同步专用面板图至鹤望兰星铁插件</div>
+                <span class="label">Ai 图</span>
+                <div class="value-description">是否允许使用 Ai 生成的图片</div>
             </div>
             <div class="item-right">
-                <span class="value value-coming-soon">敬请期待</span>
-            </div>
-        </div>
-        <div class="setting-item item-fullscreen">
-            
-            <div class="item-left">
-                <span class="label">全屏幕图</span>
-                <div class="value-description">全屏展示的面板图,渲染速度会慢一点</div>
-            </div>
-            <div class="item-right">
-                <span class="value value-coming-soon">敬请期待</span>
+                <span class="value {{ aiStatus.class }}">{{ aiStatus.text }}</span>
             </div>
         </div>
         <div class="setting-item item-easteregg">
-            
             <div class="item-left">
                 <span class="label">彩蛋图</span>
-                <div class="value-description">角色彩蛋部分图含有轻微性暗示或限制级内容</div>
+                <div class="value-description">是否允许使用彩蛋图片</div>
             </div>
             <div class="item-right">
-                <span class="value value-coming-soon">敬请期待</span>
+                <span class="value {{ easterEggStatus.class }}">{{ easterEggStatus.text }}</span>
             </div>
         </div>
-        <div class="setting-item item-ai">
-            
+        <div class="setting-item item-layout">
             <div class="item-left">
-                <span class="label">Ai图</span>
-                <div class="value-description">Ai生成的面板图</div>
+                <span class="label">横屏图</span>
+                <div class="value-description">是否允许使用横屏布局的图片</div>
             </div>
             <div class="item-right">
-                <span class="value value-coming-soon">敬请期待</span>
+                <span class="value {{ layoutStatus.class }}">{{ layoutStatus.text }}</span>
             </div>
         </div>
         <div class="footer"> Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>

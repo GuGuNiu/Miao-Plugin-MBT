@@ -79,7 +79,25 @@
         text-align: center;
         margin-top: 25px;
         font-size: 11px;
-        color: #aaa;
+        color: #666;
+      }
+      .filename-area {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; 
+      }
+
+      .ban-reasons {
+        margin-top: 3px; 
+      }
+
+      .reason-tag {
+        font-size: 10px;
+        color: #666;
+        padding: 1px 4px;
+        border-radius: 3px;
+        margin-right: 4px; 
+        white-space: nowrap; 
       }
     </style>
   </head>
@@ -91,10 +109,19 @@
       <h2 class="purified">🌱 净化屏蔽 ({{ purifiedBans.length }} 张)</h2>
       <div class="ban-grid">
         {{ each purifiedBans item }}
-        <div class="ban-item">
-          <img src="{{ item.thumbnailPath }}" alt="{{ item.fileNameNoExt }}" />
-          <div class="filename">{{ item.fileNameNoExt }}</div>
-        </div>
+        <div class="ban-item" style="text-align: center;">
+          <img src="{{ item.thumbnailPath }}" ... >
+          <div class="filename-area" style="display: flex; flex-direction: column; align-items: center;">
+              <span class="filename" style="font-weight: 600;">{{ item.fileNameNoExt }}</span>
+              {{ if item.reasons && item.reasons.length > 0 }}
+              <div class="ban-reasons">
+                  {{ each item.reasons reason }}
+                  <span class="reason-tag">[{{ reason }}]</span>
+                  {{ /each }}
+              </div>
+              {{ /if }}
+          </div>
+      </div>
         {{ /each }}
       </div>
       {{ else if userBans && userBans.length > 0 }} {{ else }}
