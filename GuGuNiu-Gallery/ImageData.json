@@ -687,7 +687,7 @@
         "attributes": {
             "filename": "芙宁娜Gu38.webp",
             "parentFolder": "芙宁娜",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -696,7 +696,7 @@
             "md5": "36fc42e210195a8359e8901142eb4b91",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:28:31.340Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1067,16 +1067,16 @@
         "attributes": {
             "filename": "胡桃Gu12.webp",
             "parentFolder": "胡桃",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "179c0fdeda9e57763fea95fa157d6bee",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:32:35.645Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1127,7 +1127,7 @@
         "attributes": {
             "filename": "胡桃Gu15.webp",
             "parentFolder": "胡桃",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -1136,7 +1136,7 @@
             "md5": "cfb4a903f42b609384db187ef4c64de6",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:32:43.339Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1367,7 +1367,7 @@
         "attributes": {
             "filename": "胡桃Gu26.webp",
             "parentFolder": "胡桃",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -1376,7 +1376,7 @@
             "md5": "ed8e3d676cc7321b0c21cf557362c979",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:31:15.500Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2007,7 +2007,7 @@
         "attributes": {
             "filename": "雷电将军Gu10.webp",
             "parentFolder": "雷电将军",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "fullscreen",
             "isEasterEgg": false,
@@ -2016,7 +2016,7 @@
             "md5": "5e3d095dad1836e2615834fcd9237556",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:31:52.404Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2187,7 +2187,7 @@
         "attributes": {
             "filename": "雷电将军Gu19.webp",
             "parentFolder": "雷电将军",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -2196,7 +2196,7 @@
             "md5": "ed71550cf85b7efa664365c1dc600460",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:32:15.251Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -9607,16 +9607,16 @@
         "attributes": {
             "filename": "迪卢克Gu3.webp",
             "parentFolder": "迪卢克",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
-            "isEasterEgg": false,
+            "isEasterEgg": true,
             "isAiImage": false,
             "isBan": false,
             "md5": "5dcd7ef0d4778a7573c3be443970a5c6",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.751Z",
+        "timestamp": "2025-05-05T01:28:17.061Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -14747,7 +14747,7 @@
         "attributes": {
             "filename": "五郎Gu2.webp",
             "parentFolder": "五郎",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -14756,7 +14756,7 @@
             "md5": "0efb753b284a2c333eaf8900b192f6cf",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-05T01:32:52.501Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -21998,5 +21998,25 @@
         },
         "timestamp": "2025-05-03T10:18:29.753Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7076391164",
+        "characterName": "阿蕾奇诺",
+        "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu3.webp",
+        "attributes": {
+            "filename": "阿蕾奇诺Gu3.webp",
+            "parentFolder": "阿蕾奇诺",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "51233318e351bcd9da0221240adde6b1",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-05T02:42:17.119Z",
+        "sourceGallery": "gs-character"
     }
 ]
