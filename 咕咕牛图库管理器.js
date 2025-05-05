@@ -969,7 +969,7 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #下载咕咕牛 命令，核心串行，附属并行下载。
-   *              内嵌下载报告模板，移除附属进度提示。
+   *              内嵌下载报告模板，统一截图方式。
    */
   async DownloadTuKu(e) {
     if (!(await this.CheckInit(e))) return true;
@@ -981,221 +981,111 @@ export class MiaoPluginMBT extends plugin {
     let coreRepoResult = { repo: 1, success: false, nodeName: '未执行', error: null };
     const subsidiaryResults = [];
 
+    const DOWNLOAD_REPORT_HTML_TEMPLATE = `
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>咕咕牛下载报告</title>
+        <style>
+            body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e8f5e9, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 480px; box-sizing: border-box; }
+            .container { padding: 20px; background-color: rgba(255, 255, 255, 0.85); border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.7); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2); }
+            h1 { text-align: center; color: #2e7d32; margin: 0 0 15px 0; font-size: 22px; border-bottom: 1px solid #c8e6c9; padding-bottom: 10px; }
+            .repo-section { margin-bottom: 15px; padding: 15px; border-radius: 6px; background-color: rgba(232, 245, 233, 0.6); border-left: 5px solid #4CAF50; }
+            .repo-section.subsidiary { border-left-color: #fb8c00; background-color: rgba(255, 243, 224, 0.6); }
+            .repo-title { font-weight: bold; font-size: 16px; color: #388e3c; margin-bottom: 8px; }
+            .repo-section.subsidiary .repo-title { color: #e65100; }
+            .status-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #a5d6a7; }
+            .repo-section.subsidiary .status-line { border-bottom-color: #ffcc80; }
+            .status-line:last-child { border-bottom: none; }
+            .status-label { color: #555; }
+            .status-value { font-weight: bold; }
+            .status-ok { color: #2e7d32; }
+            .status-fail { color: #c62828; }
+            .status-local { color: #0277bd; }
+            .status-na { color: #757575; }
+            .error-msg { font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #c62828; margin-top: 3px; padding-left: 10px;}
+            .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #757575; }
+        </style>
+    </head>
+    <body style="{{scaleStyleValue}}">
+        <div class="container">
+            <h1>咕咕牛下载报告</h1>
+            {{ if coreRepoResult }}
+            <div class="repo-section core">
+                <div class="repo-title">核心仓库 (一号)</div>
+                <div class="status-line"> <span class="status-label">状态:</span> <span class="status-value {{ coreRepoResult.success ? 'status-ok' : 'status-fail' }}">{{ coreRepoResult.success ? '下载成功' : '下载失败' }} {{ coreRepoResult.success ? '✅' : '❌' }}</span> </div>
+                <div class="status-line"> <span class="status-label">节点:</span> <span class="status-value {{ coreRepoResult.nodeName === '本地' ? 'status-local' : (coreRepoResult.success ? 'status-ok' : 'status-fail') }}">{{ coreRepoResult.nodeName }}</span> </div>
+                {{ if coreRepoResult.error }}
+                <div class="status-line"> <span class="status-label">错误:</span> </div>
+                <div class="error-msg">{{ coreRepoResult.error.message || '未知错误' }}</div>
+                {{ /if }}
+            </div>
+            {{ /if }}
+            {{ if subsidiaryResults && subsidiaryResults.length > 0 }}
+            <div class="repo-section subsidiary">
+                <div class="repo-title">附属仓库</div>
+                {{ each subsidiaryResults subRes }}
+                <div class="status-line"> <span class="status-label">{{ subRes.repo === 2 ? '二号仓库' : (subRes.repo === 3 ? '三号仓库' : subRes.repo + '号仓库') }}:</span> <span class="status-value {{ subRes.nodeName === '本地' ? 'status-local' : (subRes.nodeName === '未配置' ? 'status-na' : (subRes.success ? 'status-ok' : 'status-fail')) }}">{{ subRes.nodeName === '本地' ? '已存在' : (subRes.nodeName === '未配置' ? '未配置' : (subRes.success ? '下载成功 (' + subRes.nodeName + ')' : '下载失败 (' + subRes.nodeName + ')')) }} {{ subRes.success ? '✅' : (subRes.nodeName === '未配置' || subRes.nodeName === '本地' ? '' : '❌') }}</span> </div>
+                {{ if subRes.error }}
+                 <div class="status-line"> <span class="status-label" style="padding-left: 15px;">错误:</span> </div>
+                 <div class="error-msg">{{ subRes.error.message || '未知错误' }}</div>
+                {{ /if }}
+                {{ /each }}
+            </div>
+            {{ /if }}
+           <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
+        </div>
+    </body>
+    </html>
+    `;
+
     try {
-      const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
-      const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
-      let Repo2Exists = Repo2UrlConfigured ? await MiaoPluginMBT.IsTuKuDownloaded(2) : false;
-      const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
-      let Repo3Exists = Repo3UrlConfigured ? await MiaoPluginMBT.IsTuKuDownloaded(3) : false;
+       const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
+       const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
+       let Repo2Exists = Repo2UrlConfigured ? await MiaoPluginMBT.IsTuKuDownloaded(2) : false;
+       const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
+       let Repo3Exists = Repo3UrlConfigured ? await MiaoPluginMBT.IsTuKuDownloaded(3) : false;
+       let allDownloaded = Repo1Exists;
+       if (Repo2UrlConfigured && !Repo2Exists) allDownloaded = false;
+       if (Repo3UrlConfigured && !Repo3Exists) allDownloaded = false;
+       if (allDownloaded) { return e.reply(`${logPrefix} 所有已配置的图库仓库都已经下载好了，不用重复下载啦.`); }
+       if (!Repo1Exists && (Repo2Exists || Repo3Exists)) { await e.reply(`${logPrefix} 状态异常！核心仓库未下载，但附属仓库已存在。建议先 #重置咕咕牛`); return true; }
+       if (!Repo1Exists) {
+         logger.info(`${logPrefix} [核心下载] 开始下载核心仓库 (一号)...`);
+         try {
+           coreRepoResult = await MiaoPluginMBT.DownloadRepoWithFallback(1, Default_Config.Main_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, MiaoPluginMBT.paths.LocalTuKuPath, e, logger);
+           if (!coreRepoResult.success) {
+              logger.error(`${logPrefix} [核心下载] 核心仓库下载失败。`);
+              const failMsg = `『咕咕牛』核心仓库下载失败 (${coreRepoResult.nodeName})。请检查日志或网络后重试。`;
+              if (coreRepoResult.error) { await this.ReportError(e, '下载核心仓库', coreRepoResult.error); }
+              else { await e.reply(failMsg).catch(() => {}); }
+              return true;
+           }
+           logger.info(`${logPrefix} [核心下载] 核心仓库下载成功 (${coreRepoResult.nodeName})。`);
+         } catch (err) {
+           logger.error(`${logPrefix} [核心下载] 核心仓库下载过程中发生意外错误:`, err);
+           coreRepoResult = { repo: 1, success: false, nodeName: '执行异常', error: err };
+           await this.ReportError(e, '下载核心仓库', coreRepoResult.error);
+           return true;
+         }
+       } else {
+         logger.info(`${logPrefix} [核心下载] 核心仓库已存在，跳过下载。`);
+         coreRepoResult = { repo: 1, success: true, nodeName: '本地', error: null };
+       }
+       overallSuccess = coreRepoResult.success;
+       const subsidiaryPromises = [];
+       if (Repo2UrlConfigured && !Repo2Exists) { logger.info(`${logPrefix} [核心下载] 添加附属仓库 (二号) 下载任务。`); subsidiaryPromises.push(MiaoPluginMBT.DownloadRepoWithFallback(2, MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, MiaoPluginMBT.paths.LocalTuKuPath2, null, logger).then(result => ({ repo: 2, ...result })).catch(err => { logger.error(`${logPrefix} [核心下载] 附属仓库 (二号) 下载 Promise 捕获到错误:`, err); return { repo: 2, success: false, nodeName: '执行异常', error: err }; })); }
+       else if (Repo2UrlConfigured && Repo2Exists) { logger.info(`${logPrefix} [核心下载] 附属仓库 (二号) 已存在。`); subsidiaryResults.push({ repo: 2, success: true, nodeName: '本地', error: null }); }
+       else { logger.info(`${logPrefix} [核心下载] 附属仓库 (二号) 未配置。`); }
+       if (Repo3UrlConfigured && !Repo3Exists) { logger.info(`${logPrefix} [核心下载] 添加附属仓库 (三号) 下载任务。`); subsidiaryPromises.push(MiaoPluginMBT.DownloadRepoWithFallback(3, MiaoPluginMBT.MBTConfig.Sexy_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, MiaoPluginMBT.paths.LocalTuKuPath3, null, logger).then(result => ({ repo: 3, ...result })).catch(err => { logger.error(`${logPrefix} [核心下载] 附属仓库 (三号) 下载 Promise 捕获到错误:`, err); return { repo: 3, success: false, nodeName: '执行异常', error: err }; })); }
+       else if (Repo3UrlConfigured && Repo3Exists) { logger.info(`${logPrefix} [核心下载] 附属仓库 (三号) 已存在。`); subsidiaryResults.push({ repo: 3, success: true, nodeName: '本地', error: null }); }
+       else { logger.info(`${logPrefix} [核心下载] 附属仓库 (三号) 未配置。`); }
+       if (subsidiaryPromises.length > 0) { await e.reply('『咕咕牛』附属仓库聚合下载中,请等待...', true).catch(()=>{}); logger.info(`${logPrefix} [核心下载] 等待 ${subsidiaryPromises.length} 个附属仓库下载完成...`); const settledResults = await Promise.allSettled(subsidiaryPromises); logger.info(`${logPrefix} [核心下载] 所有附属仓库 Promise 已完成 (settled)。`); settledResults.forEach(result => { if (result.status === 'fulfilled') { subsidiaryResults.push(result.value); if(result.value.success){ logger.info(`${logPrefix} [核心下载] 附属仓库 (${result.value.repo}号) 下载成功 (${result.value.nodeName})。`); } else { logger.error(`${logPrefix} [核心下载] 附属仓库 (${result.value.repo}号) 下载失败 (${result.value.nodeName})。`); logger.error(`${logPrefix} [核心下载] 失败详情:`, result.value.error); } } else { logger.error(`${logPrefix} [核心下载] 一个附属仓库 Promise rejected:`, result.reason); } }); }
 
-      let allDownloaded = Repo1Exists;
-      if (Repo2UrlConfigured && !Repo2Exists) allDownloaded = false;
-      if (Repo3UrlConfigured && !Repo3Exists) allDownloaded = false;
-      if (allDownloaded) {
-        return e.reply(`${logPrefix} 所有已配置的图库仓库都已经下载好了，不用重复下载啦.`);
-      }
-
-      if (!Repo1Exists && (Repo2Exists || Repo3Exists)) {
-        await e.reply(`${logPrefix} 状态异常！核心仓库未下载，但附属仓库已存在。建议先 #重置咕咕牛`);
-        return true;
-      }
-
-      //  串行下载核心仓库 
-      if (!Repo1Exists) {
-        logger.info(`${logPrefix} [核心下载] 开始下载核心仓库 (一号)...`);
-        try {
-          coreRepoResult = await MiaoPluginMBT.DownloadRepoWithFallback(
-            1,
-            Default_Config.Main_Github_URL,
-            MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch,
-            MiaoPluginMBT.paths.LocalTuKuPath,
-            e, // 核心仓库需要进度提示
-            logger
-          );
-          if (!coreRepoResult.success) {
-             logger.error(`${logPrefix} [核心下载] 核心仓库下载失败。`);
-             // 失败时直接报告错误并终止
-             const failMsg = `『咕咕牛』核心仓库下载失败 (${coreRepoResult.nodeName})。请检查日志或网络后重试。`;
-             if (coreRepoResult.error) {
-               await this.ReportError(e, '下载核心仓库', coreRepoResult.error);
-             } else {
-               await e.reply(failMsg).catch(() => {});
-             }
-             return true;
-          }
-          logger.info(`${logPrefix} [核心下载] 核心仓库下载成功 (${coreRepoResult.nodeName})。`);
-        } catch (err) {
-          logger.error(`${logPrefix} [核心下载] 核心仓库下载过程中发生意外错误:`, err);
-          coreRepoResult = { repo: 1, success: false, nodeName: '执行异常', error: err };
-          await this.ReportError(e, '下载核心仓库', coreRepoResult.error);
-          return true;
-        }
-      } else {
-        logger.info(`${logPrefix} [核心下载] 核心仓库已存在，跳过下载。`);
-        coreRepoResult = { repo: 1, success: true, nodeName: '本地', error: null };
-      }
-
-      //  核心仓库成功后，并行下载附属仓库 
-      overallSuccess = coreRepoResult.success;
-      const subsidiaryPromises = [];
-
-      // 处理二号仓库
-      if (Repo2UrlConfigured && !Repo2Exists) {
-        logger.info(`${logPrefix} [核心下载] 添加附属仓库 (二号) 下载任务。`);
-        subsidiaryPromises.push(
-          MiaoPluginMBT.DownloadRepoWithFallback(
-            2,
-            MiaoPluginMBT.MBTConfig.Ass_Github_URL,
-            MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch,
-            MiaoPluginMBT.paths.LocalTuKuPath2,
-            null, // 附属仓库不传递 e，禁用进度提示
-            logger
-          )
-            .then(result => ({ repo: 2, ...result }))
-            .catch(err => {
-              logger.error(`${logPrefix} [核心下载] 附属仓库 (二号) 下载 Promise 捕获到错误:`, err);
-              return { repo: 2, success: false, nodeName: '执行异常', error: err };
-            })
-        );
-      } else if (Repo2UrlConfigured && Repo2Exists) {
-         logger.info(`${logPrefix} [核心下载] 附属仓库 (二号) 已存在。`);
-         subsidiaryResults.push({ repo: 2, success: true, nodeName: '本地', error: null });
-      } else {
-         logger.info(`${logPrefix} [核心下载] 附属仓库 (二号) 未配置。`);
-      }
-
-      // 处理三号仓库
-      if (Repo3UrlConfigured && !Repo3Exists) {
-        logger.info(`${logPrefix} [核心下载] 添加附属仓库 (三号) 下载任务。`);
-        subsidiaryPromises.push(
-          MiaoPluginMBT.DownloadRepoWithFallback(
-            3,
-            MiaoPluginMBT.MBTConfig.Sexy_Github_URL,
-            MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch,
-            MiaoPluginMBT.paths.LocalTuKuPath3,
-            null, // 附属仓库不传递 e，禁用进度提示
-            logger
-          )
-            .then(result => ({ repo: 3, ...result }))
-            .catch(err => {
-              logger.error(`${logPrefix} [核心下载] 附属仓库 (三号) 下载 Promise 捕获到错误:`, err);
-              return { repo: 3, success: false, nodeName: '执行异常', error: err };
-            })
-        );
-      } else if (Repo3UrlConfigured && Repo3Exists) {
-         logger.info(`${logPrefix} [核心下载] 附属仓库 (三号) 已存在。`);
-         subsidiaryResults.push({ repo: 3, success: true, nodeName: '本地', error: null });
-      } else {
-         logger.info(`${logPrefix} [核心下载] 附属仓库 (三号) 未配置。`);
-      }
-
-      //  添加附属仓库聚合提示 
-      if (subsidiaryPromises.length > 0) {
-          await e.reply('『咕咕牛』附属仓库聚合下载中,请等待...', true).catch(()=>{}); // 添加提示
-          logger.info(`${logPrefix} [核心下载] 等待 ${subsidiaryPromises.length} 个附属仓库下载完成...`);
-          const settledResults = await Promise.allSettled(subsidiaryPromises);
-          logger.info(`${logPrefix} [核心下载] 所有附属仓库 Promise 已完成 (settled)。`);
-          settledResults.forEach(result => {
-              if (result.status === 'fulfilled') {
-                  subsidiaryResults.push(result.value);
-                  if(result.value.success){
-                      logger.info(`${logPrefix} [核心下载] 附属仓库 (${result.value.repo}号) 下载成功 (${result.value.nodeName})。`);
-                  } else {
-                      logger.error(`${logPrefix} [核心下载] 附属仓库 (${result.value.repo}号) 下载失败 (${result.value.nodeName})。`);
-                      logger.error(`${logPrefix} [核心下载] 失败详情:`, result.value.error);
-                  }
-              } else {
-                  logger.error(`${logPrefix} [核心下载] 一个附属仓库 Promise rejected:`, result.reason);
-              }
-          });
-      }
-
-      const DOWNLOAD_REPORT_HTML_TEMPLATE = `
-      <!DOCTYPE html>
-      <html lang="zh-CN">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>咕咕牛下载报告</title>
-          <style>
-              body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e8f5e9, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 480px; box-sizing: border-box; }
-              .container { padding: 20px; background-color: rgba(255, 255, 255, 0.85); border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.7); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2); }
-              h1 { text-align: center; color: #2e7d32; margin: 0 0 15px 0; font-size: 22px; border-bottom: 1px solid #c8e6c9; padding-bottom: 10px; }
-              .repo-section { margin-bottom: 15px; padding: 15px; border-radius: 6px; background-color: rgba(232, 245, 233, 0.6); border-left: 5px solid #4CAF50; }
-              .repo-section.subsidiary { border-left-color: #fb8c00; background-color: rgba(255, 243, 224, 0.6); }
-              .repo-title { font-weight: bold; font-size: 16px; color: #388e3c; margin-bottom: 8px; }
-              .repo-section.subsidiary .repo-title { color: #e65100; }
-              .status-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #a5d6a7; }
-              .repo-section.subsidiary .status-line { border-bottom-color: #ffcc80; }
-              .status-line:last-child { border-bottom: none; }
-              .status-label { color: #555; }
-              .status-value { font-weight: bold; }
-              .status-ok { color: #2e7d32; }
-              .status-fail { color: #c62828; }
-              .status-local { color: #0277bd; }
-              .status-na { color: #757575; }
-              .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #757575; }
-          </style>
-      </head>
-      <body style="{{scaleStyleValue}}">
-          <div class="container">
-              <h1>咕咕牛下载报告</h1>
-      
-              {{ if coreRepoResult }}
-              <div class="repo-section core">
-                  <div class="repo-title">核心仓库 (一号)</div>
-                  <div class="status-line">
-                      <span class="status-label">状态:</span>
-                      <span class="status-value {{ coreRepoResult.success ? 'status-ok' : 'status-fail' }}">
-                          {{ coreRepoResult.success ? '下载成功' : '下载失败' }}
-                          {{ coreRepoResult.success ? '✅' : '❌' }}
-                      </span>
-                  </div>
-                  <div class="status-line">
-                      <span class="status-label">节点:</span>
-                      <span class="status-value {{ coreRepoResult.nodeName === '本地' ? 'status-local' : (coreRepoResult.success ? 'status-ok' : 'status-fail') }}">
-                          {{ coreRepoResult.nodeName }}
-                      </span>
-                  </div>
-                  {{ if coreRepoResult.error }}
-                  <div class="status-line">
-                      <span class="status-label">错误:</span>
-                      <span class="status-value status-fail" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">{{ coreRepoResult.error.message || '未知错误' }}</span>
-                  </div>
-                  {{ /if }}
-              </div>
-              {{ /if }}
-      
-              {{ if subsidiaryResults && subsidiaryResults.length > 0 }}
-              <div class="repo-section subsidiary">
-                  <div class="repo-title">附属仓库</div>
-                  {{ each subsidiaryResults subRes }}
-                  <div class="status-line">
-                      <span class="status-label">{{ subRes.repo === 2 ? '二号仓库' : (subRes.repo === 3 ? '三号仓库' : subRes.repo + '号仓库') }}:</span>
-                      <span class="status-value {{ subRes.nodeName === '本地' ? 'status-local' : (subRes.nodeName === '未配置' ? 'status-na' : (subRes.success ? 'status-ok' : 'status-fail')) }}">
-                          {{ subRes.nodeName === '本地' ? '已存在' : (subRes.nodeName === '未配置' ? '未配置' : (subRes.success ? '下载成功 (' + subRes.nodeName + ')' : '下载失败 (' + subRes.nodeName + ')')) }}
-                          {{ subRes.success ? '✅' : (subRes.nodeName === '未配置' || subRes.nodeName === '本地' ? '' : '❌') }}
-                      </span>
-                  </div>
-                  {{ if subRes.error }}
-                   <div class="status-line">
-                       <span class="status-label" style="padding-left: 15px;">错误:</span>
-                       <span class="status-value status-fail" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">{{ subRes.error.message || '未知错误' }}</span>
-                   </div>
-                  {{ /if }}
-                  {{ /each }}
-              </div>
-              {{ /if }}
-      
-              <div class="footer">总耗时: {{ duration }}s | By 咕咕牛</div>
-          </div>
-      </body>
-      </html>
-      `;
-
-      //  生成并发送图形化报告 
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      subsidiaryResults.sort((a, b) => a.repo - b.repo); // 确保附属结果按顺序显示
+      subsidiaryResults.sort((a, b) => a.repo - b.repo);
       const reportData = {
           coreRepoResult: coreRepoResult,
           subsidiaryResults: subsidiaryResults,
@@ -1203,30 +1093,33 @@ export class MiaoPluginMBT extends plugin {
           scaleStyleValue: MiaoPluginMBT.getScaleStyleValue()
       };
 
-      let reportHtmlContent = '';
-      let tempReportImgPath = '';
+      let tempReportHtmlPath = ''; 
+      let tempReportImgPath = ''; 
       try {
-          //logger.info(`${logPrefix} [下载报告] 开始准备图片报告数据...`);
+          logger.info(`${logPrefix} [下载报告] 开始准备图片报告...`);
           if (typeof DOWNLOAD_REPORT_HTML_TEMPLATE !== 'string' || DOWNLOAD_REPORT_HTML_TEMPLATE.length === 0) {
               throw new Error('DOWNLOAD_REPORT_HTML_TEMPLATE 常量无效!');
           }
-          reportHtmlContent = template.render(DOWNLOAD_REPORT_HTML_TEMPLATE, reportData);
-          if (typeof reportHtmlContent !== 'string' || reportHtmlContent.length === 0) {
-              throw new Error('下载报告模板渲染失败!');
-          }
+
+          // 写入内联模板到临时文件
+          await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+          tempReportHtmlPath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `download-report-tpl-${Date.now()}.html`);
+          await fsPromises.writeFile(tempReportHtmlPath, DOWNLOAD_REPORT_HTML_TEMPLATE, 'utf8');
+          // logger.debug(`${logPrefix} [下载报告] 已将内联模板写入临时文件: ${tempReportHtmlPath}`); //移除调试日志
 
           await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
           tempReportImgPath = path.join(MiaoPluginMBT.paths.tempImgPath, `download-report-${Date.now()}.png`);
 
-          //logger.info(`${logPrefix} [下载报告] 开始生成图片报告...`);
+          logger.info(`${logPrefix} [下载报告] 开始生成图片报告 (tplFile + ...data 方式)...`);
           const reportImg = await puppeteer.screenshot('guguniu-download-report', {
-              html: reportHtmlContent,
+              tplFile: tempReportHtmlPath, // 使用临时模板文件
               savePath: tempReportImgPath,
               imgType: 'png',
               pageGotoParams: { waitUntil: 'networkidle0' },
-              screenshotOptions: { fullPage: false }, // 可能需要调整为 true
-              pageBoundingRect: { selector: '.container', padding: 0 }, // 调整选择器
-              width: 520, // 调整宽度以匹配模板
+              ...reportData, 
+              screenshotOptions: { fullPage: false },
+              pageBoundingRect: { selector: '.container', padding: 0 },
+              width: 520,
           });
 
           if (reportImg) {
@@ -1237,28 +1130,26 @@ export class MiaoPluginMBT extends plugin {
           }
       } catch (reportError) {
           logger.error(`${logPrefix} [下载报告] 生成或发送图片报告时出错:`, reportError);
-          // 图片报告失败，回退到发送之前的文本消息
-          // await e.reply(finalReply).catch(() => {}); // 这里不再需要 finalReply
-          await this.ReportError(e, '生成下载报告', reportError); // 报告错误
+          await this.ReportError(e, '生成下载报告', reportError);
       } finally {
+          // 清理临时文件
+          if (tempReportHtmlPath && fs.existsSync(tempReportHtmlPath)) {
+              try { await fsPromises.unlink(tempReportHtmlPath); } catch (unlinkErr) {}
+          }
           if (tempReportImgPath && fs.existsSync(tempReportImgPath)) {
               try { await fsPromises.unlink(tempReportImgPath); } catch (unlinkErr) {}
           }
-          // 清理截图组件临时目录
           const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-download-report');
           if (fs.existsSync(possiblePuppeteerTempDir)) { try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {} }
       }
 
-
-      //  执行下载后设置
       logger.info(`${logPrefix} [核心下载] 开始执行 RunPostDownloadSetup...`);
       await MiaoPluginMBT.RunPostDownloadSetup(e, logger);
       logger.info(`${logPrefix} [核心下载] RunPostDownloadSetup 执行完成。`);
 
-      //  发送初始日志 
       let logMessages = [];
       const gitLog1 = await MiaoPluginMBT.GetTuKuLog(1, MiaoPluginMBT.paths.LocalTuKuPath, logger);
-      if (gitLog1) logMessages.push(`--- 核心仓库初始提交 ---\n${gitLog1}`);
+      if (gitLog1) logMessages.push(`--- 核心仓库提交 ---\n${gitLog1}`);
 
       for (const res of subsidiaryResults) {
           if (res.success && res.nodeName !== '本地' && res.nodeName !== '未配置') {
@@ -1268,7 +1159,7 @@ export class MiaoPluginMBT extends plugin {
               if (res.repo === 3) { repoPath = MiaoPluginMBT.paths.LocalTuKuPath3; repoDisplayName = '三号仓库'; }
               if (repoPath) {
                   const gitLogSub = await MiaoPluginMBT.GetTuKuLog(1, repoPath, logger);
-                  if (gitLogSub) logMessages.push(`--- ${repoDisplayName}初始提交 ---\n${gitLogSub}`);
+                  if (gitLogSub) logMessages.push(`--- ${repoDisplayName}提交 ---\n${gitLogSub}`);
               }
           }
       }
@@ -1289,7 +1180,7 @@ export class MiaoPluginMBT extends plugin {
       await this.ReportError(e, '下载图库顶层', error);
       overallSuccess = false;
     } finally {
-      const durationFinal = ((Date.now() - startTime) / 1000).toFixed(1); // 重新计算最终耗时
+      const durationFinal = ((Date.now() - startTime) / 1000).toFixed(1);
       logger.info(`${logPrefix} [核心下载] 流程结束，总耗时 ${durationFinal} 秒。`);
     }
     return true;
@@ -5801,87 +5692,60 @@ export class MiaoPluginMBT extends plugin {
     const functionStartTime = Date.now();
     // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 进入函数 @ ${functionStartTime}`); //调试日志
 
-    const DOWNLOAD_REPORT_HTML_TEMPLATE = `
+    const SPEEDTEST_HTML_TEMPLATE_LOCAL = `
     <!DOCTYPE html>
     <html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>咕咕牛下载报告</title>
-        <style>
-            body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e8f5e9, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 480px; box-sizing: border-box; }
-            .container { padding: 20px; background-color: rgba(255, 255, 255, 0.85); border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.7); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2); }
-            h1 { text-align: center; color: #2e7d32; margin: 0 0 15px 0; font-size: 22px; border-bottom: 1px solid #c8e6c9; padding-bottom: 10px; }
-            .repo-section { margin-bottom: 15px; padding: 15px; border-radius: 6px; background-color: rgba(232, 245, 233, 0.6); border-left: 5px solid #4CAF50; }
-            .repo-section.subsidiary { border-left-color: #fb8c00; background-color: rgba(255, 243, 224, 0.6); }
-            .repo-title { font-weight: bold; font-size: 16px; color: #388e3c; margin-bottom: 8px; }
-            .repo-section.subsidiary .repo-title { color: #e65100; }
-            .status-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #a5d6a7; }
-            .repo-section.subsidiary .status-line { border-bottom-color: #ffcc80; }
-            .status-line:last-child { border-bottom: none; }
-            .status-label { color: #555; }
-            .status-value { font-weight: bold; }
-            .status-ok { color: #2e7d32; }
-            .status-fail { color: #c62828; }
-            .status-local { color: #0277bd; }
-            .status-na { color: #757575; }
-            .error-msg { font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #c62828; margin-top: 3px; padding-left: 10px;}
-            .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #757575; }
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>咕咕牛测速报告 (下载内置)</title>
+       <style>
+        body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:0;padding:20px;background:linear-gradient(to bottom,#e0f2f7,#ffffff);color:#333;font-size:14px;line-height:1.6;width:500px;box-sizing:border-box;}
+        .container{padding:15px;background-color:rgba(255,255,255,0.8);border-radius:10px;border:1px rgba(0,255,85,0.8) solid;box-shadow:5px 5px 0 0 rgba(0,255,85,0.3);}
+        h1{text-align:center;color:rgba(7,131,48,0.8);margin:0 0 15px 0;font-size:20px;border-bottom:1px solid #eee;padding-bottom:10px;}
+        h2{font-size:16px;color:#333;margin:15px 0 10px 0;border-left:4px solid #0077cc;padding-left:8px;}
+        ul{list-style:none;padding:0;margin:0;}
+        li{display:flex;justify-content:space-between;align-items:center;padding:8px 5px;border-bottom:1px dashed #eee;}
+        li:last-child{border-bottom:none;}
+        .node-name{font-weight:bold;color:#555;flex-basis:120px;flex-shrink:0;}
+        .node-status{text-align:right;flex-grow:1;}
+        .status-ok{color:#28a745;font-weight:bold;}
+        .status-timeout{color:#dc3545;font-weight:bold;}
+        .status-na{color:#aaa;}
+        .priority{color:#777;font-size:0.9em;margin-left:5px;}
+        .best-choice{margin-top:20px;text-align:center;font-weight:600;color:#00cc55;font-size:1.05em;padding:8px;background-color:rgba(0,255,64,0.05);border-radius:6px;}
+        .footer{text-align:center;margin-top:20px;font-size:11px;color:#999;}
         </style>
-    </head>
-    <body style="{{scaleStyleValue}}">
+      </head>
+      <body style="{{scaleStyleValue}}">
         <div class="container">
-            <h1>咕咕牛下载报告</h1>
-    
-            {{ if coreRepoResult }}
-            <div class="repo-section core">
-                <div class="repo-title">核心仓库 (一号)</div>
-                <div class="status-line">
-                    <span class="status-label">状态:</span>
-                    <span class="status-value {{ coreRepoResult.success ? 'status-ok' : 'status-fail' }}">
-                        {{ coreRepoResult.success ? '下载成功' : '下载失败' }}
-                        {{ coreRepoResult.success ? '✅' : '❌' }}
-                    </span>
-                </div>
-                <div class="status-line">
-                    <span class="status-label">节点:</span>
-                    <span class="status-value {{ coreRepoResult.nodeName === '本地' ? 'status-local' : (coreRepoResult.success ? 'status-ok' : 'status-fail') }}">
-                        {{ coreRepoResult.nodeName }}
-                    </span>
-                </div>
-                {{ if coreRepoResult.error }}
-                <div class="status-line">
-                    <span class="status-label">错误:</span>
-                </div>
-                <div class="error-msg">{{ coreRepoResult.error.message || '未知错误' }}</div>
+          <h1>咕咕牛网络测速报告 (下载内置)</h1>
+          {{ if speeds1 && speeds1.length > 0 }}
+          <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
+          <ul>
+            {{ each speeds1 s }}
+            <li>
+              <span class="node-name">{{ s.name }}</span>
+              <span class="node-status">
+                {{ if s.statusText === 'ok' }}
+                <span class="status-ok">{{ s.speed }}ms ✅</span>
+                {{ else if s.statusText === 'na' }}
+                <span class="status-na">N/A ⚠️</span>
+                {{ else }}
+                <span class="status-timeout">超时 ❌</span>
                 {{ /if }}
-            </div>
-            {{ /if }}
-    
-            {{ if subsidiaryResults && subsidiaryResults.length > 0 }}
-            <div class="repo-section subsidiary">
-                <div class="repo-title">附属仓库</div>
-                {{ each subsidiaryResults subRes }}
-                <div class="status-line">
-                    <span class="status-label">{{ subRes.repo === 2 ? '二号仓库' : (subRes.repo === 3 ? '三号仓库' : subRes.repo + '号仓库') }}:</span>
-                    <span class="status-value {{ subRes.nodeName === '本地' ? 'status-local' : (subRes.nodeName === '未配置' ? 'status-na' : (subRes.success ? 'status-ok' : 'status-fail')) }}">
-                        {{ subRes.nodeName === '本地' ? '已存在' : (subRes.nodeName === '未配置' ? '未配置' : (subRes.success ? '下载成功 (' + subRes.nodeName + ')' : '下载失败 (' + subRes.nodeName + ')')) }}
-                        {{ subRes.success ? '✅' : (subRes.nodeName === '未配置' || subRes.nodeName === '本地' ? '' : '❌') }}
-                    </span>
-                </div>
-                {{ if subRes.error }}
-                 <div class="status-line">
-                     <span class="status-label" style="padding-left: 15px;">错误:</span>
-                 </div>
-                 <div class="error-msg">{{ subRes.error.message || '未知错误' }}</div>
-                {{ /if }}
-                {{ /each }}
-            </div>
-            {{ /if }}
-    
-            <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
+                <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
+              </span>
+            </li>
+            {{ /each }}
+          </ul>
+             <div class="best-choice">
+                ✅ 优选: {{ best1Display }}
+              </div>
+          {{ /if }}
+          <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
         </div>
-    </body>
+      </body>
     </html>
     `;
 
