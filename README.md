@@ -79,7 +79,7 @@ curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图�
 
 <div align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://s2.loli.net/2025/04/28/7b8ZwBKVhY6Xdny.webp" 
+    <img src="https://s2.loli.net/2025/05/05/zirbKvjTAByl3HS.webp" 
          alt="帮助" 
          width="1200" 
          style="display: block; border-radius: 8px;">
