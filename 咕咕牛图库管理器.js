@@ -3432,7 +3432,7 @@ export class MiaoPluginMBT extends plugin {
    */
   async Help(e) {
     const networkHelpUrl =
-      "https://s2.loli.net/2025/04/28/7b8ZwBKVhY6Xdny.webp";
+      "https://s2.loli.net/2025/05/05/O79hI3NnVHfRaZQ.webp";
     const localHelpPath = MiaoPluginMBT.paths.helpImagePath;
 
     try {
