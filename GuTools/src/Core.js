@@ -1,711 +1,1235 @@
 // ==========================================================================
-// 核心工具、常量、状态管理、DOM 缓存以及基础初始化框架。
+// 核心: 全局状态、常量、DOM 缓存、工具函数及初始化。
 // ==========================================================================
-'use strict';
 
-// --------------------------------------------------------------------------
-// 常量定义
-// --------------------------------------------------------------------------
+// --- 常量定义 ---
 const API_ENDPOINTS = {
-    FETCH_GALLERY_IMAGES: '/api/images',
-    FETCH_USER_DATA: '/api/userdata',
-    UPDATE_USER_DATA: '/api/update-userdata',
-    FETCH_TEMP_IMAGES: '/api/temp-images',
-    FETCH_CHARACTER_FOLDERS: '/api/character-folders',
-    FETCH_IMAGE_MD5: '/api/image-md5',
-    FETCH_LAST_FILE_NUMBER: '/api/last-file-number',
-    IMPORT_IMAGE_TO_GALLERY: '/api/import-image',
-    FETCH_EXTERNAL_USER_DATA: '/api/external-userdata', 
-    UPDATE_EXTERNAL_USER_DATA: '/api/update-external-userdata', 
-    FETCH_GALLERY_CONFIG: '/api/gallery-config',
-    UPDATE_GALLERY_CONFIG: '/api/update-gallery-config',
-    FETCH_PLUGIN_IMAGES: '/api/external-images', 
-    RENAME_SEQUENCE_FILES: '/api/rename-sequence-files',
-    FETCH_BACKGROUND_IMAGES: '/api/background-images',
-    FETCH_FOLDER_CONTENTS: '/api/folder-contents'
+  FETCH_GALLERY_IMAGES: "/api/images",
+  FETCH_USER_DATA: "/api/userdata",
+  UPDATE_USER_DATA: "/api/update-userdata",
+  FETCH_TEMP_IMAGES: "/api/temp-images",
+  FETCH_CHARACTER_FOLDERS: "/api/character-folders",
+  FETCH_IMAGE_MD5: "/api/image-md5",
+  FETCH_LAST_FILE_NUMBER: "/api/last-file-number",
+  IMPORT_IMAGE_TO_GALLERY: "/api/import-image",
+  FETCH_EXTERNAL_USER_DATA: "/api/external-userdata",
+  UPDATE_EXTERNAL_USER_DATA: "/api/update-external-userdata",
+  FETCH_GALLERY_CONFIG: "/api/gallery-config",
+  UPDATE_GALLERY_CONFIG: "/api/update-gallery-config",
+  FETCH_PLUGIN_IMAGES: "/api/external-images",
+  RENAME_SEQUENCE_FILES: "/api/rename-sequence-files",
+  FETCH_BACKGROUND_IMAGES: "/api/background-images",
+  FETCH_FOLDER_CONTENTS: "/api/folder-contents",
 };
 
 const DELAYS = {
-    INPUT_DEBOUNCE: 300,
-    DATA_LIST_SEARCH_DEBOUNCE: 300,
-    IMPORT_SEARCH_DEBOUNCE: 300,
-    PLUGIN_GALLERY_SEARCH_DEBOUNCE: 300,
-    MESSAGE_CLEAR_DEFAULT: 3000,
-    GENERATOR_NEXT_IMAGE_DELAY: 1500,
-    TOAST_DEFAULT_DURATION: 3000,
-    TOAST_ERROR_DURATION: 5000
+  INPUT_DEBOUNCE: 300,
+  DATA_LIST_SEARCH_DEBOUNCE: 300,
+  IMPORT_SEARCH_DEBOUNCE: 300,
+  PLUGIN_GALLERY_SEARCH_DEBOUNCE: 300,
+  MESSAGE_CLEAR_DEFAULT: 3000,
+  GENERATOR_NEXT_IMAGE_DELAY: 1500,
+  TOAST_DEFAULT_DURATION: 3000,
+  TOAST_ERROR_DURATION: 5000,
 };
 
 const UI_CLASSES = {
-    HIDDEN: 'hidden', ACTIVE: 'active', SELECTED: 'selected', VISIBLE: 'visible',
-    ERROR: 'error', SUCCESS: 'success', WARNING: 'warning', INFO: 'info',
-    FADE_IN: 'fade-in', FADE_OUT: 'fade-out', NO_METADATA: 'no-metadata',
-    EDITABLE: 'editable', SLIDING_OUT: 'sliding-out', INITIALLY_HIDDEN: 'initially-hidden',
-    DISABLED: 'disabled', LOADING: 'loading'
+  HIDDEN: "hidden",
+  ACTIVE: "active",
+  SELECTED: "selected",
+  VISIBLE: "visible",
+  ERROR: "error",
+  SUCCESS: "success",
+  WARNING: "warning",
+  INFO: "info",
+  FADE_IN: "fade-in",
+  FADE_OUT: "fade-out",
+  NO_METADATA: "no-metadata",
+  EDITABLE: "editable",
+  SLIDING_OUT: "sliding-out",
+  INITIALLY_HIDDEN: "initially-hidden",
+  DISABLED: "disabled",
+  LOADING: "loading",
 };
 
 const PAGINATION = {
-    PLUGIN_GALLERY_ITEMS_PER_PAGE: 8
+  PLUGIN_GALLERY_ITEMS_PER_PAGE: 8,
 };
 
 let lazyLoadObserver = null;
 
-// --------------------------------------------------------------------------
-// 全局状态管理 (AppState)
-// --------------------------------------------------------------------------
+// --- 全局状态管理 AppState ---
 const AppState = {
-    isSettingInputProgrammatically: false,
-    isProcessingSelection: false,
-    generator: {
-        isShowingFolderSuggestions: false, showingRelatedImages: false,
-        currentSelection: null, currentGeneratedId: null, currentCalculatedMd5: null,
-        searchDelayTimer: null, writingTimerId: null, writingStartTime: null,
-        successTimerId: null, successStartTime: null, backgroundWorker: null,
-        lastQuerySentToWorker: null,
+  isSettingInputProgrammatically: false,
+  isProcessingSelection: false,
+  generator: {
+    isShowingFolderSuggestions: false,
+    showingRelatedImages: false,
+    currentSelection: null, // { name, fileName, folderName, urlPath(相对), gallery, storageBox(原始大小写) }
+    currentGeneratedId: null,
+    currentCalculatedMd5: null,
+    searchDelayTimer: null,
+    writingTimerId: null,
+    writingStartTime: null,
+    successTimerId: null,
+    successStartTime: null,
+    backgroundWorker: null,
+    lastQuerySentToWorker: null,
+  },
+  importer: {
+    dataLoaded: false,
+    tempImagesList: [],
+    characterFoldersList: [],
+    selectedTempImageInfo: null, // { filename, path }
+    selectedTargetFolder: null,
+    selectedStorageBox: null, // 存储原始大小写
+    suggestedFilenameBase: "",
+    suggestedFilenameNum: 0,
+    suggestedFilenameExt: "",
+    searchDebounceTimer: null,
+  },
+  pluginGallery: {
+    dataLoaded: false,
+    allImages: [],
+    savedEntries: [],
+    savedPaths: new Set(),
+    selectedFolder: null,
+    selectedImagePath: null,
+    currentPage: 1,
+    totalPages: 1,
+    searchDebounceTimer: null,
+    currentSourceFilter: "all",
+  },
+  md5Checker: { isRunning: false, isAborted: false },
+  sequenceManager: { isRunning: false },
+  jsonCalibrator: { isRunning: false },
+  dataList: {
+    currentEditPath: null,
+    searchDebounceTimer: null,
+    virtualScrollInfo: {
+      container: null,
+      innerSpacer: null,
+      visibleItemsContainer: null,
+      itemHeight: 155,
+      bufferItems: 5,
+      scrollTop: 0,
+      filteredData: [],
+      throttleDelay: 16,
     },
-    importer: {
-        dataLoaded: false, tempImagesList: [], characterFoldersList: [],
-        selectedTempImageInfo: null, selectedTargetFolder: null,
-        suggestedFilenameBase: '', suggestedFilenameNum: 0, suggestedFilenameExt: '',
-        searchDebounceTimer: null,
-    },
-    pluginGallery: {
-        dataLoaded: false, allImages: [], savedEntries: [], savedPaths: new Set(),
-        selectedFolder: null, selectedImagePath: null, currentPage: 1, totalPages: 1,
-        searchDebounceTimer: null, currentSourceFilter: 'all',
-    },
-    md5Checker: { isRunning: false, isAborted: false },
-    sequenceManager: { isRunning: false },
-    jsonCalibrator: { isRunning: false },
-    dataList: {
-        currentEditPath: null, searchDebounceTimer: null,
-        virtualScrollInfo: {
-            container: null, innerSpacer: null, visibleItemsContainer: null,
-            itemHeight: 155, bufferItems: 5, scrollTop: 0, filteredData: [], throttleDelay: 16
-        },
-        isScrolling: null,
-    },
-    isSwitchingTabs: false,
-    messageClearTimer: null,
-    currentGuToolMode: 'generator',
-    galleryImages: [],
-    userData: [],
-    userDataPaths: new Set(),
+    isScrolling: null,
+  },
+  isSwitchingTabs: false,
+  messageClearTimer: null,
+  currentGuToolMode: "generator",
+  galleryImages: [], // 存储所有仓库的主图库图片列表 {..., storageBox(原始大小写), urlPath(相对)}
+  userData: [], // 存储 ImageData.json 内容 {..., storagebox(小写), path(相对)}
+  userDataPaths: new Set(), // 存储 ImageData.json 中图片的完整 Web 路径 (含原始大小写 storageBox)
+  availableStorageBoxes: [], // 存储检测到的可用仓库名称列表 (原始大小写)
 };
 
-// --------------------------------------------------------------------------
-// DOM 元素引用缓存 (DOM)
-// --------------------------------------------------------------------------
+// --- DOM 元素引用缓存 DOM ---
 const DOM = {};
 
 /**
- * 缓存常用 DOM 元素的引用。
+ * 缓存常用 DOM 元素的引用
  */
 function cacheDomElements() {
-    console.log("缓存 DOM 元素引用...");
-    // --- 通用 / 模态框 ---
-    DOM.toastContainer = document.getElementById('toast-container');
-    DOM.imageModalOverlay = document.getElementById('imageModalOverlay');
-    DOM.modalImageViewer = document.getElementById('modalImageViewer');
-    DOM.modalCloseButton = document.getElementById('modalCloseButton');
-    DOM.editAttributeModal = document.getElementById('editAttributeModal');
-    DOM.modalFilenameSpan = document.getElementById('modalFilename')?.querySelector('span');
-    DOM.modalEntryPathInput = document.getElementById('modalEntryPath');
-    DOM.modalRatingRadios = document.querySelectorAll('input[name="modalRating"]');
-    DOM.modalLayoutRadios = document.querySelectorAll('input[name="modalLayout"]');
-    DOM.modalIsEasterEggCheckbox = document.getElementById('modalIsEasterEgg');
-    DOM.modalIsAiImageCheckbox = document.getElementById('modalIsAiImage');
-    DOM.modalisBanCheckbox = document.getElementById('modalisBan');
-    DOM.modalSaveButton = document.getElementById('modalSaveButton');
-    DOM.modalCancelButton = document.getElementById('modalCancelButton');
-    DOM.modalMessageArea = document.getElementById('modalMessageArea');
+  console.log("缓存 DOM 元素引用...");
+  // --- 通用 / 模态框 ---
+  DOM.toastContainer = document.getElementById("toast-container");
+  DOM.imageModalOverlay = document.getElementById("imageModalOverlay");
+  DOM.modalImageViewer = document.getElementById("modalImageViewer");
+  DOM.modalCloseButton = document.getElementById("modalCloseButton");
+  DOM.editAttributeModal = document.getElementById("editAttributeModal");
+  DOM.modalFilenameSpan = document
+    .getElementById("modalFilename")
+    ?.querySelector("span");
+  DOM.modalEntryPathInput = document.getElementById("modalEntryPath");
+  DOM.modalRatingRadios = document.querySelectorAll(
+    'input[name="modalRating"]'
+  );
+  DOM.modalLayoutRadios = document.querySelectorAll(
+    'input[name="modalLayout"]'
+  );
+  DOM.modalIsEasterEggCheckbox = document.getElementById("modalIsEasterEgg");
+  DOM.modalIsAiImageCheckbox = document.getElementById("modalIsAiImage");
+  DOM.modalisBanCheckbox = document.getElementById("modalisBan");
+  DOM.modalSaveButton = document.getElementById("modalSaveButton");
+  DOM.modalCancelButton = document.getElementById("modalCancelButton");
+  DOM.modalMessageArea = document.getElementById("modalMessageArea");
 
-    // --- Tabs & 导航 ---
-    DOM.tabButtons = document.querySelectorAll('.tab-button');
-    DOM.tabPanes = document.querySelectorAll('.tab-pane');
-    DOM.currentTimeElement = document.getElementById('currentTime');
+  // --- Tabs & 导航 ---
+  DOM.tabButtons = document.querySelectorAll(".tab-button");
+  DOM.tabPanes = document.querySelectorAll(".tab-pane");
+  DOM.currentTimeElement = document.getElementById("currentTime");
+  DOM.appVersionElement = document.getElementById("appVersion");
 
-    // --- Home 面板 ---
-    DOM.galleryStatusText = document.getElementById('galleryStatusText');
-    DOM.mihoyoStatusText = document.getElementById('mihoyoStatusText');
-    DOM.px18StatusText = document.getElementById('px18StatusText');
-    DOM.rx18StatusText = document.getElementById('rx18StatusText');
-    DOM.galleryToggleSwitch = document.getElementById('galleryToggleSwitch');
-    DOM.mihoyoToggleSwitch = document.getElementById('mihoyoToggleSwitch');
-    DOM.px18ToggleSwitch = document.getElementById('px18ToggleSwitch');
-    DOM.rx18ToggleSwitch = document.getElementById('rx18ToggleSwitch');
+  // --- Home 面板 ---
+  DOM.tuKuOPStatusText = document.getElementById('tuKuOPStatusText');
+  DOM.pflStatusText = document.getElementById('pflStatusText');
+  DOM.tuKuOPToggleSwitch = document.getElementById('tuKuOPToggleSwitch');
 
-    // --- GuTools 面板 (容器 & 视图) ---
-    DOM.guToolsPane = document.getElementById('GuTools');
-    DOM.generatorPaneView = document.getElementById('generatorPaneView');
-    DOM.importPaneView = document.getElementById('importPaneView');
-    DOM.md5PaneView = document.getElementById('md5PaneView');
-    DOM.sequencePaneView = document.getElementById('sequencePaneView');
-    DOM.jsonCalibrationPaneView = document.getElementById('jsonCalibrationPaneView');
-    DOM.guToolsModeButtonGroups = document.querySelectorAll('#GuTools .gu-tools-mode-buttons');
+  // --- GuTools 面板 (容器 & 视图) ---
+  DOM.guToolsPane = document.getElementById("GuTools");
+  DOM.generatorPaneView = document.getElementById("generatorPaneView");
+  DOM.importPaneView = document.getElementById("importPaneView");
+  DOM.md5PaneView = document.getElementById("md5PaneView");
+  DOM.sequencePaneView = document.getElementById("sequencePaneView");
+  DOM.jsonCalibrationPaneView = document.getElementById(
+    "jsonCalibrationPaneView"
+  );
+  DOM.guToolsModeButtonGroups = document.querySelectorAll(
+    "#GuTools .gu-tools-mode-buttons"
+  );
 
-    // --- GuTools - Generator 视图 ---
-    DOM.generatorSearchInput = document.getElementById('searchInput');
-    DOM.generatorSuggestionList = document.getElementById('suggestions');
-    DOM.generatorPreviewArea = document.getElementById('previewArea');
-    DOM.generatorPreviewImage = document.getElementById('previewImage');
-    DOM.generatorAttributesPanel = document.getElementById('attributesPanel');
-    DOM.generatorRatingRadios = document.querySelectorAll('input[name="rating"]');
-    DOM.generatorLayoutRadios = document.querySelectorAll('input[name="layout"]');
-    DOM.generatorIsEasterEggCheckbox = document.getElementById('isEasterEggCheckbox');
-    DOM.generatorIsAiImageCheckbox = document.getElementById('isAiImageCheckbox');
-    DOM.generatorGameTags = { gs: document.getElementById('gameTagGs'), sr: document.getElementById('gameTagSr'), zzz: document.getElementById('gameTagZzz'), waves: document.getElementById('gameTagWaves') };
-    DOM.generatorMd5DisplayInput = document.getElementById('md5DisplayInput');
-    DOM.generatorIdDisplayInput = document.getElementById('idDisplayInput');
-    DOM.generatorEntryCountDisplay = document.getElementById('entryCountDisplay');
-    DOM.generatorSaveButton = document.getElementById('saveButton');
-    DOM.generatorMessageArea = document.getElementById('messageArea');
+  // --- GuTools - Generator 视图 ---
+  DOM.generatorSearchInput = document.getElementById("searchInput");
+  DOM.generatorSuggestionList = document.getElementById("suggestions");
+  DOM.generatorPreviewArea = document.getElementById("previewArea");
+  DOM.generatorPreviewImage = document.getElementById("previewImage");
+  DOM.generatorAttributesPanel = document.getElementById("attributesPanel");
+  DOM.generatorRatingRadios = document.querySelectorAll('input[name="rating"]');
+  DOM.generatorLayoutRadios = document.querySelectorAll('input[name="layout"]');
+  DOM.generatorIsEasterEggCheckbox = document.getElementById(
+    "isEasterEggCheckbox"
+  );
+  DOM.generatorIsAiImageCheckbox = document.getElementById("isAiImageCheckbox");
+  DOM.generatorGameTags = {
+    gs: document.getElementById("gameTagGs"),
+    sr: document.getElementById("gameTagSr"),
+    zzz: document.getElementById("gameTagZzz"),
+    waves: document.getElementById("gameTagWaves"),
+  };
+  DOM.generatorStorageBoxDisplay = document.getElementById("storageBoxDisplay");
+  DOM.generatorMd5DisplayInput = document.getElementById("md5DisplayInput");
+  DOM.generatorIdDisplayInput = document.getElementById("idDisplayInput");
+  DOM.generatorEntryCountDisplay = document.getElementById("entryCountDisplay");
+  DOM.generatorSaveButton = document.getElementById("saveButton");
+  DOM.generatorMessageArea = document.getElementById("messageArea");
 
-    // --- GuTools - Import 视图 ---
-    DOM.importerTempImageSearchInput = document.getElementById('tempImageSearchInput');
-    DOM.importerTempImageSuggestions = document.getElementById('tempImageSuggestions');
-    DOM.importerTempImagePreviewArea = document.getElementById('tempImagePreviewArea');
-    DOM.importerTempImagePreview = document.getElementById('tempImagePreview');
-    DOM.importerAttributesPanel = document.getElementById('importAttributesPanel');
-    DOM.importerRatingRadios = document.querySelectorAll('input[name="importRating"]');
-    DOM.importerLayoutRadios = document.querySelectorAll('input[name="importLayout"]');
-    DOM.importerIsEasterEggCheckbox = document.getElementById('importIsEasterEggCheckbox');
-    DOM.importerIsAiImageCheckbox = document.getElementById('importIsAiImageCheckbox');
-    DOM.importerTargetFolderSearchInput = document.getElementById('targetFolderSearchInput');
-    DOM.importerTargetFolderSuggestions = document.getElementById('targetFolderSuggestions');
-    DOM.importerFinalFilenameInput = document.getElementById('finalFilenameInput');
-    DOM.importerEditFilenameButton = document.getElementById('editFilenameButton');
-    DOM.importerAddToGalleryButton = document.getElementById('addToGalleryButton');
-    DOM.importerMessageArea = document.getElementById('importMessageArea');
-    DOM.importerDownloadSourceInput = document.getElementById('importDownloadSourceInput');
+  // --- GuTools - Import 视图 ---
+  DOM.importerTempImageSearchInput = document.getElementById(
+    "tempImageSearchInput"
+  );
+  DOM.importerTempImageSuggestions = document.getElementById(
+    "tempImageSuggestions"
+  );
+  DOM.importerTempImagePreviewArea = document.getElementById(
+    "tempImagePreviewArea"
+  );
+  DOM.importerTempImagePreview = document.getElementById("tempImagePreview");
+  DOM.importerAttributesPanel = document.getElementById(
+    "importAttributesPanel"
+  );
+  DOM.importerRatingRadios = document.querySelectorAll(
+    'input[name="importRating"]'
+  );
+  DOM.importerLayoutRadios = document.querySelectorAll(
+    'input[name="importLayout"]'
+  );
+  DOM.importerIsEasterEggCheckbox = document.getElementById(
+    "importIsEasterEggCheckbox"
+  );
+  DOM.importerIsAiImageCheckbox = document.getElementById(
+    "importIsAiImageCheckbox"
+  );
+  DOM.importerTargetFolderSearchInput = document.getElementById(
+    "targetFolderSearchInput"
+  );
+  DOM.importerTargetFolderSuggestions = document.getElementById(
+    "targetFolderSuggestions"
+  );
+  DOM.importerFinalFilenameInput =
+    document.getElementById("finalFilenameInput");
+  DOM.importerEditFilenameButton =
+    document.getElementById("editFilenameButton");
+  DOM.importerAddToGalleryButton =
+    document.getElementById("addToGalleryButton");
+  DOM.importerMessageArea = document.getElementById("importMessageArea");
+  DOM.importerDownloadSourceInput = document.getElementById(
+    "importDownloadSourceInput"
+  );
 
-    // --- GuTools - MD5 校准视图 ---
-    DOM.md5StartButton = document.getElementById('startMD5Calibration');
-    DOM.md5AbortButton = document.getElementById('abortMD5Calibration');
-    DOM.md5StatusArea = document.getElementById('md5CalibrationStatus');
-    DOM.md5TotalFilesChecked = document.getElementById('totalFilesChecked');
-    DOM.md5FilesCheckedCount = document.getElementById('filesCheckedCount');
-    DOM.md5TotalJsonEntries = document.getElementById('totalMD5Count');
-    DOM.md5MismatchedCount = document.getElementById('mismatchedMD5Count');
-    DOM.md5ProgressText = document.getElementById('md5CalibrationProgress');
-    DOM.md5ProgressBar = document.getElementById('md5CalibrationProgressBar');
-    DOM.md5JsonListContainer = document.getElementById('jsonMd5ListContainer');
-    DOM.md5JsonTotalDisplay = document.getElementById('jsonTotalEntriesDisplay');
-    DOM.md5MismatchedList = document.getElementById('mismatchedMD5List');
-    DOM.md5MismatchedDisplay = document.getElementById('mismatchedCountDisplay');
-    DOM.md5FixAllButton = document.getElementById('fixAllMismatchedMD5');
-    DOM.md5FilesNotInJsonCount = document.getElementById('filesNotInJsonCount');
-    DOM.md5FilesNotInJsonList = document.getElementById('filesNotInJsonList');
+  // --- GuTools - MD5 校准视图 ---
+  DOM.md5StartButton = document.getElementById("startMD5Calibration");
+  DOM.md5AbortButton = document.getElementById("abortMD5Calibration");
+  DOM.md5StatusArea = document.getElementById("md5CalibrationStatus");
+  DOM.md5TotalFilesChecked = document.getElementById("totalFilesChecked");
+  DOM.md5FilesCheckedCount = document.getElementById("filesCheckedCount");
+  DOM.md5TotalJsonEntries = document.getElementById("totalMD5Count");
+  DOM.md5MismatchedCount = document.getElementById("mismatchedMD5Count");
+  DOM.md5ProgressText = document.getElementById("md5CalibrationProgress");
+  DOM.md5ProgressBar = document.getElementById("md5CalibrationProgressBar");
+  DOM.md5JsonListContainer = document.getElementById("jsonMd5ListContainer");
+  DOM.md5JsonTotalDisplay = document.getElementById("jsonTotalEntriesDisplay");
+  DOM.md5MismatchedList = document.getElementById("mismatchedMD5List");
+  DOM.md5MismatchedDisplay = document.getElementById("mismatchedCountDisplay");
+  DOM.md5FixAllButton = document.getElementById("fixAllMismatchedMD5");
+  DOM.md5FilesNotInJsonCount = document.getElementById("filesNotInJsonCount");
+  DOM.md5FilesNotInJsonList = document.getElementById("filesNotInJsonList");
 
-    // --- GuTools - 序号管理视图 ---
-    DOM.sequenceAnalyzeButton = document.getElementById('analyzeSequences');
-    DOM.sequenceStatusArea = document.getElementById('sequenceAnalysisStatus');
-    DOM.sequenceIssuesList = document.getElementById('sequenceIssuesList');
-    DOM.sequenceFixButton = document.getElementById('fixSequenceIssues');
+  // --- GuTools - 序号管理视图 ---
+  DOM.sequenceAnalyzeButton = document.getElementById("analyzeSequences");
+  DOM.sequenceStatusArea = document.getElementById("sequenceAnalysisStatus");
+  DOM.sequenceIssuesList = document.getElementById("sequenceIssuesList");
+  DOM.sequenceFixButton = document.getElementById("fixSequenceIssues");
 
-    // --- GuTools - JSON 校准视图 ---
-    DOM.jsonCalStartButton = document.getElementById('startJsonCalibration');
-    DOM.jsonCalStatusArea = document.getElementById('jsonCalibrationStatus');
-    DOM.jsonCalEntriesCheckedCount = document.getElementById('jsonEntriesCheckedCount');
-    DOM.jsonCalFilesCheckedCount = document.getElementById('jsonFilesCheckedCount');
-    DOM.jsonCalMissingCount = document.getElementById('missingFilesCount');
-    DOM.jsonCalProgressText = document.getElementById('jsonCalibrationProgress');
-    DOM.jsonCalProgressBar = document.getElementById('jsonCalibrationProgressBar');
-    DOM.jsonCalMissingList = document.getElementById('missingFilesList');
-    DOM.jsonCalMissingDisplay = document.getElementById('missingFilesCountDisplay');
-    DOM.jsonCalRemoveButton = document.getElementById('removeMissingEntriesBtn');
+  // --- GuTools - JSON 校准视图 ---
+  DOM.jsonCalStartButton = document.getElementById("startJsonCalibration");
+  DOM.jsonCalStatusArea = document.getElementById("jsonCalibrationStatus");
+  DOM.jsonCalEntriesCheckedCount = document.getElementById(
+    "jsonEntriesCheckedCount"
+  );
+  DOM.jsonCalFilesCheckedCount = document.getElementById(
+    "jsonFilesCheckedCount"
+  );
+  DOM.jsonCalMissingCount = document.getElementById("missingFilesCount");
+  DOM.jsonCalProgressText = document.getElementById("jsonCalibrationProgress");
+  DOM.jsonCalProgressBar = document.getElementById(
+    "jsonCalibrationProgressBar"
+  );
+  DOM.jsonCalMissingList = document.getElementById("missingFilesList");
+  DOM.jsonCalMissingDisplay = document.getElementById(
+    "missingFilesCountDisplay"
+  );
+  DOM.jsonCalRemoveButton = document.getElementById("removeMissingEntriesBtn");
 
-    // --- Data List 面板 ---
-    DOM.dataListPane = document.getElementById('dataListPane');
-    DOM.dataListFilterGame = document.getElementById('filterGame');
-    DOM.dataListSearchInput = document.getElementById('dataListSearchInput');
-    DOM.dataListFilterPx18 = document.getElementById('filterPx18');
-    DOM.dataListFilterRx18 = document.getElementById('filterRx18');
-    DOM.dataListFilterNormal = document.getElementById('filterNormal');
-    DOM.dataListFilterFullscreen = document.getElementById('filterFullscreen');
-    DOM.dataListFilterEasterEgg = document.getElementById('filterEasterEgg');
-    DOM.dataListFilterAiImage = document.getElementById('filterAiImage');
-    DOM.dataListFilterIsBan = document.getElementById('filterisBan');
-    DOM.dataListCountDisplay = document.getElementById('dataListCountDisplay');
-    DOM.dataListContainer = document.getElementById('dataListContainer');
+  // --- GuTools - 仓库转移视图 ---
+  DOM.stockroomGoPaneView = document.getElementById('stockroomGoPaneView');
+  DOM.sourceStorageBoxSelect = document.getElementById('sourceStorageBoxSelect');
+  DOM.sourceFolderSelect = document.getElementById('sourceFolderSelect');
+  DOM.targetStorageBoxSelectGo = document.getElementById('targetStorageBoxSelectGo');
+  DOM.transferFolderButton = document.getElementById('transferFolderButton');
+  DOM.stockroomGoStatus = document.getElementById('stockroomGoStatus');
+  DOM.stockroomInfoContainer = document.getElementById('stockroomInfoContainer');
 
-    // --- Plugin Gallery 面板 ---
-    DOM.pluginGalleryPane = document.getElementById('pluginGalleryPane'); // HTML ID 保持 plugin
-    DOM.pluginGalleryFolderSearchInput = document.getElementById('pluginFolderSearchInput');
-    DOM.pluginGallerySourceFilterButtons = document.querySelectorAll('#pluginSourceFilterButtons .source-filter-btn');
-    DOM.pluginGalleryFolderListContainer = document.getElementById('pluginFolderListContainer');
-    DOM.pluginGalleryFolderLoading = document.getElementById('pluginFolderLoading');
-    DOM.pluginGalleryFolderNoResults = document.getElementById('pluginFolderNoResults');
-    DOM.pluginGalleryImageGridContainer = document.getElementById('pluginImageGridPreviewContainer');
-    DOM.pluginGalleryPreviewPlaceholder = document.getElementById('pluginPreviewPlaceholder');
-    DOM.pluginGalleryImageGrid = document.getElementById('pluginImageGridPreview');
-    DOM.pluginGalleryPaginationControls = document.getElementById('pluginPaginationControls');
-    DOM.pluginGalleryPrevPageBtn = document.getElementById('pluginPrevPageBtn');
-    DOM.pluginGalleryNextPageBtn = document.getElementById('pluginNextPageBtn');
-    DOM.pluginGalleryPageInfo = document.getElementById('pluginPageInfo');
-    DOM.pluginGalleryAttributeInfoArea = document.getElementById('pluginAttributeInfoArea');
-    DOM.pluginGalleryEditorPlaceholder = document.getElementById('pluginEditorPlaceholder');
-    
+  // --- Data List 面板 ---
+  DOM.dataListPane = document.getElementById("dataListPane");
+  DOM.dataListFilterGame = document.getElementById("filterGame");
+  DOM.dataListSearchInput = document.getElementById("dataListSearchInput");
+  DOM.dataListFilterPx18 = document.getElementById("filterPx18");
+  DOM.dataListFilterRx18 = document.getElementById("filterRx18");
+  DOM.dataListFilterNormal = document.getElementById("filterNormal");
+  DOM.dataListFilterFullscreen = document.getElementById("filterFullscreen");
+  DOM.dataListFilterEasterEgg = document.getElementById("filterEasterEgg");
+  DOM.dataListFilterAiImage = document.getElementById("filterAiImage");
+  DOM.dataListFilterIsBan = document.getElementById("filterisBan");
+  DOM.dataListCountDisplay = document.getElementById("dataListCountDisplay");
+  DOM.dataListContainer = document.getElementById("dataListContainer");
 
+  // --- Plugin Gallery 面板 ---
+  DOM.pluginGalleryPane = document.getElementById("pluginGalleryPane");
+  DOM.pluginGalleryFolderSearchInput = document.getElementById(
+    "pluginFolderSearchInput"
+  );
+  DOM.pluginGallerySourceFilterButtons = document.querySelectorAll(
+    "#pluginSourceFilterButtons .source-filter-btn"
+  );
+  DOM.pluginGalleryFolderListContainer = document.getElementById(
+    "pluginFolderListContainer"
+  );
+  DOM.pluginGalleryFolderLoading = document.getElementById(
+    "pluginFolderLoading"
+  );
+  DOM.pluginGalleryFolderNoResults = document.getElementById(
+    "pluginFolderNoResults"
+  );
+  DOM.pluginGalleryImageGridContainer = document.getElementById(
+    "pluginImageGridPreviewContainer"
+  );
+  DOM.pluginGalleryPreviewPlaceholder = document.getElementById(
+    "pluginPreviewPlaceholder"
+  );
+  DOM.pluginGalleryImageGrid = document.getElementById(
+    "pluginImageGridPreview"
+  );
+  DOM.pluginGalleryPaginationControls = document.getElementById(
+    "pluginPaginationControls"
+  );
+  DOM.pluginGalleryPrevPageBtn = document.getElementById("pluginPrevPageBtn");
+  DOM.pluginGalleryNextPageBtn = document.getElementById("pluginNextPageBtn");
+  DOM.pluginGalleryPageInfo = document.getElementById("pluginPageInfo");
+  DOM.pluginGalleryAttributeInfoArea = document.getElementById(
+    "pluginAttributeInfoArea"
+  );
+  DOM.pluginGalleryEditorPlaceholder = document.getElementById(
+    "pluginEditorPlaceholder"
+  );
 
-    // --- Advanced Management 面板 ---
-    DOM.advancedManagementPane = document.getElementById('advancedManagementPane');
+  // --- Advanced Management 面板 ---
+  DOM.advancedManagementPane = document.getElementById(
+    "advancedManagementPane"
+  );
 
-    // --- 验证核心元素 ---
-    const essentialElements = [
-        DOM.toastContainer, DOM.tabButtons, DOM.tabPanes,
-        DOM.generatorPaneView, DOM.importPaneView, DOM.md5PaneView, DOM.sequencePaneView, DOM.jsonCalibrationPaneView,
-        DOM.dataListPane, DOM.pluginGalleryPane,
-        DOM.md5JsonListContainer, 
-        DOM.jsonCalMissingList, 
+  // --- 验证核心元素 ---
+  const essentialElements = [
+    DOM.stockroomGoPaneView,
+    DOM.toastContainer,
+    DOM.tabButtons,
+    DOM.tabPanes,
+    DOM.generatorPaneView,
+    DOM.importPaneView,
+    DOM.md5PaneView,
+    DOM.sequencePaneView,
+    DOM.jsonCalibrationPaneView,
+    DOM.stockroomInfoContainer,
+    DOM.dataListPane,
+    DOM.pluginGalleryPane,
+    DOM.md5JsonListContainer,
+    DOM.jsonCalMissingList,
+    DOM.appVersionElement,
+    DOM.tuKuOPStatusText, 
+    DOM.pflStatusText,
+    DOM.tuKuOPToggleSwitch,
+  ];
+  const missingKeys = essentialElements
+    .map((el, i) => {
+      const key = Object.keys(DOM).find((k) => DOM[k] === el);
+      return !el || (el instanceof NodeList && el.length === 0)
+        ? key || `Unknown Element #${i}`
+        : null;
+    })
+    .filter(Boolean);
 
-    ];
-    const missingKeys = essentialElements
-        .map((el, i) => {
-            const key = Object.keys(DOM).find(k => DOM[k] === el);
-            return (!el || (el instanceof NodeList && el.length === 0)) ? key || `Unknown Element #${i}` : null;
-        })
-        .filter(Boolean);
-
-    if (missingKeys.length > 0) {
-        console.error(`核心 UI 元素缺失: ${missingKeys.join(', ')}。请检查 HTML ID 和 cacheDomElements。`);
-        alert("页面加载错误：核心界面元素缺失，请检查控制台。");
-    } else {
-        console.log("DOM 元素引用缓存成功。");
-    }
+  if (missingKeys.length > 0) {
+    console.error(
+      `核心 UI 元素缺失: ${missingKeys.join(
+        ", "
+      )} 请检查 HTML ID 和 cacheDomElements`
+    );
+    alert("页面加载错误：核心界面元素缺失，请检查控制台。");
+  } else {
+    console.log("DOM 元素引用缓存成功。");
+  }
 }
 
-// --------------------------------------------------------------------------
-// 核心工具函数
-// --------------------------------------------------------------------------
+// --- 核心工具函数 ---
 
 /**
- * 发起 fetch 请求并处理 JSON 响应。
- * @param {string} url - 请求 URL。
- * @param {object} options - fetch 选项。
- * @returns {Promise<any>} 解析后的 JSON 数据。
+ * 发起 fetch 请求并处理 JSON 响应
+ * @param {string} url 请求 URL
+ * @param {object} options fetch 选项
+ * @returns {Promise<any>} 解析后的 JSON 数据或文本
  */
 async function fetchJsonData(url, options = {}) {
-    const fetchOptions = { cache: 'no-store', ...options };
-    console.debug(`请求: ${fetchOptions.method || 'GET'} ${url}`);
-    try {
-        const response = await fetch(url, fetchOptions);
-        if (!response.ok) {
-            let errorMsg = `HTTP ${response.status} (${response.statusText}) @ ${url}`;
-            try { const errData = await response.json(); errorMsg = errData.error || JSON.stringify(errData); }
-            catch { try { const txt = await response.text(); if(txt) errorMsg = txt; } catch {} }
-            console.error(`请求失败 (${url}): ${errorMsg}`);
-            throw new Error(errorMsg);
+  const fetchOptions = { cache: "no-store", ...options };
+  console.debug(`请求: ${fetchOptions.method || "GET"} ${url}`);
+  try {
+    const response = await fetch(url, fetchOptions);
+    if (!response.ok) {
+      let errorMsg = `HTTP ${response.status} ${response.statusText} @ ${url}`;
+      try {
+        const errData = await response.json();
+        errorMsg = errData.error || JSON.stringify(errData);
+      } catch {
+        try {
+          const txt = await response.text();
+          if (txt) errorMsg = txt;
+        } catch {
+          /* 忽略 */
         }
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/json')) {
-            const jsonData = await response.json();
-            console.debug(`请求成功: ${url}`);
-            return jsonData;
-        } else {
-            console.warn(`响应非 JSON (${url}): ${contentType || '未知'}`);
-            return await response.text(); // 返回文本或根据需要处理
-        }
-    } catch (error) {
-        console.error(`处理请求 ${url} 出错:`, error.message);
-        throw error;
+      }
+      console.error(`请求失败 ${url}: ${errorMsg}`);
+      throw new Error(errorMsg);
     }
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      const jsonData = await response.json();
+      console.debug(`请求成功: ${url}`);
+      return jsonData;
+    } else {
+      console.warn(`响应非 JSON ${url}: ${contentType || "未知"}`);
+      return await response.text();
+    }
+  } catch (error) {
+    console.error(`处理请求 ${url} 出错:`, error.message);
+    throw error;
+  }
 }
 
 /**
- * 获取指定图片路径的 MD5 值。
- * @param {string} imagePath - 图片的 Web 路径 (例如 'gs-character/角色/文件.webp')。
- * @returns {Promise<string|null>} 成功则返回 MD5 字符串，失败则返回 null。
+ * 获取指定图片路径的 MD5 值
+ * @param {string} imagePath 图片的 Web 路径 e.g., '/Miao-Plugin-MBT/gs-character/角色/文件.webp'
+ * @returns {Promise<string|null>} 成功则返回 MD5 字符串 失败则返回 null
  */
 async function fetchImageMd5(imagePath) {
-    if (!imagePath) {
-        console.warn("fetchImageMd5: 图片路径为空。");
-        return null;
+  if (!imagePath) {
+    console.warn("fetchImageMd5: 图片路径为空");
+    return null;
+  }
+  const normalizedPath = imagePath.startsWith("/")
+    ? imagePath
+    : `/${imagePath}`;
+  const url = `${API_ENDPOINTS.FETCH_IMAGE_MD5}?path=${encodeURIComponent(
+    normalizedPath
+  )}`;
+  try {
+    const result = await fetchJsonData(url);
+    if (result?.success === true && typeof result.md5 === "string") {
+      return result.md5;
+    } else {
+      console.warn(`获取 ${normalizedPath} MD5 失败: 服务器返回`, result);
+      return null;
     }
-    const url = `${API_ENDPOINTS.FETCH_IMAGE_MD5}?path=${encodeURIComponent(imagePath)}`;
-    try {
-        const result = await fetchJsonData(url);
-        if (result?.success === true && typeof result.md5 === 'string') {
-            return result.md5;
-        } else {
-            // 如果 success 不是 true 或 md5 不存在/类型不对
-            console.warn(`获取 ${imagePath} MD5 失败: 服务器返回`, result);
-            return null;
-        }
-    } catch (error) {
-        // fetchJsonData 内部已打印错误日志
-        // console.error(`获取 ${imagePath} MD5 时发生异常:`, error);
-        return null; // 明确返回 null 表示失败
-    }
+  } catch (error) {
+    return null;
+  }
 }
 
 /**
- * 从后端获取角色文件夹列表。
+ * 从后端获取角色文件夹列表 (所有仓库汇总)
  * @returns {Promise<void>}
  */
 async function fetchCharacterFolders() {
-    console.log("Core: 正在获取角色文件夹列表...");
-    try {
-        const data = await fetchJsonData(API_ENDPOINTS.FETCH_CHARACTER_FOLDERS);
-        AppState.importer.characterFoldersList = Array.isArray(data) ? data : [];
-        console.log(`Core: 成功加载 ${AppState.importer.characterFoldersList.length} 个角色文件夹。`);
-    } catch (error) {
-        console.error("Core: 加载角色文件夹列表失败:", error);
-        displayToast('加载角色文件夹列表失败', UI_CLASSES.WARNING, DELAYS.TOAST_ERROR_DURATION);
-        AppState.importer.characterFoldersList = []; // 出错时清空
-    }
+  console.log("Core: 正在获取角色文件夹列表...");
+  try {
+    const data = await fetchJsonData(API_ENDPOINTS.FETCH_CHARACTER_FOLDERS);
+    AppState.importer.characterFoldersList = Array.isArray(data) ? data : [];
+    console.log(
+      `Core: 成功加载 ${AppState.importer.characterFoldersList.length} 个角色文件夹`
+    );
+  } catch (error) {
+    console.error("Core: 加载角色文件夹列表失败:", error);
+    displayToast(
+      "加载角色文件夹列表失败",
+      UI_CLASSES.WARNING,
+      DELAYS.TOAST_ERROR_DURATION
+    );
+    AppState.importer.characterFoldersList = [];
+  }
 }
 
 /**
- * 向后端发送请求更新用户数据 JSON 文件 (区分内部/外部)。
- * 更新成功后，会同步更新前端的 AppState 数据缓存和相关 UI。
- * @param {Array<object>} newData - 最新的完整数据列表。
- * @param {string} successMsg - 操作成功时在目标区域显示的短消息。
- * @param {string} targetElementId - 消息显示的目标区域元素的 ID ('generatorMessageArea', 'importMessageArea', 'modalMessageArea', 或 'toast')。
- * @param {boolean} [isExternalData=false] - true 表示更新外部数据, false 表示更新内部数据。
- * @param {number|null} [successDuration=DELAYS.MESSAGE_CLEAR_DEFAULT] - 成功消息显示时长，null 则不自动消失。
- * @returns {Promise<boolean>} 操作是否成功。
+ * 向后端发送请求更新用户数据 JSON 文件 区分内部/外部
+ * @param {Array<object>} newData 最新的完整数据列表
+ * @param {string} successMsg 操作成功时在目标区域显示的短消息
+ * @param {string} targetElementId 消息显示的目标区域元素的 ID
+ * @param {boolean} [isExternalData=false] true 表示更新外部数据 false 表示更新内部数据
+ * @param {number|null} [successDuration=DELAYS.MESSAGE_CLEAR_DEFAULT] 成功消息显示时长 null 则不自动消失
+ * @returns {Promise<boolean>} 操作是否成功
  */
-async function updateUserData(newData, successMsg = '更新成功', targetElementId = 'generatorMessageArea', isExternalData = false, successDuration = DELAYS.MESSAGE_CLEAR_DEFAULT) {
-    let targetElement = document.getElementById(targetElementId);
-    if (!targetElement && targetElementId !== 'toast') {
-        console.warn(`updateUserData: 目标消息区域 #${targetElementId} 未找到，将使用 Toast。`);
-        targetElementId = 'toast'; // 回退到 Toast
+async function updateUserData(
+  newData,
+  successMsg = "更新成功",
+  targetElementId = "generatorMessageArea",
+  isExternalData = false,
+  successDuration = DELAYS.MESSAGE_CLEAR_DEFAULT
+) {
+  let targetElement = document.getElementById(targetElementId);
+  if (!targetElement && targetElementId !== "toast") {
+    console.warn(
+      `updateUserData: 目标消息区域 #${targetElementId} 未找到 将使用 Toast`
+    );
+    targetElementId = "toast";
+  }
+
+  const apiUrl = isExternalData
+    ? API_ENDPOINTS.UPDATE_EXTERNAL_USER_DATA
+    : API_ENDPOINTS.UPDATE_USER_DATA;
+  const dataTypeDesc = isExternalData ? "外部插件" : "内部主图库";
+  console.log(
+    `核心更新: 开始更新 ${dataTypeDesc} 数据到 ${apiUrl} ${newData.length} 条...`
+  );
+
+  const displayFunc =
+    targetElementId === "toast" ? displayToast : displayScopedMessage;
+  const messageArgs = targetElementId === "toast" ? [] : [targetElement];
+
+  try {
+    const result = await fetchJsonData(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newData),
+    });
+
+    if (!result?.success) {
+      throw new Error(result?.error || "服务器未能成功保存数据");
     }
 
-    const apiUrl = isExternalData ? API_ENDPOINTS.UPDATE_EXTERNAL_USER_DATA : API_ENDPOINTS.UPDATE_USER_DATA;
-    const dataTypeDesc = isExternalData ? '外部插件' : '内部主图库';
-    console.log(`核心更新: 开始更新 ${dataTypeDesc} 数据到 ${apiUrl} (${newData.length} 条)...`);
+    console.log(`核心更新: ${dataTypeDesc} 数据更新成功`);
+    if (isExternalData) {
+      AppState.pluginGallery.savedEntries = newData;
+      AppState.pluginGallery.savedPaths = new Set(
+        newData.map((entry) => entry.path).filter(Boolean)
+      );
+      console.log(
+        `核心更新: 前端插件缓存已更新为 ${AppState.pluginGallery.savedEntries.length} 条`
+      );
+      if (
+        DOM.pluginGalleryPane?.classList.contains(UI_CLASSES.ACTIVE) &&
+        typeof renderPluginFolderList === "function"
+      ) {
+        console.log("核心更新: 插件图库可见 正在刷新文件夹列表...");
+        renderPluginFolderList();
+      }
+    }  else { // 处理内部数据更新
+      AppState.userData = newData; // newData 中 storagebox 应该是原始大小写了
+      // --- 重新构建 userDataPaths (使用原始大小写 storagebox) ---
+      console.log("Core: 重新构建 userDataPaths (updateUserData)...");
+      AppState.userDataPaths = new Set();
+      AppState.userData.forEach(e => {
+          // 直接使用 userData 中的 storagebox (现在是原始大小写)
+          if (e.path && e.storagebox) {
+              const fullPath = `/${e.storagebox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+              AppState.userDataPaths.add(fullPath);
+          } else {
+              console.warn(`Core: updateUserData - userData 条目缺少 path 或 storagebox:`, e);
+          }
+      });
+      console.log(
+        `核心更新: 前端内部缓存已更新为 ${AppState.userData.length} 条 已缓存 ${AppState.userDataPaths.size} 个有效路径`
+      );
+      // --- 构建结束 ---
 
-    const displayFunc = targetElementId === 'toast' ? displayToast : displayScopedMessage;
-    const messageArgs = targetElementId === 'toast' ? [] : [targetElement];
-
-    try {
-        const result = await fetchJsonData(apiUrl, {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify(newData)
-        });
-
-        if (!result?.success) { // 简化判断
-            throw new Error(result?.error || '服务器未能成功保存数据');
-        }
-
-        console.log(`核心更新: ${dataTypeDesc} 数据更新成功。`);
-        if (isExternalData) {
-            AppState.pluginGallery.savedEntries = newData; // 更新插件数据缓存
-            AppState.pluginGallery.savedPaths = new Set(newData.map(entry => entry.path).filter(Boolean));
-            console.log(`核心更新: 前端插件缓存已更新为 ${AppState.pluginGallery.savedEntries.length} 条。`);
-            // 如果插件图库可见，刷新 (需要 Gallery.js 定义 renderPluginFolderList)
-             if (DOM.pluginGalleryPane?.classList.contains(UI_CLASSES.ACTIVE) && typeof renderPluginFolderList === "function") {
-                console.log("核心更新: 插件图库可见，正在刷新文件夹列表...");
-                 renderPluginFolderList();
-             }
-        } else {
-            AppState.userData = newData; // 更新内部数据缓存
-            AppState.userDataPaths = new Set(newData.map(entry => entry.path).filter(Boolean));
-            console.log(`核心更新: 前端内部缓存已更新为 ${AppState.userData.length} 条。`);
-            // 更新 Generator 计数 (需要 GuTools_Generator.js 定义)
-            if (typeof updateGeneratorEntryCount === "function") updateGeneratorEntryCount();
-            // 更新 DataList 计数 (需要 Data_List.js 定义)
-            if (typeof updateDataListCount === "function") updateDataListCount();
-            // 如果数据列表可见，刷新 (需要 Data_List.js 定义)
-             if (DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE) && typeof applyFiltersAndRenderDataList === "function") {
-                 console.log("核心更新: 数据列表可见，正在刷新...");
-                 applyFiltersAndRenderDataList();
-             }
-             // 如果 MD5 视图可见，刷新列表 (需要 GuTools_MD5.js 定义)
-             if (DOM.md5PaneView?.classList.contains(UI_CLASSES.ACTIVE) && typeof populateMd5JsonList === "function") {
-                  console.log("核心更新: MD5 视图可见，正在刷新 JSON 列表...");
-                  populateMd5JsonList();
-             }
-        }
-
-        displayFunc(...messageArgs, successMsg, UI_CLASSES.SUCCESS, successDuration); // 显示成功消息
-        return true;
-
-    } catch (error) {
-        const errMsg = `保存 ${dataTypeDesc} 数据失败: ${error.message}`;
-        console.error(`核心更新: ${errMsg}`);
-        displayFunc(...messageArgs, errMsg, UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION); // 显示错误消息
-        return false;
+      if (typeof updateGeneratorEntryCount === "function")
+        updateGeneratorEntryCount();
+      if (typeof updateDataListCount === "function") updateDataListCount();
+      if (
+        DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE) &&
+        typeof applyFiltersAndRenderDataList === "function"
+      ) {
+        console.log("核心更新: 数据列表可见 正在刷新...");
+        applyFiltersAndRenderDataList();
+      }
+      if (
+        DOM.md5PaneView?.classList.contains(UI_CLASSES.ACTIVE) &&
+        typeof populateMd5JsonList === "function"
+      ) {
+        console.log("核心更新: MD5 视图可见 正在刷新 JSON 列表...");
+        populateMd5JsonList();
+      }
     }
+
+    displayFunc(
+      ...messageArgs,
+      successMsg,
+      UI_CLASSES.SUCCESS,
+      successDuration
+    );
+    return true;
+  } catch (error) {
+    const errMsg = `保存 ${dataTypeDesc} 数据失败: ${error.message}`;
+    console.error(`核心更新: ${errMsg}`);
+    displayFunc(
+      ...messageArgs,
+      errMsg,
+      UI_CLASSES.ERROR,
+      DELAYS.TOAST_ERROR_DURATION
+    );
+    return false;
+  }
 }
 
-
 /**
- * 显示 Toast 提示。
- * @param {string} message - 消息文本。
- * @param {string} [type=UI_CLASSES.INFO] - 消息类型。
- * @param {number} [duration=DELAYS.TOAST_DEFAULT_DURATION] - 显示时长。
+ * 显示 Toast 提示
+ * @param {string} message 消息文本
+ * @param {string} [type=UI_CLASSES.INFO] 消息类型
+ * @param {number} [duration=DELAYS.TOAST_DEFAULT_DURATION] 显示时长
  */
-function displayToast(message, type = UI_CLASSES.INFO, duration = DELAYS.TOAST_DEFAULT_DURATION) {
-    if (!DOM.toastContainer) { console.warn("Toast container 缺失:", message); return; }
-    const toastEl = document.createElement('div');
-    toastEl.className = `toast-message ${type}`; toastEl.textContent = message;
-    DOM.toastContainer.insertBefore(toastEl, DOM.toastContainer.firstChild);
-    requestAnimationFrame(() => { // 确保元素已插入 DOM
-        requestAnimationFrame(() => { // 再请求一帧确保 transition 生效
-            toastEl.classList.add(UI_CLASSES.ACTIVE);
-        });
+function displayToast(
+  message,
+  type = UI_CLASSES.INFO,
+  duration = DELAYS.TOAST_DEFAULT_DURATION
+) {
+  if (!DOM.toastContainer) {
+    console.warn("Toast container 缺失:", message);
+    return;
+  }
+  const toastEl = document.createElement("div");
+  toastEl.className = `toast-message ${type}`;
+  toastEl.textContent = message;
+  DOM.toastContainer.insertBefore(toastEl, DOM.toastContainer.firstChild);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      toastEl.classList.add(UI_CLASSES.ACTIVE);
+    });
+  });
+  setTimeout(() => {
+    toastEl.classList.remove(UI_CLASSES.ACTIVE);
+    toastEl.addEventListener("transitionend", () => toastEl.remove(), {
+      once: true,
     });
     setTimeout(() => {
-        toastEl.classList.remove(UI_CLASSES.ACTIVE);
-        toastEl.addEventListener('transitionend', () => toastEl.remove(), { once: true });
-        setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 500); // 后备移除
-    }, duration);
+      if (toastEl.parentNode) toastEl.remove();
+    }, 500);
+  }, duration);
 }
 
 /**
- * 在指定区域显示消息。
- * @param {HTMLElement | null} areaElement - 消息区域元素。
- * @param {string} message - 消息文本。
- * @param {string} [type=UI_CLASSES.INFO] - 消息类型。
- * @param {number | null} [duration=null] - 自动隐藏延迟，null 不自动隐藏。
- * @param {boolean} [clearTimers=true] - 是否清除相关业务计时器。
+ * 在指定区域显示消息
+ * @param {HTMLElement | null} areaElement 消息区域元素
+ * @param {string} message 消息文本
+ * @param {string} [type=UI_CLASSES.INFO] 消息类型
+ * @param {number | null} [duration=null] 自动隐藏延迟 null 不自动隐藏
+ * @param {boolean} [clearTimers=true] 是否清除相关业务计时器
  */
-function displayScopedMessage(areaElement, message, type = UI_CLASSES.INFO, duration = null, clearTimers = true) {
-    if (!areaElement) { console.warn("displayScopedMessage: 目标元素无效:", message); return; }
-    clearTimeout(AppState.messageClearTimer); AppState.messageClearTimer = null;
-    if (clearTimers) { /* 清除特定计时器的逻辑 */ }
-    areaElement.textContent = message;
-    areaElement.className = ''; // 清除旧类
-    areaElement.classList.add(UI_CLASSES.VISIBLE, type); // 应用新类
-    if (typeof duration === 'number' && duration > 0) {
-        AppState.messageClearTimer = setTimeout(() => hideScopedMessage(areaElement), duration);
-    }
+function displayScopedMessage(
+  areaElement,
+  message,
+  type = UI_CLASSES.INFO,
+  duration = null,
+  clearTimers = true
+) {
+  if (!areaElement) {
+    console.warn("displayScopedMessage: 目标元素无效:", message);
+    return;
+  }
+  clearTimeout(AppState.messageClearTimer);
+  AppState.messageClearTimer = null;
+  if (clearTimers) {
+    /* 清除特定计时器的逻辑 */
+  }
+  areaElement.textContent = message;
+  areaElement.className = "";
+  areaElement.classList.add(UI_CLASSES.VISIBLE, type);
+  if (typeof duration === "number" && duration > 0) {
+    AppState.messageClearTimer = setTimeout(
+      () => hideScopedMessage(areaElement),
+      duration
+    );
+  }
 }
 
 /**
- * 隐藏指定区域的消息。
- * @param {HTMLElement | null} areaElement - 消息区域元素。
+ * 隐藏指定区域的消息
+ * @param {HTMLElement | null} areaElement 消息区域元素
  */
 function hideScopedMessage(areaElement) {
-    if (areaElement) { areaElement.classList.remove(UI_CLASSES.VISIBLE); }
-    clearTimeout(AppState.messageClearTimer); AppState.messageClearTimer = null;
-    /* 清除特定计时器的逻辑 */
+  if (areaElement) {
+    areaElement.classList.remove(UI_CLASSES.VISIBLE);
+  }
+  clearTimeout(AppState.messageClearTimer);
+  AppState.messageClearTimer = null;
+  /* 清除特定计时器的逻辑 */
 }
 // 便利函数
-function displayGeneratorMessage(message, type = UI_CLASSES.INFO, duration = null) { displayScopedMessage(DOM.generatorMessageArea, message, type, duration); }
-function hideGeneratorMessage() { hideScopedMessage(DOM.generatorMessageArea); }
-function displayImportMessage(message, type = UI_CLASSES.INFO, duration = null) { displayScopedMessage(DOM.importerMessageArea, message, type, duration); }
-function hideImportMessage() { hideScopedMessage(DOM.importerMessageArea); }
-function displayModalMessage(message, type = UI_CLASSES.INFO, duration = null) { displayScopedMessage(DOM.modalMessageArea, message, type, duration); }
-function hideModalMessage() { hideScopedMessage(DOM.modalMessageArea); }
+function displayGeneratorMessage(
+  message,
+  type = UI_CLASSES.INFO,
+  duration = null
+) {
+  displayScopedMessage(DOM.generatorMessageArea, message, type, duration);
+}
+function hideGeneratorMessage() {
+  hideScopedMessage(DOM.generatorMessageArea);
+}
+function displayImportMessage(
+  message,
+  type = UI_CLASSES.INFO,
+  duration = null
+) {
+  displayScopedMessage(DOM.importerMessageArea, message, type, duration);
+}
+function hideImportMessage() {
+  hideScopedMessage(DOM.importerMessageArea);
+}
+function displayModalMessage(message, type = UI_CLASSES.INFO, duration = null) {
+  displayScopedMessage(DOM.modalMessageArea, message, type, duration);
+}
+function hideModalMessage() {
+  hideScopedMessage(DOM.modalMessageArea);
+}
 
 /**
- * 生成纯数字 ID。
- * @param {number} [length=10] - ID 长度。
- * @returns {string} 数字 ID。
+ * 生成纯数字 ID
+ * @param {number} [length=10] ID 长度
+ * @returns {string} 数字 ID
  */
 function generateNumericId(length = 10) {
-    if (length <= 0) return '';
-    let r = String(Math.floor(Math.random()*9)+1);
-    for (let i=1; i<length; i++) r+=String(Math.floor(Math.random()*10));
-    return r;
+  if (length <= 0) return "";
+  let r = String(Math.floor(Math.random() * 9) + 1);
+  for (let i = 1; i < length; i++) r += String(Math.floor(Math.random() * 10));
+  return r;
 }
 
 /**
- * 生成 GELD ID (字母数字组合)。
- * @param {number} [length=20] - ID 长度。
- * @returns {string} GELD ID。
+ * 生成 GELD ID 字母数字组合
+ * @param {number} [length=20] ID 长度
+ * @returns {string} GELD ID
  */
 function generateGeldId(length = 20) {
-    const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let r = ''; const l = c.length;
-    for (let i=0; i<length; i++) r+=c.charAt(Math.floor(Math.random()*l));
-    return r;
+  const c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let r = "";
+  const l = c.length;
+  for (let i = 0; i < length; i++) r += c.charAt(Math.floor(Math.random() * l));
+  return r;
 }
 
 /**
- * 更新导航栏时间显示。
+ * 更新导航栏时间显示
  */
 function updateCurrentTimeDisplay() {
-    if (!DOM.currentTimeElement) return;
-    const n=new Date(); const y=n.getFullYear(); const m=String(n.getMonth()+1).padStart(2,'0'); const d=String(n.getDate()).padStart(2,'0'); const h=String(n.getHours()).padStart(2,'0'); const i=String(n.getMinutes()).padStart(2,'0'); const s=String(n.getSeconds()).padStart(2,'0');
-    DOM.currentTimeElement.textContent = `${y}-${m}-${d} ${h}:${i}:${s}`;
+  if (!DOM.currentTimeElement) return;
+  const n = new Date();
+  const y = n.getFullYear();
+  const m = String(n.getMonth() + 1).padStart(2, "0");
+  const d = String(n.getDate()).padStart(2, "0");
+  const h = String(n.getHours()).padStart(2, "0");
+  const i = String(n.getMinutes()).padStart(2, "0");
+  const s = String(n.getSeconds()).padStart(2, "0");
+  DOM.currentTimeElement.textContent = `${y}-${m}-${d} ${h}:${i}:${s}`;
 }
 
 /**
- * IntersectionObserver 回调，处理图片懒加载。
- * @param {IntersectionObserverEntry[]} entries - 观察条目。
- * @param {IntersectionObserver} observer - 观察器实例。
+ * IntersectionObserver 回调 处理图片懒加载
+ * @param {IntersectionObserverEntry[]} entries 观察条目
+ * @param {IntersectionObserver} observer 观察器实例
  */
 function handleImageLazyLoad(entries, observer) {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const i=entry.target, s=i.dataset.src;
-            if(s){i.src=s; i.removeAttribute('data-src'); i.onload=()=>i.classList.add('loaded'); i.onerror=()=>i.classList.add('load-error');}
-            observer.unobserve(i);
-        }
-    });
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      const imgElement = entry.target;
+      const src = imgElement.dataset.src;
+      if (src) {
+        imgElement.src = src;
+        imgElement.removeAttribute("data-src");
+        imgElement.onload = () => imgElement.classList.add("loaded");
+        imgElement.onerror = () => imgElement.classList.add("load-error");
+      }
+      observer.unobserve(imgElement);
+    }
+  });
 }
 
 /**
- * 根据游戏代码获取中文名称。
- * @param {string | null | undefined} code - 游戏代码。
- * @returns {string} 中文名或原始代码或'未知'。
+ * 根据游戏代码获取中文名称
+ * @param {string | null | undefined} code 游戏代码
+ * @returns {string} 中文名或原始代码或'未知'
  */
 function getGameName(code) {
-    const map = { 'gs-character': '原神', 'sr-character': '星铁', 'zzz-character': '绝区零', 'waves-character': '鸣潮' };
-    return map[code] || code || '未知';
+  const map = {
+    "gs-character": "原神",
+    "sr-character": "星铁",
+    "zzz-character": "绝区零",
+    "waves-character": "鸣潮",
+  };
+  return map[code] || code || "未知";
 }
 
 /**
- * 格式化 ISO 时间戳为 'YYYY-MM-DD HH:mm'。
- * @param {string | null | undefined} isoTimestamp - ISO 时间戳。
- * @returns {string} 格式化后的时间或 'N/A'。
+ * 格式化 ISO 时间戳为 'YYYY-MM-DD HH:mm'
+ * @param {string | null | undefined} isoTimestamp ISO 时间戳
+ * @returns {string} 格式化后的时间或 'N/A'
  */
 function formatTimestamp(isoTimestamp) {
-    if (!isoTimestamp) return 'N/A';
-    try {
-        const date = new Date(isoTimestamp);
-        if (isNaN(date.getTime())) throw new Error("Invalid Date");
-        const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0'), h=String(date.getHours()).padStart(2,'0'), i=String(date.getMinutes()).padStart(2,'0');
-        return `${y}-${m}-${d} ${h}:${i}`; // 精确到分钟
-    } catch (e) {
-        console.warn("格式化时间戳失败:", isoTimestamp, e);
-        return isoTimestamp; // 返回原始值
-    }
+  if (!isoTimestamp) return "N/A";
+  try {
+    const date = new Date(isoTimestamp);
+    if (isNaN(date.getTime())) throw new Error("Invalid Date");
+    const y = date.getFullYear(),
+      m = String(date.getMonth() + 1).padStart(2, "0"),
+      d = String(date.getDate()).padStart(2, "0"),
+      h = String(date.getHours()).padStart(2, "0"),
+      i = String(date.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d} ${h}:${i}`;
+  } catch (e) {
+    console.warn("格式化时间戳失败:", isoTimestamp, e);
+    return isoTimestamp;
+  }
 }
 
-
-// --------------------------------------------------------------------------
-// 初始化框架
-// --------------------------------------------------------------------------
 /**
- * 页面加载时执行的主要初始化函数。
+ * 填充仓库选择下拉框
+ * @param {HTMLSelectElement} selectElement 目标 select 元素
+ * @param {boolean} [includeAllOption=false] 是否包含 "所有仓库" 选项
+ * @param {string} [defaultSelection=''] 默认选中的仓库名
+ */
+function populateStorageBoxSelect(
+  selectElement,
+  includeAllOption = false,
+  defaultSelection = ""
+) {
+  if (!selectElement) return;
+  selectElement.innerHTML = "";
+  if (includeAllOption) {
+    const allOption = document.createElement("option");
+    allOption.value = "";
+    allOption.textContent = "——所有仓库——";
+    selectElement.appendChild(allOption);
+  }
+  AppState.availableStorageBoxes.forEach((boxName) => {
+    // 使用原始大小写
+    const option = document.createElement("option");
+    option.value = boxName; // 值和显示都用原始大小写
+    option.textContent = boxName;
+    selectElement.appendChild(option);
+  });
+  if (
+    defaultSelection &&
+    AppState.availableStorageBoxes.includes(defaultSelection)
+  ) {
+    selectElement.value = defaultSelection;
+  } else if (!includeAllOption && AppState.availableStorageBoxes.length > 0) {
+    selectElement.value = AppState.availableStorageBoxes[0];
+  }
+}
+
+// --- 初始化框架 ---
+/**
+ * 页面加载时执行的主要初始化函数
  */
 async function initializeApplication() {
-    console.log("应用初始化开始...");
-    cacheDomElements();
+  console.log("应用初始化开始...");
+  cacheDomElements();
 
-    // --- 初始化 IntersectionObserver ---
-    try {
-        if ('IntersectionObserver' in window) {
-            lazyLoadObserver = new IntersectionObserver(handleImageLazyLoad, { root: null, rootMargin: '200px', threshold: 0.01 });
-            console.log("图片懒加载观察器初始化成功。");
-        } else { console.warn("浏览器不支持 IntersectionObserver。"); lazyLoadObserver = null; }
-    } catch (error) { console.error("初始化 Observer 出错:", error); lazyLoadObserver = null; }
+  if (DOM.appVersionElement) {
+    DOM.appVersionElement.textContent = "咕咕牛Web管理器 v2.5";
+  }
 
-    // 2. 设置初始 UI 状态
-    hideGeneratorMessage(); hideImportMessage(); hideModalMessage();
-    if (DOM.generatorSearchInput) { DOM.generatorSearchInput.disabled = true; DOM.generatorSearchInput.placeholder = "加载核心数据..."; }
-    if (DOM.generatorAttributesPanel) DOM.generatorAttributesPanel.classList.add(UI_CLASSES.INITIALLY_HIDDEN);
-    if (DOM.importerAttributesPanel) DOM.importerAttributesPanel.classList.add(UI_CLASSES.INITIALLY_HIDDEN);
-    if (DOM.generatorPreviewImage) { DOM.generatorPreviewImage.src = ""; DOM.generatorPreviewImage.alt = "选择图片"; DOM.generatorPreviewImage.classList.add(UI_CLASSES.HIDDEN); DOM.generatorPreviewImage.style.display = 'none'; }
-    if (DOM.importerTempImagePreview){ DOM.importerTempImagePreview.src = ""; DOM.importerTempImagePreview.alt = "待入库图片预览"; DOM.importerTempImagePreview.classList.add(UI_CLASSES.HIDDEN); }
-    if (typeof disableImportFormSections === "function") { disableImportFormSections(); } else { console.warn("Core: disableImportFormSections 未定义 (GuTools_Import.js)。"); }
-
-    // 3. 设置默认 Tab
-    const defaultTabId = 'homePane';
-    DOM.tabPanes.forEach(p => p.classList.remove(UI_CLASSES.ACTIVE, UI_CLASSES.SLIDING_OUT)); DOM.tabButtons.forEach(b => b.classList.remove(UI_CLASSES.ACTIVE));
-    const defaultPane = document.getElementById(defaultTabId); const defaultButton = document.querySelector(`.tab-button[data-tab="${defaultTabId}"]`);
-    if (defaultPane) defaultPane.classList.add(UI_CLASSES.ACTIVE); else console.warn(`默认 Tab 面板 '${defaultTabId}' 未找到。`);
-    if (defaultButton) defaultButton.classList.add(UI_CLASSES.ACTIVE); else console.warn(`默认 Tab 按钮 '${defaultTabId}' 未找到。`);
-
-    // 4. 时间更新
-    updateCurrentTimeDisplay(); setInterval(updateCurrentTimeDisplay, 1000);
-
-    // 5. 获取核心数据
-    displayGeneratorMessage("加载核心数据...", UI_CLASSES.INFO);
-    let galleryImagesLoaded = false; let userDataLoaded = false;
-    try {
-        const [imagesResult, userdataResult] = await Promise.allSettled([
-            fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_IMAGES),
-            fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA)
-        ]);
-
-        if (imagesResult.status === 'fulfilled' && Array.isArray(imagesResult.value)) {
-            AppState.galleryImages = imagesResult.value; galleryImagesLoaded = true;
-            console.log(`核心数据: 加载 ${AppState.galleryImages.length} 图库信息。`);
-            if (DOM.generatorSearchInput) { DOM.generatorSearchInput.placeholder = `搜索 ${AppState.galleryImages.length} 图片...`; }
-            if (DOM.generatorAttributesPanel) DOM.generatorAttributesPanel.classList.remove(UI_CLASSES.INITIALLY_HIDDEN);
-        } else {
-            console.error("核心数据: 加载图库列表失败:", imagesResult.reason || '未知');
-            displayToast("加载图库列表失败", UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
-            if (DOM.generatorSearchInput) { DOM.generatorSearchInput.placeholder = "列表加载失败"; DOM.generatorSearchInput.disabled = true; }
-        }
-
-        if (userdataResult.status === 'fulfilled' && Array.isArray(userdataResult.value)) {
-            AppState.userData = userdataResult.value;
-            AppState.userDataPaths = new Set(AppState.userData.map(e => e.path).filter(Boolean));
-            userDataLoaded = true;
-            console.log(`核心数据: 加载 ${AppState.userData.length} 用户数据。`);
-            if (typeof updateGeneratorEntryCount === "function") updateGeneratorEntryCount(); else console.warn("Core: updateGeneratorEntryCount 未定义 (GuTools_Generator.js)。");
-            if(AppState.currentGuToolMode === 'md5' && typeof populateMd5JsonList === "function") populateMd5JsonList(); else if(AppState.currentGuToolMode === 'md5') console.warn("Core: populateMd5JsonList 未定义 (GuTools_MD5.js)。");
-        } else {
-            console.error("核心数据: 加载用户数据失败:", userdataResult.reason || '未知');
-            displayToast("加载 JSON 数据失败", UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
-            AppState.userData = []; AppState.userDataPaths = new Set();
-            if (typeof updateGeneratorEntryCount === "function") updateGeneratorEntryCount();
-            if(AppState.currentGuToolMode === 'md5' && typeof populateMd5JsonList === "function") populateMd5JsonList();
-        }
-
-        if (galleryImagesLoaded && userDataLoaded) { displayGeneratorMessage('核心数据加载完毕！', UI_CLASSES.SUCCESS, DELAYS.MESSAGE_CLEAR_DEFAULT); }
-        else if (imagesLoaded) { displayGeneratorMessage('图库加载成功, JSON 数据加载失败', UI_CLASSES.WARNING, DELAYS.MESSAGE_CLEAR_DEFAULT + 1000); }
-        else if (userdataLoaded) { displayGeneratorMessage('JSON 数据加载成功, 图库加载失败', UI_CLASSES.WARNING, DELAYS.MESSAGE_CLEAR_DEFAULT + 1000); }
-        else { displayGeneratorMessage('核心数据加载失败！', UI_CLASSES.ERROR); }
-
-        // 6. 初始化 Worker
-        if (galleryImagesLoaded && typeof Worker !== 'undefined') {
-             if (typeof initializeGeneratorSearchWorker === "function") initializeGeneratorSearchWorker(); else console.warn("Core: initializeGeneratorSearchWorker 未定义 (GuTools_Generator.js)。");
-        } else if (typeof Worker === 'undefined') {
-            console.warn("核心: 不支持 Worker。"); displayToast("不支持后台搜索", UI_CLASSES.WARNING);
-            if (DOM.generatorSearchInput && !DOM.generatorSearchInput.disabled) { DOM.generatorSearchInput.placeholder = "搜索不可用"; DOM.generatorSearchInput.disabled = true; }
-        } else {
-            console.warn("核心: 图库加载失败，Worker 未初始化。");
-            if (DOM.generatorSearchInput && !DOM.generatorSearchInput.disabled) { DOM.generatorSearchInput.placeholder = "搜索不可用 (数据错误)"; DOM.generatorSearchInput.disabled = true; }
-        }
-
-        // 7. 设置事件监听器
-        console.log("核心: 设置事件监听器...");
-        const setupFunctions = [
-            { name: 'setupTabNavigation', file: 'Ui_Controls.js' },
-            { name: 'setupHomePaneEventListeners', file: 'Ui_Controls.js' },
-            { name: 'setupModalEventListeners', file: 'Data_List.js' },
-            { name: 'setupGuToolsModeSwitcher', file: 'GuTools_Main.js' },
-            { name: 'setupGeneratorEventListeners', file: 'GuTools_Generator.js' },
-            { name: 'setupImporterEventListeners', file: 'GuTools_Import.js' },
-            { name: 'setupMd5CheckerEventListeners', file: 'GuTools_MD5.js' },
-            { name: 'setupSequenceManagerEventListeners', file: 'GuTools_Sequence.js' },
-            { name: 'setupJsonCalibratorEventListeners', file: 'GuTools_JsonCal.js' },
-            { name: 'setupDataListEventListeners', file: 'Data_List.js' },
-            { name: 'setupPluginGalleryEventListeners', file: 'Gallery.js' }, // 或 Plugin_Gallery.js
-            { name: 'setupGlobalEventListeners', file: 'Ui_Controls.js' }
-        ];
-        for (const funcInfo of setupFunctions) {
-            if (typeof window[funcInfo.name] === "function") {
-                window[funcInfo.name]();
-                console.log(`  > ${funcInfo.name} (来自 ${funcInfo.file}) 已调用。`);
-            } else { console.warn(`核心: ${funcInfo.name} 函数在 ${funcInfo.file} 中尚未定义。`); }
-        }
-        console.log("核心: 事件监听器设置调用完成。");
-
-        // 8. 初始 UI 更新
-        if (typeof updateGalleryStatusDisplay === "function") updateGalleryStatusDisplay(); else console.warn("核心: updateGalleryStatusDisplay 未定义 (Ui_Controls.js)。");
-        const filterToggleIds = ['dataListFilterPx18', 'dataListFilterRx18', 'dataListFilterIsBan', 'dataListFilterNormal', 'dataListFilterFullscreen', 'dataListFilterEasterEgg', 'dataListFilterAiImage'];
-        filterToggleIds.forEach(id => {
-            if (document.getElementById(id)) {
-                 if (typeof updateFilterToggleButtonText === "function") updateFilterToggleButtonText(id); else console.warn(`核心: updateFilterToggleButtonText 未定义 (${id}) (Data_List.js)。`);
-            }
-        });
-
-        console.log("应用初始化流程完成。");
-
-    } catch (error) {
-        console.error("!!! 核心初始化失败 !!!:", error);
-        displayGeneratorMessage(`初始化严重错误: ${error.message}.`, UI_CLASSES.ERROR);
-        document.body.classList.add('initialization-error');
+  try {
+    if ("IntersectionObserver" in window) {
+      lazyLoadObserver = new IntersectionObserver(handleImageLazyLoad, {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0.01,
+      });
+      console.log("图片懒加载观察器初始化成功");
+    } else {
+      console.warn("浏览器不支持 IntersectionObserver");
+      lazyLoadObserver = null;
     }
+  } catch (error) {
+    console.error("初始化 Observer 出错:", error);
+    lazyLoadObserver = null;
+  }
+
+  hideGeneratorMessage();
+  hideImportMessage();
+  hideModalMessage();
+  if (DOM.generatorSearchInput) {
+    DOM.generatorSearchInput.disabled = true;
+    DOM.generatorSearchInput.placeholder = "加载核心数据...";
+  }
+  if (DOM.generatorAttributesPanel)
+    DOM.generatorAttributesPanel.classList.add(UI_CLASSES.INITIALLY_HIDDEN);
+  if (DOM.importerAttributesPanel)
+    DOM.importerAttributesPanel.classList.add(UI_CLASSES.INITIALLY_HIDDEN);
+  if (DOM.generatorPreviewImage) {
+    DOM.generatorPreviewImage.src = "";
+    DOM.generatorPreviewImage.alt = "选择图片";
+    DOM.generatorPreviewImage.classList.add(UI_CLASSES.HIDDEN);
+    DOM.generatorPreviewImage.style.display = "none";
+  }
+  if (DOM.importerTempImagePreview) {
+    DOM.importerTempImagePreview.src = "";
+    DOM.importerTempImagePreview.alt = "待入库图片预览";
+    DOM.importerTempImagePreview.classList.add(UI_CLASSES.HIDDEN);
+  }
+  if (typeof disableImportFormSections === "function") {
+    disableImportFormSections();
+  } else {
+    console.warn("Core: disableImportFormSections 未定义 GuTools_Import.js");
+  }
+
+  const defaultTabId = "homePane";
+  DOM.tabPanes.forEach((p) =>
+    p.classList.remove(UI_CLASSES.ACTIVE, UI_CLASSES.SLIDING_OUT)
+  );
+  DOM.tabButtons.forEach((b) => b.classList.remove(UI_CLASSES.ACTIVE));
+  const defaultPane = document.getElementById(defaultTabId);
+  const defaultButton = document.querySelector(
+    `.tab-button[data-tab="${defaultTabId}"]`
+  );
+  if (defaultPane) defaultPane.classList.add(UI_CLASSES.ACTIVE);
+  else console.warn(`默认 Tab 面板 '${defaultTabId}' 未找到`);
+  if (defaultButton) defaultButton.classList.add(UI_CLASSES.ACTIVE);
+  else console.warn(`默认 Tab 按钮 '${defaultTabId}' 未找到`);
+
+  updateCurrentTimeDisplay();
+  setInterval(updateCurrentTimeDisplay, 1000);
+
+  displayGeneratorMessage("加载核心数据...", UI_CLASSES.INFO);
+  let galleryImagesLoaded = false;
+  let userDataLoaded = false;
+  try {
+    const [imagesResult, userdataResult] = await Promise.allSettled([
+      fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_IMAGES),
+      fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA),
+    ]);
+
+    if (
+      imagesResult.status === "fulfilled" &&
+      Array.isArray(imagesResult.value)
+    ) {
+      // --- 处理 galleryImages 保留原始大小写 storageBox 存储相对路径 ---
+      AppState.galleryImages = imagesResult.value.map((img, index) => {
+        let currentStorageBox = img.storageBox || img.storagebox; // 优先驼峰 兼容小写
+        let originalUrlPath = img.urlPath || "";
+        let relativePath = "";
+
+        if (!currentStorageBox) {
+          console.warn(
+            `Core: galleryImage[${index}] 缺少 storageBox/storagebox:`,
+            img
+          );
+          currentStorageBox = "unknown";
+        }
+        // 保留原始大小写
+
+        let pathWithoutRepo = originalUrlPath;
+        if (typeof pathWithoutRepo !== "string") pathWithoutRepo = "";
+
+        // 使用原始大小写构建正则 用于提取相对路径
+        const escapedStorageBox = currentStorageBox.replace(
+          /[-\/\\^$*+?.()|[\]{}]/g,
+          "\\$&"
+        );
+        const repoPrefixRegex = new RegExp(`^/?(${escapedStorageBox})/`, "i"); // 忽略匹配时的大小写
+
+        if (pathWithoutRepo.match(repoPrefixRegex)) {
+          pathWithoutRepo = pathWithoutRepo.replace(repoPrefixRegex, "");
+        } else if (pathWithoutRepo.startsWith("/")) {
+          console.warn(
+            `Core: galleryImage[${index}] urlPath 开头与仓库名 ${currentStorageBox} 不匹配: ${originalUrlPath}`
+          );
+          pathWithoutRepo = pathWithoutRepo.substring(1);
+        }
+        relativePath = pathWithoutRepo;
+
+        const finalRelativePath = relativePath
+          .replace(/\\/g, "/")
+          .replace(/\/{2,}/g, "/");
+
+        // if (originalUrlPath !== finalRelativePath && index < 10) { // 日志过多 暂时注释
+        //     console.log(`Core: Path transformation[${index}]: ${originalUrlPath} -> ${finalRelativePath} (storageBox: ${currentStorageBox})`);
+        // }
+
+        return {
+          ...img,
+          storageBox: currentStorageBox, // 存储原始大小写
+          urlPath: finalRelativePath, // 存储相对路径
+          storagebox: undefined, // 移除小写字段
+        };
+      });
+      // --- 处理结束 ---
+
+      galleryImagesLoaded = true;
+      AppState.availableStorageBoxes = [
+        ...new Set(
+          AppState.galleryImages.map((img) => img.storageBox).filter(Boolean)
+        ),
+      ].sort(); // 存储原始大小写
+      console.log(
+        `核心数据: 加载 ${AppState.galleryImages.length} 图库信息 来自 ${
+          AppState.availableStorageBoxes.length
+        } 个仓库: ${AppState.availableStorageBoxes.join(", ")}`
+      );
+      if (DOM.generatorSearchInput) {
+        DOM.generatorSearchInput.placeholder = `搜索 ${AppState.galleryImages.length} 图片...`;
+      }
+      if (DOM.generatorAttributesPanel)
+        DOM.generatorAttributesPanel.classList.remove(
+          UI_CLASSES.INITIALLY_HIDDEN
+        );
+      if (DOM.importerStorageBoxSelect)
+        populateStorageBoxSelect(DOM.importerStorageBoxSelect, false);
+      if (DOM.sequenceStorageBoxSelect)
+        populateStorageBoxSelect(DOM.sequenceStorageBoxSelect, false);
+    } else {
+      console.error(
+        "核心数据: 加载图库列表失败:",
+        imagesResult.reason || "未知"
+      );
+      displayToast(
+        "加载图库列表失败",
+        UI_CLASSES.ERROR,
+        DELAYS.TOAST_ERROR_DURATION
+      );
+      if (DOM.generatorSearchInput) {
+        DOM.generatorSearchInput.placeholder = "列表加载失败";
+        DOM.generatorSearchInput.disabled = true;
+      }
+    }
+
+    if (
+      userdataResult.status === "fulfilled" &&
+      Array.isArray(userdataResult.value)
+    ) {
+      AppState.userData = userdataResult.value;
+      // --- 正确构建 userDataPaths (使用原始大小写 storageBox) ---
+      console.log(
+        "Core: 开始构建 userDataPaths (包含原始大小写 storageBox 的完整 Web 路径)..."
+      );
+      AppState.userDataPaths = new Set();
+      AppState.userData.forEach((e, index) => {
+        // 假设 JSON 中存的是小写 storagebox 需要找到对应的大小写
+        const originalCaseStorageBox = AppState.availableStorageBoxes.find(
+          (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
+        );
+        if (e.path && originalCaseStorageBox) {
+          const fullPath = `/${originalCaseStorageBox}/${e.path}`
+            .replace(/\\/g, "/")
+            .replace(/\/{2,}/g, "/");
+          AppState.userDataPaths.add(fullPath);
+        } else if (e.path && e.storagebox) {
+          // 后备：如果找不到原始大小写 用小写
+          const fullPath = `/${e.storagebox}/${e.path}`
+            .replace(/\\/g, "/")
+            .replace(/\/{2,}/g, "/");
+          AppState.userDataPaths.add(fullPath);
+          console.warn(
+            `Core: userData[${index}] 未找到 ${e.storagebox} 的原始大小写 使用小写构建路径`
+          );
+        } else {
+          console.warn(
+            `Core: userData 条目 ${index} 缺少 path 或 storagebox 无法添加到 Set:`,
+            e
+          );
+        }
+      });
+      // --- 构建结束 ---
+      userDataLoaded = true;
+      console.log(
+        `核心数据: 加载 ${AppState.userData.length} 用户数据 已缓存 ${AppState.userDataPaths.size} 个有效路径`
+      );
+
+      if (typeof updateGeneratorEntryCount === "function")
+        updateGeneratorEntryCount();
+      else
+        console.warn(
+          "Core: updateGeneratorEntryCount 未定义 GuTools_Generator.js"
+        );
+      if (
+        AppState.currentGuToolMode === "md5" &&
+        typeof populateMd5JsonList === "function"
+      )
+        populateMd5JsonList();
+      else if (AppState.currentGuToolMode === "md5")
+        console.warn("Core: populateMd5JsonList 未定义 GuTools_MD5.js");
+    } else {
+      console.error(
+        "核心数据: 加载用户数据失败:",
+        userdataResult.reason || "未知"
+      );
+      displayToast(
+        "加载 JSON 数据失败",
+        UI_CLASSES.ERROR,
+        DELAYS.TOAST_ERROR_DURATION
+      );
+      AppState.userData = [];
+      AppState.userDataPaths = new Set();
+      if (typeof updateGeneratorEntryCount === "function")
+        updateGeneratorEntryCount();
+      if (
+        AppState.currentGuToolMode === "md5" &&
+        typeof populateMd5JsonList === "function"
+      )
+        populateMd5JsonList();
+    }
+
+    if (galleryImagesLoaded && userDataLoaded) {
+      displayGeneratorMessage(
+        "核心数据加载完毕！",
+        UI_CLASSES.SUCCESS,
+        DELAYS.MESSAGE_CLEAR_DEFAULT
+      );
+    } else if (galleryImagesLoaded) {
+      displayGeneratorMessage(
+        "图库加载成功 JSON 数据加载失败",
+        UI_CLASSES.WARNING,
+        DELAYS.MESSAGE_CLEAR_DEFAULT + 1000
+      );
+    } else if (userDataLoaded) {
+      displayGeneratorMessage(
+        "JSON 数据加载成功 图库加载失败",
+        UI_CLASSES.WARNING,
+        DELAYS.MESSAGE_CLEAR_DEFAULT + 1000
+      );
+    } else {
+      displayGeneratorMessage("核心数据加载失败！", UI_CLASSES.ERROR);
+    }
+
+    if (galleryImagesLoaded && typeof Worker !== "undefined") {
+      if (typeof initializeGeneratorSearchWorker === "function")
+        initializeGeneratorSearchWorker();
+      else
+        console.warn(
+          "Core: initializeGeneratorSearchWorker 未定义 GuTools_Generator.js"
+        );
+    } else if (typeof Worker === "undefined") {
+      console.warn("核心: 不支持 Worker");
+      displayToast("不支持后台搜索", UI_CLASSES.WARNING);
+      if (DOM.generatorSearchInput && !DOM.generatorSearchInput.disabled) {
+        DOM.generatorSearchInput.placeholder = "搜索不可用";
+        DOM.generatorSearchInput.disabled = true;
+      }
+    } else {
+      console.warn("核心: 图库加载失败 Worker 未初始化");
+      if (DOM.generatorSearchInput && !DOM.generatorSearchInput.disabled) {
+        DOM.generatorSearchInput.placeholder = "搜索不可用 数据错误";
+        DOM.generatorSearchInput.disabled = true;
+      }
+    }
+
+    console.log("核心: 设置事件监听器...");
+    const setupFunctions = [
+      { name: "setupTabNavigation", file: "Ui_Controls.js" },
+      { name: "setupHomePaneEventListeners", file: "Ui_Controls.js" },
+      { name: "setupModalEventListeners", file: "Data_List.js" },
+      { name: "setupGuToolsModeSwitcher", file: "GuTools_Main.js" },
+      { name: "setupGeneratorEventListeners", file: "GuTools_Generator.js" },
+      { name: "setupImporterEventListeners", file: "GuTools_Import.js" },
+      { name: "setupMd5CheckerEventListeners", file: "GuTools_MD5.js" },
+      {
+        name: "setupSequenceManagerEventListeners",
+        file: "GuTools_Sequence.js",
+      },
+      { name: "setupJsonCalibratorEventListeners", file: "GuTools_JsonCal.js" },
+      { name: 'setupStockroomGoEventListeners', file: 'GuTools_StockroomGo.js' },
+      { name: "setupDataListEventListeners", file: "Data_List.js" },
+      { name: "setupPluginGalleryEventListeners", file: "Plugin_Gallery.js" },
+      { name: "setupGlobalEventListeners", file: "Ui_Controls.js" },
+    ];
+    for (const funcInfo of setupFunctions) {
+      if (typeof window[funcInfo.name] === "function") {
+        window[funcInfo.name]();
+        console.log(`  > ${funcInfo.name} 来自 ${funcInfo.file} 已调用`);
+      } else {
+        console.warn(
+          `核心: ${funcInfo.name} 函数在 ${funcInfo.file} 中尚未定义`
+        );
+      }
+    }
+    console.log("核心: 事件监听器设置调用完成");
+
+    if (typeof updateGalleryStatusDisplay === "function")
+      updateGalleryStatusDisplay();
+    else console.warn("核心: updateGalleryStatusDisplay 未定义 Ui_Controls.js");
+    const filterToggleIds = [
+      "dataListFilterPx18",
+      "dataListFilterRx18",
+      "dataListFilterIsBan",
+      "dataListFilterNormal",
+      "dataListFilterFullscreen",
+      "dataListFilterEasterEgg",
+      "dataListFilterAiImage",
+    ];
+    filterToggleIds.forEach((id) => {
+      if (document.getElementById(id)) {
+        if (typeof updateFilterToggleButtonText === "function")
+          updateFilterToggleButtonText(id);
+        else
+          console.warn(
+            `核心: updateFilterToggleButtonText 未定义 ${id} Data_List.js`
+          );
+      }
+    });
+
+    console.log("应用初始化流程完成");
+  } catch (error) {
+    console.error("!!! 核心初始化失败 !!!:", error);
+    displayGeneratorMessage(
+      `初始化严重错误: ${error.message}.`,
+      UI_CLASSES.ERROR
+    );
+    document.body.classList.add("initialization-error");
+  }
 }
 
-// --------------------------------------------------------------------------
-// DOMContentLoaded 监听器
-// --------------------------------------------------------------------------
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApplication);
+// --- DOMContentLoaded 监听器 ---
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeApplication);
 } else {
-    console.log("核心: DOM 已加载，直接运行初始化。");
-    initializeApplication();
+  console.log("核心: DOM 已加载 直接运行初始化");
+  initializeApplication();
 }
