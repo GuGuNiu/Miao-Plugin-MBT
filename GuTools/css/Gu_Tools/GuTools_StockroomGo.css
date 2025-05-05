@@ -1,0 +1,301 @@
+/* ===================================== */
+/* == GuTools - 仓库转移视图样式 == */
+/* ===================================== */
+
+#stockroomGoPaneView .stockroom-go-layout-wrapper {
+    display: flex;
+    gap: 20px;
+    background-color: #fff0f5;
+    padding: 20px;
+    height: 100%;
+    overflow: hidden;
+    /* 底部圆角与面板视觉统一 */
+    border-radius: 0 0 16px 16px;
+    /* 顶部边框颜色匹配背景 */
+    border-top: 2px solid #fce7f3;
+    box-sizing: border-box;
+}
+
+#stockroomGoPaneView .stockroom-go-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    background-color: #ffffff;
+    border: 2px solid #f9a8d4;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0px #f472b6;
+    overflow: hidden;
+}
+
+/* 左侧控制列 */
+#stockroomGoPaneView .stockroom-go-column:first-child {
+    flex: 0 0 340px;
+    justify-content: flex-start;
+}
+
+/* 右侧信息/日志列 */
+#stockroomGoPaneView .stockroom-go-column:last-child {
+    flex: 1 1 60%;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+#stockroomGoPaneView .column-title {
+    /* TODO: 审视下方 !important 标记的必要性 */
+    font-size: 1.4em !important;
+    font-weight: 700 !important;
+    color: #be185d !important;
+    margin-top: 0;
+    margin-bottom: 15px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 3px solid #fbcfe8 !important;
+    text-align: center;
+    /* TODO: 审视下方 !important 标记的必要性 */
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: initial !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+#stockroomGoPaneView .column-title span {
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #ec4899;
+}
+
+#stockroomGoPaneView .stockroom-go-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex-shrink: 0;
+}
+
+#stockroomGoPaneView .stockroom-go-controls .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+#stockroomGoPaneView .stockroom-go-controls label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #831843;
+    font-size: 0.9em;
+}
+
+#stockroomGoPaneView .cartoon-select {
+    padding: 10px 14px;
+    border: 2px solid #f9a8d4;
+    border-radius: 8px;
+    background-color: #fffbff;
+    color: #831843;
+    font-size: 1em;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#stockroomGoPaneView .cartoon-select:disabled {
+    background-color: #fdf2f8;
+    border-color: #fce7f3;
+    color: #be185d;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#stockroomGoPaneView .cartoon-select:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
+}
+
+#stockroomGoPaneView .tool-button.primary {
+    background-color: #f472b6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 2px 2px 0px #db2777;
+}
+
+#stockroomGoPaneView .tool-button.primary:hover:not(:disabled) {
+    background-color: #ec4899;
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #be185d;
+}
+
+#stockroomGoPaneView .tool-button:disabled {
+    background-color: #fce7f3;
+    color: #f472b6;
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+#stockroomGoPaneView .status-area {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background-color: #fdf2f8;
+    border: 2px solid #fbcfe8;
+    border-radius: 8px;
+    font-size: 0.95em;
+    color: #9d174d;
+    min-height: 45px;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#stockroomGoPaneView .status-area p {
+    margin: 0;
+}
+
+#stockroomGoPaneView .log-area {
+    flex-grow: 1;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    border: 2px solid #f9a8d4;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #fffbff;
+    color: #831843;
+    resize: none;
+    outline: none;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #f472b6 #fdf2f8;
+}
+
+#stockroomGoPaneView .log-area::-webkit-scrollbar {
+    width: 10px;
+}
+
+#stockroomGoPaneView .log-area::-webkit-scrollbar-track {
+    background: #fdf2f8;
+    border-radius: 5px;
+}
+
+#stockroomGoPaneView .log-area::-webkit-scrollbar-thumb {
+    background-color: #f472b6;
+    border-radius: 5px;
+    border: 2px solid #fdf2f8;
+}
+
+#stockroomGoPaneView .log-area::-webkit-scrollbar-thumb:hover {
+    background-color: #ec4899;
+}
+
+/* --- 仓库信息列表 --- */
+
+#stockroomInfoContainer {
+    padding: 15px;
+    overflow-y: auto;
+    /* height: 100%; */ /* 通常由 flex-grow 控制，避免固定高度 */
+    flex-grow: 1; /* 确保列表区域填满剩余空间 */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    scrollbar-width: thin;
+    scrollbar-color: #f472b6 #fdf2f8;
+}
+
+#stockroomInfoContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+#stockroomInfoContainer::-webkit-scrollbar-track {
+    background: #fdf2f8;
+    border-radius: 4px;
+}
+
+#stockroomInfoContainer::-webkit-scrollbar-thumb {
+    background-color: #f472b6;
+    border-radius: 4px;
+    border: 2px solid #fdf2f8;
+}
+
+#stockroomInfoContainer::-webkit-scrollbar-thumb:hover {
+    background-color: #ec4899;
+}
+
+.stockroom-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    background-color: #ffffff;
+    border: 1px solid #fce7f3;
+    border-radius: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    cursor: default;
+    box-shadow: 0 3px 5px rgba(219, 39, 119, 0.08);
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.stockroom-item:hover {
+    border-color: #f9a8d4;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(219, 39, 119, 0.15);
+    background-color: #fffbff;
+}
+
+.stockroom-icon {
+    font-size: 2.4em;
+    margin-right: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    color: #f472b6;
+    width: 40px;
+    text-align: center;
+}
+
+.stockroom-text-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-grow: 1;
+    overflow: hidden;
+    /* 确保 flex item 在内容溢出时正确处理 */
+    min-width: 0;
+}
+
+.stockroom-name {
+    font-weight: 600;
+    color: #831843;
+    font-size: 1.0em;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.stockroom-folder-count {
+    font-size: 0.88em;
+    color: #be185d;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#stockroomInfoContainer .list-placeholder {
+    text-align: center;
+    color: var(--secondary-text-color);
+    padding: 30px 20px;
+    font-style: italic;
+    width: 100%;
+}
