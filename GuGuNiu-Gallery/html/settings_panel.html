@@ -281,6 +281,7 @@
         .item-layout { --item-color: #4fc3f7; --item-color-rgb: 79, 195, 247; } 
         .item-easteregg { --item-color: #9575cd; --item-color-rgb: 149, 117, 205; }
         .item-ai { --item-color: #f06292; --item-color-rgb: 240, 98, 146; }
+        .item-pm18 { --item-color:rgb(255, 0, 0)2; --item-color-rgb: 240, 98, 146; }
 
         .value-enabled {
             --status-color: #64ffda;
@@ -399,6 +400,15 @@
             </div>
             <div class="item-right">
                 <span class="value {{ layoutStatus.class }}">{{ layoutStatus.text }}</span>
+            </div>
+        </div>
+        <div class="setting-item item-pm18"> 
+            <div class="item-left">
+                <span class="label">PM18</span> 
+                <div class="value-description">管理三号仓库特殊面板图部署[默认不开启]</div>
+            </div>
+            <div class="item-right">
+                <span class="value {{ PM18Status.class }}">{{ PM18Status.text }}</span> 
             </div>
         </div>
         <div class="footer"> Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
