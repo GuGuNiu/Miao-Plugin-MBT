@@ -996,7 +996,7 @@ export class MiaoPluginMBT extends plugin {
             .repo-section.subsidiary { border-left-color: #fb8c00; background-color: rgba(255, 243, 224, 0.6); }
             .repo-title { font-weight: bold; font-size: 16px; color: #388e3c; margin-bottom: 8px; }
             .repo-section.subsidiary .repo-title { color: #e65100; }
-            .status-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #a5d6a7; }
+            .status-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 0;}
             .repo-section.subsidiary .status-line { border-bottom-color: #ffcc80; }
             .status-line:last-child { border-bottom: none; }
             .status-label { color: #555; }
@@ -1024,7 +1024,7 @@ export class MiaoPluginMBT extends plugin {
                 <div class="status-line"> <span class="status-label">错误:</span> </div> <div class="error-msg">{{ coreRepoResult.error.message || '未知错误' }}</div>
                 {{ /if }}
                 {{ if gitLog1 }}
-                <div class="log-section"> <div class="log-title">初始提交:</div> <pre class="log-content">{{ gitLog1 }}</pre> </div>
+                <div class="log-section"> <div class="log-title">最新:</div> <pre class="log-content">{{ gitLog1 }}</pre> </div>
                 {{ /if }}
             </div>
             {{ /if }}
@@ -1037,7 +1037,7 @@ export class MiaoPluginMBT extends plugin {
                  <div class="status-line"> <span class="status-label" style="padding-left: 15px;">错误:</span> </div> <div class="error-msg">{{ subRes.error.message || '未知错误' }}</div>
                 {{ /if }}
                 {{ if subRes.gitLog }}
-                <div class="log-section" style="margin-top: 5px; padding-top: 5px;"> <div class="log-title" style="font-size: 12px;">{{ subRes.repo === 2 ? '二号' : (subRes.repo === 3 ? '三号' : subRes.repo + '号') }}初始提交:</div> <pre class="log-content" style="max-height: 60px;">{{ subRes.gitLog }}</pre> </div>
+                <div class="log-section" style="margin-top: 5px; padding-top: 5px;"> <div class="log-title" style="font-size: 12px;">{{ subRes.repo === 2 ? '二号' : (subRes.repo === 3 ? '三号' : subRes.repo + '号') }}最新:</div> <pre class="log-content" style="max-height: 60px;">{{ subRes.gitLog }}</pre> </div>
                 {{ /if }}
                 {{ /each }}
             </div>
@@ -1167,7 +1167,7 @@ export class MiaoPluginMBT extends plugin {
           let coreStatusLineText = `核心仓库: ${coreRepoResult.success ? '成功' : '失败'} (${coreRepoResult.nodeName})`;
           if (coreRepoResult.error) coreStatusLineText += ` | 错误: ${coreRepoResult.error.message}`;
           logMessages.push(coreStatusLineText);
-          if (gitLog1) logMessages.push(`--- 核心仓库初始提交 ---\n${gitLog1}`);
+          if (gitLog1) logMessages.push(`--- 核心仓库最新 ---\n${gitLog1}`);
 
           subsidiaryResults.forEach(res => {
               let subStatusLineText = `${res.repo === 2 ? '二号仓库' : (res.repo === 3 ? '三号仓库' : res.repo + '号仓库')}: `;
@@ -1176,7 +1176,7 @@ export class MiaoPluginMBT extends plugin {
               else subStatusLineText += `${res.success ? '成功' : '失败'} (${res.nodeName})`;
               if (res.error) subStatusLineText += ` | 错误: ${res.error.message}`;
               logMessages.push(subStatusLineText);
-              if (res.gitLog) logMessages.push(`--- ${res.repo === 2 ? '二号' : (res.repo === 3 ? '三号' : res.repo + '号')}仓库初始提交 ---\n${res.gitLog}`);
+              if (res.gitLog) logMessages.push(`--- ${res.repo === 2 ? '二号' : (res.repo === 3 ? '三号' : res.repo + '号')}仓库最新 ---\n${res.gitLog}`);
           });
 
           try {
@@ -5746,7 +5746,7 @@ export class MiaoPluginMBT extends plugin {
         h1{text-align:center;color:rgba(7,131,48,0.8);margin:0 0 15px 0;font-size:20px;border-bottom:1px solid #eee;padding-bottom:10px;}
         h2{font-size:16px;color:#333;margin:15px 0 10px 0;border-left:4px solid #0077cc;padding-left:8px;}
         ul{list-style:none;padding:0;margin:0;}
-        li{display:flex;justify-content:space-between;align-items:center;padding:8px 5px;border-bottom:1px dashed #eee;}
+        li{display:flex;justify-content:space-between;align-items:center;padding:8px 5px;}
         li:last-child{border-bottom:none;}
         .node-name{font-weight:bold;color:#555;flex-basis:120px;flex-shrink:0;}
         .node-status{text-align:right;flex-grow:1;}
