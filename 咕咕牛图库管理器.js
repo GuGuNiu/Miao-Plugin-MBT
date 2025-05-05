@@ -739,6 +739,11 @@ export class MiaoPluginMBT extends plugin {
         copyIfExists: true,
       },
       {
+        sourceSubPath: "GuGuNiu-Gallery/html/download_report.html",
+        destFileName: "html/download_report.html",
+        copyIfExists: true,
+      },
+      {
         sourceSubPath: "GuGuNiu-Gallery/html/img",
         destFileName: "html/img",
         copyIfExists: true,
