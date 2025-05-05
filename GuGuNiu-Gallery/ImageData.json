@@ -22018,5 +22018,25 @@
         },
         "timestamp": "2025-05-05T02:42:17.119Z",
         "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3918327395",
+        "characterName": "梦见月瑞希",
+        "path": "gs-character/梦见月瑞希/梦见月瑞希Gu3.webp",
+        "attributes": {
+            "filename": "梦见月瑞希Gu3.webp",
+            "parentFolder": "梦见月瑞希",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0ce9109f9cc6785a525ea9a9391e2ddd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-05T03:30:07.181Z",
+        "sourceGallery": "gs-character"
     }
 ]
