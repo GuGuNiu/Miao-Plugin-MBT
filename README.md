@@ -60,13 +60,13 @@
 
 ##### &emsp;&emsp;|_使用GitHub源安装->>
 ```bash
-curl -sL "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库下载器.js" -o "./plugins/example/咕咕牛图库下载器.js"
+curl -sL "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 
 ##### &emsp;&emsp;|_使用jsdelivr源安装->>
 
 ```bash
-curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库下载器.js" -o "./plugins/example/咕咕牛图库下载器.js"
+curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 ---
 
