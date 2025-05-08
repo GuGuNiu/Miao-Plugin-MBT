@@ -1227,264 +1227,210 @@ export class MiaoPluginMBT extends plugin {
     return true;
   }
 
-  /**
-   * @description 处理 #更新咕咕牛 命令，执行双仓库更新流程。
+ /**
+   * @description 处理 #更新咕咕牛 命令，执行多仓库更新流程，并生成图片报告。
    */
   async UpdateTuKu(e, isScheduled = false) {
-    if (!isScheduled && !(await this.CheckInit(e))) return false;
+    if (!isScheduled && !(await this.CheckInit(e))) return false; 
+
+    const logger = this.logger;
+    const logPrefix = this.logPrefix;
 
     const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
     const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
-    const Repo2Exists =
-      Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
+    let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
     const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
-    const Repo3Exists =
-      Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
+    let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
 
-    //  检查仓库状态 
     let anyRepoMissing = false;
     if (!Repo1Exists) anyRepoMissing = true;
     if (Repo2UrlConfigured && !Repo2Exists) anyRepoMissing = true;
     if (Repo3UrlConfigured && !Repo3Exists) anyRepoMissing = true;
 
     if (anyRepoMissing && Repo1Exists) {
-      // 如果核心在，但有附属缺失
-      if (!isScheduled && e)
-        await e.reply(
-          "『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。",
-          true
-        );
-      // 可以选择继续更新已存在的，或者直接返回
-      // return false;
+      if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
     } else if (!Repo1Exists) {
-      // 如果核心不在
-      if (!isScheduled && e)
-        await e.reply(
-          "『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧。",
-          true
-        );
-      return false;
+      if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧。", true);
+      return false; // 核心仓库不存在，无法更新
     }
 
     const startTime = Date.now();
-    if (!isScheduled && e)
-      await e.reply("『咕咕牛🐂』开始检查更新，稍等片刻...", true);
-    this.logger.info(
-      `${this.logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`
-    );
+    if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新 (所有仓库)，稍等片刻...", true);
+    logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
 
-    let Repo1Updated = false,
-      Repo2Updated = false,
-      Repo3Updated = false;
-    let Repo1Success = true,
-      Repo2Success = true,
-      Repo3Success = true;
+    const reportResults = [];
+    let overallSuccess = true;
     let overallHasChanges = false;
-    let finalUserMessage = "";
-    let gitLogRepo1 = "",
-      gitLogRepo2 = "",
-      gitLogRepo3 = "";
+
+    // 更新核心仓库 (一号)
+    if (Repo1Exists) {
+      const result = await MiaoPluginMBT.UpdateSingleRepo(e, 1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库 (核心)", Default_Config.Main_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, isScheduled, logger);
+      overallSuccess &&= result.success;
+      overallHasChanges ||= result.hasChanges;
+      reportResults.push({
+        name: "一号仓库 (核心)",
+        statusText: result.success ? (result.hasChanges ? "更新成功" : "已是最新") : "更新失败",
+        statusClass: result.success ? (result.hasChanges ? "status-ok" : "status-no-change") : "status-fail",
+        error: result.success ? null : (result.error || { message: "未知错误" }),
+        log: result.success ? (await MiaoPluginMBT.GetTuKuLog(5, MiaoPluginMBT.paths.LocalTuKuPath, logger)) : (result.error?.stderr || result.error?.message || "获取日志失败"),
+      });
+    } else {
+      reportResults.push({ name: "一号仓库 (核心)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null });
+      overallSuccess = false; // 核心未下载，整体视为失败
+    }
+
+    // 更新附属仓库 (二号) - 仅当核心仓库操作基本成功或未配置时
+    if (Repo2UrlConfigured) {
+      if (Repo2Exists) {
+        const result = await MiaoPluginMBT.UpdateSingleRepo(null, 2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库 (附属)", MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, isScheduled, logger);
+        overallSuccess &&= result.success;
+        overallHasChanges ||= result.hasChanges;
+        reportResults.push({
+          name: "二号仓库 (附属)",
+          statusText: result.success ? (result.hasChanges ? "更新成功" : "已是最新") : "更新失败",
+          statusClass: result.success ? (result.hasChanges ? "status-ok" : "status-no-change") : "status-fail",
+          error: result.success ? null : (result.error || { message: "未知错误" }),
+          log: result.success ? (await MiaoPluginMBT.GetTuKuLog(5, MiaoPluginMBT.paths.LocalTuKuPath2, logger)) : (result.error?.stderr || result.error?.message || "获取日志失败"),
+        });
+      } else {
+        reportResults.push({ name: "二号仓库 (附属)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null });
+        // overallSuccess &&= false; // 附属未下载不影响整体成功，但可能影响功能
+      }
+    } else {
+      reportResults.push({ name: "二号仓库 (附属)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null });
+    }
+
+    // 更新附属仓库 (三号) - 仅当核心仓库操作基本成功或未配置时
+    if (Repo3UrlConfigured) {
+      if (Repo3Exists) {
+        const result = await MiaoPluginMBT.UpdateSingleRepo(null, 3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库 (涩涩)", MiaoPluginMBT.MBTConfig.Sexy_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, isScheduled, logger);
+        overallSuccess &&= result.success;
+        overallHasChanges ||= result.hasChanges;
+        reportResults.push({
+          name: "三号仓库 (涩涩)",
+          statusText: result.success ? (result.hasChanges ? "更新成功" : "已是最新") : "更新失败",
+          statusClass: result.success ? (result.hasChanges ? "status-ok" : "status-no-change") : "status-fail",
+          error: result.success ? null : (result.error || { message: "未知错误" }),
+          log: result.success ? (await MiaoPluginMBT.GetTuKuLog(5, MiaoPluginMBT.paths.LocalTuKuPath3, logger)) : (result.error?.stderr || result.error?.message || "获取日志失败"),
+        });
+      } else {
+        reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null });
+        // overallSuccess &&= false;
+      }
+    } else {
+      reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null });
+    }
+
+    // 后续处理
+    if (overallSuccess && overallHasChanges) {
+      logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
+      await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
+    }
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    const reportData = {
+      pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+      duration: duration,
+      scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+      results: reportResults,
+      overallSuccess: overallSuccess,
+      overallHasChanges: overallHasChanges,
+    };
+
+    // 生成并发送报告图片
+    let tempHtmlFilePath = '';
+    let tempImgFilePath = '';
+    let reportSent = false;
 
     try {
-      // 更新核心仓库
-      if (Repo1Exists) {
-        const result1 = await MiaoPluginMBT.UpdateSingleRepo(
-          e,
-          1,
-          MiaoPluginMBT.paths.LocalTuKuPath,
-          "一号仓库",
-          Default_Config.Main_Github_URL,
-          MiaoPluginMBT.MBTConfig.SepositoryBranch ||
-            Default_Config.SepositoryBranch,
-          isScheduled,
-          this.logger
-        );
-        Repo1Success = result1.success;
-        Repo1Updated = result1.hasChanges;
-        if (!Repo1Success && !isScheduled)
-          finalUserMessage = "核心仓库(一号)更新失败了...";
-        else if (Repo1Success) {
-          gitLogRepo1 = result1.log || "";
-          if (Repo1Updated)
-            this.logger.info(`${this.logPrefix} 核心仓库(一号)更新了内容。`);
-          else
-            this.logger.info(
-              `${this.logPrefix} 核心仓库(一号)已经是最新版本。`
-            );
-        }
-      } else {
-        Repo1Success = false; // 核心不存在，更新失败
+      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'update_report.html');
+      // 确保模板存在
+      try {
+          await fsPromises.access(sourceHtmlPath);
+      } catch (err) {
+          logger.error(`${logPrefix} [更新报告] 找不到更新报告模板: ${sourceHtmlPath}`, err);
+          // 尝试发送文本消息作为回退
+          let fallbackMsg = `${logPrefix} 更新检查完成。\n`;
+          reportResults.forEach(res => {
+              fallbackMsg += `${res.name}: ${res.statusText}\n`;
+              if (res.error) fallbackMsg += `  错误: ${res.error.message}\n`;
+          });
+          if (e && !isScheduled) await e.reply(fallbackMsg);
+          else if (isScheduled && Bot.master && Bot.master.length > 0) {
+              Bot.master.forEach(masterId => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch(err => logger.error("发送定时更新文本报告给主人失败", err)));
+          }
+          return overallHasChanges; // 模板缺失，提前返回
       }
 
-      // 更新附属仓库 (只有在核心仓库更新成功后才进行)
-      if (Repo1Success) {
-        // 更新二号仓库
-        if (Repo2UrlConfigured && Repo2Exists) {
-          const result2 = await MiaoPluginMBT.UpdateSingleRepo(
-            null,
-            2,
-            MiaoPluginMBT.paths.LocalTuKuPath2,
-            "二号仓库",
-            MiaoPluginMBT.MBTConfig.Ass_Github_URL,
-            MiaoPluginMBT.MBTConfig.SepositoryBranch ||
-              Default_Config.SepositoryBranch,
-            isScheduled,
-            this.logger
-          );
-          Repo2Success = result2.success;
-          Repo2Updated = result2.hasChanges;
-          if (!Repo2Success && !isScheduled && !finalUserMessage)
-            finalUserMessage = "附属仓库(二号)更新失败了...";
-          else if (Repo2Success) {
-            gitLogRepo2 = result2.log || "";
-            if (Repo2Updated)
-              this.logger.info(`${this.logPrefix} 附属仓库(二号)更新了内容。`);
-            else
-              this.logger.info(
-                `${this.logPrefix} 附属仓库(二号)已经是最新版本。`
-              );
-          }
-        } else if (Repo2UrlConfigured && !Repo2Exists) {
-          this.logger.info(
-            `${this.logPrefix} 附属仓库(二号)未下载，跳过更新。`
-          );
-        } else if (!Repo2UrlConfigured) {
-          Repo2Success = true; // 未配置视为成功
-        }
+      await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+      tempHtmlFilePath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `update-report-tpl-${Date.now()}.html`);
 
-        // 更新三号仓库
-        if (Repo3UrlConfigured && Repo3Exists) {
-          const result3 = await MiaoPluginMBT.UpdateSingleRepo(
-            null,
-            3,
-            MiaoPluginMBT.paths.LocalTuKuPath3,
-            "三号仓库",
-            MiaoPluginMBT.MBTConfig.Sexy_Github_URL,
-            MiaoPluginMBT.MBTConfig.SepositoryBranch ||
-              Default_Config.SepositoryBranch,
-            isScheduled,
-            this.logger
-          );
-          Repo3Success = result3.success;
-          Repo3Updated = result3.hasChanges;
-          if (!Repo3Success && !isScheduled && !finalUserMessage)
-            finalUserMessage = "附属仓库(三号)更新失败了...";
-          else if (Repo3Success) {
-            gitLogRepo3 = result3.log || "";
-            if (Repo3Updated)
-              this.logger.info(`${this.logPrefix} 附属仓库(三号)更新了内容。`);
-            else
-              this.logger.info(
-                `${this.logPrefix} 附属仓库(三号)已经是最新版本。`
-              );
-          }
-        } else if (Repo3UrlConfigured && !Repo3Exists) {
-          this.logger.info(
-            `${this.logPrefix} 附属仓库(三号)未下载，跳过更新。`
-          );
-        } else if (!Repo3UrlConfigured) {
-          Repo3Success = true; // 未配置视为成功
-        }
-      }
+      await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+      tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `update-report-${Date.now()}.png`);
 
-      overallHasChanges = Repo1Updated || Repo2Updated || Repo3Updated;
-      const overallSuccess = Repo1Success && Repo2Success && Repo3Success;
+      logger.info(`${logPrefix} [更新报告] 开始生成图片报告`);
+      const img = await puppeteer.screenshot('guguniu-update-report', {
+        tplFile: sourceHtmlPath, 
+        savePath: tempImgFilePath,
+        imgType: 'png',
+        pageGotoParams: { waitUntil: 'networkidle0' },
+        ...reportData,
+        screenshotOptions: { fullPage: true }, // 根据内容调整，如果日志多可能需要true
+        pageBoundingRect: { selector: '.container', padding: 0 },
+        width: 560,
+      });
 
-      if (overallSuccess) {
-        if (overallHasChanges) {
-          if (!isScheduled && e)
-            await e.reply(`${this.logPrefix} 检测到更新，正在应用变更...`);
-          await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, this.logger);
-
-          if (!isScheduled && e) {
-            if (!finalUserMessage) finalUserMessage = "『咕咕牛』更新成功啦！";
-
-            let logMessages = [];
-            if (gitLogRepo1)
-              logMessages.push(
-                `--- 核心仓库(一号)最新记录 ---\n${gitLogRepo1}`
-              );
-            if (gitLogRepo2 && Repo2Updated)
-              logMessages.push(
-                `--- 附属仓库(二号)更新记录 ---\n${gitLogRepo2}`
-              );
-            if (gitLogRepo3 && Repo3Updated)
-              logMessages.push(
-                `--- 附属仓库(三号)更新记录 ---\n${gitLogRepo3}`
-              );
-
-            if (logMessages.length > 0) {
-              try {
-                const forwardMsg = await common.makeForwardMsg(
-                  e,
-                  logMessages,
-                  "『咕咕牛』更新详情"
-                );
-                if (forwardMsg) await e.reply(forwardMsg);
-                else await e.reply(finalUserMessage + " (日志发送失败)");
-              } catch (fwdErr) {
-                this.logger.error(
-                  `${this.logPrefix} 创建更新日志转发消息失败:`,
-                  fwdErr
-                );
-                await e.reply(finalUserMessage + " (日志发送失败)");
-              }
-            } else {
-              await e.reply(finalUserMessage);
-            }
-          } else if (isScheduled && overallHasChanges) {
-            this.logger.info(
-              `${this.logPrefix} [定时] 检测到更新，准备通知主人...`
-            );
-            const latestLogCombined =
-              gitLogRepo1 ||
-              (await MiaoPluginMBT.GetTuKuLog(
-                1,
-                MiaoPluginMBT.paths.LocalTuKuPath,
-                this.logger
-              ));
-            await this.NotifyMasterUpdateSuccess(latestLogCombined);
-          }
-        } else {
-          this.logger.info(`${this.logPrefix} 所有仓库均已是最新版本。`);
-          if (!isScheduled && e) {
-            finalUserMessage = "『咕咕牛』已经是最新版本啦，不用更新了~";
-            await e.reply(finalUserMessage);
-            const latestLog =
-              gitLogRepo1 ||
-              (await MiaoPluginMBT.GetTuKuLog(
-                1,
-                MiaoPluginMBT.paths.LocalTuKuPath,
-                this.logger
-              ));
-            if (latestLog) await e.reply(`最新提交：${latestLog}`);
-          } else if (isScheduled) {
-            this.logger.info(`${this.logPrefix} [定时] 无更新内容。`);
-          }
-        }
-      } else {
-        this.logger.error(`${this.logPrefix} 更新过程出错。`);
+      if (img) {
         if (!isScheduled && e) {
-          if (!finalUserMessage)
-            finalUserMessage = "『咕咕牛』更新过程中出错了，快去看看日志！";
-          await e.reply(finalUserMessage);
+          await e.reply(img);
+        } else if (isScheduled && Bot.master && Bot.master.length > 0) {
+          logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
+          for (const masterId of Bot.master) {
+            try {
+              await Bot.pickUser(masterId).sendMsg(img);
+              logger.info(`${logPrefix} [定时更新] 图片报告已发送给主人 ${masterId}`);
+            } catch (sendErr) {
+              logger.error(`${logPrefix} [定时更新] 发送图片报告给主人 ${masterId} 失败:`, sendErr);
+              // 可以考虑发送文本回退
+              let fallbackMsgMaster = `${logPrefix} 定时更新报告图片发送失败。\n`;
+              reportResults.forEach(res => {
+                  fallbackMsgMaster += `${res.name}: ${res.statusText}\n`;
+                  if (res.error) fallbackMsgMaster += `  错误: ${res.error.message}\n`;
+              });
+              await Bot.pickUser(masterId).sendMsg(fallbackMsgMaster).catch(()=>{});
+            }
+          }
         }
-        overallHasChanges = false;
+        reportSent = true;
+      } else {
+        logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空)。`);
       }
-    } catch (error) {
-      this.logger.error(`${this.logPrefix} 更新流程发生严重异常:`, error);
-      if (!isScheduled && e) await this.ReportError(e, "更新图库", error);
-      else if (isScheduled)
-        this.logger.error(
-          `${this.logPrefix} [定时] 执行更新时发生严重错误:`,
-          error
-        );
-      overallHasChanges = false;
+
+    } catch (reportError) {
+      logger.error(`${logPrefix} [更新报告] 生成或发送图片报告时出错:`, reportError);
+      // 尝试发送文本回退
+      if (!reportSent) {
+          let fallbackMsg = `${logPrefix} 更新检查完成，但报告图片生成失败。\n`;
+          reportResults.forEach(res => {
+              fallbackMsg += `${res.name}: ${res.statusText}\n`;
+              if (res.error) fallbackMsg += `  错误: ${res.error.message}\n`;
+          });
+          if (e && !isScheduled) await e.reply(fallbackMsg);
+          else if (isScheduled && Bot.master && Bot.master.length > 0) {
+              Bot.master.forEach(masterId => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch(err => logger.error("发送定时更新文本报告给主人失败(图片生成错误)", err)));
+          }
+      }
     } finally {
-      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      this.logger.info(`${this.logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
+
+      if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
+        try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
+      }
+      const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-update-report');
+      if (fs.existsSync(possiblePuppeteerTempDir)) { try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {} }
     }
-    return overallHasChanges;
+
+    logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
+    return overallHasChanges; // 返回是否有任何仓库发生了实际的 git pull 变更
   }
 
   /**
