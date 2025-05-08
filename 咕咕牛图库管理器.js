@@ -162,6 +162,67 @@ const ERROR_CODES = {
   Exist: "EEXIST",
 };
 
+// ========================================================================//
+// =============================  内置模板 =================================//
+// ========================================================================//
+const SPEEDTEST_HTML_TEMPLATE_LOCAL = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>咕咕牛测速报告 (下载内置)</title>
+   <style>
+    body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:0;padding:20px;background:linear-gradient(to bottom,#e0f2f7,#ffffff);color:#333;font-size:14px;line-height:1.6;width:500px;box-sizing:border-box;}
+    .container{padding:15px;background-color:rgba(255,255,255,0.8);border-radius:10px;border:1px rgba(0,255,85,0.8) solid;box-shadow:5px 5px 0 0 rgba(0,255,85,0.3);}
+    h1{text-align:center;color:rgba(7,131,48,0.8);margin:0 0 15px 0;font-size:20px;border-bottom:1px solid #eee;padding-bottom:10px;}
+    h2{font-size:16px;color:#333;margin:15px 0 10px 0;border-left:4px solid #0077cc;padding-left:8px;}
+    ul{list-style:none;padding:0;margin:0;}
+    li{display:flex;justify-content:space-between;align-items:center;padding:8px 5px;}
+    li:last-child{border-bottom:none;}
+    .node-name{font-weight:bold;color:#555;flex-basis:120px;flex-shrink:0;}
+    .node-status{text-align:right;flex-grow:1;}
+    .status-ok{color:#28a745;font-weight:bold;}
+    .status-timeout{color:#dc3545;font-weight:bold;}
+    .status-na{color:#aaa;}
+    .priority{color:#777;font-size:0.9em;margin-left:5px;}
+    .best-choice{margin-top:20px;text-align:center;font-weight:600;color:#00cc55;font-size:1.05em;padding:8px;background-color:rgba(0,255,64,0.05);border-radius:6px;}
+    .footer{text-align:center;margin-top:20px;font-size:11px;color:#999;}
+    </style>
+  </head>
+  <body style="{{scaleStyleValue}}">
+    <div class="container">
+      <h1>咕咕牛网络测速报告 (下载内置)</h1>
+      {{ if speeds1 && speeds1.length > 0 }}
+      <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
+      <ul>
+        {{ each speeds1 s }}
+        <li>
+          <span class="node-name">{{ s.name }}</span>
+          <span class="node-status">
+            {{ if s.statusText === 'ok' }}
+            <span class="status-ok">{{ s.speed }}ms ✅</span>
+            {{ else if s.statusText === 'na' }}
+            <span class="status-na">N/A ⚠️</span>
+            {{ else }}
+            <span class="status-timeout">超时 ❌</span>
+            {{ /if }}
+            <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
+          </span>
+        </li>
+        {{ /each }}
+      </ul>
+         <div class="best-choice">
+            ✅ 优选: {{ best1Display }}
+          </div>
+      {{ /if }}
+      <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
+    </div>
+  </body>
+</html>
+`;
+
+
 // ========================================================================= //
 // ========================= 公共工具函数区域 =============================== //
 // ========================================================================= //
@@ -578,7 +639,7 @@ function FormatBytes(bytes, decimals = 1) {
 }
 
 /**
- * @description 原生异步互斥锁，确保资源访问的原子性。🔒
+ * @description 原生异步互斥锁，确保资源访问的原子性。
  */
 class SimpleAsyncMutex {
   _locked = false;
@@ -598,9 +659,28 @@ class SimpleAsyncMutex {
   release() {
     if (this._waitQueue.length > 0) {
       const nextResolve = this._waitQueue.shift();
-      nextResolve();
+      if (nextResolve) { // 确保 nextResolve 存在
+        nextResolve();
+      } else { // 理论上不应发生，但作为防御
+        this._locked = false; 
+      }
     } else {
       this._locked = false;
+    }
+  }
+
+  /**
+   * @description 以独占方式运行提供的回调函数。
+   *              它会自动获取锁，执行回调，然后在回调完成后（无论成功还是失败）释放锁。
+   * @param {Function} callback - 一个异步函数 (返回 Promise) 或同步函数，将在获取锁后执行。
+   * @returns {Promise<any>} - 返回回调函数的执行结果。
+   */
+  async runExclusive(callback) { 
+    await this.acquire();
+    try {
+      return await callback();
+    } finally {
+      this.release();
     }
   }
 }
@@ -624,7 +704,7 @@ export class MiaoPluginMBT extends plugin {
 
   // --- 实例化锁 ---
   static configMutex = new SimpleAsyncMutex();
-  static banMutex = new SimpleAsyncMutex(); // 移除 banMutex
+  // static banMutex = new SimpleAsyncMutex(); // 移除 banMutex
   static gitMutex = new SimpleAsyncMutex();
 
   /**
@@ -5579,81 +5659,28 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 下载单个仓库，包含代理选择、GitHub 直连优先判断和 Fallback 重试逻辑。
-   *              预渲染 HTML 到文件再截图，恢复用户进度提示。
+   *              预渲染 HTML 到文件再截图，用户进度提示。
    *              保持核心的锁范围优化。移除多余用户提示。
    */
   static async DownloadRepoWithFallback(
     repoNum,
     repoUrl,
     branch,
-    localPath,
+    finalLocalPath,
     eForProgress,
     loggerInstance
   ) {
     const logPrefix = Default_Config.logPrefix;
     const repoTypeName = repoNum === 1 ? "核心仓库" : "附属仓库";
     const baseRawUrl = RAW_URL_Repo1;
-    const functionStartTime = Date.now();
-    // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 进入函数 @ ${functionStartTime}`); //调试日志
 
-    const SPEEDTEST_HTML_TEMPLATE_LOCAL = `
-    <!DOCTYPE html>
-    <html lang="zh-CN">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>咕咕牛测速报告 (下载内置)</title>
-       <style>
-        body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:0;padding:20px;background:linear-gradient(to bottom,#e0f2f7,#ffffff);color:#333;font-size:14px;line-height:1.6;width:500px;box-sizing:border-box;}
-        .container{padding:15px;background-color:rgba(255,255,255,0.8);border-radius:10px;border:1px rgba(0,255,85,0.8) solid;box-shadow:5px 5px 0 0 rgba(0,255,85,0.3);}
-        h1{text-align:center;color:rgba(7,131,48,0.8);margin:0 0 15px 0;font-size:20px;border-bottom:1px solid #eee;padding-bottom:10px;}
-        h2{font-size:16px;color:#333;margin:15px 0 10px 0;border-left:4px solid #0077cc;padding-left:8px;}
-        ul{list-style:none;padding:0;margin:0;}
-        li{display:flex;justify-content:space-between;align-items:center;padding:8px 5px;}
-        li:last-child{border-bottom:none;}
-        .node-name{font-weight:bold;color:#555;flex-basis:120px;flex-shrink:0;}
-        .node-status{text-align:right;flex-grow:1;}
-        .status-ok{color:#28a745;font-weight:bold;}
-        .status-timeout{color:#dc3545;font-weight:bold;}
-        .status-na{color:#aaa;}
-        .priority{color:#777;font-size:0.9em;margin-left:5px;}
-        .best-choice{margin-top:20px;text-align:center;font-weight:600;color:#00cc55;font-size:1.05em;padding:8px;background-color:rgba(0,255,64,0.05);border-radius:6px;}
-        .footer{text-align:center;margin-top:20px;font-size:11px;color:#999;}
-        </style>
-      </head>
-      <body style="{{scaleStyleValue}}">
-        <div class="container">
-          <h1>咕咕牛网络测速报告 (下载内置)</h1>
-          {{ if speeds1 && speeds1.length > 0 }}
-          <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
-          <ul>
-            {{ each speeds1 s }}
-            <li>
-              <span class="node-name">{{ s.name }}</span>
-              <span class="node-status">
-                {{ if s.statusText === 'ok' }}
-                <span class="status-ok">{{ s.speed }}ms ✅</span>
-                {{ else if s.statusText === 'na' }}
-                <span class="status-na">N/A ⚠️</span>
-                {{ else }}
-                <span class="status-timeout">超时 ❌</span>
-                {{ /if }}
-                <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
-              </span>
-            </li>
-            {{ /each }}
-          </ul>
-             <div class="best-choice">
-                ✅ 优选: {{ best1Display }}
-              </div>
-          {{ /if }}
-          <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
-        </div>
-      </body>
-    </html>
-    `;
+    const timestamp = Date.now();
+    const randomSuffix = crypto.randomBytes(4).toString('hex');
+    const uniqueTempDirName = `GuTemp-${repoNum}-${timestamp}-${randomSuffix}`;
+    const tempRepoPath = path.join(MiaoPluginMBT.paths.tempPath, "guguniu-downloads", uniqueTempDirName);
 
-    let sourcesToTry = [];
+    loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 目标路径: ${finalLocalPath}, 临时路径: ${tempRepoPath}`);
+
     let allTestResults = [];
     let tempHtmlFilePath = "";
     let tempImgFilePath = "";
@@ -5662,458 +5689,259 @@ export class MiaoPluginMBT extends plugin {
     const testStartTime = Date.now();
 
     try {
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 开始测速 @ ${testStartTime}`); //调试日志
-      allTestResults = await MiaoPluginMBT.TestProxies(
-        baseRawUrl,
-        loggerInstance
-      );
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 测速结束 @ ${Date.now()}`); //调试日志
-    } catch (testError) {
-      loggerInstance.error(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 代理测速失败:`,
-        testError
-      );
-      const githubSource = Default_Config.proxies.find(
-        (p) => p.name === "GitHub"
-      );
-      if (githubSource) {
-        allTestResults = [{ ...githubSource, speed: Infinity }];
-      }
-    }
+      allTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance);
 
-    if (eForProgress && repoNum === 1 && allTestResults.length > 0) {
-      let renderData = {};
-      let htmlContent = "";
-      try {
-        const reportSources = MiaoPluginMBT.GetSortedAvailableSources(
-          allTestResults,
-          true,
-          loggerInstance
-        );
-        const bestSourceForReport = reportSources[0] || null;
-        const duration = ((Date.now() - testStartTime) / 1000).toFixed(1);
-        const processSpeeds = (speeds) => {
-          return speeds
-            .map((s) => ({
-              ...s,
-              statusText:
-                s.testUrlPrefix === null
-                  ? "na"
-                  : Number.isFinite(s.speed) && s.speed >= 0
-                  ? "ok"
-                  : "timeout",
-            }))
-            .sort(
-              (a, b) =>
-                (a.priority ?? 999) - (b.priority ?? 999) ||
-                (a.speed === Infinity || a.statusText === "na"
-                  ? 1
-                  : b.speed === Infinity || b.statusText === "na"
-                  ? -1
-                  : a.speed - b.speed)
-            );
-        };
-        const processedSpeedsResult = processSpeeds(allTestResults);
-        const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
-        let best1Display = "无可用源";
-        if (bestSourceForReport) {
-          let speedInfo = "N/A";
-          if (bestSourceForReport.testUrlPrefix !== null) {
-            speedInfo =
-              Number.isFinite(bestSourceForReport.speed) &&
-              bestSourceForReport.speed >= 0
-                ? `${bestSourceForReport.speed}ms`
-                : "超时";
-          }
-          best1Display = `${bestSourceForReport.name}(${speedInfo})`;
-        }
-        renderData = {
-          speeds1: processedSpeedsResult,
-          best1: bestSourceForReport,
-          duration: duration,
-          scaleStyleValue: scaleStyleValue,
-          best1Display: best1Display,
-        };
-
-        htmlContent = template.render(
-          SPEEDTEST_HTML_TEMPLATE_LOCAL,
-          renderData
-        );
-        // loggerInstance.debug(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [诊断] 预渲染 HTML 内容类型: ${typeof htmlContent}, 是否为空: ${!htmlContent}`); //调试日志
-        if (typeof htmlContent !== "string" || htmlContent.length === 0) {
-          throw new Error("template.render 返回了无效内容!");
-        }
-
-        await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, {
-          recursive: true,
-        });
-        tempHtmlFilePath = path.join(
-          MiaoPluginMBT.paths.tempHtmlPath,
-          `dl-speedtest-rendered-${Date.now()}-${Math.random()
-            .toString(16)
-            .slice(2)}.html`
-        );
-        await fsPromises.writeFile(tempHtmlFilePath, htmlContent, "utf8");
-        // loggerInstance.debug(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 已将渲染好的 HTML 写入临时文件: ${tempHtmlFilePath}`); //调试日志
-        canGenerateReport = true;
-      } catch (prepOrRenderError) {
-        loggerInstance.error(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 准备或渲染测速报告失败:`,
-          prepOrRenderError
-        );
-        await eForProgress
-          .reply(
-            `${logPrefix} 准备或渲染测速报告出错 (${prepOrRenderError.message?.substring(
-              0,
-              50
-            )}...)，继续下载...`
-          )
-          .catch(() => {});
-        canGenerateReport = false;
-      }
-
-      if (canGenerateReport) {
+      if (eForProgress && repoNum === 1 && allTestResults.length > 0) {
+ 
+        let renderData = {};
+        let htmlContent = "";
         try {
-          await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, {
-            recursive: true,
-          });
-          tempImgFilePath = path.join(
-            MiaoPluginMBT.paths.tempImgPath,
-            `dl-speedtest-${Date.now()}.png`
-          );
+          const reportSources = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+          const bestSourceForReport = reportSources[0] || null;
+          const duration = ((Date.now() - testStartTime) / 1000).toFixed(1);
+          const processSpeeds = (speeds) => speeds.map(s => ({ ...s, statusText: s.testUrlPrefix === null ? "na" : Number.isFinite(s.speed) && s.speed >= 0 ? "ok" : "timeout" })).sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999) || (a.speed === Infinity || a.statusText === "na" ? 1 : b.speed === Infinity || b.statusText === "na" ? -1 : a.speed - b.speed));
+          const processedSpeedsResult = processSpeeds(allTestResults);
+          const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
+          let best1Display = "无可用源";
+          if (bestSourceForReport) {
+            let speedInfo = "N/A";
+            if (bestSourceForReport.testUrlPrefix !== null) speedInfo = Number.isFinite(bestSourceForReport.speed) && bestSourceForReport.speed >= 0 ? `${bestSourceForReport.speed}ms` : "超时";
+            best1Display = `${bestSourceForReport.name}(${speedInfo})`;
+          }
+          renderData = { speeds1: processedSpeedsResult, best1: bestSourceForReport, duration: duration, scaleStyleValue: scaleStyleValue, best1Display: best1Display };
+          htmlContent = template.render(SPEEDTEST_HTML_TEMPLATE_LOCAL, renderData);
+          if (typeof htmlContent !== "string" || htmlContent.length === 0) throw new Error("template.render 返回了无效内容!");
 
-          // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [诊断] 准备调用 puppeteer.screenshot (预渲染 tplFile 方式)...`); //调试日志
-          // loggerInstance.debug(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [诊断] tplFile: ${tempHtmlFilePath}`); //调试日志
+          await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+          tempHtmlFilePath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `dl-speedtest-rendered-${Date.now()}-${crypto.randomBytes(3).toString('hex')}.html`);
+          await fsPromises.writeFile(tempHtmlFilePath, htmlContent, "utf8");
+          canGenerateReport = true;
+        } catch (prepOrRenderError) {
+          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 准备或渲染测速报告失败:`, prepOrRenderError);
+          if (eForProgress) await eForProgress.reply(`${logPrefix} 准备或渲染测速报告出错，继续下载...`).catch(() => {});
+          canGenerateReport = false;
+        }
 
-          const img = await puppeteer.screenshot("guguniu-dl-speedtest", {
-            tplFile: tempHtmlFilePath,
-            savePath: tempImgFilePath,
-            imgType: "png",
-            pageGotoParams: { waitUntil: "networkidle0" },
-            screenshotOptions: { fullPage: false },
-            pageBoundingRect: { selector: "body", padding: 0 },
-            width: 540,
-          });
-          // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [诊断] puppeteer.screenshot 调用完成，返回类型: ${typeof img}`); //调试日志
-
-          if (img) {
-            await eForProgress.reply(img);
-            await common.sleep(500);
-          } else {
-            loggerInstance.warn(
-              `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 生成测速截图成功，但 Puppeteer 返回空 (可能为空白图片)。`
-            );
-            await eForProgress
-              .reply(`${logPrefix} 生成测速报告图片时内容可能为空，继续下载...`)
-              .catch(() => {});
-          }
-        } catch (screenshotError) {
-          loggerInstance.error(
-            `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] Puppeteer 生成测速截图失败:`,
-            screenshotError
-          );
-          if (screenshotError.message?.includes("加载html错误：undefined")) {
-            loggerInstance.error(
-              `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [诊断] 即使使用预渲染 tplFile 方式仍然报错 '加载html错误：undefined'，问题可能在截图组件或环境。`
-            );
-          }
-          await eForProgress
-            .reply(
-              `${logPrefix} 生成测速报告截图出错 (${screenshotError.message?.substring(
-                0,
-                50
-              )}...)，继续下载...`
-            )
-            .catch(() => {});
-        } finally {
-          if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) {
-            try {
-              await fsPromises.unlink(tempHtmlFilePath);
-            } catch (unlinkErr) {}
-          }
-          if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-            try {
-              await fsPromises.unlink(tempImgFilePath);
-            } catch (unlinkErr) {}
-          }
-          const possiblePuppeteerTempDir = path.join(
-            MiaoPluginMBT.paths.tempPath,
-            "..",
-            "guguniu-dl-speedtest"
-          );
-          if (fs.existsSync(possiblePuppeteerTempDir)) {
-            try {
-              await safeDelete(possiblePuppeteerTempDir);
-            } catch (deleteErr) {}
+        if (canGenerateReport) {
+          try {
+            await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+            tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `dl-speedtest-${Date.now()}.png`);
+            const img = await puppeteer.screenshot("guguniu-dl-speedtest", {
+              tplFile: tempHtmlFilePath, savePath: tempImgFilePath, imgType: "png",
+              pageGotoParams: { waitUntil: "networkidle0" },
+              screenshotOptions: { fullPage: false }, pageBoundingRect: { selector: "body", padding: 0 }, width: 540,
+            });
+            if (img) {
+              if (eForProgress) await eForProgress.reply(img);
+              await common.sleep(500);
+            } else {
+              if (eForProgress) await eForProgress.reply(`${logPrefix} 生成测速报告图片时内容可能为空，继续下载...`).catch(() => {});
+            }
+          } catch (screenshotError) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] Puppeteer 生成测速截图失败:`, screenshotError);
+            if (eForProgress) await eForProgress.reply(`${logPrefix} 生成测速报告截图出错，继续下载...`).catch(() => {});
+          } finally {
+            if (tempHtmlFilePath && fs.existsSync(tempHtmlFilePath)) { try { await fsPromises.unlink(tempHtmlFilePath); } catch (unlinkErr) {} }
+            if (tempImgFilePath && fs.existsSync(tempImgFilePath)) { try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {} }
+            const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, "..", "guguniu-dl-speedtest");
+            if (fs.existsSync(possiblePuppeteerTempDir)) { try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {} }
           }
         }
       }
-    }
 
-    const githubResult = allTestResults.find((r) => r.name === "GitHub");
-    let githubDirectAttempted = false;
+      const githubResult = allTestResults.find((r) => r.name === "GitHub");
+      let githubDirectAttempted = false;
 
-    if (
-      githubResult &&
-      githubResult.speed !== Infinity &&
-      githubResult.speed <= 300
-    ) {
-      githubDirectAttempted = true;
-      const nodeName = "GitHub(直连-优先)";
-      loggerInstance.info(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 检测到 GitHub 直连延迟 (${githubResult.speed}ms) <= 300ms，优先尝试直连...`
-      );
+      if (githubResult && githubResult.speed !== Infinity && githubResult.speed <= 300) {
+        githubDirectAttempted = true;
+        const nodeName = "GitHub(直连-优先)";
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试 ${nodeName}...`);
 
-      const cloneArgsDirect = [
-        "clone",
-        `--depth=${Default_Config.gitCloneDepth}`,
-        "--progress",
-        repoUrl,
-        localPath,
-      ];
-      const gitOptionsDirect = {
-        cwd: MiaoPluginMBT.paths.YunzaiPath,
-        shell: false,
-      };
-
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 尝试获取 Git 锁 (GitHub 直连) @ ${Date.now()}`); //调试日志
-      await MiaoPluginMBT.gitMutex.acquire();
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 已获取 Git 锁 (GitHub 直连) @ ${Date.now()}`); //调试日志
-      try {
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 开始 ExecuteCommand (GitHub 直连) @ ${Date.now()}`); //调试日志
-        let progressReportedDirect = { 10: false, 90: false };
-        await ExecuteCommand(
-          "git",
-          cloneArgsDirect,
-          gitOptionsDirect,
-          Default_Config.gitCloneTimeout,
-          (stderrChunk) => {
-            if (eForProgress && repoNum === 1) {
-              const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
-              if (match?.[1]) {
-                  const progress = parseInt(match[1], 10);
-                  [10, 90].forEach(t => {
-                      if (progress >= t && !progressReportedDirect[t]) {
-                          progressReportedDirect[t] = true;
-                          eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: ${t}%...`).catch(() => {});
-                      }
-                  });
-              }
-          } else if (repoNum !== 1) { // 附属仓库只记录日志
-              const match = stderrChunk.match(/(Receiving objects|Resolving deltas):\s*(\d+)%/);
-              if (match) loggerInstance.debug(`${logPrefix} [下载进度 ${repoTypeName} (${repoNum}号)] (${nodeName}) ${match[1]}: ${match[2]}%`);
-          }
-        },
-          undefined
-        );
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] ExecuteCommand 成功 (GitHub 直连) @ ${Date.now()}`); //调试日志
-        loggerInstance.info(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用 ${nodeName} 下载成功！`
-        );
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 函数成功返回 @ ${Date.now()}`); //调试日志
-        return { success: true, nodeName: nodeName };
-      } catch (error) {
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] ExecuteCommand 失败 (GitHub 直连) @ ${Date.now()}`); //调试日志
-        loggerInstance.error(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 优先尝试 ${nodeName} 下载失败。将继续尝试其他源...`
-        );
-        loggerInstance.error(error);
-        lastError = error;
-        loggerInstance.warn(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试清理直连失败产生的目录: ${localPath}`
-        );
-        await safeDelete(localPath);
-        await common.sleep(1000);
-      } finally {
-        MiaoPluginMBT.gitMutex.release();
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 释放 Git 锁 (GitHub 直连) @ ${Date.now()}`); //调试日志
-      }
-    } else if (githubResult) {
-      loggerInstance.info(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] GitHub 直连延迟 (${
-          githubResult.speed === Infinity
-            ? "超时/失败"
-            : githubResult.speed + "ms"
-        }) > 300ms，按优先级选择节点。`
-      );
-    } else {
-      loggerInstance.warn(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 未找到 GitHub 测速结果，按优先级选择节点。`
-      );
-    }
-
-    sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(
-      allTestResults,
-      true,
-      loggerInstance
-    );
-
-    if (sourcesToTry.length === 0) {
-      loggerInstance.error(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 没有任何可用的下载源！(包括 GitHub 直连尝试后)`
-      );
-      if (repoNum === 1 && eForProgress) {
-        await MiaoPluginMBT.ReportError(
-          eForProgress,
-          `下载${repoTypeName}`,
-          lastError || new Error("无可用下载源"),
-          `测速结果: ${JSON.stringify(allTestResults)}`,
-          loggerInstance
-        );
-      }
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 函数失败返回 @ ${Date.now()}`); //调试日志
-      return {
-        success: false,
-        nodeName: "无可用源",
-        error: lastError || new Error("无可用下载源"),
-      };
-    }
-
-    loggerInstance.info(
-      `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 开始尝试列表: ${sourcesToTry
-        .map((s) => s.name)
-        .join(", ")}`
-    );
-
-    for (const source of sourcesToTry) {
-      if (source.name === "GitHub" && githubDirectAttempted) {
-        // loggerInstance.debug(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 已优先尝试过 GitHub 直连，跳过本次列表中的 GitHub 源。`); //调试日志
-        continue;
-      }
-
-      const nodeName =
-        source.name === "GitHub" ? "GitHub(直连)" : `${source.name}(代理)`;
-      loggerInstance.info(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试使用源: ${nodeName}`
-      );
-
-      let cloneUrl = "";
-      let proxyForEnv = null;
-      if (source.name === "GitHub") {
-        cloneUrl = repoUrl;
-      } else if (source.cloneUrlPrefix) {
-        if (source.name === "GitClone") {
-          cloneUrl = `${source.cloneUrlPrefix.replace(
-            /\/$/,
-            ""
-          )}/${repoUrl.replace(/^https?:\/\//, "")}`;
+        const preCleanSuccess = await safeDelete(tempRepoPath);
+        if (!preCleanSuccess) {
+          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 预清理临时目录 ${tempRepoPath} 失败！`);
+          lastError = new Error(`预清理临时目录 ${tempRepoPath} 失败`);
         } else {
-          cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, "")}/${repoUrl}`;
-        }
-        try {
-          const proxyUrl = new URL(source.cloneUrlPrefix);
-          if (["http:", "https:"].includes(proxyUrl.protocol))
-            proxyForEnv = proxyUrl.origin;
-        } catch (urlError) {
-          loggerInstance.warn(
-            `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 无法解析代理 ${source.name} 的 cloneUrlPrefix: ${urlError.message}`
-          );
-        }
-      } else {
-        loggerInstance.warn(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 源 ${source.name} 没有 cloneUrlPrefix，跳过。`
-        );
-        continue;
-      }
-      const cloneArgs = [
-        "clone",
-        `--depth=${Default_Config.gitCloneDepth}`,
-        "--progress",
-        cloneUrl,
-        localPath,
-      ];
-      const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
-      if (proxyForEnv) {
-        gitOptions.env = {
-          ...process.env,
-          HTTP_PROXY: proxyForEnv,
-          HTTPS_PROXY: proxyForEnv,
-        };
-        loggerInstance.info(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 为 Git 命令设置代理: ${proxyForEnv}`
-        );
-      }
+          await fsPromises.mkdir(path.dirname(tempRepoPath), { recursive: true });
+          const cloneArgsDirect = ["clone", `--depth=${Default_Config.gitCloneDepth}`, "--progress", repoUrl, tempRepoPath];
+          const gitOptionsDirect = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+          
+          // 用于跟踪核心仓库进度报告的状态
+          let progressStatusDirect = { reported10: false, reported90: false };
 
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 尝试获取 Git 锁 (${nodeName}) @ ${Date.now()}`); //调试日志
-      await MiaoPluginMBT.gitMutex.acquire();
-      // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 已获取 Git 锁 (${nodeName}) @ ${Date.now()}`); //调试日志
-      try {
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 开始 ExecuteCommand (${nodeName}) @ ${Date.now()}`); //调试日志
-        let progressReported = { 10: false, 90: false };
-        await ExecuteCommand(
-          "git",
-          cloneArgs,
-          gitOptions,
-          Default_Config.gitCloneTimeout,
-          (stderrChunk) => {
-            if (eForProgress && repoNum === 1) {
-              const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
-              if (match?.[1]) {
-                  const progress = parseInt(match[1], 10);
-                  [10, 90].forEach(t => {
-                      if (progress >= t && !progressReported[t]) {
-                          progressReported[t] = true;
-                          eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: ${t}%...`).catch(() => {});
+          try {
+            await MiaoPluginMBT.gitMutex.runExclusive(async () => {
+              await ExecuteCommand(
+                "git", cloneArgsDirect, gitOptionsDirect, Default_Config.gitCloneTimeout,
+                (stderrChunk) => { // stderrChunk 回调
+                  if (eForProgress && repoNum === 1) { // 仅为核心仓库且有 e 对象时
+                    const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
+                    if (match?.[1]) {
+                      const progress = parseInt(match[1], 10);
+                      if (progress >= 10 && !progressStatusDirect.reported10) {
+                        progressStatusDirect.reported10 = true;
+                        if (eForProgress) eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: 10%...`).catch(() => {});
                       }
-                  });
-              }
-          } else if (repoNum !== 1) { // 附属仓库只记录日志
-               const match = stderrChunk.match(/(Receiving objects|Resolving deltas):\s*(\d+)%/);
-               if (match) loggerInstance.debug(`${logPrefix} [下载进度 ${repoTypeName} (${repoNum}号)] (${nodeName}) ${match[1]}: ${match[2]}%`);
-          }
-      },
-          undefined
-        );
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] ExecuteCommand 成功 (${nodeName}) @ ${Date.now()}`); //调试日志
-        loggerInstance.info(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载成功！`
-        );
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 函数成功返回 @ ${Date.now()}`); //调试日志
-        return { success: true, nodeName: nodeName };
-      } catch (error) {
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] ExecuteCommand 失败 (${nodeName}) @ ${Date.now()}`); //调试日志
-        loggerInstance.error(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载失败。`
-        );
-        loggerInstance.error(error);
-        lastError = error;
-        loggerInstance.warn(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试清理失败下载产生的目录: ${localPath}`
-        );
-        await safeDelete(localPath);
-        await common.sleep(1000);
-        loggerInstance.warn(
-          `${logPrefix} 使用源 ${nodeName} 下载 ${repoTypeName} (${repoNum}号) 失败，尝试下一个源...`
-        );
-      } finally {
-        MiaoPluginMBT.gitMutex.release();
-        // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 释放 Git 锁 (${nodeName}) @ ${Date.now()}`); //调试日志
-      }
-    }
+                      if (progress >= 90 && !progressStatusDirect.reported90) {
+                        progressStatusDirect.reported90 = true;
+                        if (eForProgress) eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: 90%...`).catch(() => {});
+                      }
+                    }
+                  }
+                  // 附属仓库无日志输出
+                },
+                undefined // onStdOut 回调
+              );
+            });
 
-    loggerInstance.error(
-      `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试了所有可用源 (${sourcesToTry
-        .map((s) => s.name)
-        .join(", ")})，均下载失败！`
-    );
-    if (repoNum === 1 && eForProgress) {
-      // 只有核心仓库失败时才向用户报告
-      await MiaoPluginMBT.ReportError(
-        eForProgress,
-        `下载${repoTypeName}`,
-        lastError || new Error("所有源下载失败"),
-        `尝试源: ${sourcesToTry.map((s) => s.name).join(", ")}`,
-        loggerInstance
-      );
-    } else {
-      loggerInstance.error(
-        `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 最终错误:`,
-        lastError || "未知错误"
-      );
+            loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) Clone 完成，尝试移动文件...`);
+            try {
+              await fsPromises.rename(tempRepoPath, finalLocalPath);
+            } catch (renameError) {
+              if (renameError.code === 'EXDEV') {
+                loggerInstance.warn(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 重命名失败 (EXDEV)，回退到复制...`);
+                await copyFolderRecursive(tempRepoPath, finalLocalPath, {}, loggerInstance);
+                await safeDelete(tempRepoPath);
+              } else {
+                throw renameError;
+              }
+            }
+            loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用 ${nodeName} 下载成功！`);
+            return { success: true, nodeName: nodeName };
+          } catch (error) {
+            loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] ${nodeName} 下载失败。`);
+            lastError = error;
+            await safeDelete(tempRepoPath);
+            await common.sleep(1000);
+          }
+        }
+      }
+
+      let sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+      if (sourcesToTry.length === 0 && !githubDirectAttempted) {
+         const githubSourceFromConfig = Default_Config.proxies.find(p => p.name === "GitHub");
+         if (githubSourceFromConfig) {
+            sourcesToTry.push({...githubSourceFromConfig, speed: Infinity});
+         }
+      }
+
+      if (sourcesToTry.length === 0) {
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 没有任何可用的下载源！`);
+        if (repoNum === 1 && eForProgress) {
+          await MiaoPluginMBT.ReportError(eForProgress, `下载${repoTypeName}`, lastError || new Error("无可用下载源"), `测速结果: ${JSON.stringify(allTestResults)}`, loggerInstance);
+        }
+        return { success: false, nodeName: "无可用源", error: lastError || new Error("无可用下载源") };
+      }
+
+      for (const source of sourcesToTry) {
+        if (source.name === "GitHub" && githubDirectAttempted) {
+          continue;
+        }
+
+        const nodeName = source.name === "GitHub" ? "GitHub(直连)" : `${source.name}(代理)`;
+        loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试使用源: ${nodeName}`);
+
+        const preCleanSuccessLoop = await safeDelete(tempRepoPath);
+        if (!preCleanSuccessLoop) {
+          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 预清理临时目录 ${tempRepoPath} 失败！跳过此节点。`);
+          lastError = new Error(`预清理临时目录 ${tempRepoPath} 失败 (节点: ${nodeName})`);
+          continue;
+        }
+        await fsPromises.mkdir(path.dirname(tempRepoPath), { recursive: true });
+
+        let cloneUrl = "";
+        let proxyForEnv = null;
+        if (source.name === "GitHub") {
+          cloneUrl = repoUrl;
+        } else if (source.cloneUrlPrefix) {
+          if (source.name === "GitClone") {
+            cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, "")}/${repoUrl.replace(/^https?:\/\//, "")}`;
+          } else {
+            cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, "")}/${repoUrl}`;
+          }
+          try {
+            const proxyUrl = new URL(source.cloneUrlPrefix);
+            if (["http:", "https:"].includes(proxyUrl.protocol)) proxyForEnv = proxyUrl.origin;
+          } catch (urlError) { /* 静默处理或精简日志 */ }
+        } else {
+          continue;
+        }
+
+        const cloneArgs = ["clone", `--depth=${Default_Config.gitCloneDepth}`, "--progress", cloneUrl, tempRepoPath];
+        const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+        if (proxyForEnv) {
+          gitOptions.env = { ...process.env, HTTP_PROXY: proxyForEnv, HTTPS_PROXY: proxyForEnv };
+        }
+        
+        // 用于跟踪核心仓库进度报告的状态
+        let progressStatusLoop = { reported10: false, reported90: false };
+
+        try {
+          await MiaoPluginMBT.gitMutex.runExclusive(async () => {
+            await ExecuteCommand(
+              "git", cloneArgs, gitOptions, Default_Config.gitCloneTimeout,
+              (stderrChunk) => { // stderrChunk 回调
+                if (eForProgress && repoNum === 1) { // 仅为核心仓库且有 e 对象时
+                  const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
+                  if (match?.[1]) {
+                    const progress = parseInt(match[1], 10);
+                    if (progress >= 10 && !progressStatusLoop.reported10) {
+                      progressStatusLoop.reported10 = true;
+                      if (eForProgress) eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: 10%...`).catch(() => {});
+                    }
+                    if (progress >= 90 && !progressStatusLoop.reported90) {
+                      progressStatusLoop.reported90 = true;
+                      if (eForProgress) eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: 90%...`).catch(() => {});
+                    }
+                  }
+                }
+                // 附属仓库无日志输出
+              },
+              undefined // onStdOut 回调
+            );
+          });
+
+          loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) Clone 完成，尝试移动文件...`);
+          try {
+            await fsPromises.rename(tempRepoPath, finalLocalPath);
+          } catch (renameError) {
+            if (renameError.code === 'EXDEV') {
+              loggerInstance.warn(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 重命名失败 (EXDEV)，回退到复制...`);
+              await copyFolderRecursive(tempRepoPath, finalLocalPath, {}, loggerInstance);
+              await safeDelete(tempRepoPath);
+            } else {
+              throw renameError;
+            }
+          }
+          loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载成功！`);
+          return { success: true, nodeName: nodeName };
+        } catch (error) {
+          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载失败。`);
+          lastError = error;
+          await safeDelete(tempRepoPath);
+          await common.sleep(1000);
+        }
+      }
+
+      loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 所有可用源均下载失败！`);
+      if (repoNum === 1 && eForProgress) {
+        await MiaoPluginMBT.ReportError(eForProgress, `下载${repoTypeName}`, lastError || new Error("所有源下载失败"), `尝试源: ${sourcesToTry.map((s) => s.name).join(", ")}`, loggerInstance);
+      } else if (repoNum !== 1) {
+        loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 最终错误:`, lastError || "未知错误");
+      }
+      return { success: false, nodeName: "所有源失败", error: lastError };
+
+    } catch (criticalError) {
+      loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 发生严重错误:`, criticalError);
+      if (eForProgress) {
+        await MiaoPluginMBT.ReportError(eForProgress, `下载${repoTypeName} (严重错误)`, criticalError, "", loggerInstance);
+      }
+      return { success: false, nodeName: "严重错误", error: criticalError };
+    } finally {
+      await safeDelete(tempRepoPath);
     }
-    // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] [计时] 函数失败返回 @ ${Date.now()}`); //调试日志
-    return { success: false, nodeName: "所有源失败", error: lastError };
   }
+
 
   /**
    * @description 更新单个仓库，包含冲突检测和强制重置逻辑。
