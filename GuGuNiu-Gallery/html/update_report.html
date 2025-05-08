@@ -17,7 +17,6 @@
     font-weight: normal;
     font-style: normal;
 }
-
 body {
     font-family: 'CuteFont', sans-serif;
     width: 520px;
@@ -31,22 +30,6 @@ body {
     position: relative;
     overflow: hidden;
 }
-
-.bg-decor { 
-    position: absolute;
-    z-index: -1;
-    opacity: 0.4;
-    pointer-events: none;
-}
-
-.bg-decor.star {
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-}
-
-.bg-decor.cloud {
-    clip-path: path('M 10,30 A 20,20 0 0,1 50,30 A 20,20 0 0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 Z');
-}
-
 .container {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 16px;
@@ -73,7 +56,6 @@ body {
     opacity: 0.5;
     transform: rotate(15deg);
 }
-
 h1 {
     text-align: center;
     color: #00acc1;
@@ -85,7 +67,6 @@ h1 {
     text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
     position: relative;
 }
-
 .update-details-block {
     margin-bottom: 15px;
     padding: 15px;
@@ -94,7 +75,6 @@ h1 {
     border: 1px solid #b3e0ff;
     box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
 }
-
 h2 {
     color: #0288d1;
     margin: 0 0 10px;
@@ -106,23 +86,20 @@ h2 {
     align-items: center;
 }
 h2 .icon { margin-right: 5px; vertical-align: -3px; font-size: 17px; }
-
 ul { list-style: none; padding-left: 0px; margin-top: 5px; margin-bottom: 0; }
 li {
-    margin-bottom: 5px;
-    padding-bottom: 3px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
     border-bottom: 1px solid #f0f4f8;
     min-height: 18px;
 }
-li:last-child { border-bottom: none; margin-bottom: 0; }
-
-.repo-status-line { 
+li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+.repo-status-line {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px; 
+    margin-bottom: 5px;
 }
-
 .label {
     color: #555;
     margin-right: 8px;
@@ -135,8 +112,8 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
 .status-ok { color: #00c853; }
 .status-fail { color: #d81b60; }
 .status-no-change { color: #0288d1; }
-.status-skipped { color: #78909c; } 
-
+.status-skipped { color: #78909c; }
+.status-force-synced { color: #e53935; font-weight: bold; }
 .error-details {
     font-size: 12px;
     white-space: pre-wrap;
@@ -148,9 +125,21 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
     border-radius: 6px;
     border-left: 3px solid #d81b60;
 }
-
+.error-details strong { color: #b71c1c; }
+.error-details pre {
+    font-size:10px;
+    max-height: 60px;
+    overflow-y:auto;
+    background: #ffebee;
+    padding: 5px;
+    border-radius:3px;
+    margin-top:3px;
+    border: 1px solid #ffcdd2;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
 .log-details {
-    margin-top: 8px; 
+    margin-top: 8px;
 }
 .log-details h3 {
     color: #333;
@@ -166,7 +155,7 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
     background-color: #f9f9f9;
     padding: 10px;
     border-radius: 6px;
-    max-height: 120px; 
+    max-height: 90px;
     overflow-y: auto;
     border: 1px solid #eee;
 }
@@ -175,7 +164,6 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
     color: #aaa;
     font-style: italic;
 }
-
 .summary-section {
     margin-top: 20px;
     padding: 15px;
@@ -188,11 +176,43 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
     border: 1px solid #00acc1;
     box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
 }
-.summary-section.no-changes { background: #e0f0ff; border-color: #78909c; color: #555; } 
+.summary-section.no-changes { background: #e0f0ff; border-color: #78909c; color: #555; }
 .summary-section.has-errors { background: rgba(255, 105, 180, 0.1); border-color: #d81b60; color: #d81b60; }
-
-
-
+.error-summary-block {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    background: rgba(255,224,230,0.5);
+    border: 1px solid #d81b60;
+    box-shadow: 0 0 10px rgba(216,27,96,0.2);
+}
+.error-summary-block h2 {
+    color: #c62828;
+    border-left-color: #c62828;
+}
+.error-summary-block ul li {
+    border-bottom: 1px solid #ffcdd2;
+}
+.error-summary-block ul li strong {
+    color: #b71c1c;
+}
+.error-summary-block ul li p {
+    font-size: 0.9em;
+    margin: 3px 0 0 10px;
+    color: #c62828;
+}
+.error-summary-block .error-details {
+    margin-left:10px;
+    margin-top:3px;
+    font-size:10px;
+    max-height: 40px;
+    background-color: rgba(255, 105, 180, 0.05);
+}
+.error-summary-block .error-details pre {
+    background: #ffebee;
+    padding: 3px 5px;
+    max-height: 35px;
+}
 .footer {
     text-align: center;
     margin-top: 25px;
@@ -203,38 +223,37 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
 }
     </style>
 </head>
-<body style="{{scaleStyleValue}}"> 
+<body style="{{scaleStyleValue}}">
     <div class="container">
         <h1>咕咕牛更新报告</h1>
-
         <div class="update-details-block">
             <h2><span class="icon">🔄</span>更新详情</h2>
             <ul>
-                {{ each results repoResult }} 
+                {{ each results repoResult }}
                     <li>
-                        <div class="repo-status-line"> 
+                        <div class="repo-status-line">
                             <span class="label">{{ repoResult.name }}:</span>
-                            <span class="value {{ repoResult.statusClass }}">{{ repoResult.statusText }}</span>
+                            <span class="value {{ repoResult.statusClass }} {{ if repoResult.statusText === '本地冲突 (强制同步)' }}status-force-synced{{ /if }}">
+                                {{ repoResult.statusText }}
+                            </span>
                         </div>
-
-                        {{ if repoResult.error }} 
+                        {{ if repoResult.error }}
                             <div class="error-details">
-                                <strong>错误:</strong> {{ repoResult.error.message || '未知错误详情' }}
+                                <strong>错误:</strong> {{ repoResult.error.message ? repoResult.error.message.split('\n')[0] : '未知错误详情' }}
                                 {{ if repoResult.error.code }} (Code: {{ repoResult.error.code }}){{ /if }}
                                 {{ if repoResult.error.stderr }}
-                                    <pre style="font-size:10px; max-height: 60px; overflow-y:auto; background: #ffebee; padding: 5px; border-radius:3px; margin-top:3px;">{{ repoResult.error.stderr }}</pre>
+                                    <pre>{{ repoResult.error.stderr.split('\n').filter(line => line.match(/^(fatal|error|warning):/i) && !line.trim().startsWith('trace:') && !line.trim().startsWith('http.c:') && !line.trim().startsWith('== Info:')).join('\n') || '无关键Git错误输出，详情请查阅控制台完整日志。' }}</pre>
                                 {{ /if }}
                             </div>
                         {{ /if }}
-
                         {{ if repoResult.log && !repoResult.error }}
                             <div class="log-details">
-                                <h3>最新提交记录:</h3>
-                                <pre class="log-content">{{ repoResult.log }}</pre> 
+                                <h3>最新提交记录 (近3条):</h3>
+                                <pre class="log-content">{{ repoResult.log }}</pre>
                             </div>
-                        {{ else if repoResult.log && repoResult.error && !repoResult.error.stderr }} 
+                        {{ else if repoResult.log && repoResult.error && (!repoResult.error.stderr || !(repoResult.error.stderr.split('\n').filter(line => line.match(/^(fatal|error|warning):/i)).length > 0)) }}
                              <div class="log-details">
-                                <h3>相关日志:</h3>
+                                <h3>相关日志 (可能包含线索):</h3>
                                 <pre class="log-content">{{ repoResult.log }}</pre>
                             </div>
                         {{ /if }}
@@ -242,22 +261,35 @@ li:last-child { border-bottom: none; margin-bottom: 0; }
                 {{ /each }}
             </ul>
         </div>
-
         <div class="summary-section {{ if !overallHasChanges && overallSuccess }}no-changes{{ else if !overallSuccess }}has-errors{{ /if }}">
             {{ if overallSuccess }}
                 {{ if overallHasChanges }}🎉 所有仓库更新检查完成，部分仓库有更新！
                 {{ else }}👍 所有仓库更新检查完成，均已是最新版本！
                 {{ /if }}
             {{ else }}
-                💔 更新过程中遇到问题，请检查上述详情。
+                💔 更新过程中遇到问题，请检查上述详情及控制台日志。
             {{ /if }}
         </div>
-
-        <!-- 全局错误日志块 -->
-        <!-- {{ if !overallSuccess }}
-            <div class="error-log-block"> ... </div>
-        {{ /if }} -->
-
+        {{ if !overallSuccess }}
+            <div class="error-summary-block">
+                <h2><span class="icon">⚠️</span>错误摘要</h2>
+                <ul>
+                    {{ each results repoResult }}
+                        {{ if repoResult.error }}
+                            <li>
+                                <strong>{{ repoResult.name }}:</strong>
+                                <p>{{ repoResult.error.message ? repoResult.error.message.split('\n')[0] : '未知错误' }}</p>
+                                {{ if repoResult.error.stderr }}
+                                    <div class="error-details">
+                                        <pre>{{ repoResult.error.stderr.split('\n').filter(line => line.match(/^(fatal|error|warning):/i) && !line.trim().startsWith('trace:') && !line.trim().startsWith('http.c:') && !line.trim().startsWith('== Info:')).slice(0,3).join('\n') || '无关键Git错误摘要。' }}</pre>
+                                    </div>
+                                {{ /if }}
+                            </li>
+                        {{ /if }}
+                    {{ /each }}
+                </ul>
+            </div>
+        {{ /if }}
         <div class="footer">
             总耗时: {{ duration }}s | Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛
         </div>

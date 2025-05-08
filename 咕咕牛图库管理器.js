@@ -308,14 +308,15 @@ async function copyFolderRecursive(
 
 /**
  * @description 执行外部命令，处理流，支持超时和信号终止。
+ *              内部 stderr 处理会过滤控制台输出，但原始数据仍传递给 onStdErr 回调。
  */
 function ExecuteCommand(
   command,
   args,
   options = {},
   timeout = 0,
-  onStdErr,
-  onStdOut
+  onStdErr, // 外部传入的 stderr 处理器
+  onStdOut  // 外部传入的 stdout 处理器
 ) {
   return new Promise((resolve, reject) => {
     const logger = global.logger || console;
@@ -330,10 +331,11 @@ function ExecuteCommand(
       `${Default_Config.logPrefix} [执行命令] > ${cmdStr} (CWD: ${cwd})`
     );
 
+    // 保持 Git 调试环境变量的设置
     const gitDebugEnv = {
       GIT_CURL_VERBOSE: "1",
       GIT_TRACE: "1",
-      GIT_PROGRESS_DELAY: "0",
+      GIT_PROGRESS_DELAY: "0", // 确保进度条及时
     };
     options.env = { ...process.env, ...(options.env || {}), ...gitDebugEnv };
 
@@ -354,7 +356,7 @@ function ExecuteCommand(
     let killed = false;
     let exited = false;
     let promiseSettled = false;
-    let lastStderrChunk = "";
+    let lastStderrChunk = ""; // 仍然跟踪 lastStderrChunk
 
     const settlePromise = (resolver, value) => {
       if (promiseSettled) return;
@@ -391,6 +393,7 @@ function ExecuteCommand(
       }
     };
 
+
     if (timeout > 0) {
       timer = setTimeout(() => {
         if (exited || promiseSettled) return;
@@ -419,19 +422,56 @@ function ExecuteCommand(
       }, timeout);
     }
 
-    const handleOutput = (streamName, data, callback) => {
+    const handleOutput = (streamName, data, externalCallback) => {
       if (exited || killed || promiseSettled) return;
-      const output = data.toString();
+      const outputChunk = data.toString();
+
       if (streamName === "stdout") {
-        stdout += output;
-      } else {
-        stderr += output;
-        lastStderrChunk = output;
+        stdout += outputChunk;
+      } else { // streamName === "stderr"
+        stderr += outputChunk; // 始终累加所有 stderr 数据到 stderr 变量
+        lastStderrChunk = outputChunk;
+
+        const शांतLogPrefixes = [
+            "trace:", "http.c:", "== Info:", "   Trying", " Connected to",
+            " CONNECT tunnel:", " allocate connect buffer", " Establish HTTP proxy tunnel",
+            " Send header:", " Recv header:", " CONNECT phase completed",
+            " CONNECT tunnel established", " ALPN:", " TLSv1.", " SSL connection using",
+            " Server certificate:", "  subject:", "  start date:", "  expire date:",
+            "  subjectAltName:", "  issuer:", "  SSL certificate verify ok.",
+            "   Certificate level", " using HTTP/", " [HTTP/", " Request completely sent off",
+            " old SSL session ID is stale", " Connection #", " Found bundle for host",
+            " Re-using existing connection", " upload completely sent off"
+            // " remote: Enumerating objects:", // 这些是进度，外部回调会处理
+            // " remote: Counting objects:",
+            // " remote: Compressing objects:",
+            // " remote: Total",
+        ];
+        let isDetailedDebugLogForConsole = false;
+        const trimmedChunk = outputChunk.trim();
+        for (const prefix of शांतLogPrefixes) {
+          if (trimmedChunk.startsWith(prefix)) {
+            isDetailedDebugLogForConsole = true;
+            break;
+          }
+        }
+        // 明确的Git错误/警告，但不是那些调试前缀
+        const isCriticalErrorForConsole = trimmedChunk.match(/^(fatal|error|warning):/i) && !isDetailedDebugLogForConsole;
+
+        // 只在控制台打印非调试日志或关键错误
+        if (isCriticalErrorForConsole) {
+            logger.error(`${Default_Config.logPrefix} [CMD ERR] ${trimmedChunk}`);
+        } else if (!isDetailedDebugLogForConsole &&
+                   !trimmedChunk.match(/(Receiving objects|Resolving deltas|remote: Compressing objects|remote: Total|remote: Enumerating objects|remote: Counting objects):\s*(\d+)%/i) && // 也排除进度信息
+                   trimmedChunk.length > 0) { // 确保有内容才打印
+            // logger.debug(`${Default_Config.logPrefix} [CMD STDERR] ${trimmedChunk}`); // 打印其他非调试、非进度的stderr
+        }
       }
 
-      if (callback) {
+      // 始终将原始的、未经过滤的 outputChunk 传递给外部的回调
+      if (externalCallback) {
         try {
-          callback(output);
+          externalCallback(outputChunk);
         } catch (e) {
           logger.warn(`${Default_Config.logPrefix} ${streamName} 回调出错:`, e);
         }
@@ -449,6 +489,9 @@ function ExecuteCommand(
         err
       );
       clearTimeout(timer);
+      // 附加 stdout/stderr 到错误对象
+      err.stdout = stdout;
+      err.stderr = stderr;
       settlePromise(reject, err);
     });
 
@@ -467,7 +510,7 @@ function ExecuteCommand(
         err.code = code ?? "UNKNOWN";
         err.signal = signal;
         err.stdout = stdout;
-        err.stderr = stderr;
+        err.stderr = stderr; 
         settlePromise(reject, err);
       }
     });
@@ -1230,208 +1273,192 @@ export class MiaoPluginMBT extends plugin {
  /**
    * @description 处理 #更新咕咕牛 命令，执行多仓库更新流程，并生成图片报告。
    */
-  async UpdateTuKu(e, isScheduled = false) {
-    if (!isScheduled && !(await this.CheckInit(e))) return false; 
+ async UpdateTuKu(e, isScheduled = false) {
+  if (!isScheduled && !(await this.CheckInit(e))) return false;
 
-    const logger = this.logger;
-    const logPrefix = this.logPrefix;
+  const logger = this.logger;
+  const logPrefix = this.logPrefix;
 
-    const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
-    const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
-    let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
-    const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
-    let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
+  const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
+  const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
+  let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
+  const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
+  let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
 
-    let anyRepoMissing = false;
-    if (!Repo1Exists) anyRepoMissing = true;
-    if (Repo2UrlConfigured && !Repo2Exists) anyRepoMissing = true;
-    if (Repo3UrlConfigured && !Repo3Exists) anyRepoMissing = true;
+  let anyRepoMissing = false;
+  if (!Repo1Exists) anyRepoMissing = true;
+  if (Repo2UrlConfigured && !Repo2Exists) anyRepoMissing = true;
+  if (Repo3UrlConfigured && !Repo3Exists) anyRepoMissing = true;
 
-    if (anyRepoMissing && Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
-    } else if (!Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧。", true);
-      return false; // 核心仓库不存在，无法更新
-    }
+  if (anyRepoMissing && Repo1Exists) {
+    if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
+  } else if (!Repo1Exists) {
+    if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧。", true);
+    return false;
+  }
 
-    const startTime = Date.now();
-    if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新 (所有仓库)，稍等片刻...", true);
-    logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
+  const startTime = Date.now();
+  if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新 (所有仓库)，稍等片刻...", true);
+  logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
 
-    const reportResults = [];
-    let overallSuccess = true;
-    let overallHasChanges = false;
+  const reportResults = [];
+  let overallSuccess = true;
+  let overallHasChanges = false;
 
-    // 更新核心仓库 (一号)
-    if (Repo1Exists) {
-      const result = await MiaoPluginMBT.UpdateSingleRepo(e, 1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库 (核心)", Default_Config.Main_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, isScheduled, logger);
-      overallSuccess &&= result.success;
-      overallHasChanges ||= result.hasChanges;
-      reportResults.push({
-        name: "一号仓库 (核心)",
-        statusText: result.success ? (result.hasChanges ? "更新成功" : "已是最新") : "更新失败",
-        statusClass: result.success ? (result.hasChanges ? "status-ok" : "status-no-change") : "status-fail",
-        error: result.success ? null : (result.error || { message: "未知错误" }),
-        log: result.success ? (await MiaoPluginMBT.GetTuKuLog(5, MiaoPluginMBT.paths.LocalTuKuPath, logger)) : (result.error?.stderr || result.error?.message || "获取日志失败"),
-      });
-    } else {
-      reportResults.push({ name: "一号仓库 (核心)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null });
-      overallSuccess = false; // 核心未下载，整体视为失败
-    }
+  const processRepoResult = async (repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isCore = false) => {
+    const result = await MiaoPluginMBT.UpdateSingleRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isScheduled, logger);
+    overallSuccess &&= result.success;
+    overallHasChanges ||= result.hasChanges;
 
-    // 更新附属仓库 (二号) - 仅当核心仓库操作基本成功或未配置时
-    if (Repo2UrlConfigured) {
-      if (Repo2Exists) {
-        const result = await MiaoPluginMBT.UpdateSingleRepo(null, 2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库 (附属)", MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, isScheduled, logger);
-        overallSuccess &&= result.success;
-        overallHasChanges ||= result.hasChanges;
-        reportResults.push({
-          name: "二号仓库 (附属)",
-          statusText: result.success ? (result.hasChanges ? "更新成功" : "已是最新") : "更新失败",
-          statusClass: result.success ? (result.hasChanges ? "status-ok" : "status-no-change") : "status-fail",
-          error: result.success ? null : (result.error || { message: "未知错误" }),
-          log: result.success ? (await MiaoPluginMBT.GetTuKuLog(5, MiaoPluginMBT.paths.LocalTuKuPath2, logger)) : (result.error?.stderr || result.error?.message || "获取日志失败"),
-        });
+    let statusText = "";
+    if (result.success) {
+      if (result.wasForceReset) {
+        statusText = "本地冲突 (强制同步)";
+      } else if (result.hasChanges) {
+        statusText = "更新成功";
       } else {
-        reportResults.push({ name: "二号仓库 (附属)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null });
-        // overallSuccess &&= false; // 附属未下载不影响整体成功，但可能影响功能
+        statusText = "已是最新";
       }
     } else {
-      reportResults.push({ name: "二号仓库 (附属)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null });
+      statusText = "更新失败";
     }
-
-    // 更新附属仓库 (三号) - 仅当核心仓库操作基本成功或未配置时
-    if (Repo3UrlConfigured) {
-      if (Repo3Exists) {
-        const result = await MiaoPluginMBT.UpdateSingleRepo(null, 3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库 (涩涩)", MiaoPluginMBT.MBTConfig.Sexy_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, isScheduled, logger);
-        overallSuccess &&= result.success;
-        overallHasChanges ||= result.hasChanges;
-        reportResults.push({
-          name: "三号仓库 (涩涩)",
-          statusText: result.success ? (result.hasChanges ? "更新成功" : "已是最新") : "更新失败",
-          statusClass: result.success ? (result.hasChanges ? "status-ok" : "status-no-change") : "status-fail",
-          error: result.success ? null : (result.error || { message: "未知错误" }),
-          log: result.success ? (await MiaoPluginMBT.GetTuKuLog(5, MiaoPluginMBT.paths.LocalTuKuPath3, logger)) : (result.error?.stderr || result.error?.message || "获取日志失败"),
-        });
-      } else {
-        reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null });
-        // overallSuccess &&= false;
-      }
-    } else {
-      reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null });
-    }
-
-    // 后续处理
-    if (overallSuccess && overallHasChanges) {
-      logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
-      await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
-    }
-
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    const reportData = {
-      pluginVersion: MiaoPluginMBT.GetVersionStatic(),
-      duration: duration,
-      scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-      results: reportResults,
-      overallSuccess: overallSuccess,
-      overallHasChanges: overallHasChanges,
+    return {
+      name: repoDisplayName,
+      statusText: statusText,
+      statusClass: result.success ? (result.hasChanges || result.wasForceReset ? "status-ok" : "status-no-change") : "status-fail",
+      error: result.error, // 包含完整 stderr
+      log: result.log, 
+      wasForceReset: result.wasForceReset
     };
+  };
 
-    // 生成并发送报告图片
-    let tempHtmlFilePath = '';
-    let tempImgFilePath = '';
-    let reportSent = false;
+  if (Repo1Exists) {
+    reportResults.push(await processRepoResult(1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库 (核心)", Default_Config.Main_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, true));
+  } else {
+    reportResults.push({ name: "一号仓库 (核心)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+    overallSuccess = false;
+  }
 
+  if (Repo2UrlConfigured) {
+    if (Repo2Exists) {
+      reportResults.push(await processRepoResult(2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库 (附属)", MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch));
+    } else {
+      reportResults.push({ name: "二号仓库 (附属)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+    }
+  } else {
+    reportResults.push({ name: "二号仓库 (附属)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+  }
+
+  if (Repo3UrlConfigured) {
+    if (Repo3Exists) {
+      reportResults.push(await processRepoResult(3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库 (涩涩)", MiaoPluginMBT.MBTConfig.Sexy_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch));
+    } else {
+      reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+    }
+  } else {
+    reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+  }
+
+  if (overallSuccess && overallHasChanges) {
+    logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
+    await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
+  }
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  const reportData = {
+    pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+    duration: duration,
+    scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+    results: reportResults,
+    overallSuccess: overallSuccess,
+    overallHasChanges: overallHasChanges,
+  };
+
+  let tempImgFilePath = ''; // savePath for screenshot
+  let reportSent = false;
+
+  try {
+    const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'update_report.html');
     try {
-      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, 'html', 'update_report.html');
-      // 确保模板存在
-      try {
-          await fsPromises.access(sourceHtmlPath);
-      } catch (err) {
-          logger.error(`${logPrefix} [更新报告] 找不到更新报告模板: ${sourceHtmlPath}`, err);
-          // 尝试发送文本消息作为回退
-          let fallbackMsg = `${logPrefix} 更新检查完成。\n`;
-          reportResults.forEach(res => {
-              fallbackMsg += `${res.name}: ${res.statusText}\n`;
-              if (res.error) fallbackMsg += `  错误: ${res.error.message}\n`;
-          });
-          if (e && !isScheduled) await e.reply(fallbackMsg);
-          else if (isScheduled && Bot.master && Bot.master.length > 0) {
-              Bot.master.forEach(masterId => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch(err => logger.error("发送定时更新文本报告给主人失败", err)));
-          }
-          return overallHasChanges; // 模板缺失，提前返回
-      }
+        await fsPromises.access(sourceHtmlPath);
+    } catch (err) {
+        logger.error(`${logPrefix} [更新报告] 找不到更新报告模板: ${sourceHtmlPath}`, err);
+        let fallbackMsg = `${logPrefix} 更新检查完成。\n`;
+        reportResults.forEach(res => {
+            fallbackMsg += `${res.name}: ${res.statusText}\n`;
+            if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split('\n')[0]}\n`; // 只取第一行
+        });
+        if (e && !isScheduled) await e.reply(fallbackMsg);
+        else if (isScheduled && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 增加 Bot 定义检查
+            Bot.master.forEach(masterId => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch(sendErr => logger.error("发送定时更新文本报告给主人失败", sendErr)));
+        }
+        return overallHasChanges;
+    }
 
-      await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
-      tempHtmlFilePath = path.join(MiaoPluginMBT.paths.tempHtmlPath, `update-report-tpl-${Date.now()}.html`);
+    await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true }); // 确保 tempImgPath 存在
+    tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `update-report-${Date.now()}.png`);
 
-      await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
-      tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `update-report-${Date.now()}.png`);
+    logger.info(`${logPrefix} [更新报告] 开始生成图片报告...`);
+    const img = await puppeteer.screenshot('guguniu-update-report', {
+      tplFile: sourceHtmlPath,
+      savePath: tempImgFilePath,
+      imgType: 'png',
+      pageGotoParams: { waitUntil: 'networkidle0' },
+      ...reportData,
+      screenshotOptions: { fullPage: true },
+      pageBoundingRect: { selector: '.container', padding: 0 },
+      width: 560,
+    });
 
-      logger.info(`${logPrefix} [更新报告] 开始生成图片报告`);
-      const img = await puppeteer.screenshot('guguniu-update-report', {
-        tplFile: sourceHtmlPath, 
-        savePath: tempImgFilePath,
-        imgType: 'png',
-        pageGotoParams: { waitUntil: 'networkidle0' },
-        ...reportData,
-        screenshotOptions: { fullPage: true }, // 根据内容调整，如果日志多可能需要true
-        pageBoundingRect: { selector: '.container', padding: 0 },
-        width: 560,
-      });
-
-      if (img) {
-        if (!isScheduled && e) {
-          await e.reply(img);
-        } else if (isScheduled && Bot.master && Bot.master.length > 0) {
-          logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
-          for (const masterId of Bot.master) {
-            try {
-              await Bot.pickUser(masterId).sendMsg(img);
-              logger.info(`${logPrefix} [定时更新] 图片报告已发送给主人 ${masterId}`);
-            } catch (sendErr) {
-              logger.error(`${logPrefix} [定时更新] 发送图片报告给主人 ${masterId} 失败:`, sendErr);
-              // 可以考虑发送文本回退
-              let fallbackMsgMaster = `${logPrefix} 定时更新报告图片发送失败。\n`;
-              reportResults.forEach(res => {
-                  fallbackMsgMaster += `${res.name}: ${res.statusText}\n`;
-                  if (res.error) fallbackMsgMaster += `  错误: ${res.error.message}\n`;
-              });
-              await Bot.pickUser(masterId).sendMsg(fallbackMsgMaster).catch(()=>{});
-            }
+    if (img) {
+      if (!isScheduled && e) {
+        await e.reply(img);
+      } else if (isScheduled && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 增加 Bot 定义检查
+        logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
+        for (const masterId of Bot.master) {
+          try {
+            await Bot.pickUser(masterId).sendMsg(img);
+            logger.info(`${logPrefix} [定时更新] 图片报告已发送给主人 ${masterId}`);
+          } catch (sendErr) {
+            logger.error(`${logPrefix} [定时更新] 发送图片报告给主人 ${masterId} 失败:`, sendErr);
+            let fallbackMsgMaster = `${logPrefix} 定时更新报告图片发送失败。\n`;
+            reportResults.forEach(res => {
+                fallbackMsgMaster += `${res.name}: ${res.statusText}\n`;
+                if (res.error && res.error.message) fallbackMsgMaster += `  错误: ${res.error.message.split('\n')[0]}\n`;
+            });
+            await Bot.pickUser(masterId).sendMsg(fallbackMsgMaster).catch(()=>{});
           }
         }
-        reportSent = true;
-      } else {
-        logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空)。`);
       }
-
-    } catch (reportError) {
-      logger.error(`${logPrefix} [更新报告] 生成或发送图片报告时出错:`, reportError);
-      // 尝试发送文本回退
-      if (!reportSent) {
-          let fallbackMsg = `${logPrefix} 更新检查完成，但报告图片生成失败。\n`;
-          reportResults.forEach(res => {
-              fallbackMsg += `${res.name}: ${res.statusText}\n`;
-              if (res.error) fallbackMsg += `  错误: ${res.error.message}\n`;
-          });
-          if (e && !isScheduled) await e.reply(fallbackMsg);
-          else if (isScheduled && Bot.master && Bot.master.length > 0) {
-              Bot.master.forEach(masterId => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch(err => logger.error("发送定时更新文本报告给主人失败(图片生成错误)", err)));
-          }
-      }
-    } finally {
-
-      if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-        try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
-      }
-      const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-update-report');
-      if (fs.existsSync(possiblePuppeteerTempDir)) { try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {} }
+      reportSent = true;
+    } else {
+      logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空)。`);
     }
 
-    logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
-    return overallHasChanges; // 返回是否有任何仓库发生了实际的 git pull 变更
+  } catch (reportError) {
+    logger.error(`${logPrefix} [更新报告] 生成或发送图片报告时出错:`, reportError);
+    if (!reportSent) {
+        let fallbackMsg = `${logPrefix} 更新检查完成，但报告图片生成失败。\n`;
+        reportResults.forEach(res => {
+            fallbackMsg += `${res.name}: ${res.statusText}\n`;
+            if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split('\n')[0]}\n`;
+        });
+        if (e && !isScheduled) await e.reply(fallbackMsg);
+        else if (isScheduled && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 增加 Bot 定义检查
+            Bot.master.forEach(masterId => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch(sendErr => logger.error("发送定时更新文本报告给主人失败(图片生成错误)", sendErr)));
+        }
+    }
+  } finally {
+    if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
+      try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
+    }
+    const possiblePuppeteerTempDir = path.join(MiaoPluginMBT.paths.tempPath, '..', 'guguniu-update-report');
+    if (fs.existsSync(possiblePuppeteerTempDir)) { try { await safeDelete(possiblePuppeteerTempDir); } catch (deleteErr) {} }
   }
+
+  logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
+  return overallHasChanges;
+}
 
   /**
    * @description 处理 #重置咕咕牛 命令，彻底清理图库相关文件和状态。
@@ -6090,163 +6117,251 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 更新单个仓库，包含冲突检测和强制重置逻辑。
+   *              控制台只输出关键错误，但返回的错误对象包含完整 stderr。
+   *              返回 wasForceReset 标志。
+   * @returns {Promise<{success: boolean, hasChanges: boolean, log: string|null, error: Error|null, wasForceReset: boolean}>}
    */
   static async UpdateSingleRepo(
-    e,
+    e, 
     RepoNum,
     localPath,
     RepoName,
-    RepoUrl,
+    RepoUrl, // RepoUrl 未在此函数中使用，但保留以备将来可能需要
     branch,
     isScheduled,
     logger
   ) {
     const logPrefix = Default_Config.logPrefix;
     logger.info(`${logPrefix} [更新仓库] 开始更新 ${RepoName} @ ${localPath}`);
-    let success = false,
-      hasChanges = false,
-      latestLog = null,
-      pullOutput = "",
-      pullError = null;
+    let success = false;
+    let hasChanges = false;
+    let latestLog = null;
+    let pullError = null; // 存储 pull 或 reset 阶段的最终错误
+    let wasForceReset = false; // 标记是否执行了强制重置
 
     await MiaoPluginMBT.gitMutex.acquire();
     try {
       let oldCommit = "";
       try {
-        oldCommit = (
-          await ExecuteCommand(
-            "git",
-            ["rev-parse", "HEAD"],
-            { cwd: localPath },
-            5000
-          )
-        ).stdout.trim();
-      } catch {}
+        // 尝试获取当前 commit hash
+        const revParseResult = await ExecuteCommand(
+          "git",
+          ["rev-parse", "HEAD"],
+          { cwd: localPath },
+          5000 // 短超时
+        );
+        oldCommit = revParseResult.stdout.trim();
+      } catch (revParseError) {
+        logger.warn(`${logPrefix} [更新仓库] ${RepoName} 获取当前 commit 失败:`, revParseError.message);
+        // 即使获取旧 commit 失败，也继续尝试更新
+      }
 
       let needsReset = false;
+      let pullOutput = ""; // 存储 pull 命令的输出
+
       try {
+        // 尝试快速前进拉取
         const pullResult = await ExecuteCommand(
           "git",
-          ["pull", "--ff-only", "--progress"],
+          ["pull", "origin", branch, "--ff-only", "--progress"], 
           { cwd: localPath },
           Default_Config.gitPullTimeout,
-          undefined,
-          (stderrChunk) => {
-            const matchLog = stderrChunk.match(
-              /(Receiving objects|Resolving deltas):\s*(\d+)%/
-            );
-            if (matchLog)
-              logger.debug(
-                `${logPrefix} [更新进度 ${RepoName}] ${matchLog[1]}: ${matchLog[2]}%`
-              );
-          }
+          (stderrChunk) => { // onStdErr: 处理进度等信息，但不直接打印调试日志到控制台
+            const output = stderrChunk.toString();
+            const progressMatch = output.match(/(Receiving objects|Resolving deltas|remote: Compressing objects|remote: Total|remote: Enumerating objects|remote: Counting objects):\s*(\d+)%/i);
+            if (progressMatch) {
+              // logger.trace(`${logPrefix} [更新进度 ${RepoName}] ${progressMatch[1]}: ${progressMatch[2]}%`);
+            }
+          },
+          undefined 
         );
-        pullOutput = pullResult.stdout + pullResult.stderr;
-        success = true;
+        pullOutput = (pullResult.stdout || "") + (pullResult.stderr || "");
+        success = true; // 初步认为成功
         logger.info(
           `${logPrefix} [更新仓库] ${RepoName} 'git pull --ff-only' 成功。`
         );
-      } catch (err) {
-        pullError = err;
-        pullOutput = err.stderr || err.stdout || err.message || String(err);
+      } catch (err) { // git pull --ff-only 失败
+        pullError = err; // 保存 pull 阶段的错误，包含完整的 stderr
+        pullOutput = (err.stderr || "") || (err.stdout || "") || err.message || String(err);
+
+        // 在控制台只打印关键错误信息
         logger.warn(
           `${logPrefix} [更新仓库] ${RepoName} 'git pull --ff-only' 失败，错误码: ${err.code}`
         );
-        logger.warn(
-          `${logPrefix} [更新仓库] ${RepoName} Git 输出:\n${pullOutput}`
-        );
+        const criticalLines = (pullOutput.split('\n') || [])
+                              .filter(line => line.match(/^(fatal|error|warning):/i) && !["trace:", "http.c:", "== Info:"].some(p => line.trim().startsWith(p)))
+                              .join('\n');
+        if (criticalLines) {
+            logger.warn(`${logPrefix} [更新仓库] ${RepoName} Git 关键错误:\n${criticalLines}`);
+        } else if (err.message) {
+            logger.warn(`${logPrefix} [更新仓库] ${RepoName} 错误信息: ${err.message}`);
+        }
+
+        // 判断是否是因为冲突或特定状态需要强制重置
         if (
           err.code !== 0 &&
-          (err.stderr?.includes("commit") ||
-            err.stderr?.includes("unrelated") ||
-            err.stderr?.includes("lock") ||
-            err.stderr?.includes("fast-forward") ||
-            err.message?.includes("failed"))
+          ( (err.stderr || "").includes("Not possible to fast-forward") ||
+            (err.stderr || "").includes("diverging") ||
+            (err.stderr || "").includes("unrelated histories") ||
+            (err.stderr || "").includes("commit your changes or stash them") ||
+            (err.stderr || "").includes("needs merge") || // 增加需要合并的情况
+            (err.stderr || "").includes("lock file") ||
+            (err.message || "").includes("failed")
+          )
         ) {
           needsReset = true;
           logger.warn(
             `${logPrefix} [更新仓库] ${RepoName} 检测到冲突或状态异常，准备尝试强制重置...`
           );
         } else {
-          throw err;
+          // 对于其他 pull 错误，标记为失败，但不尝试重置
+          success = false;
+          // pullError 已经保存了错误信息
         }
       }
 
-      if (needsReset) {
+      // 如果需要且 pull 未成功，则尝试强制重置
+      if (needsReset && !success) {
         logger.warn(
           `${logPrefix} [更新仓库] ${RepoName} 正在执行强制重置 (git fetch & git reset --hard)...`
         );
         try {
           await ExecuteCommand(
             "git",
-            ["fetch", "origin"],
+            ["fetch", "origin"], // 获取最新的远程信息
             { cwd: localPath },
-            Default_Config.gitPullTimeout
+            Default_Config.gitPullTimeout // 使用 pull 的超时，fetch 可能也需要较长时间
           );
-          await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], {
+          await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], { // 重置到最新的远程分支
             cwd: localPath,
           });
-          success = true;
-          hasChanges = true;
+
+          success = true; // 强制重置成功，则更新最终成功
+          hasChanges = true; // 强制重置意味着本地状态被改变，视为有变化
+          wasForceReset = true; // 标记发生了强制重置
+          pullError = null; // 清除 pull 阶段的错误，因为我们已经通过重置解决了
           logger.info(`${logPrefix} [更新仓库] ${RepoName} 强制重置成功。`);
-          latestLog = await MiaoPluginMBT.GetTuKuLog(20, localPath, logger);
         } catch (resetError) {
           logger.error(`${logPrefix} [更新仓库] ${RepoName} 强制重置失败！`);
-          success = false;
-          throw resetError;
+          success = false; // 强制重置失败，则更新最终失败
+          pullError = resetError; // 更新错误为重置错误（包含其 stderr）
+          // 控制台打印关键重置错误
+          const resetOutput = (resetError.stderr || "") || (resetError.stdout || "") || resetError.message || String(resetError);
+          const resetCriticalLines = (resetOutput.split('\n') || [])
+                                    .filter(line => line.match(/^(fatal|error|warning):/i) && !["trace:", "http.c:", "== Info:"].some(p => line.trim().startsWith(p)))
+                                    .join('\n');
+          if (resetCriticalLines) {
+              logger.error(`${logPrefix} [更新仓库] ${RepoName} 重置关键错误:\n${resetCriticalLines}`);
+          } else if (resetError.message) {
+              logger.error(`${logPrefix} [更新仓库] ${RepoName} 重置错误信息: ${resetError.message}`);
+          }
         }
       }
 
-      if (success && !needsReset) {
+      // 获取日志和判断变更状态 (仅在最终成功时进行)
+      if (success) {
         let newCommit = "";
         try {
-          newCommit = (
-            await ExecuteCommand(
-              "git",
-              ["rev-parse", "HEAD"],
-              { cwd: localPath },
-              5000
-            )
-          ).stdout.trim();
-        } catch {}
-        hasChanges = oldCommit && newCommit && oldCommit !== newCommit;
+          const newRevParseResult = await ExecuteCommand(
+            "git",
+            ["rev-parse", "HEAD"],
+            { cwd: localPath },
+            5000
+          );
+          newCommit = newRevParseResult.stdout.trim();
+        } catch (newRevParseError){
+            logger.warn(`${logPrefix} [更新仓库] ${RepoName} 获取新 commit 失败:`, newRevParseError.message);
+        }
+
+        if (!wasForceReset) { // 如果不是通过重置成功的，才需要比较 commit
+            hasChanges = oldCommit && newCommit && oldCommit !== newCommit;
+        }
+        // 对于重置成功的情况，hasChanges 已经设为 true
+
+        // 记录日志信息
         if (hasChanges) {
           logger.info(
-            `${Default_Config.logPrefix} [更新仓库] ${RepoName} 检测到新的提交。`
+            `${Default_Config.logPrefix} [更新仓库] ${RepoName} 检测到新的提交${wasForceReset ? " (通过强制重置)" : ""}。`
           );
-          latestLog = await MiaoPluginMBT.GetTuKuLog(20, localPath, logger);
-        } else if (pullOutput.includes("Already up to date")) {
+        } else if (pullOutput.includes("Already up to date") && !wasForceReset) {
           logger.info(
             `${Default_Config.logPrefix} [更新仓库] ${RepoName} 已是最新。`
           );
-          latestLog = await MiaoPluginMBT.GetTuKuLog(1, localPath, logger);
-        } else {
-          logger.warn(
-            `${Default_Config.logPrefix} [更新仓库] ${RepoName} pull 成功但未检测到明确更新，获取最新日志...`
-          );
-          latestLog = await MiaoPluginMBT.GetTuKuLog(1, localPath, logger);
+        } else if (success && !wasForceReset) { // pull 成功但没检测到明确更新且非重置
+             logger.info( 
+               `${Default_Config.logPrefix} [更新仓库] ${RepoName} pull 操作完成，未检测到新提交或无 "Already up to date" 消息。`
+             );
+             hasChanges = false; // 明确标记为无变化
+        }
+
+        // 获取最近3条日志
+        try {
+            latestLog = await MiaoPluginMBT.GetTuKuLog(3, localPath, logger);
+        } catch (logError) {
+            logger.warn(`${logPrefix} [更新仓库] ${RepoName} 获取提交日志失败:`, logError.message);
+            latestLog = "获取日志失败";
+        }
+
+      } else { // 更新最终失败
+        // 仍然尝试获取日志，可能有助于诊断
+        try {
+            latestLog = await MiaoPluginMBT.GetTuKuLog(3, localPath, logger);
+        } catch (logError) {
+            logger.warn(`${logPrefix} [更新仓库] ${RepoName} (失败状态下) 获取提交日志失败:`, logError.message);
+            latestLog = "获取日志失败";
+        }
+        // pullError 此时应该是最终的错误
+        // 如果 pullError 为空（理论上不应该，因为 success 是 false），创建一个通用错误
+        if (!pullError) {
+            pullError = new Error(`${RepoName} 更新失败，但未捕获到具体错误对象`);
         }
       }
-    } catch (error) {
+
+    } catch (outerError) { // 这个 catch 捕获上面逻辑中未被捕获的意外错误
       success = false;
       hasChanges = false;
-      logger.error(`${logPrefix} [更新仓库] ${RepoName} 更新操作失败。`);
-      if (RepoNum === 1 && e && !isScheduled) {
-        const errorToReport = error || pullError || new Error("未知更新错误");
-        await MiaoPluginMBT.ReportError(
-          e,
-          `更新${RepoName}`,
-          errorToReport,
-          `Git输出(部分):\n${pullOutput.substring(0, 500)}`,
-          logger
-        );
-      } else {
-        logger.error(error || pullError);
+      logger.error(`${logPrefix} [更新仓库] ${RepoName} 更新操作中发生顶层意外错误:`, outerError);
+      if (!pullError) { // 如果之前的 pullError 是空的，用这个顶层错误
+          pullError = outerError;
+      } else { // 如果已有 pullError，将此错误信息附加
+          pullError.message += ` | OuterError: ${outerError.message}`;
       }
+      wasForceReset = false; // 发生意外错误，重置状态无效
+      latestLog = "发生意外错误，无法获取日志";
     } finally {
       MiaoPluginMBT.gitMutex.release();
     }
-    return { success, hasChanges, log: latestLog };
+
+    // 向用户报告核心仓库的最终失败状态
+    if (!success && RepoNum === 1 && e && !isScheduled) {
+      const errorToReport = pullError || new Error(`${RepoName} 更新最终失败，原因未知`);
+      // 尝试从 errorToReport 中提取关键 stderr 信息
+      const stderrForReport = errorToReport.stderr || "";
+      const criticalLinesForReport = (stderrForReport.split('\n') || [])
+                                    .filter(line => line.match(/^(fatal|error|warning):/i) && !["trace:", "http.c:", "== Info:"].some(p => line.trim().startsWith(p)))
+                                    .slice(0, 5) // 最多显示5行关键错误
+                                    .join('\n');
+      const contextMessage = criticalLinesForReport ? `Git关键错误(部分):\n${criticalLinesForReport}` : '无关键Git错误输出，请查阅控制台。';
+
+      await MiaoPluginMBT.ReportError(
+        e,
+        `更新${RepoName}`,
+        errorToReport, // 传递最终的错误对象
+        contextMessage,
+        logger
+      );
+    } else if (!success && !isScheduled) { // 非核心仓库失败，只在控制台记录最终错误
+        logger.error(`${logPrefix} [更新仓库] ${RepoName} 更新最终失败:`, pullError || "未知错误");
+    }
+
+    // 返回结果对象
+    return {
+        success: success,
+        hasChanges: hasChanges,
+        log: latestLog,
+        error: success ? null : pullError, // 只有失败时才返回 error 对象
+        wasForceReset: wasForceReset
+    };
   }
 
   /**
