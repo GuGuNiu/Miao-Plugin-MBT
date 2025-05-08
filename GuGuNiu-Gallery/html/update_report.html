@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛更新报告</title>
+    <style>
+      @font-face {
+    font-family: 'CuteFont';
+    src: local('Yuanti SC'),
+         local('YouYuan'),
+         local('Microsoft YaHei UI Rounded'),
+         local('Arial Rounded MT Bold'),
+         local('Microsoft YaHei UI'),
+         local('PingFang SC'),
+         sans-serif;
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'CuteFont', sans-serif;
+    width: 520px;
+    margin: 20px auto;
+    padding: 20px;
+    background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+    color: #333;
+    font-size: 14px;
+    line-height: 1.6;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-decor { 
+    position: absolute;
+    z-index: -1;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.bg-decor.star {
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.bg-decor.cloud {
+    clip-path: path('M 10,30 A 20,20 0 0,1 50,30 A 20,20 0 0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 Z');
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
+    border: 1px solid #b3e0ff;
+    position: relative;
+    z-index: 1;
+}
+.container::before {
+    content: '🌿';
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 24px;
+    opacity: 0.5;
+}
+.container::after {
+    content: '🌱';
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    font-size: 24px;
+    opacity: 0.5;
+    transform: rotate(15deg);
+}
+
+h1 {
+    text-align: center;
+    color: #00acc1;
+    margin: 0 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4fc3f7;
+    font-size: 26px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
+    position: relative;
+}
+
+.update-details-block {
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    background: linear-gradient(to bottom, #f5faff, #ffffff);
+    border: 1px solid #b3e0ff;
+    box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+}
+
+h2 {
+    color: #0288d1;
+    margin: 0 0 10px;
+    border-left: 4px solid #ff4081;
+    padding-left: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+h2 .icon { margin-right: 5px; vertical-align: -3px; font-size: 17px; }
+
+ul { list-style: none; padding-left: 0px; margin-top: 5px; margin-bottom: 0; }
+li {
+    margin-bottom: 5px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #f0f4f8;
+    min-height: 18px;
+}
+li:last-child { border-bottom: none; margin-bottom: 0; }
+
+.repo-status-line { 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px; 
+}
+
+.label {
+    color: #555;
+    margin-right: 8px;
+    white-space: nowrap;
+    font-size: 0.95em;
+}
+.value {
+    font-weight: bold;
+}
+.status-ok { color: #00c853; }
+.status-fail { color: #d81b60; }
+.status-no-change { color: #0288d1; }
+.status-skipped { color: #78909c; } 
+
+.error-details {
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #d81b60;
+    margin-top: 5px;
+    padding: 8px;
+    background-color: rgba(255, 105, 180, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #d81b60;
+}
+
+.log-details {
+    margin-top: 8px; 
+}
+.log-details h3 {
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 14px;
+    font-weight: 500;
+}
+.log-content {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 6px;
+    max-height: 120px; 
+    overflow-y: auto;
+    border: 1px solid #eee;
+}
+.log-content:empty::before {
+    content: "(无相关日志记录)";
+    color: #aaa;
+    font-style: italic;
+}
+
+.summary-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(to bottom, #f5faff, #e6f0ff);
+    border-radius: 12px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    border: 1px solid #00acc1;
+    box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+}
+.summary-section.no-changes { background: #e0f0ff; border-color: #78909c; color: #555; } 
+.summary-section.has-errors { background: rgba(255, 105, 180, 0.1); border-color: #d81b60; color: #d81b60; }
+
+
+
+.footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.8em;
+    color: #78909c;
+    border-top: 1px solid #e0f0ff;
+    padding-top: 10px;
+}
+    </style>
+</head>
+<body style="{{scaleStyleValue}}"> 
+    <div class="container">
+        <h1>咕咕牛更新报告</h1>
+
+        <div class="update-details-block">
+            <h2><span class="icon">🔄</span>更新详情</h2>
+            <ul>
+                {{ each results repoResult }} 
+                    <li>
+                        <div class="repo-status-line"> 
+                            <span class="label">{{ repoResult.name }}:</span>
+                            <span class="value {{ repoResult.statusClass }}">{{ repoResult.statusText }}</span>
+                        </div>
+
+                        {{ if repoResult.error }} 
+                            <div class="error-details">
+                                <strong>错误:</strong> {{ repoResult.error.message || '未知错误详情' }}
+                                {{ if repoResult.error.code }} (Code: {{ repoResult.error.code }}){{ /if }}
+                                {{ if repoResult.error.stderr }}
+                                    <pre style="font-size:10px; max-height: 60px; overflow-y:auto; background: #ffebee; padding: 5px; border-radius:3px; margin-top:3px;">{{ repoResult.error.stderr }}</pre>
+                                {{ /if }}
+                            </div>
+                        {{ /if }}
+
+                        {{ if repoResult.log && !repoResult.error }}
+                            <div class="log-details">
+                                <h3>最新提交记录:</h3>
+                                <pre class="log-content">{{ repoResult.log }}</pre> 
+                            </div>
+                        {{ else if repoResult.log && repoResult.error && !repoResult.error.stderr }} 
+                             <div class="log-details">
+                                <h3>相关日志:</h3>
+                                <pre class="log-content">{{ repoResult.log }}</pre>
+                            </div>
+                        {{ /if }}
+                    </li>
+                {{ /each }}
+            </ul>
+        </div>
+
+        <div class="summary-section {{ if !overallHasChanges && overallSuccess }}no-changes{{ else if !overallSuccess }}has-errors{{ /if }}">
+            {{ if overallSuccess }}
+                {{ if overallHasChanges }}🎉 所有仓库更新检查完成，部分仓库有更新！
+                {{ else }}👍 所有仓库更新检查完成，均已是最新版本！
+                {{ /if }}
+            {{ else }}
+                💔 更新过程中遇到问题，请检查上述详情。
+            {{ /if }}
+        </div>
+
+        <!-- 全局错误日志块 -->
+        <!-- {{ if !overallSuccess }}
+            <div class="error-log-block"> ... </div>
+        {{ /if }} -->
+
+        <div class="footer">
+            总耗时: {{ duration }}s | Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛
+        </div>
+    </div>
+</body>
+</html>
