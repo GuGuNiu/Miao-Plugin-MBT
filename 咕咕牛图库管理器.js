@@ -3447,182 +3447,159 @@ export class MiaoPluginMBT extends plugin {
    * @description 处理 #查看 命令，显示指定角色的所有图片及状态。
    */
   async FindRoleSplashes(e) {
-    if (!(await this.CheckInit(e))) return true;
-    if (!(await MiaoPluginMBT.IsTuKuDownloaded(1)))
-      return e.reply("『咕咕牛』核心库还没下载呢！", true);
+  if (!(await this.CheckInit(e))) return true;
+  if (!(await MiaoPluginMBT.IsTuKuDownloaded(1)))
+    return e.reply("『咕咕牛』核心库还没下载呢！", true);
 
-    const match = e.msg.match(/^#查看\s*(.+)$/i);
-    if (!match?.[1]) return e.reply("想看哪个角色呀？格式：#查看 角色名", true);
+  const match = e.msg.match(/^#查看\s*(.+)$/i);
+  if (!match?.[1]) return e.reply("想看哪个角色呀？格式：#查看 角色名", true);
 
-    const roleNameInput = match[1].trim();
-    try {
-      const { mainName, exists } = await MiaoPluginMBT.FindRoleAlias(
-        roleNameInput,
-        this.logger
+  const roleNameInput = match[1].trim();
+  try {
+    const { mainName, exists } = await MiaoPluginMBT.FindRoleAlias(
+      roleNameInput,
+      this.logger
+    );
+    const standardMainName = mainName || roleNameInput;
+
+    const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter(
+      (img) => img.characterName === standardMainName
+    );
+
+    if (rawRoleImageData.length === 0) {
+      const dirExists = await MiaoPluginMBT.CheckRoleDirExists(
+        standardMainName
       );
-      const standardMainName = mainName || roleNameInput;
-
-      const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter(
-        (img) => img.characterName === standardMainName
-      );
-
-      if (rawRoleImageData.length === 0) {
-        const dirExists = await MiaoPluginMBT.CheckRoleDirExists(
-          standardMainName
-        );
-        if (dirExists)
-          return e.reply(
-            `『${standardMainName}』的角色文件夹在，但是图库数据里没有图片信息哦。`
-          );
-        else
-          return e.reply(`图库里好像没有『${standardMainName}』这个角色呢。`);
-      }
-
-      const config = MiaoPluginMBT.MBTConfig;
-      const roleImageData = MiaoPluginMBT.FilterImagesBySwitches(
-        rawRoleImageData,
-        config
-      );
-
-      if (roleImageData.length === 0) {
+      if (dirExists)
         return e.reply(
-          `根据当前的设置，没有找到『${standardMainName}』的可用图片。`,
-          true
+          `『${standardMainName}』的角色文件夹在，但是图库数据里没有图片信息哦。`
         );
-      }
+      else
+        return e.reply(`图库里好像没有『${standardMainName}』这个角色呢。`);
+    }
 
-      roleImageData.sort(
-        (a, b) =>
-          parseInt(a.path?.match(/Gu(\d+)\.webp$/i)?.[1] || "0") -
-          parseInt(b.path?.match(/Gu(\d+)\.webp$/i)?.[1] || "0")
-      );
+    const config = MiaoPluginMBT.MBTConfig;
+    rawRoleImageData.sort(
+      (a, b) =>
+        parseInt(a.path?.match(/Gu(\d+)\.webp$/i)?.[1] || "0") -
+        parseInt(b.path?.match(/Gu(\d+)\.webp$/i)?.[1] || "0")
+    );
 
-      const ITEMS_PER_BATCH = 28;
-      const BATCH_SIZE = 28;
-      const totalItems = roleImageData.length;
-      const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
+    const ITEMS_PER_BATCH = 28;
+    const BATCH_SIZE = 28;
+    const totalItems = rawRoleImageData.length;
+    const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
 
-      // this.logger.info(
-      //   `${this.logPrefix} [查看] 角色 ${standardMainName} 共 ${totalItems} 张可用图片 (过滤后)，将分 ${totalBatches} 批发送。`
-      // );
-      //调试日志-精简
+    this.logger.info(
+      `${this.logPrefix} [查看] 角色 ${standardMainName} 共 ${totalItems} 张图片，将分 ${totalBatches} 批发送。`
+    );
 
-      for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
-        const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
-        const endIndex = Math.min(startIndex + BATCH_SIZE, totalItems);
-        const currentBatchData = roleImageData.slice(startIndex, endIndex);
+    for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+      const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
+      const endIndex = Math.min(startIndex + BATCH_SIZE, totalItems);
+      const currentBatchData = rawRoleImageData.slice(startIndex, endIndex);
 
-        const batchTitle = `查看『${standardMainName}』 (${
-          startIndex + 1
-        }-${endIndex} / ${totalItems} 张)`;
-        const currentForwardList = [[batchTitle]];
-        if (batchNum === 1) {
-          currentForwardList.push([
-            `想导出图片？试试: #咕咕牛导出${standardMainName}1`,
-          ]);
-        }
+      const batchTitle = `查看『${standardMainName}』 (${
+        startIndex + 1
+      }-${endIndex} / ${totalItems} 张)`;
+      const currentForwardList = [[batchTitle]];
+      if (batchNum === 1) {currentForwardList.push([`想导出图片？试试: #咕咕牛导出${standardMainName}1`,]);}
+      this.logger.info(`${this.logPrefix} [查看] 正在准备第 ${batchNum}/${totalBatches} 批...`);
 
-        // this.logger.info(
-        //   `${this.logPrefix} [查看] 正在准备第 ${batchNum}/${totalBatches} 批...`
-        // );
-        //调试日志-精简
+      for (let i = 0; i < currentBatchData.length; i++) {
+        const item = currentBatchData[i];
+        const globalIndex = startIndex + i;
 
-        for (let i = 0; i < currentBatchData.length; i++) {
-          const item = currentBatchData[i];
-          const globalIndex = startIndex + i;
+        const { path: relativePath } = item;
+        if (!relativePath) continue;
 
-          const { path: relativePath } = item;
-          if (!relativePath) continue;
+        const normalizedPath = relativePath.replace(/\\/g, "/");
+        const fileName = path.basename(normalizedPath);
+        const baseName = fileName.replace(/\.webp$/i, "");
 
-          const normalizedPath = relativePath.replace(/\\/g, "/");
-          const fileName = path.basename(normalizedPath);
-          const baseName = fileName.replace(/\.webp$/i, "");
+        const isEffectivelyBanned =
+          MiaoPluginMBT._activeBanSet.has(normalizedPath);
+        const isUserBanned = MiaoPluginMBT._userBanSet.has(normalizedPath);
+        const isPurified = MiaoPluginMBT.CheckIfPurifiedByLevel(
+          item,
+          MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl
+        );
 
-          const isEffectivelyBanned =
-            MiaoPluginMBT._activeBanSet.has(normalizedPath);
-          const isUserBanned = MiaoPluginMBT._userBanSet.has(normalizedPath);
-          const isPurified = MiaoPluginMBT.CheckIfPurifiedByLevel(
-            item,
-            MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl
-          );
+        let labelStr = "";
+        if (isEffectivelyBanned) {labelStr += " ❌封禁";if (isPurified && !isUserBanned) labelStr += " 🌱净化";}
+        const entryText = `${globalIndex + 1}、${baseName}${labelStr}`;
+        const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(
+          normalizedPath
+        );
 
-          let labelStr = "";
-          if (isEffectivelyBanned) {
-            labelStr += " ❌封禁";
-            if (isPurified && !isUserBanned) labelStr += " 🌱净化";
-          }
-
-          const entryText = `${globalIndex + 1}、${baseName}${labelStr}`;
-          const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(
-            normalizedPath
-          );
-
-          if (absolutePath) {
-            try {
-              await fsPromises.access(absolutePath, fs.constants.R_OK);
-              currentForwardList.push([
-                entryText,
-                segment.image(`file://${absolutePath}`),
-              ]);
-            } catch (accessErr) {
-              this.logger.warn(
-                `${this.logPrefix} [查看] 文件无法访问: ${absolutePath}`,
-                accessErr.code
-              );
-              currentForwardList.push(`${entryText} (文件状态异常)`);
-            }
-          } else {
-            this.logger.warn(
-              `${this.logPrefix} [查看] 文件丢失: ${normalizedPath}`
-            );
-            currentForwardList.push(`${entryText} (文件丢失了...)`);
-          }
-        }
-
-        if (currentForwardList.length > 1) {
+        if (absolutePath) {
           try {
-            const forwardMsg = await common.makeForwardMsg(
-              e,
-              currentForwardList,
-              `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`
+            await fsPromises.access(absolutePath, fs.constants.R_OK);
+            currentForwardList.push([
+              entryText,
+              segment.image(`file://${absolutePath}`),
+            ]);
+          } catch (accessErr) {
+            this.logger.warn(
+              `${this.logPrefix} [查看] 文件无法访问: ${absolutePath}`,
+              accessErr.code
             );
-            if (forwardMsg) {
-              await e.reply(forwardMsg);
-              // this.logger.info(`${this.logPrefix} [查看] 第 ${batchNum}/${totalBatches} 批已发送。`);
-            } else {
-              this.logger.error(
-                `${this.logPrefix} [查看] common.makeForwardMsg 返回空 (批次 ${batchNum})`
-              );
-              await e.reply(
-                `生成第 ${batchNum}/${totalBatches} 批图片列表失败了 (makeForwardMsg failed)。`,
-                true
-              );
-            }
-          } catch (sendError) {
-            this.logger.error(
-              `${this.logPrefix} [查看] 发送第 ${batchNum}/${totalBatches} 批合并转发消息失败:`,
-              sendError
-            );
-            await e.reply(
-              `发送第 ${batchNum}/${totalBatches} 批图片列表失败了，请检查后台日志。`,
-              true
-            );
-          }
-
-          if (batchNum < totalBatches) {
-            await common.sleep(1500);
+            currentForwardList.push(`${entryText} (文件状态异常)`);
           }
         } else {
           this.logger.warn(
-            `${this.logPrefix} [查看] 第 ${batchNum}/${totalBatches} 批为空，跳过发送。`
+            `${this.logPrefix} [查看] 文件丢失: ${normalizedPath}`
           );
+          currentForwardList.push(`${entryText} (文件丢失了...)`);
         }
       }
-    } catch (error) {
-      await this.ReportError(e, `查看角色 ${roleNameInput}`, error);
+
+      if (currentForwardList.length > 1) {
+        try {
+          const forwardMsg = await common.makeForwardMsg(
+            e,
+            currentForwardList,
+            `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`
+          );
+          if (forwardMsg) {
+            await e.reply(forwardMsg);
+            this.logger.info(
+              `${this.logPrefix} [查看] 第 ${batchNum}/${totalBatches} 批已发送。`
+            );
+          } else {
+            this.logger.error(
+              `${this.logPrefix} [查看] common.makeForwardMsg 返回空 (批次 ${batchNum})`
+            );
+            await e.reply(
+              `生成第 ${batchNum}/${totalBatches} 批图片列表失败了 (makeForwardMsg failed)。`,
+              true
+            );
+          }
+        } catch (sendError) {
+          this.logger.error(
+            `${this.logPrefix} [查看] 发送第 ${batchNum}/${totalBatches} 批合并转发消息失败:`,
+            sendError
+          );
+          await e.reply(
+            `发送第 ${batchNum}/${totalBatches} 批图片列表失败了，请检查后台日志。`,
+            true
+          );
+        }
+
+        if (batchNum < totalBatches) {
+          await common.sleep(1500);
+        }
+      } else {
+        this.logger.warn(
+          `${this.logPrefix} [查看] 第 ${batchNum}/${totalBatches} 批为空，跳过发送。`
+        );
+      }
     }
-    return true;
+  } catch (error) {
+    await this.ReportError(e, `查看角色 ${roleNameInput}`, error);
   }
+  return true;
+}
 
   /**
    * @description 处理 #可视化 命令，严格回归 V4.8.4 逻辑。
