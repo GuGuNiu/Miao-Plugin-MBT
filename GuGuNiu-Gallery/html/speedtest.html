@@ -1,133 +1,221 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛测速报告</title>
     <style>
-      body {
-        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: linear-gradient(to bottom, #e0f2f7, #ffffff);
-        color: #333;
-        font-size: 14px;
-        line-height: 1.6;
-        width: 500px;
-        box-sizing: border-box;
-      }
-      .container {
-        padding: 15px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border-radius: 10px;
-        border: 1px rgba(0, 255, 85, 0.8) solid;
-        box-shadow: 5px 5px 0 0 rgba(0, 255, 85, 0.3);
-      }
-      h1 {
-        text-align: center;
-        color: rgba(7, 131, 48, 0.8);
-        margin: 0 0 15px 0;
-        font-size: 20px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-      }
-      h2 {
-        font-size: 16px;
-        color: #333;
-        margin: 15px 0 10px 0;
-        border-left: 4px solid #0077cc;
-        padding-left: 8px;
-      }
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 5px;
-        border-bottom: 1px dashed #eee;
-      }
-      li:last-child {
-        border-bottom: none;
-      }
-      .node-name {
-        font-weight: bold;
-        color: #555;
-        flex-basis: 120px;
-        flex-shrink: 0;
-      }
-      .node-status {
-        text-align: right;
-        flex-grow: 1;
-      }
-      .status-ok {
-        color: #28a745;
-        font-weight: bold;
-      }
-      .status-timeout {
-        color: #dc3545;
-        font-weight: bold;
-      }
-      .status-na {
-        color: #aaa;
-      }
-      .priority {
-        color: #777;
-        font-size: 0.9em;
-        margin-left: 5px;
-      }
-      .best-choice {
-        margin-top: 20px;
-        text-align: center;
-        font-weight: 600;
-        color: #00cc55;
-        font-size: 1.05em;
-        padding: 8px;
-        background-color: rgba(0, 255, 64, 0.05);
-        border-radius: 6px;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 11px;
-        color: #999;
-      }
+        @font-face {
+            font-family: 'CuteFont';
+            src: local('Yuanti SC'),
+                 local('YouYuan'),
+                 local('Microsoft YaHei UI Rounded'),
+                 local('Arial Rounded MT Bold'),
+                 local('Microsoft YaHei UI'),
+                 local('PingFang SC'),
+                 sans-serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'CuteFont', sans-serif;
+            width: 520px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
+            border: 1px solid #b3e0ff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container::before {
+            content: '🌿';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            opacity: 0.5;
+        }
+
+        .container::after {
+            content: '🌱';
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 24px;
+            opacity: 0.5;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            text-align: center;
+            color: #00acc1;
+            margin: 0 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4fc3f7;
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
+            position: relative;
+        }
+
+        h2 {
+            color: #0288d1;
+            margin: 15px 0 10px;
+            border-left: 4px solid #ff4081;
+            padding-left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        h2 .icon {
+            margin-right: 5px;
+            vertical-align: -3px;
+            font-size: 17px;
+            color: #ff4081;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f4f8;
+            min-height: 18px;
+        }
+
+        li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .node-name {
+            color: #555;
+            margin-right: 8px;
+            white-space: nowrap;
+            font-size: 0.95em;
+            flex-basis: 150px;
+            flex-shrink: 0;
+        }
+
+        .node-status {
+            font-weight: bold;
+            color: #0277bd;
+            text-align: right;
+            font-size: 0.95em;
+            flex-grow: 1;
+        }
+
+        .status-ok {
+            color: #00c853;
+            background: rgba(0, 200, 83, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .status-timeout {
+            color: #d81b60;
+            background: rgba(255, 105, 180, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .status-na {
+            color: #78909c;
+            background: rgba(120, 144, 156, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .priority {
+            color: #78909c;
+            font-size: 0.85em;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+
+        .best-choice {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(to bottom, #f5faff, #e6f0ff);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #00c853;
+            border: 1px solid #00acc1;
+            box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+        }
+
+        .best-choice .icon {
+            margin-right: 5px;
+            font-size: 16px;
+            color: #ff4081;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.8em;
+            color: #78909c;
+            border-top: 1px solid #e0f0ff;
+            padding-top: 10px;
+        }
     </style>
-  </head>
-  <body style="{{scaleStyleValue}}">
+</head>
+<body style="{{scaleStyleValue}}">
     <div class="container">
-      <h1>咕咕牛网络测速报告</h1>
+        <h1>咕咕牛网络测速报告</h1>
 
-      {{ if speeds1 && speeds1.length > 0 }}
-      <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
-      <ul>
-        {{ each speeds1 s }}
-        <li>
-          <span class="node-name">{{ s.name }}</span>
-          <span class="node-status">
-            {{ if s.statusText === 'ok' }}
-            <span class="status-ok">{{ s.speed }}ms ✅</span>
-            {{ else if s.statusText === 'na' }}
-            <span class="status-na">N/A ⚠️</span>
-            {{ else }}
-            <span class="status-timeout">超时 ❌</span>
-            {{ /if }}
-            <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
-          </span>
-        </li>
-        {{ /each }}
-      </ul>
-      <div class="best-choice">
-        ✅ 优选: {{ best1 ? `${best1.name}(${best1.testUrlPrefix === null ?
-        'N/A' : (Number.isFinite(best1.speed) && best1.speed >= 0 ? best1.speed
-        + 'ms' : '超时')})` : '无可用源' }}
-      </div>
-      {{ /if }}
+        {{ if speeds1 && speeds1.length > 0 }}
+        <h2><span class="icon">🌐</span>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
+        <ul>
+            {{ each speeds1 s }}
+            <li>
+                <span class="node-name">{{ s.name }}</span>
+                <span class="node-status">
+                    {{ if s.statusText === 'ok' }}
+                    <span class="status-ok">{{ s.speed }}ms ✅</span>
+                    {{ else if s.statusText === 'na' }}
+                    <span class="status-na">N/A ⚠️</span>
+                    {{ else }}
+                    <span class="status-timeout">超时 ❌</span>
+                    {{ /if }}
+                    <span class="priority">(优先级: {{ s.priority ?? 'N' }})</span>
+                </span>
+            </li>
+            {{ /each }}
+        </ul>
+        <div class="best-choice">
+            <span class="icon">✅</span>优选: {{ best1 ? `${best1.name}(${best1.testUrlPrefix === null ? 'N/A' : (Number.isFinite(best1.speed) && best1.speed >= 0 ? best1.speed + 'ms' : '超时')})` : '无可用源' }}
+        </div>
+        {{ /if }}
 
-      <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
+        <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
     </div>
-  </body>
+</body>
 </html>
