@@ -22258,5 +22258,25 @@
         },
         "timestamp": "2025-05-03T10:18:29.753Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8556030800",
+        "characterName": "长离",
+        "path": "waves-character/长离/长离Gu1.webp",
+        "attributes": {
+            "filename": "长离Gu1.webp",
+            "parentFolder": "长离",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6f2d231f74d5c92f0d7b807dfa245c34",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-09T13:18:17.817Z",
+        "sourceGallery": "waves-character"
     }
 ]
