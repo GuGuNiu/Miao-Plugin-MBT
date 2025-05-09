@@ -5242,9 +5242,10 @@ export class MiaoPluginMBT extends plugin {
         );
       try {
         finalData = await MiaoPluginMBT.ScanLocalImagesToBuildCache(logger);
-        logger.info(
-          `${Default_Config.logPrefix} [加载元数据] 扫描回退完成，找到 ${finalData.length} 个图片文件。`
-        );
+        // logger.info(
+        //   `${Default_Config.logPrefix} [加载元数据] 扫描回退完成，找到 ${finalData.length} 个图片文件。`
+        // );
+        //调试日志-精简
       } catch (scanError) {
         logger.error(
           `${Default_Config.logPrefix} [加载元数据] 扫描回退过程中发生错误:`,
@@ -5868,9 +5869,10 @@ export class MiaoPluginMBT extends plugin {
       }
 
       await fsPromises.writeFile(banListPath, jsonString, "utf8");
-      logger.info(
-        `${logPrefix} [保存用户封禁] 成功保存 ${sortedBans.length} 条记录到 ${banListPath}`
-      );
+      // logger.info(
+      //   `${logPrefix} [保存用户封禁] 成功保存 ${sortedBans.length} 条记录到 ${banListPath}`
+      // );
+      //调试日志-精简
       return true;
     } catch (error) {
       logger.error(
@@ -6429,6 +6431,7 @@ export class MiaoPluginMBT extends plugin {
       ) {
         githubDirectAttempted = true;
         const nodeName = "GitHub(直连-优先)";
+
         const preCleanSuccess = await safeDelete(tempRepoPath);
         if (!preCleanSuccess) {
           loggerInstance.error(
@@ -6462,9 +6465,7 @@ export class MiaoPluginMBT extends plugin {
                 gitOptionsDirect,
                 Default_Config.gitCloneTimeout,
                 (stderrChunk) => {
-                  // stderrChunk 回调
                   if (eForProgress && repoNum === 1) {
-                    // 仅为核心仓库且有 e 对象时
                     const match = stderrChunk.match(
                       /Receiving objects:\s*(\d+)%/
                     );
@@ -6490,36 +6491,52 @@ export class MiaoPluginMBT extends plugin {
                       }
                     }
                   }
-                  // 附属仓库无日志输出
                 },
-                undefined // onStdOut 回调
+                undefined
               );
             });
 
-            loggerInstance.info(
-              `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) Clone 完成，尝试移动文件...`
-            );
+            const tempParentDir = path.dirname(path.dirname(tempRepoPath));
+            const intermediateDir = path.join(tempParentDir, 'rename');
+            const intermediateTempPath = path.join(intermediateDir, path.basename(tempRepoPath));
+            const intermediateFinalPath = path.join(intermediateDir, path.basename(finalLocalPath));
+
+            await fsPromises.mkdir(intermediateDir, { recursive: true });
+            await safeDelete(intermediateTempPath);
+            await safeDelete(intermediateFinalPath);
+
             try {
-              await fsPromises.rename(tempRepoPath, finalLocalPath);
-            } catch (renameError) {
-              if (renameError.code === "EXDEV") {
-                loggerInstance.warn(
-                  `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 重命名失败 (EXDEV)，回退到复制...`
-                );
-                await copyFolderRecursive(
-                  tempRepoPath,
-                  finalLocalPath,
-                  {},
-                  loggerInstance
-                );
+              await fsPromises.rename(tempRepoPath, intermediateTempPath);
+            } catch (moveError) {
+              if (moveError.code === 'EPERM' || moveError.code === 'EXDEV') {
+                await copyFolderRecursive(tempRepoPath, intermediateTempPath, {}, loggerInstance);
                 await safeDelete(tempRepoPath);
               } else {
-                throw renameError;
+                throw moveError;
               }
             }
-            loggerInstance.info(
-              `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用 ${nodeName} 下载成功！`
-            );
+
+            try {
+              await fsPromises.rename(intermediateTempPath, intermediateFinalPath);
+            } catch (renameError) {
+              await safeDelete(intermediateTempPath);
+              throw renameError;
+            }
+
+            await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
+            await safeDelete(finalLocalPath);
+
+            try {
+              await fsPromises.rename(intermediateFinalPath, finalLocalPath);
+            } catch (finalMoveError) {
+              if (finalMoveError.code === 'EPERM' || finalMoveError.code === 'EXDEV') {
+                await copyFolderRecursive(intermediateFinalPath, finalLocalPath, {}, loggerInstance);
+                await safeDelete(intermediateFinalPath);
+              } else {
+                throw finalMoveError;
+              }
+            }
+
             return { success: true, nodeName: nodeName };
           } catch (error) {
             loggerInstance.error(
@@ -6566,16 +6583,16 @@ export class MiaoPluginMBT extends plugin {
         };
       }
 
+      let isFirstAttempt = true;
       for (const source of sourcesToTry) {
         if (source.name === "GitHub" && githubDirectAttempted) {
           continue;
         }
 
-        const nodeName =
-          source.name === "GitHub" ? "GitHub(直连)" : `${source.name}(代理)`;
-        loggerInstance.info(
-          `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 尝试使用源: ${nodeName}`
-        );
+        const nodeName = source.name === "GitHub" ? "GitHub(直连)" : `${source.name}(代理)`;
+        if (!isFirstAttempt && eForProgress && repoNum === 1) {
+          eForProgress.reply(`『咕咕牛』正在尝试下载核心仓库，当前节点: ${nodeName}...`);
+        }
 
         const preCleanSuccessLoop = await safeDelete(tempRepoPath);
         if (!preCleanSuccessLoop) {
@@ -6632,7 +6649,6 @@ export class MiaoPluginMBT extends plugin {
           };
         }
 
-        // 用于跟踪核心仓库进度报告的状态
         let progressStatusLoop = { reported10: false, reported90: false };
 
         try {
@@ -6643,9 +6659,7 @@ export class MiaoPluginMBT extends plugin {
               gitOptions,
               Default_Config.gitCloneTimeout,
               (stderrChunk) => {
-                // stderrChunk 回调
                 if (eForProgress && repoNum === 1) {
-                  // 仅为核心仓库且有 e 对象时
                   const match = stderrChunk.match(
                     /Receiving objects:\s*(\d+)%/
                   );
@@ -6653,52 +6667,64 @@ export class MiaoPluginMBT extends plugin {
                     const progress = parseInt(match[1], 10);
                     if (progress >= 10 && !progressStatusLoop.reported10) {
                       progressStatusLoop.reported10 = true;
-                      if (eForProgress)
-                        eForProgress
-                          .reply(
-                            `『咕咕牛』${repoTypeName} (${nodeName}) 下载: 10%...`
-                          )
-                          .catch(() => {});
+                      eForProgress.reply(
+                        `『咕咕牛』${repoTypeName} (${nodeName}) 下载: 10%...`
+                      ).catch(() => {});
                     }
                     if (progress >= 90 && !progressStatusLoop.reported90) {
                       progressStatusLoop.reported90 = true;
-                      if (eForProgress)
-                        eForProgress
-                          .reply(
-                            `『咕咕牛』${repoTypeName} (${nodeName}) 下载: 90%...`
-                          )
-                          .catch(() => {});
+                      eForProgress.reply(
+                        `『咕咕牛』${repoTypeName} (${nodeName}) 下载: 90%...`
+                      ).catch(() => {});
                     }
                   }
                 }
-                // 附属仓库无日志输出
               },
-              undefined // onStdOut 回调
+              undefined
             );
           });
 
-          loggerInstance.info(
-            `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) Clone 完成，尝试移动文件...`
-          );
+          const tempParentDir = path.dirname(path.dirname(tempRepoPath));
+          const intermediateDir = path.join(tempParentDir, 'rename');
+          const intermediateTempPath = path.join(intermediateDir, path.basename(tempRepoPath));
+          const intermediateFinalPath = path.join(intermediateDir, path.basename(finalLocalPath));
+
+          await fsPromises.mkdir(intermediateDir, { recursive: true });
+          await safeDelete(intermediateTempPath);
+          await safeDelete(intermediateFinalPath);
+
           try {
-            await fsPromises.rename(tempRepoPath, finalLocalPath);
-          } catch (renameError) {
-            if (renameError.code === "EXDEV") {
-              loggerInstance.warn(
-                `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 重命名失败 (EXDEV)，回退到复制...`
-              );
-              await copyFolderRecursive(
-                tempRepoPath,
-                finalLocalPath,
-                {},
-                loggerInstance
-              );
+            await fsPromises.rename(tempRepoPath, intermediateTempPath);
+          } catch (moveError) {
+            if (moveError.code === 'EPERM' || moveError.code === 'EXDEV') {
+              await copyFolderRecursive(tempRepoPath, intermediateTempPath, {}, loggerInstance);
               await safeDelete(tempRepoPath);
             } else {
-              throw renameError;
+              throw moveError;
             }
           }
-          // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载成功！`);
+
+          try {
+            await fsPromises.rename(intermediateTempPath, intermediateFinalPath);
+          } catch (renameError) {
+            await safeDelete(intermediateTempPath);
+            throw renameError;
+          }
+
+          await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
+          await safeDelete(finalLocalPath);
+
+          try {
+            await fsPromises.rename(intermediateFinalPath, finalLocalPath);
+          } catch (finalMoveError) {
+            if (finalMoveError.code === 'EPERM' || finalMoveError.code === 'EXDEV') {
+              await copyFolderRecursive(intermediateFinalPath, finalLocalPath, {}, loggerInstance);
+              await safeDelete(intermediateFinalPath);
+            } else {
+              throw finalMoveError;
+            }
+          }
+
           return { success: true, nodeName: nodeName };
         } catch (error) {
           loggerInstance.error(
@@ -6706,8 +6732,12 @@ export class MiaoPluginMBT extends plugin {
           );
           lastError = error;
           await safeDelete(tempRepoPath);
+          await safeDelete(intermediateTempPath);
+          await safeDelete(intermediateFinalPath);
           await common.sleep(1000);
         }
+
+        isFirstAttempt = false;
       }
 
       loggerInstance.error(
