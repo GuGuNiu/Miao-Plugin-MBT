@@ -1300,7 +1300,6 @@ export class MiaoPluginMBT extends plugin {
           `download-report-${Date.now()}.png`
         );
 
-        logger.info(`${logPrefix} [下载报告] 开始生成图片报告`);
         const reportImg = await puppeteer.screenshot(
           "guguniu-download-report",
           {
@@ -1415,10 +1414,7 @@ export class MiaoPluginMBT extends plugin {
       }
 
       //  执行下载后设置
-      logger.info(`${logPrefix} [核心下载] 开始执行 RunPostDownloadSetup...`);
       await MiaoPluginMBT.RunPostDownloadSetup(e, logger);
-      logger.info(`${logPrefix} [核心下载] RunPostDownloadSetup 执行完成。`);
-
       await e.reply("『咕咕牛』成功进入喵喵里面！").catch(() => {});
     } catch (error) {
       logger.error(`${logPrefix} [DownloadTuKu-核心] 顶层执行出错:`, error);
@@ -1682,7 +1678,6 @@ export class MiaoPluginMBT extends plugin {
         `update-report-${Date.now()}.png`
       );
 
-      logger.info(`${logPrefix} [更新报告] 开始生成图片报告...`);
       const img = await puppeteer.screenshot("guguniu-update-report", {
         tplFile: sourceHtmlPath,
         savePath: tempImgFilePath,
@@ -1803,7 +1798,7 @@ export class MiaoPluginMBT extends plugin {
 
     const msg = e.msg.trim();
     if (msg !== "#重置咕咕牛") {
-      return false; 
+      return false;
     }
 
     const startMessage = "『咕咕牛🐂』收到！开始彻底重置图库，请稍等...";
@@ -1813,25 +1808,25 @@ export class MiaoPluginMBT extends plugin {
     await e.reply(startMessage, true);
     this.logger.info(`${this.logPrefix} 用户 ${e.user_id} 执行重置操作.`);
 
+    let mainDirsDeleteSuccess = true;
+    let pluginDirsCleanSuccess = true;
+    let firstError = null;
+
     // 删除主要仓库和公共资源目录
     const pathsToDeleteDirectly = [
       MiaoPluginMBT.paths.LocalTuKuPath,
       MiaoPluginMBT.paths.LocalTuKuPath2,
       MiaoPluginMBT.paths.LocalTuKuPath3,
       MiaoPluginMBT.paths.commonResPath,
-    ].filter(Boolean); // 过滤掉可能未定义的路径
-
-    let mainDirsDeleteSuccess = true;
-    let firstError = null;
+    ].filter(Boolean);
 
     for (const dirPath of pathsToDeleteDirectly) {
-      if (!dirPath) continue; // 双重保险
+      if (!dirPath) continue;
       this.logger.info(`${this.logPrefix} [重置] 正在删除主要目录: ${dirPath}`);
       try {
-        const deleted = await safeDelete(dirPath); // safeDelete 应返回 true/false
+        const deleted = await safeDelete(dirPath);
         if (!deleted) {
           this.logger.warn(`${this.logPrefix} [重置] 删除 ${dirPath} 可能未完全成功 (safeDelete 返回 false)`);
-          // mainDirsDeleteSuccess = false; // 根据需要决定是否因此标记为整体失败
         }
       } catch (err) {
         this.logger.error(`${this.logPrefix} [重置] 删除 ${dirPath} 时发生错误:`, err);
@@ -1840,14 +1835,14 @@ export class MiaoPluginMBT extends plugin {
       }
     }
 
-    //  清理残留的 GuTemp-* 临时下载目录
+    //  清理残留的 GuTemp-* 临时下载目录 (静默处理失败，仅记录日志)
     const tempDownloadBasePath = path.join(MiaoPluginMBT.paths.tempPath, "guguniu-downloads");
     this.logger.info(`${this.logPrefix} [重置] 检查并清理残留的临时下载目录于: ${tempDownloadBasePath}`);
     let tempDirsCleanedCount = 0;
-    let tempDirsSilentFailCount = 0; // 记录静默失败的次数
+    let tempDirsSilentFailCount = 0;
 
     try {
-      await fsPromises.access(tempDownloadBasePath); // 检查父目录是否存在
+      await fsPromises.access(tempDownloadBasePath);
       const entries = await fsPromises.readdir(tempDownloadBasePath, { withFileTypes: true });
       const tempDirCleanupPromises = [];
 
@@ -1862,12 +1857,10 @@ export class MiaoPluginMBT extends plugin {
                 if (cleanedSuccessfully) {
                   tempDirsCleanedCount++;
                 } else {
-                  // safeDelete 返回 false，表示可能未完全删除
                   this.logger.warn(`${this.logPrefix} [重置-静默] 临时目录可能未完全清除 (safeDelete 返回 false): ${tempDirPath}`);
                   tempDirsSilentFailCount++;
                 }
               } catch (cleanupError) {
-                // safeDelete 自身抛出了异常
                 this.logger.warn(`${this.logPrefix} [重置-静默] 删除临时目录 ${tempDirPath} 时发生异常 (已忽略): ${cleanupError.message || cleanupError}`);
                 tempDirsSilentFailCount++;
               }
@@ -1887,8 +1880,6 @@ export class MiaoPluginMBT extends plugin {
       if (tempDirsCleanedCount === 0 && tempDirsSilentFailCount === 0 && !hasGuTempDirs) {
           this.logger.info(`${this.logPrefix} [重置] 未发现需要清理的 GuTemp-* 临时下载目录。`);
       }
-
-
     } catch (readBaseTempErr) {
       if (readBaseTempErr.code === ERROR_CODES.NotFound) {
         this.logger.info(`${this.logPrefix} [重置] 临时下载目录基路径 ${tempDownloadBasePath} 不存在，无需清理 GuTemp-* 目录。`);
@@ -1897,17 +1888,53 @@ export class MiaoPluginMBT extends plugin {
       }
     }
 
+    // 清理目标插件目录中的图片文件
+    this.logger.info(`${this.logPrefix} [重置] 开始清理目标插件目录中的图片文件...`);
+    const targetPluginDirs = [
+      MiaoPluginMBT.paths.target.miaoChar,
+      MiaoPluginMBT.paths.target.zzzChar,
+      MiaoPluginMBT.paths.target.wavesChar,
+    ].filter(Boolean);
+
+    for (const dirPath of targetPluginDirs) {
+      if (!dirPath) continue;
+      try {
+        await MiaoPluginMBT.CleanTargetCharacterDirs(dirPath, this.logger);
+      } catch (err) {
+        this.logger.error(`${this.logPrefix} [重置] 清理目标插件目录 ${dirPath} 时出错:`, err);
+        pluginDirsCleanSuccess = false;
+        if (!firstError) firstError = { operation: `清理插件目录 ${path.basename(dirPath)}`, error: err };
+      }
+    }
+
+    //  重置内存状态
+    this.logger.info(`${this.logPrefix} [重置] 重置内存状态...`);
+    await MiaoPluginMBT.configMutex.acquire();
+    try {
+      MiaoPluginMBT.MBTConfig = {};
+      MiaoPluginMBT._imgDataCache = Object.freeze([]);
+      MiaoPluginMBT._userBanSet = new Set();
+      MiaoPluginMBT._activeBanSet = new Set();
+      MiaoPluginMBT._aliasData = null;
+      MiaoPluginMBT.isGloballyInitialized = false;
+      MiaoPluginMBT.initializationPromise = null;
+      this.isPluginInited = false;
+      this.logger.info(`${this.logPrefix} [重置] 内存状态已重置。`);
+    } finally {
+      MiaoPluginMBT.configMutex.release();
+    }
+
+    // 最终结果判断和用户回复
     const overallSuccess = mainDirsDeleteSuccess && pluginDirsCleanSuccess;
 
     if (overallSuccess) {
-      // 用户收到的成功消息不应再包含临时文件清理失败的提示
-      await e.reply(successMessageBase); 
+      await e.reply(successMessageBase);
       if (tempDirsSilentFailCount > 0) { // 仅在日志中额外提示开发者
           this.logger.info(`${this.logPrefix} [重置-提示] 重置操作主体成功，但有 ${tempDirsSilentFailCount} 个临时目录清理时被静默处理。`);
       }
     } else {
-      await e.reply(failureMessage); 
-      if (firstError) { // firstError 仍然只记录主要流程的第一个严重错误
+      await e.reply(failureMessage);
+      if (firstError) {
         await MiaoPluginMBT.ReportError(e, `重置咕咕牛 (${firstError.operation})`, firstError.error, "", this.logger);
       }
     }
@@ -6696,9 +6723,6 @@ export class MiaoPluginMBT extends plugin {
    * @description 执行首次下载后的设置步骤。
    */
   static async RunPostDownloadSetup(e, logger = global.logger || console) {
-    logger.info(
-      `${Default_Config.logPrefix} [下载后设置] 开始执行下载后初始化步骤...`
-    );
     try {
       await MiaoPluginMBT.LoadTuKuConfig(true, logger);
       await MiaoPluginMBT.SyncFilesToCommonRes(logger);
