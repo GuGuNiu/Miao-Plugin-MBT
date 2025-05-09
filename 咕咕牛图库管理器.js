@@ -271,26 +271,24 @@ const SPEEDTEST_HTML_TEMPLATE_LOCAL = `
 
         .status-ok {
             color: #00c853;
-            background: rgba(0, 230, 118, 0.3);
-            padding: 3px 10px;
-            border-radius: 6px;
-            box-shadow: 0 0 5px rgba(0, 230, 118, 0.4);
+            background: rgba(0, 200, 83, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
         }
+
 
         .status-timeout {
             color: #d81b60;
-            background: rgba(255, 105, 180, 0.3);
-            padding: 3px 10px;
-            border-radius: 6px;
-            box-shadow: 0 0 5px rgba(255, 105, 180, 0.4);
+            background: rgba(255, 105, 180, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
         }
 
         .status-na {
             color: #78909c;
-            background: rgba(120, 144, 156, 0.3);
-            padding: 3px 10px;
-            border-radius: 6px;
-            box-shadow: 0 0 5px rgba(120, 144, 156, 0.4);
+            background: rgba(120, 144, 156, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
         }
 
         .priority {
@@ -997,9 +995,7 @@ function ExecuteCommand(
     proc.on("close", (code, signal) => {
       if (exited || promiseSettled) return;
       exited = true;
-      logger.info(
-        `${Default_Config.logPrefix} [执行命令] 进程关闭 [${cmdStr}] Code: ${code}, Signal: ${signal}`
-      );
+      //logger.info(`${Default_Config.logPrefix} [执行命令] 进程关闭 [${cmdStr}] Code: ${code}, Signal: ${signal}`); //调试日志-精简
       clearTimeout(timer);
 
       if (code === 0) {
@@ -1834,16 +1830,10 @@ export class MiaoPluginMBT extends plugin {
 
     if (anyRepoMissing && Repo1Exists) {
       if (!isScheduled && e)
-        await e.reply(
-          "『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。",
-          true
-        );
+        await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。",true);
     } else if (!Repo1Exists) {
       if (!isScheduled && e)
-        await e.reply(
-          "『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧。",
-          true
-        );
+        await e.reply("『咕咕牛🐂』图库未下载",true);
       return false;
     }
 
@@ -2187,7 +2177,7 @@ export class MiaoPluginMBT extends plugin {
     const failureMessage = "『咕咕牛🐂』重置过程中好像出了点问题，可能没清理干净，快去看看日志吧！";
 
     await e.reply(startMessage, true);
-    this.logger.info(`${this.logPrefix} 用户 ${e.user_id} 执行重置操作.`);
+    //this.logger.info(`${this.logPrefix} 用户 ${e.user_id} 执行重置操作.`);  //调试日志-精简
 
     let mainDirsDeleteSuccess = true;
     let pluginDirsCleanSuccess = true;
@@ -2203,7 +2193,7 @@ export class MiaoPluginMBT extends plugin {
 
     for (const dirPath of pathsToDeleteDirectly) {
       if (!dirPath) continue;
-      this.logger.info(`${this.logPrefix} [重置] 正在删除主要目录: ${dirPath}`);
+      //this.logger.info(`${this.logPrefix} [重置] 正在删除: ${dirPath}`);
       try {
         const deleted = await safeDelete(dirPath);
         if (!deleted) {
@@ -2218,7 +2208,7 @@ export class MiaoPluginMBT extends plugin {
 
     //  清理残留的 GuTemp-* 临时下载目录 (静默处理失败，仅记录日志)
     const tempDownloadBasePath = path.join(MiaoPluginMBT.paths.tempPath, "guguniu-downloads");
-    this.logger.info(`${this.logPrefix} [重置] 检查并清理残留的临时下载目录于: ${tempDownloadBasePath}`);
+    //this.logger.info(`${this.logPrefix} [重置] 检查并清理残留的临时下载目录于: ${tempDownloadBasePath}`);
     let tempDirsCleanedCount = 0;
     let tempDirsSilentFailCount = 0;
 
@@ -2230,7 +2220,7 @@ export class MiaoPluginMBT extends plugin {
       for (const entry of entries) {
         if (entry.isDirectory() && entry.name.startsWith("GuTemp-")) {
           const tempDirPath = path.join(tempDownloadBasePath, entry.name);
-          this.logger.info(`${this.logPrefix} [重置] 发现残留临时目录，尝试删除: ${tempDirPath}`);
+          //this.logger.info(`${this.logPrefix} [重置] 发现残留临时目录，尝试删除: ${tempDirPath}`);
           tempDirCleanupPromises.push(
             (async () => {
               try {
@@ -2252,25 +2242,25 @@ export class MiaoPluginMBT extends plugin {
       await Promise.all(tempDirCleanupPromises);
 
       if (tempDirsCleanedCount > 0) {
-        this.logger.info(`${this.logPrefix} [重置] 成功清理了 ${tempDirsCleanedCount} 个残留的临时下载目录。`);
+        //this.logger.info(`${this.logPrefix} [重置] 成功清理了 ${tempDirsCleanedCount} 个残留的临时下载目录。`);
       }
       if (tempDirsSilentFailCount > 0) {
         this.logger.warn(`${this.logPrefix} [重置] 有 ${tempDirsSilentFailCount} 个临时下载目录在清理时遇到问题 (已静默处理，详见日志)。`);
       }
       const hasGuTempDirs = entries.some(entry => entry.isDirectory() && entry.name.startsWith("GuTemp-"));
       if (tempDirsCleanedCount === 0 && tempDirsSilentFailCount === 0 && !hasGuTempDirs) {
-          this.logger.info(`${this.logPrefix} [重置] 未发现需要清理的 GuTemp-* 临时下载目录。`);
+          //this.logger.info(`${this.logPrefix} [重置] 未发现需要清理的 GuTemp-* 临时下载目录。`);
       }
     } catch (readBaseTempErr) {
       if (readBaseTempErr.code === ERROR_CODES.NotFound) {
-        this.logger.info(`${this.logPrefix} [重置] 临时下载目录基路径 ${tempDownloadBasePath} 不存在，无需清理 GuTemp-* 目录。`);
+        //this.logger.info(`${this.logPrefix} [重置] 临时下载目录基路径 ${tempDownloadBasePath} 不存在，无需清理 GuTemp-* 目录。`);
       } else {
         this.logger.warn(`${this.logPrefix} [重置-静默] 访问或读取临时下载目录基路径 ${tempDownloadBasePath} 失败 (已忽略):`, readBaseTempErr.message || readBaseTempErr);
       }
     }
 
     // 清理目标插件目录中的图片文件
-    this.logger.info(`${this.logPrefix} [重置] 开始清理目标插件目录中的图片文件...`);
+    //this.logger.info(`${this.logPrefix} [重置] 开始清理目标插件目录中的图片文件...`);
     const targetPluginDirs = [
       MiaoPluginMBT.paths.target.miaoChar,
       MiaoPluginMBT.paths.target.zzzChar,
@@ -2289,7 +2279,7 @@ export class MiaoPluginMBT extends plugin {
     }
 
     //  重置内存状态
-    this.logger.info(`${this.logPrefix} [重置] 重置内存状态...`);
+    //this.logger.info(`${this.logPrefix} [重置] 重置内存状态...`);
     await MiaoPluginMBT.configMutex.acquire();
     try {
       MiaoPluginMBT.MBTConfig = {};
@@ -2336,16 +2326,16 @@ export class MiaoPluginMBT extends plugin {
     const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
     const Repo3Exists =
       Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
-    this.logger.info(
-      `${this.logPrefix} [检查状态] 仓库状态 - 一号: ${
-        Repo1Exists ? "存在" : "不存在"
-      }, 二号: ${
-        Repo2UrlConfigured ? (Repo2Exists ? "存在" : "未下载") : "未配置"
-      }, 三号: ${
-        Repo3UrlConfigured ? (Repo3Exists ? "存在" : "未下载") : "未配置"
-      }`
-    );
-
+    // this.logger.info(
+    //   `${this.logPrefix} [检查状态] 仓库状态 - 一号: ${
+    //     Repo1Exists ? "存在" : "不存在"
+    //   }, 二号: ${
+    //     Repo2UrlConfigured ? (Repo2Exists ? "存在" : "未下载") : "未配置"
+    //   }, 三号: ${
+    //     Repo3UrlConfigured ? (Repo3Exists ? "存在" : "未下载") : "未配置"
+    //   }`
+    // );
+    //调试日志-精简
     if (!Repo1Exists) {
       return e.reply("『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧！", true);
     }
@@ -2497,9 +2487,10 @@ export class MiaoPluginMBT extends plugin {
         });
       }
       stats.meta.roles = characterSet.size;
-      this.logger.info(
-        `${this.logPrefix} [检查状态] 元数据: ${stats.meta.roles}角色, ${stats.meta.images}图片`
-      );
+      // this.logger.info(
+      //   `${this.logPrefix} [检查状态] 元数据: ${stats.meta.roles}角色, ${stats.meta.images}图片`
+      // );
+      //调试日志-精简
 
       // 本地文件扫描统计
       const RepoStatsScan = {
@@ -2628,9 +2619,10 @@ export class MiaoPluginMBT extends plugin {
         scanResult.totalFilesSize
       );
       scanResult.totalSizeFormatted = FormatBytes(scanResult.totalSize);
-      this.logger.info(
-        `${this.logPrefix} [检查状态] 本地扫描: ${scanResult.roles}角色, ${scanResult.images}图片, 文件 ${scanResult.totalFilesSizeFormatted}, 总 ${scanResult.totalSizeFormatted}`
-      );
+      // this.logger.info(
+      //   `${this.logPrefix} [检查状态] 本地扫描: ${scanResult.roles}角色, ${scanResult.images}图片, 文件 ${scanResult.totalFilesSizeFormatted}, 总 ${scanResult.totalSizeFormatted}`
+      // );
+      //调试日志-精简
 
       // 计算各仓库总占用和文件占用
       for (const repoNum in stats.repos) {
@@ -2771,7 +2763,7 @@ export class MiaoPluginMBT extends plugin {
       
 
       if (currentStatus === enable) {
-        logger.info(`${logPrefix} [启用禁用] 状态未变，尝试显示面板。`);
+        //logger.info(`${logPrefix} [启用禁用] 状态未变，尝试显示面板。`);
         try {
           await this.ShowSettingsPanel(e, `图库已经是「${action}」状态了。`);
         } catch (panelError) {
@@ -2791,7 +2783,7 @@ export class MiaoPluginMBT extends plugin {
 
       MiaoPluginMBT.MBTConfig.TuKuOP = enable;
       configChanged = true;
-      logger.info(`${logPrefix} [启用禁用] 内存状态变更为 -> ${enable}`);
+      //logger.info(`${logPrefix} [启用禁用] 内存状态变更为 -> ${enable}`); //调试日志-精简
 
       
       const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(
@@ -3424,9 +3416,7 @@ export class MiaoPluginMBT extends plugin {
             MiaoPluginMBT._imgDataCache,
             logger
           );
-          logger.info(
-            `${logPrefix} [${actionVerb}] 操作后，后台已重新应用生效封禁列表。`
-          );
+          // logger.info(`${logPrefix} [${actionVerb}] 操作后，后台已重新应用生效封禁列表。`); //调试日志-精简
           if (needsRestore) {
             const restored = await MiaoPluginMBT.RestoreFileFromSource(
               targetRelativePath,
@@ -3512,9 +3502,10 @@ export class MiaoPluginMBT extends plugin {
       const totalItems = roleImageData.length;
       const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
 
-      this.logger.info(
-        `${this.logPrefix} [查看] 角色 ${standardMainName} 共 ${totalItems} 张可用图片 (过滤后)，将分 ${totalBatches} 批发送。`
-      );
+      // this.logger.info(
+      //   `${this.logPrefix} [查看] 角色 ${standardMainName} 共 ${totalItems} 张可用图片 (过滤后)，将分 ${totalBatches} 批发送。`
+      // );
+      //调试日志-精简
 
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
         const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
@@ -3531,9 +3522,10 @@ export class MiaoPluginMBT extends plugin {
           ]);
         }
 
-        this.logger.info(
-          `${this.logPrefix} [查看] 正在准备第 ${batchNum}/${totalBatches} 批...`
-        );
+        // this.logger.info(
+        //   `${this.logPrefix} [查看] 正在准备第 ${batchNum}/${totalBatches} 批...`
+        // );
+        //调试日志-精简
 
         for (let i = 0; i < currentBatchData.length; i++) {
           const item = currentBatchData[i];
@@ -3687,7 +3679,7 @@ export class MiaoPluginMBT extends plugin {
           `${logPrefix} [可视化] 未在任何目标插件目录中找到角色 '${standardMainName}' 的文件夹。`
         );
         return e.reply(
-          `在目标插件目录中没有找到角色『${standardMainName}』的图片文件夹哦，是不是还没同步或者角色名错了？`
+          `『${standardMainName}』不存在，可能是未同步/无该角色？`
         );
       }
 
@@ -3698,9 +3690,10 @@ export class MiaoPluginMBT extends plugin {
         allImageFiles = files.filter((file) =>
           supportedExtensions.includes(path.extname(file).toLowerCase())
         );
-        logger.info(
-          `${logPrefix} [可视化] 在 ${roleFolderPath} 中找到 ${allImageFiles.length} 个支持的图片文件。`
-        );
+        // logger.info(
+        //   `${logPrefix} [可视化] 在 ${roleFolderPath} 中找到 ${allImageFiles.length} 个支持的图片文件。`
+        // );
+        //调试日志-精简
       } catch (readErr) {
         logger.error(
           `${logPrefix} [可视化] 读取角色文件夹失败: ${roleFolderPath}`,
@@ -3734,11 +3727,12 @@ export class MiaoPluginMBT extends plugin {
       const totalImageCount = allImageFiles.length;
       const totalBatches = Math.ceil(totalImageCount / BATCH_SIZE);
 
-      logger.info(
-        `${logPrefix} [可视化] 找到 ${totalImageCount} 张图片，将分 ${totalBatches} 批发送...`
-      );
+      // logger.info(
+      //   `${logPrefix} [可视化] 找到 ${totalImageCount} 张图片，将分 ${totalBatches} 批发送...`
+      // );
+      //调试日志-精简
       await e.reply(
-        `${logPrefix} 正在整理 ${totalImageCount} 张 [${standardMainName}] 的图片, 分 ${totalBatches} 批发送, 请注意查收~`
+        `${logPrefix} 发现${totalImageCount}张 [${standardMainName}] 的图片, 分${totalBatches}批发送, 请注意查收~`
       );
       await common.sleep(500);
 
@@ -3934,9 +3928,10 @@ export class MiaoPluginMBT extends plugin {
         }
       }
 
-      logger.info(
-        `${logPrefix} [可视化] 『${standardMainName}』所有批次处理完成。`
-      );
+      // logger.info(
+      //   `${logPrefix} [可视化] 『${standardMainName}』所有批次处理完成。`
+      // );
+      //调试日志-精简
     } catch (error) {
       logger.error(
         `${logPrefix} [可视化] 处理角色 '${roleNameInput}' 时发生顶层错误:`,
@@ -4055,9 +4050,10 @@ export class MiaoPluginMBT extends plugin {
         return true;
       }
 
-      this.logger.info(
-        `${this.logPrefix} 用户 ${e.user_id} 正在导出: ${targetFileName}`
-      );
+      // this.logger.info(
+      //   `${this.logPrefix} 用户 ${e.user_id} 正在导出: ${targetFileName}`
+      // );
+      //调试日志-精简
 
       await e.reply(`📦 导出成功！给你 -> ${targetFileName}`);
       await common.sleep(200);
@@ -5118,13 +5114,14 @@ export class MiaoPluginMBT extends plugin {
       }
 
       MiaoPluginMBT.MBTConfig = loadedConfig;
-      logger.info(
-        `${logPrefix} [加载配置] 完成: 图库=${
-          loadedConfig.TuKuOP ? "开" : "关"
-        }, PFL=${loadedConfig.PFL},  Ai=${loadedConfig.Ai}, 彩蛋=${
-          loadedConfig.EasterEgg
-        }, 横屏=${loadedConfig.layout}, PM18=${loadedConfig.PM18}`
-      );
+      // logger.info(
+      //   `${logPrefix} [加载配置] 完成: 图库=${
+      //     loadedConfig.TuKuOP ? "开" : "关"
+      //   }, PFL=${loadedConfig.PFL},  Ai=${loadedConfig.Ai}, 彩蛋=${
+      //     loadedConfig.EasterEgg
+      //   }, 横屏=${loadedConfig.layout}, PM18=${loadedConfig.PM18}`
+      // );
+      //调试日志-精简
       return MiaoPluginMBT.MBTConfig;
     } finally {
       // 无锁操作
@@ -5163,7 +5160,7 @@ export class MiaoPluginMBT extends plugin {
  
       const yamlString = yaml.stringify(dataToSave);
       await fsPromises.writeFile(configFilePath, yamlString, "utf8");
-      logger.info(`${logPrefix} [保存配置] 成功保存配置到 ${configFilePath}`);
+      // logger.info(`${logPrefix} [保存配置] 成功保存配置到 ${configFilePath}`); //调试日志-精简
 
       MiaoPluginMBT.MBTConfig = { ...MiaoPluginMBT.MBTConfig, ...configData };
       return true;
@@ -5492,9 +5489,10 @@ export class MiaoPluginMBT extends plugin {
         pflLevel
       )}), 开关(Ai:${!filterAi},彩蛋:${!filterEasterEgg},横屏:${!filterLayout})`
     );
-    logger.info(
-      `${Default_Config.logPrefix} [生成封禁] 结果: 手动=${initialUserBansCount}, PFL屏蔽=${pflPurifiedCount}, 开关屏蔽=${switchPurifiedCount}, 总生效=${effectiveBans.size}`
-    );
+    // logger.info(
+    //   `${Default_Config.logPrefix} [生成封禁] 结果: 手动=${initialUserBansCount}, PFL屏蔽=${pflPurifiedCount}, 开关屏蔽=${switchPurifiedCount}, 总生效=${effectiveBans.size}`
+    // );
+    //调试日志-精简
 
     MiaoPluginMBT._activeBanSet = effectiveBans;
     return MiaoPluginMBT._activeBanSet;
@@ -6262,9 +6260,7 @@ export class MiaoPluginMBT extends plugin {
       uniqueTempDirName
     );
 
-    loggerInstance.info(
-      `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 目标路径: ${finalLocalPath}, 临时路径: ${tempRepoPath}`
-    );
+    // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 目标路径: ${finalLocalPath}, 临时路径: ${tempRepoPath}`); //调试日志-精简
 
     let allTestResults = [];
     let tempHtmlFilePath = "";
@@ -6769,7 +6765,7 @@ export class MiaoPluginMBT extends plugin {
     logger
   ) {
     const logPrefix = Default_Config.logPrefix;
-    logger.info(`${logPrefix} [更新仓库] 开始更新 ${RepoName} @ ${localPath}`);
+    //logger.info(`${logPrefix} [更新仓库] 开始更新 ${RepoName} @ ${localPath}`); //调试日志-精简
     let success = false;
     let hasChanges = false;
     let latestLog = null;
@@ -6819,9 +6815,10 @@ export class MiaoPluginMBT extends plugin {
         );
         pullOutput = (pullResult.stdout || "") + (pullResult.stderr || "");
         success = true; // 初步认为成功
-        logger.info(
-          `${logPrefix} [更新仓库] ${RepoName} 'git pull --ff-only' 成功。`
-        );
+        // logger.info(
+        //   `${logPrefix} [更新仓库] ${RepoName} 'git pull --ff-only' 成功。`
+        // );
+        //调试日志-精简
       } catch (err) {
         // git pull --ff-only 失败
         pullError = err; // 保存 pull 阶段的错误，包含完整的 stderr
@@ -7222,9 +7219,7 @@ export class MiaoPluginMBT extends plugin {
         }
       }
     }
-    logger.info(
-      `${Default_Config.logPrefix} [同步公共] 完成: ${s}成功, ${f}失败/跳过。`
-    );
+    //logger.info(`${Default_Config.logPrefix} [同步公共] 完成: ${s}成功, ${f}失败/跳过。`);  //调试日志-精简
   }
 
   /**
@@ -7256,9 +7251,7 @@ export class MiaoPluginMBT extends plugin {
         }
       }
     }
-    logger.info(
-      `${Default_Config.logPrefix} [同步特定] 完成: ${s}成功, ${f}失败/跳过。`
-    );
+    //logger.info(`${Default_Config.logPrefix} [同步特定] 完成: ${s}成功, ${f}失败/跳过。`); //调试日志-精简
   }
 
   /**
@@ -7289,9 +7282,7 @@ export class MiaoPluginMBT extends plugin {
       );
     }
 
-    logger.info(
-      `${Default_Config.logPrefix} [同步角色] 开始复制 (${imageDataToSync.length} 条元数据)...`
-    );
+    //logger.info(`${Default_Config.logPrefix} [同步角色] 开始复制 (${imageDataToSync.length} 条元数据)...`); //调试日志-精简
     let copied = 0,
       banned = 0,
       missingSource = 0,
@@ -7379,9 +7370,7 @@ export class MiaoPluginMBT extends plugin {
       }
     }
     await Promise.all(promises);
-    logger.info(
-      `${Default_Config.logPrefix} [同步角色] 完成: 复制${copied}, 跳过(封禁${banned}+源丢失${missingSource}+无目标${noTarget}+错误${errorCount})。`
-    );
+    //logger.info(`${Default_Config.logPrefix} [同步角色] 完成: 复制${copied}, 跳过(封禁${banned}+源丢失${missingSource}+无目标${noTarget}+错误${errorCount})。`);  //调试日志-精简
   }
 
   /**
@@ -7392,7 +7381,7 @@ export class MiaoPluginMBT extends plugin {
     logger = global.logger || console
   ) {
     if (!targetPluginDir) return;
-    logger.info(`${Default_Config.logPrefix} [清理目标] ${targetPluginDir}`);
+    //logger.info(`${Default_Config.logPrefix} [清理目标] ${targetPluginDir}`); //调试日志-精简
     let cleanedCount = 0;
     try {
       await fsPromises.access(targetPluginDir);
@@ -7452,9 +7441,7 @@ export class MiaoPluginMBT extends plugin {
           }
         }
       }
-      logger.info(
-        `${Default_Config.logPrefix} [清理目标] 清理完成: ${targetPluginDir}, 共清理 ${cleanedCount} 个包含 'Gu' 的 .webp 文件。`
-      );
+      //logger.info( `${Default_Config.logPrefix} [清理目标] 清理完成: ${targetPluginDir}, 共清理 ${cleanedCount} 个包含 'Gu' 的 .webp 文件。`);
     } catch (readBaseErr) {
       if (
         readBaseErr.code !== ERROR_CODES.NotFound &&
@@ -7480,7 +7467,7 @@ export class MiaoPluginMBT extends plugin {
       MiaoPluginMBT.paths.target.wavesChar,
     ].filter(Boolean);
 
-    logger.info(`${logPrefix} [PM18部署]开始执行...`);
+    //logger.info(`${logPrefix} [PM18部署]开始执行...`);   //调试日志-精简
     let copiedCount = 0,
       decryptedCount = 0,
       placedCount = 0,
@@ -7527,9 +7514,7 @@ export class MiaoPluginMBT extends plugin {
         }
       };
       await findAndCopyMbt(sourceRepoPath, tempCachePath);
-      logger.info(
-        `${logPrefix} [PM18部署]共复制 ${copiedCount} 个 .MBT 文件。`
-      );
+      //logger.info(`${logPrefix} [PM18部署]共复制 ${copiedCount} 个 .MBT 文件。`);   //调试日志-精简
 
       if (copiedCount === 0) {
         await safeDelete(tempCachePath);
@@ -7631,14 +7616,12 @@ export class MiaoPluginMBT extends plugin {
         }
       };
       await decryptAndPlace(tempCachePath);
-      logger.info(
-        `${logPrefix} [PM18部署]解密完成，成功解密 ${decryptedCount} 个，成功释放 ${placedCount} 个。`
-      );
+      logger.info(`${logPrefix} [PM18部署]解密完成，成功解密 ${decryptedCount} 个，成功释放 ${placedCount} 个。`);
     } catch (error) {
       deployError = error;
     } finally {
       await safeDelete(tempCachePath);
-      logger.info(`${logPrefix} [PM18部署]执行结束。错误数: ${errorCount}`);
+      //logger.info(`${logPrefix} [PM18部署]执行结束。错误数: ${errorCount}`);  //调试日志-精简
     }
   }
 
@@ -7653,13 +7636,13 @@ export class MiaoPluginMBT extends plugin {
       MiaoPluginMBT.paths.target.wavesChar,
     ].filter(Boolean);
 
-    logger.info(`${logPrefix} [PM18清理] 开始执行...`);
+    //logger.info(`${logPrefix} [PM18清理] 开始执行...`);  //调试日志-精简
     let cleanedCount = 0;
     let cleanErrorCount = 0;
 
     try {
       const cleanPromises = targetPluginDirs.map(async (targetDir) => {
-        logger.info(`${logPrefix} [PM18清理] 正在扫描目录: ${targetDir}`);
+        //logger.info(`${logPrefix} [PM18清理] 正在扫描目录: ${targetDir}`);  //调试日志-精简
         try {
           await fsPromises.access(targetDir);
           const findAndDeleteGuX = async (currentDir) => {
@@ -7705,14 +7688,10 @@ export class MiaoPluginMBT extends plugin {
       });
 
       await Promise.all(cleanPromises);
-      logger.info(
-        `${logPrefix} [PM18清理] 清理完成，共删除 ${cleanedCount} 个 GuX 图片文件。`
-      );
+      // logger.info(`${logPrefix} [PM18清理] 清理完成，共删除 ${cleanedCount} 个 GuX 图片文件。`);  //调试日志-精简
     } catch (error) {
     } finally {
-      logger.info(
-        `${logPrefix} [PM18清理] 执行结束。错误数: ${cleanErrorCount}`
-      );
+      logger.info(`${logPrefix} [PM18清理] 执行结束。错误数: ${cleanErrorCount}`);
     }
   }
 
@@ -7734,7 +7713,7 @@ export class MiaoPluginMBT extends plugin {
     try {
       await fsPromises.mkdir(path.dirname(targetPath), { recursive: true });
       await fsPromises.copyFile(sourcePath, targetPath);
-      logger.info(`${Default_Config.logPrefix} [恢复文件] ${targetPath}`);
+      //logger.info(`${Default_Config.logPrefix} [恢复文件] ${targetPath}`);  //调试日志-精简
       return true;
     } catch (copyError) {
       logger.error(
@@ -7841,16 +7820,16 @@ export class MiaoPluginMBT extends plugin {
           clearTimeout(timeoutId);
           speed = Date.now() - startTime;
           if (!response.ok) {
-            // logger.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 状态码非 OK: ${response.status}`);
+            // logger.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 状态码非 OK: ${response.status}`); //调试日志-精简
             speed = Infinity;
           }
         } catch (fetchError) {
           clearTimeout(timeoutId);
           if (fetchError.name === "AbortError") {
             speed = Infinity;
-            // logger.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时 (>${timeoutDuration}ms)`);
+            // logger.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时 (>${timeoutDuration}ms)`); //调试日志-精简
           } else {
-            // logger.error(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message}`);
+            // logger.error(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message}`); //调试日志-精简
             speed = Infinity;
           }
         }
@@ -7915,11 +7894,7 @@ export class MiaoPluginMBT extends plugin {
             : ", Timeout"
         })`
     );
-    logger.info(
-      `${Default_Config.logPrefix} [选择源] 可用下载源排序: ${sourceNames.join(
-        " > "
-      )}`
-    );
+    // logger.info(`${Default_Config.logPrefix} [选择源] 可用下载源排序: ${sourceNames.join( " > " )}`);  //调试日志-精简
     return available;
   }
 }
