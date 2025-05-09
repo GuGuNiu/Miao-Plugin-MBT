@@ -1947,7 +1947,6 @@ export class MiaoPluginMBT extends plugin {
    */
   async CheckStatus(e) {
     if (!(await this.CheckInit(e))) return true;
-    this.logger.info(`${this.logPrefix} [检查状态] 开始生成状态报告...`);
 
     const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
     const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
@@ -2311,10 +2310,6 @@ export class MiaoPluginMBT extends plugin {
       );
 
       await fsPromises.copyFile(sourceHtmlPath, tempHtmlFilePath);
-
-      this.logger.info(
-        `${this.logPrefix} [检查状态] 开始调用 Puppeteer 生成状态报告截图...`
-      );
       const img = await puppeteer.screenshot("guguniu-status", {
         tplFile: tempHtmlFilePath,
         savePath: tempImgFilePath,
@@ -2329,7 +2324,6 @@ export class MiaoPluginMBT extends plugin {
 
       if (img) {
         await e.reply(img);
-        this.logger.info(`${this.logPrefix} [检查状态] 状态报告图片已发送。`);
       } else {
         this.logger.error(
           `${this.logPrefix} [检查状态] Puppeteer 未能成功生成图片。`
@@ -2457,7 +2451,6 @@ export class MiaoPluginMBT extends plugin {
 
     if (configChanged) {
       try {
-        logger.info(`${logPrefix} [启用禁用] 开始执行后台操作...`);
         if (enable) {
           await MiaoPluginMBT.SyncCharacterFolders(logger);
           await MiaoPluginMBT.GenerateAndApplyBanList(
@@ -2478,7 +2471,6 @@ export class MiaoPluginMBT extends plugin {
             logger
           );
         }
-        logger.info(`${logPrefix} [启用禁用] 后台操作完成。`);
       } catch (error) {
         asyncError = error;
         logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
@@ -3285,9 +3277,6 @@ export class MiaoPluginMBT extends plugin {
         logger
       );
       standardMainName = aliasResult.mainName || roleNameInput;
-      logger.info(
-        `${logPrefix} [可视化] 请求可视化角色: '${roleNameInput}', 标准名: '${standardMainName}'`
-      );
 
       let roleFolderPath = null;
       const targetDirsToCheck = [
@@ -3296,9 +3285,6 @@ export class MiaoPluginMBT extends plugin {
         MiaoPluginMBT.paths.target.wavesChar,
       ].filter(Boolean);
 
-      logger.info(
-        `${logPrefix} [可视化] 开始在目标插件目录查找角色 '${standardMainName}' 的文件夹...`
-      );
       for (const targetDir of targetDirsToCheck) {
         if (!targetDir) continue;
         const potentialPath = path.join(targetDir, standardMainName);
@@ -3307,9 +3293,6 @@ export class MiaoPluginMBT extends plugin {
           const stats = await fsPromises.stat(potentialPath);
           if (stats.isDirectory()) {
             roleFolderPath = potentialPath;
-            logger.info(
-              `${logPrefix} [可视化] 在目标插件目录找到角色文件夹: ${roleFolderPath}`
-            );
             break;
           }
         } catch (err) {
@@ -4144,13 +4127,7 @@ export class MiaoPluginMBT extends plugin {
         `settings-${Date.now()}.png`
       );
 
-      logger.info(
-        `${logPrefix} [设置面板] 开始生成设置面板截图 (tplFile + ...data 方式)...`
-      );
-      
       const screenshotData = { ...renderData };
-      
-
       const img = await puppeteer.screenshot("guguniu-settings-panel", {
         tplFile: tempHtmlFilePath,
         savePath: tempImgFilePath,
@@ -4168,7 +4145,6 @@ export class MiaoPluginMBT extends plugin {
           await common.sleep(300);
         }
         await e.reply(img);
-        logger.info(`${logPrefix} [设置面板] 设置面板图片已发送。`);
       } else {
         logger.error(
           `${logPrefix} [设置面板] Puppeteer 未能成功生成图片 (返回空)。`
