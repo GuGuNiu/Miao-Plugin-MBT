@@ -53,7 +53,7 @@ const Default_Config = {
     { name: "GhproxyCom", priority: 50, testUrlPrefix: `https://ghproxy.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.com/" },
     { name: "GhproxyNet", priority: 50, testUrlPrefix: `https://ghproxy.net/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.net/" },
     { name: "GhddlcTop", priority: 55, testUrlPrefix: `https://gh.ddlc.top/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.ddlc.top/" },
-    { name: "GitClone", priority: 70, testUrlPrefix: null, cloneUrlPrefix: "https://gitclone.com/" },
+    { name: "GitClone", priority: 320, testUrlPrefix: null, cloneUrlPrefix: "https://gitclone.com/" },
     { name: "Mirror", priority: 80, testUrlPrefix: `https://raw.gitmirror.com/GuGuNiu/Miao-Plugin-MBT/main`, cloneUrlPrefix: "https://hub.gitmirror.com/" },
     { name: "GitHub", priority: 300, testUrlPrefix: RAW_URL_Repo1, cloneUrlPrefix: "https://github.com/" }
   ],
@@ -122,57 +122,258 @@ const TRIGGERABLE_ITEMS = Object.freeze([
 const SPEEDTEST_HTML_TEMPLATE_LOCAL = `
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛测速报告 (下载内置)</title>
-   <style>
-    body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:0;padding:20px;background:linear-gradient(to bottom,#e0f2f7,#ffffff);color:#333;font-size:14px;line-height:1.6;width:500px;box-sizing:border-box;}
-    .container{padding:15px;background-color:rgba(255,255,255,0.8);border-radius:10px;border:1px rgba(0,255,85,0.8) solid;box-shadow:5px 5px 0 0 rgba(0,255,85,0.3);}
-    h1{text-align:center;color:rgba(7,131,48,0.8);margin:0 0 15px 0;font-size:20px;border-bottom:1px solid #eee;padding-bottom:10px;}
-    h2{font-size:16px;color:#333;margin:15px 0 10px 0;border-left:4px solid #0077cc;padding-left:8px;}
-    ul{list-style:none;padding:0;margin:0;}
-    li{display:flex;justify-content:space-between;align-items:center;padding:8px 5px;}
-    li:last-child{border-bottom:none;}
-    .node-name{font-weight:bold;color:#555;flex-basis:120px;flex-shrink:0;}
-    .node-status{text-align:right;flex-grow:1;}
-    .status-ok{color:#28a745;font-weight:bold;}
-    .status-timeout{color:#dc3545;font-weight:bold;}
-    .status-na{color:#aaa;}
-    .priority{color:#777;font-size:0.9em;margin-left:5px;}
-    .best-choice{margin-top:20px;text-align:center;font-weight:600;color:#00cc55;font-size:1.05em;padding:8px;background-color:rgba(0,255,64,0.05);border-radius:6px;}
-    .footer{text-align:center;margin-top:20px;font-size:11px;color:#999;}
+    <style>
+        @font-face {
+            font-family: 'CuteFont';
+            src: local('Yuanti SC'), 
+                 local('YouYuan'), 
+                 local('Microsoft YaHei UI Rounded'), 
+                 local('Arial Rounded MT Bold'),
+                 local('Microsoft YaHei UI'),
+                 local('PingFang SC'), 
+                 sans-serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'CuteFont', sans-serif;
+            width:520px;
+            margin: 20px auto;
+            padding: 30px;
+            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><polygon points="40,10 70,30 70,50 40,70 10,50 10,30" fill="none" stroke="rgba(0, 172, 230, 0.25)" stroke-width="1"/><circle cx="40" cy="40" r="3" fill="rgba(255, 105, 180, 0.3)"/></svg>') repeat;
+            opacity: 0.2;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="20" cy="20" r="4" fill="rgba(0, 230, 118, 0.2)"/><circle cx="80" cy="80" r="3" fill="rgba(255, 193, 7, 0.2)"/></svg>') repeat;
+            opacity: 0.15;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
+            border: 1px solid #b3e0ff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><line x1="0" y1="60" x2="120" y2="60" stroke="rgba(0, 172, 230, 0.15)" stroke-width="0.5"/><line x1="60" y1="0" x2="60" y2="120" stroke="rgba(255, 105, 180, 0.15)" stroke-width="0.5"/></svg>') repeat;
+            opacity: 0.1;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00acc1;
+            margin: 0 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4fc3f7;
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
+            position: relative;
+        }
+
+        h2 {
+            color: #0288d1;
+            margin: 15px 0 10px;
+            border-left: 4px solid #ff4081;
+            padding-left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        h2 .icon {
+            margin-right: 6px;
+            font-size: 18px;
+            color: #ff4081;
+            text-shadow: 0 0 3px rgba(255, 105, 180, 0.3);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e0f0ff;
+            min-height: 20px;
+        }
+
+        li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .node-name {
+            color: #555;
+            margin-right: 10px;
+            white-space: nowrap;
+            font-size: 0.95em;
+            flex-basis: 150px;
+            flex-shrink: 0;
+        }
+
+        .node-status {
+            font-weight: bold;
+            color: #0277bd;
+            text-align: right;
+            font-size: 0.9em;
+            flex-grow: 1;
+        }
+
+        .status-ok {
+            color: #00c853;
+            background: rgba(0, 230, 118, 0.3);
+            padding: 3px 10px;
+            border-radius: 6px;
+            box-shadow: 0 0 5px rgba(0, 230, 118, 0.4);
+        }
+
+        .status-timeout {
+            color: #d81b60;
+            background: rgba(255, 105, 180, 0.3);
+            padding: 3px 10px;
+            border-radius: 6px;
+            box-shadow: 0 0 5px rgba(255, 105, 180, 0.4);
+        }
+
+        .status-na {
+            color: #78909c;
+            background: rgba(120, 144, 156, 0.3);
+            padding: 3px 10px;
+            border-radius: 6px;
+            box-shadow: 0 0 5px rgba(120, 144, 156, 0.4);
+        }
+
+        .priority {
+            color: #78909c;
+            font-size: 0.85em;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+
+        .best-choice {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: linear-gradient(to bottom, #f5faff, #e6f0ff);
+            border: 1px solid #00acc1;
+            box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            font-size: 1em;
+            color: #00c853;
+            font-weight: bold;
+        }
+
+        .best-choice::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><polygon points="20,5 35,20 20,35 5,20" fill="none" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5"/></svg>') repeat;
+            opacity: 0.2;
+            z-index: -1;
+        }
+
+        .best-choice .icon {
+            margin-right: 6px;
+            font-size: 1em;
+            color: #ff4081;
+            text-shadow: 0 0 3px rgba(255, 105, 180, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.8em;
+            color: #78909c;
+            border-top: 1px solid #e0f0ff;
+            padding-top: 10px;
+            position: relative;
+        }
     </style>
-  </head>
-  <body style="{{scaleStyleValue}}">
+</head>
+<body style="{{scaleStyleValue}}">
     <div class="container">
-      <h1>咕咕牛网络测速报告 (下载内置)</h1>
-      {{ if speeds1 && speeds1.length > 0 }}
-      <h2>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
-      <ul>
-        {{ each speeds1 s }}
-        <li>
-          <span class="node-name">{{ s.name }}</span>
-          <span class="node-status">
-            {{ if s.statusText === 'ok' }}
-            <span class="status-ok">{{ s.speed }}ms ✅</span>
-            {{ else if s.statusText === 'na' }}
-            <span class="status-na">N/A ⚠️</span>
-            {{ else }}
-            <span class="status-timeout">超时 ❌</span>
-            {{ /if }}
-            <span class="priority">(优先级:{{ s.priority ?? 'N' }})</span>
-          </span>
-        </li>
-        {{ /each }}
-      </ul>
-         <div class="best-choice">
-            ✅ 优选: {{ best1Display }}
-          </div>
-      {{ /if }}
-      <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
+        <h1>咕咕牛网络测速(下载内置)</h1>
+        {{ if speeds1 && speeds1.length > 0 }}
+        <h2><span class="icon">🌐</span>聚合仓库基准 ({{ speeds1.length }} 节点)</h2>
+        <ul>
+            {{ each speeds1 s }}
+            <li>
+                <span class="node-name">{{ s.name }}</span>
+                <span class="node-status">
+                    {{ if s.statusText === 'ok' }}
+                    <span class="status-ok">{{ s.speed }}ms ✅</span>
+                    {{ else if s.statusText === 'na' }}
+                    <span class="status-na">N/A ⚠️</span>
+                    {{ else }}
+                    <span class="status-timeout">超时 ❌</span>
+                    {{ /if }}
+                    <span class="priority">(优先级: {{ s.priority ?? 'N' }})</span>
+                </span>
+            </li>
+            {{ /each }}
+        </ul>
+        <div class="best-choice">
+            <span class="icon">✅</span>优选: {{ best1Display }}
+        </div>
+        {{ /if }}
+        <div class="footer">测速耗时: {{ duration }}s | By 咕咕牛</div>
     </div>
-  </body>
+</body>
 </html>
 `;
 
@@ -184,55 +385,246 @@ const DOWNLOAD_REPORT_HTML_TEMPLATE = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛下载报告</title>
     <style>
-        body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #e8f5e9, #ffffff); color: #333; font-size: 14px; line-height: 1.6; width: 480px; box-sizing: border-box; }
-        .container { padding: 20px; background-color: rgba(255, 255, 255, 0.85); border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.7); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2); }
-        h1 { text-align: center; color: #2e7d32; margin: 0 0 15px 0; font-size: 22px; border-bottom: 1px solid #c8e6c9; padding-bottom: 10px; }
-        .repo-section { margin-bottom: 15px; padding: 15px; border-radius: 6px; background-color: rgba(232, 245, 233, 0.6); border-left: 5px solid #4CAF50; }
-        .repo-section.subsidiary { border-left-color: #fb8c00; background-color: rgba(255, 243, 224, 0.6); }
-        .repo-title { font-weight: bold; font-size: 16px; color: #388e3c; margin-bottom: 8px; }
-        .repo-section.subsidiary .repo-title { color: #e65100; }
-        .status-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 0;}
-        .repo-section.subsidiary .status-line { border-bottom-color: #ffcc80; }
-        .status-line:last-child { border-bottom: none; }
-        .status-label { color: #555; }
-        .status-value { font-weight: bold; }
-        .status-ok { color: #2e7d32; }
-        .status-fail { color: #c62828; }
-        .status-local { color: #0277bd; }
-        .status-na { color: #757575; }
-        .error-msg { font-size: 11px; white-space: pre-wrap; word-break: break-all; color: #c62828; margin-top: 3px; padding-left: 10px;}
-        .log-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #c8e6c9; }
-        .log-title { font-weight: bold; color: #555; margin-bottom: 5px; font-size: 13px; }
-        .log-content { font-family: 'Courier New', Courier, monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; background-color: rgba(0,0,0,0.03); padding: 8px; border-radius: 4px; max-height: 100px; overflow-y: auto; }
-        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #757575; }
+        @font-face {
+            font-family: 'CuteFont';
+            src: local('Yuanti SC'),
+                 local('YouYuan'),
+                 local('Microsoft YaHei UI Rounded'),
+                 local('Arial Rounded MT Bold'),
+                 local('Microsoft YaHei UI'),
+                 local('PingFang SC'),
+                 sans-serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'CuteFont', sans-serif;
+            width: 550px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
+            border: 1px solid #b3e0ff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container::before {
+            content: '🌿';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            opacity: 0.5;
+        }
+
+        .container::after {
+            content: '🌱';
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 24px;
+            opacity: 0.5;
+            transform: rotate(15deg);
+        }
+
+        h1 {
+            text-align: center;
+            color: #00acc1;
+            margin: 0 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4fc3f7;
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
+            position: relative;
+        }
+
+        .repo-section {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            background: linear-gradient(to bottom, #f5faff, #ffffff);
+            border: 1px solid #b3e0ff;
+            box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+        }
+
+        .repo-section.subsidiary {
+            border: 1px solid #ff4081;
+            box-shadow: 0 0 10px rgba(255, 105, 180, 0.2);
+        }
+
+        .repo-title {
+            color: #0288d1;
+            margin: 0 0 10px;
+            border-left: 4px solid #ff4081;
+            padding-left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .repo-title .icon {
+            margin-right: 5px;
+            vertical-align: -3px;
+            font-size: 17px;
+            color: #ff4081;
+        }
+
+        .repo-section.subsidiary .repo-title {
+            color: #ff4081;
+            border-left-color: #00acc1;
+        }
+
+        .repo-section.subsidiary .repo-title .icon {
+            color: #00acc1;
+        }
+
+        .status-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f4f8;
+            min-height: 18px;
+        }
+
+        .status-line:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .status-label {
+            color: #555;
+            margin-right: 8px;
+            white-space: nowrap;
+            font-size: 0.95em;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #0277bd;
+            font-size: 0.95em;
+        }
+
+        .status-ok {
+            color: #00c853;
+        }
+
+        .status-fail {
+            color: #d81b60;
+        }
+
+        .status-local {
+            color: #0288d1;
+        }
+
+        .status-na {
+            color: #78909c;
+        }
+
+        .error-details {
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #d81b60;
+            margin-top: 5px;
+            padding: 8px;
+            background-color: rgba(255, 105, 180, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #d81b60;
+        }
+
+        .log-details {
+            margin-top: 8px;
+        }
+
+        .log-details h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .log-content {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            font-
+            white-space: pre-wrap;
+            word-break: break-all;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 90px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            font-weight: bold;
+        }
+
+        .log-content:empty::before {
+            content: "(无相关日志记录)";
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.8em;
+            color: #78909c;
+            border-top: 1px solid #e0f0ff;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body style="{{scaleStyleValue}}">
     <div class="container">
-        <h1>咕咕牛下载报告</h1>
+        <h1>咕咕牛图库下载完成报告</h1>
         {{ if coreRepoResult }}
         <div class="repo-section core">
-            <div class="repo-title">核心仓库 (一号)</div>
+            <div class="repo-title"><span class="icon">📦</span>核心仓库 (一号)</div>
             <div class="status-line"> <span class="status-label">状态:</span> <span class="status-value {{ coreRepoResult.success ? 'status-ok' : 'status-fail' }}">{{ coreRepoResult.success ? '下载成功' : '下载失败' }} {{ coreRepoResult.success ? '✅' : '❌' }}</span> </div>
             <div class="status-line"> <span class="status-label">节点:</span> <span class="status-value {{ coreRepoResult.nodeName === '本地' ? 'status-local' : (coreRepoResult.success ? 'status-ok' : 'status-fail') }}">{{ coreRepoResult.nodeName }}</span> </div>
             {{ if coreRepoResult.error }}
-            <div class="status-line"> <span class="status-label">错误:</span> </div> <div class="error-msg">{{ coreRepoResult.error.message || '未知错误' }}</div>
+            <div class="error-details">{{ coreRepoResult.error.message || '未知错误' }}</div>
             {{ /if }}
             {{ if gitLog1 }}
-            <div class="log-section"> <div class="log-title">最新:</div> <pre class="log-content">{{ gitLog1 }}</pre> </div>
+            <div class="log-details">
+                <h3>最新:</h3>
+                <pre class="log-content">{{ gitLog1 }}</pre>
+            </div>
             {{ /if }}
         </div>
         {{ /if }}
         {{ if subsidiaryResults && subsidiaryResults.length > 0 }}
         <div class="repo-section subsidiary">
-            <div class="repo-title">附属仓库</div>
+            <div class="repo-title"><span class="icon">📦</span>附属仓库</div>
             {{ each subsidiaryResults subRes }}
             <div class="status-line"> <span class="status-label">{{ subRes.repo === 2 ? '二号仓库' : (subRes.repo === 3 ? '三号仓库' : subRes.repo + '号仓库') }}:</span> <span class="status-value {{ subRes.nodeName === '本地' ? 'status-local' : (subRes.nodeName === '未配置' ? 'status-na' : (subRes.success ? 'status-ok' : 'status-fail')) }}">{{ subRes.nodeName === '本地' ? '已存在' : (subRes.nodeName === '未配置' ? '未配置' : (subRes.success ? '下载成功 (' + subRes.nodeName + ')' : '下载失败 (' + subRes.nodeName + ')')) }} {{ subRes.success ? '✅' : (subRes.nodeName === '未配置' || subRes.nodeName === '本地' ? '' : '❌') }}</span> </div>
             {{ if subRes.error }}
-             <div class="status-line"> <span class="status-label" style="padding-left: 15px;">错误:</span> </div> <div class="error-msg">{{ subRes.error.message || '未知错误' }}</div>
+            <div class="error-details">{{ subRes.error.message || '未知错误' }}</div>
             {{ /if }}
             {{ if subRes.gitLog }}
-            <div class="log-section" style="margin-top: 5px; padding-top: 5px;"> <div class="log-title" style="font-size: 12px;">最新:</div> <pre class="log-content" style="max-height: 60px;">{{ subRes.gitLog }}</pre> </div>
+            <div class="log-details">
+                <h3>最新:</h3>
+                <pre class="log-content">{{ subRes.gitLog }}</pre>
+            </div>
             {{ /if }}
             {{ /each }}
         </div>
@@ -1048,9 +1440,7 @@ export class MiaoPluginMBT extends plugin {
       if (Repo2UrlConfigured && !Repo2Exists) allDownloaded = false;
       if (Repo3UrlConfigured && !Repo3Exists) allDownloaded = false;
       if (allDownloaded) {
-        return e.reply(
-          `${logPrefix} 所有已配置的图库仓库都已经下载好了，不用重复下载啦.`
-        );
+        return e.reply(`${logPrefix} 图库已存在`);
       }
       if (!Repo1Exists && (Repo2Exists || Repo3Exists)) {
         await e.reply(
@@ -1059,7 +1449,7 @@ export class MiaoPluginMBT extends plugin {
         return true;
       }
       if (!Repo1Exists) {
-        logger.info(`${logPrefix} [核心下载] 开始下载核心仓库 (一号)...`);
+        // logger.info(`${logPrefix} [核心下载] 开始下载核心仓库 (一号)...`);
         try {
           coreRepoResult = await MiaoPluginMBT.DownloadRepoWithFallback(
             1,
@@ -1080,9 +1470,6 @@ export class MiaoPluginMBT extends plugin {
             }
             return true;
           }
-          logger.info(
-            `${logPrefix} [核心下载] 核心仓库下载成功 (${coreRepoResult.nodeName})。`
-          );
           // 核心下载成功后，获取其初始日志
           gitLog1 = await MiaoPluginMBT.GetTuKuLog(
             1,
@@ -1121,7 +1508,7 @@ export class MiaoPluginMBT extends plugin {
       overallSuccess = coreRepoResult.success;
       const subsidiaryPromises = [];
       if (Repo2UrlConfigured && !Repo2Exists) {
-        logger.info(`${logPrefix} [核心下载] 添加附属仓库 (二号) 下载任务。`);
+        //logger.info(`${logPrefix} [核心下载] 添加附属仓库 (二号) 下载任务。`);
         subsidiaryPromises.push(
           MiaoPluginMBT.DownloadRepoWithFallback(
             2,
@@ -1164,7 +1551,7 @@ export class MiaoPluginMBT extends plugin {
         logger.info(`${logPrefix} [核心下载] 附属仓库 (二号) 未配置。`);
       }
       if (Repo3UrlConfigured && !Repo3Exists) {
-        logger.info(`${logPrefix} [核心下载] 添加附属仓库 (三号) 下载任务。`);
+        //logger.info(`${logPrefix} [核心下载] 添加附属仓库 (三号) 下载任务。`);
         subsidiaryPromises.push(
           MiaoPluginMBT.DownloadRepoWithFallback(
             3,
@@ -1208,15 +1595,10 @@ export class MiaoPluginMBT extends plugin {
       }
       if (subsidiaryPromises.length > 0) {
         await e.reply("『咕咕牛』附属仓库聚合下载中,请等待...").catch(() => {});
-        logger.info(
-          `${logPrefix} [核心下载] 等待 ${subsidiaryPromises.length} 个附属仓库下载完成...`
-        );
+        // logger.info(`${logPrefix} [核心下载] 等待 ${subsidiaryPromises.length} 个附属仓库下载完成...`);
         const settledResults = await Promise.allSettled(subsidiaryPromises);
-        logger.info(
-          `${logPrefix} [核心下载] 所有附属仓库 Promise 已完成 (settled)。`
-        );
+        //logger.info(`${logPrefix} [核心下载] 所有附属仓库 Promise 已完成 (settled)。`);
         for (const result of settledResults) {
-          // 使用 for...of 保证顺序获取日志
           if (result.status === "fulfilled") {
             const resValue = result.value;
             if (
@@ -1224,7 +1606,6 @@ export class MiaoPluginMBT extends plugin {
               resValue.nodeName !== "本地" &&
               resValue.nodeName !== "未配置"
             ) {
-              // 新下载成功的
               logger.info(
                 `${logPrefix} [核心下载] 附属仓库 (${resValue.repo}号) 下载成功 (${resValue.nodeName})。`
               );
@@ -1316,7 +1697,7 @@ export class MiaoPluginMBT extends plugin {
 
         if (reportImg) {
           await e.reply(reportImg);
-          logger.info(`${logPrefix} [下载报告] 图片报告已发送。`);
+          //logger.info(`${logPrefix} [下载报告] 图片报告已发送。`);
           reportSent = true; // 标记图片报告发送成功
         } else {
           throw new Error("Puppeteer 生成下载报告图片失败 (返回空)");
@@ -1468,7 +1849,7 @@ export class MiaoPluginMBT extends plugin {
 
     const startTime = Date.now();
     if (!isScheduled && e)
-      await e.reply("『咕咕牛🐂』开始检查更新 (所有仓库)，稍等片刻...", true);
+      await e.reply("『咕咕牛🐂』开始检查更新...", true);
     logger.info(
       `${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`
     );
@@ -1801,8 +2182,8 @@ export class MiaoPluginMBT extends plugin {
       return false;
     }
 
-    const startMessage = "『咕咕牛🐂』收到！开始彻底重置图库，请稍等...";
-    const successMessageBase = "『咕咕牛🐂』重置完成！所有相关文件和缓存都清理干净啦。现在可以重新 `#下载咕咕牛` 了。";
+    const startMessage = "『咕咕牛🐂』开始重置图库，请稍等...";
+    const successMessageBase = "『咕咕牛🐂』重置完成！所有相关文件和缓存都清理干净啦。";
     const failureMessage = "『咕咕牛🐂』重置过程中好像出了点问题，可能没清理干净，快去看看日志吧！";
 
     await e.reply(startMessage, true);
@@ -2642,7 +3023,7 @@ export class MiaoPluginMBT extends plugin {
           if (img) {
             await e.reply(img);
             manualSent = true;
-            logger.info(`${logPrefix} [封禁列表] 手动封禁列表图片已发送。`);
+            //logger.info(`${logPrefix} [封禁列表] 手动封禁列表图片已发送。`);
             if (purifiedBansData.length > 0) {
               await common.sleep(1000);
             }
@@ -2788,9 +3169,7 @@ export class MiaoPluginMBT extends plugin {
             );
             if (forwardMsgPurified) {
               await e.reply(forwardMsgPurified);
-              logger.info(
-                `${logPrefix} [封禁列表] 合并的自动屏蔽列表消息已发送。`
-              );
+              // logger.info(`${logPrefix} [封禁列表] 合并的自动屏蔽列表消息已发送。`);
             } else {
               logger.error(
                 `${logPrefix} [封禁列表] 创建自动屏蔽列表合并消息失败 (makeForwardMsg 返回空)。`
@@ -3217,9 +3596,7 @@ export class MiaoPluginMBT extends plugin {
             );
             if (forwardMsg) {
               await e.reply(forwardMsg);
-              this.logger.info(
-                `${this.logPrefix} [查看] 第 ${batchNum}/${totalBatches} 批已发送。`
-              );
+              // this.logger.info(`${this.logPrefix} [查看] 第 ${batchNum}/${totalBatches} 批已发送。`);
             } else {
               this.logger.error(
                 `${this.logPrefix} [查看] common.makeForwardMsg 返回空 (批次 ${batchNum})`
@@ -3269,7 +3646,7 @@ export class MiaoPluginMBT extends plugin {
     let standardMainName = "";
     const logger = this.logger;
     const logPrefix = this.logPrefix;
-    const BATCH_SIZE = 20;
+    const BATCH_SIZE = 28;
 
     try {
       const aliasResult = await MiaoPluginMBT.FindRoleAlias(
@@ -3515,9 +3892,7 @@ export class MiaoPluginMBT extends plugin {
 
           if (img) {
             await e.reply(img);
-            logger.info(
-              `${logPrefix} [可视化] 『${standardMainName}』第 ${batchNum}/${totalBatches} 批图片已发送。`
-            );
+            // logger.info(`${logPrefix} [可视化] 『${standardMainName}』第 ${batchNum}/${totalBatches} 批图片已发送。`);
           } else {
             logger.error(
               `${logPrefix} [可视化] 第 ${batchNum}/${totalBatches} 批截图生成失败或返回空。`
@@ -6327,9 +6702,7 @@ export class MiaoPluginMBT extends plugin {
               throw renameError;
             }
           }
-          loggerInstance.info(
-            `${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载成功！`
-          );
+          // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载成功！`);
           return { success: true, nodeName: nodeName };
         } catch (error) {
           loggerInstance.error(
@@ -7468,22 +7841,16 @@ export class MiaoPluginMBT extends plugin {
           clearTimeout(timeoutId);
           speed = Date.now() - startTime;
           if (!response.ok) {
-            logger.warn(
-              `${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 状态码非 OK: ${response.status}`
-            );
+            // logger.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 状态码非 OK: ${response.status}`);
             speed = Infinity;
           }
         } catch (fetchError) {
           clearTimeout(timeoutId);
           if (fetchError.name === "AbortError") {
             speed = Infinity;
-            logger.warn(
-              `${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时 (>${timeoutDuration}ms)`
-            );
+            // logger.warn(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) 超时 (>${timeoutDuration}ms)`);
           } else {
-            logger.error(
-              `${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message}`
-            );
+            // logger.error(`${Default_Config.logPrefix} [网络测速] ${proxyName} (${testUrl}) fetch 出错: ${fetchError.message}`);
             speed = Infinity;
           }
         }
