@@ -1,3 +1,4 @@
+
 import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
@@ -640,44 +641,38 @@ const DOWNLOAD_REPORT_HTML_TEMPLATE = `
  * @description 安全地递归删除文件或目录，带重试逻辑。
  */
 async function safeDelete(targetPath, maxAttempts = 3, delay = 1000) {
-  let attempts = 0;
-  const logger = global.logger || console;
-  while (attempts < maxAttempts) {
-    try {
-      await fsPromises.rm(targetPath, { recursive: true, force: true });
-      return true;
-    } catch (err) {
-      if (err.code === ERROR_CODES.NotFound) return true;
-      if (
-        [ERROR_CODES.Busy, ERROR_CODES.Perm, ERROR_CODES.NotEmpty].includes(
-          err.code
-        )
-      ) {
-        attempts++;
-        if (attempts >= maxAttempts) {
-          logger.error(
-            `${Default_Config.logPrefix} [安全删除] ${targetPath} 最终失败 (${attempts}次): ${err.code}`
-          );
-          throw err;
+    if (targetPath === null || typeof targetPath === 'undefined' || targetPath === '') {
+      // logger.debug(`${Default_Config.logPrefix} [安全删除] 路径为空或无效，跳过删除。`); //调式日志-精简
+      return true; 
+    }
+
+    let attempts = 0;
+    const logger = global.logger || console; // 确保 logger 定义
+    while (attempts < maxAttempts) {
+      try {
+        await fsPromises.rm(targetPath, { recursive: true, force: true });
+        // logger.debug(`${Default_Config.logPrefix} [安全删除] 成功删除 ${targetPath}`); //调式日志-精简
+        return true;
+      } catch (err) {
+        if (err.code === ERROR_CODES.NotFound) {
+          // logger.debug(`${Default_Config.logPrefix} [安全删除] 路径 ${targetPath} 不存在，视为已删除。`); //调式日志-精简
+          return true;
         }
-        logger.warn(
-          `${
-            Default_Config.logPrefix
-          } [安全删除] ${targetPath} 失败 (${attempts}/${maxAttempts}): ${
-            err.code
-          }, ${delay / 1000}s 后重试...`
-        );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      } else {
-        logger.error(
-          `${Default_Config.logPrefix} [安全删除] ${targetPath} 遇到未处理异常:`,
-          err
-        );
-        throw err;
+        if ( [ERROR_CODES.Busy, ERROR_CODES.Perm, ERROR_CODES.NotEmpty].includes(err.code)){
+          attempts++;
+          if (attempts >= maxAttempts) {
+            logger.error( `${Default_Config.logPrefix} [安全删除] ${targetPath} 最终失败 (${attempts}次): ${err.code}` );
+            return false; // 改为返回 false 表示删除失败
+          }
+          logger.warn(`${Default_Config.logPrefix} [安全删除] ${targetPath} 失败 (${attempts}/${maxAttempts}): ${err.code}, ${delay / 1000}s 后重试...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        } else {
+          logger.error( `${Default_Config.logPrefix} [安全删除] ${targetPath} 遇到未处理异常:`, err);
+          return false; // 改为返回 false
+        }
       }
     }
-  }
-  return false;
+    return false; // 正常情况下不应该执行到这里，但作为兜底
 }
 
 /**
@@ -5650,109 +5645,120 @@ export class MiaoPluginMBT extends plugin {
    * @description 格式化错误信息，生成包含摘要、建议、上下文和堆栈的报告对象。
    */
   static FormatError(operationName, error, context = "") {
-    const Report = {
-      summary: `${Default_Config.logPrefix} 操作 [${operationName}] 失败了！`,
-      contextInfo: context || "（没啥额外信息）",
-      suggestions: "",
-      stack: error?.stack || "（调用栈信息丢失了）",
-    };
-    if (error?.message) Report.summary += `\n错误信息: ${error.message}`;
-    if (error?.code) Report.summary += ` (Code: ${error.code})`;
-    if (error?.signal) Report.summary += ` (Signal: ${error.signal})`;
-    const stderr = error?.stderr || "";
-    const stdout = error?.stdout || "";
-    const errorString = `${error?.message || ""} ${stderr} ${
-      String(error?.code) || ""
-    } ${context || ""}`.toLowerCase();
-    const suggestionsMap = {
-      "could not resolve host":
-        "网络问题: 是不是 DNS 解析不了主机？检查下网络和 DNS 设置。",
-      "connection timed out":
-        "网络问题: 连接超时了，网不好或者对面服务器挂了？",
-      "connection refused":
-        "网络问题: 对面服务器拒绝连接，端口对吗？防火墙开了？",
-      "ssl certificate problem":
-        "网络问题: SSL 证书有问题，系统时间对不对？或者需要更新证书？",
-      "403 forbidden": "访问被拒 (403): 没权限访问这个地址哦。",
-      "404 not found": "资源未找到 (404): URL 写错了或者文件真的没了。",
-      "unable to access":
-        "Git 访问失败: 检查网络、URL、代理设置对不对，或者仓库是不是私有的？",
-      "authentication failed": "Git 认证失败: 用户名密码或者 Token 不对吧？",
-      "permission denied":
-        "权限问题: Yunzai 没权限读写文件或目录，检查下文件夹权限。",
-      "index file corrupt":
-        "Git 仓库可能坏了: 试试清理 `.git/index` 文件？不行就得 #重置咕咕牛 了。",
-      "lock file|index.lock":
-        "Git 正忙着呢: 等一下下，或者手动清理 `.git/index.lock` 文件（小心点！）",
-      "commit your changes or stash them":
-        "Git 冲突: 本地文件改动了和远程对不上，试试 #更新咕咕牛 强制覆盖？",
-      "not a git repository": "Git: 这地方不是个 Git 仓库啊。",
-      "unrelated histories": "Git 历史冲突: 这个得 #重置咕咕牛 才能解决了。",
-      "not possible to fast-forward":
-        "Git: 无法快进合并，#更新咕咕牛 强制覆盖试试。",
-      [ERROR_CODES.NotFound]: "文件系统: 找不到文件或目录，路径对吗？",
-      [ERROR_CODES.Access]: "文件系统: 没权限访问这个文件或目录。",
-      [ERROR_CODES.Busy]: "文件系统: 文件或目录正被占用，稍后再试试？",
-      [ERROR_CODES.NotEmpty]: "文件系统: 文件夹里还有东西，删不掉。",
-      [ERROR_CODES.ConnReset]: "网络: 连接突然断了。",
-      [ERROR_CODES.Timeout]: "操作超时了，等太久了...",
-      "json.parse":
-        "数据问题: JSON 文件格式不对，检查下 `imagedata.json` 或 `banlist.json`。",
-      "yaml.parse":
-        "配置问题: YAML 文件格式不对，检查下 `GalleryConfig.yaml`。",
-    };
-    let matchedSuggestion = null;
-    if (
-      error instanceof ReferenceError &&
-      error.message.includes("is not defined")
-    ) {
-      matchedSuggestion =
-        "代码出错了: 引用了不存在的变量或函数。如果没改过代码，可能是插件Bug，快去反馈！";
-    } else {
-      for (const keyword in suggestionsMap) {
-        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const regex = new RegExp(escapedKeyword, "i");
-        if (regex.test(errorString)) {
-          matchedSuggestion = suggestionsMap[keyword];
-          break;
+      const logPrefix = Default_Config.logPrefix;
+
+      const Report = {
+        summary: `${logPrefix} 操作 [${operationName}] 失败了！`,
+        contextInfo: context || "（无额外上下文信息）", // 提供默认值
+        suggestions: "",
+        stack: error?.stack || "（调用栈信息丢失）", // 防止 error 为 null/undefined
+      };
+
+      if (error?.message) Report.summary += `\n错误信息: ${error.message}`;
+      if (error?.code) Report.summary += ` (Code: ${error.code})`;
+      if (error?.signal) Report.summary += ` (Signal: ${error.signal})`;
+
+      const stderr = error?.stderr || "";
+      const stdout = error?.stdout || "";
+      // 构建一个包含所有可能错误信息的字符串，用于匹配 suggestionsMap
+      const errorStringForSuggestions = `${error?.message || ""} ${stderr} ${String(error?.code) || ""} ${context || ""}`.toLowerCase();
+
+      const suggestionsMap = { 
+        "could not resolve host": "网络问题: 是不是 DNS 解析不了主机？检查下网络和 DNS 设置。",
+        "connection timed out": "网络问题: 连接超时了，网不好或者对面服务器挂了？",
+        "connection refused": "网络问题: 对面服务器拒绝连接，端口对吗？防火墙开了？",
+        "ssl certificate problem": "网络问题: SSL 证书有问题，系统时间对不对？或者需要更新证书？",
+        "403 forbidden": "访问被拒 (403): 没权限访问这个地址哦。",
+        "404 not found": "资源未找到 (404): URL 写错了或者文件真的没了。",
+        "unable to access": "Git 访问失败: 检查网络、URL、代理设置对不对，或者仓库是不是私有的？",
+        "authentication failed": "Git 认证失败: 用户名密码或者 Token 不对吧？",
+        "permission denied": "权限问题: Yunzai 没权限读写文件或目录，检查下文件夹权限。",
+        "index file corrupt": "Git 仓库可能坏了: 试试清理 `.git/index` 文件？不行就得 #重置咕咕牛 了。",
+        "lock file|index.lock": "Git 正忙着呢: 等一下下，或者手动清理 `.git/index.lock` 文件（小心点！）",
+        "commit your changes or stash them": "Git 冲突: 本地文件改动了和远程对不上，试试 #更新咕咕牛 强制覆盖？",
+        "not a git repository": "Git: 这地方不是个 Git 仓库啊。",
+        "unrelated histories": "Git 历史冲突: 这个得 #重置咕咕牛 才能解决了。",
+        "not possible to fast-forward": "Git: 无法快进合并，#更新咕咕牛 强制覆盖试试。",
+        [ERROR_CODES.NotFound]: "文件系统: 找不到文件或目录，路径对吗？",
+        [ERROR_CODES.Access]: "文件系统: 没权限访问这个文件或目录。", 
+        [ERROR_CODES.Busy]: "文件系统: 文件或目录正被占用，稍后再试试？", 
+        [ERROR_CODES.NotEmpty]: "文件系统: 文件夹里还有东西，删不掉。", 
+        [ERROR_CODES.ConnReset]: "网络: 连接突然断了。", 
+        [ERROR_CODES.Timeout]: "操作超时了，等太久了...",
+        "json.parse": "数据问题: JSON 文件格式不对，检查下 `imagedata.json` 或 `banlist.json`。",
+        "yaml.parse": "配置问题: YAML 文件格式不对，检查下 `GalleryConfig.yaml`。",
+      };
+
+      let matchedSuggestion = null;
+      if (error instanceof ReferenceError && error.message?.includes("is not defined")) {
+        matchedSuggestion = "代码出错了: 引用了不存在的变量或函数。如果没改过代码，可能是插件Bug，快去反馈！";
+      } else {
+        for (const keyword in suggestionsMap) {
+          // 对于 ERROR_CODES.XXX 这种直接是值的，需要确保 keyword 是字符串形式的错误码
+          const keywordToTest = ERROR_CODES[keyword] || keyword; // 如果 keyword 是 ERROR_CODES 的键名，则取其值
+          const escapedKeyword = String(keywordToTest).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // 确保是字符串再转义
+          const regex = new RegExp(escapedKeyword, "i");
+          if (regex.test(errorStringForSuggestions)) {
+            matchedSuggestion = suggestionsMap[keyword];
+            break;
+          }
         }
       }
-    }
-    let finalSuggestions = [];
-    if (matchedSuggestion) {
-      finalSuggestions.push(`- ${matchedSuggestion}`);
-    } else {
-      finalSuggestions.push("- 暂时没头绪，看看下面的通用建议？");
-    }
-    finalSuggestions.push(
-      "- 检查网络连接是不是通畅。",
-      "- 检查 Yunzai 目录和插件目录的权限设置。",
-      "- 仔细看看控制台输出的详细错误日志。"
-    );
-    if (operationName.includes("下载") || operationName.includes("更新")) {
-      finalSuggestions.push(
-        "- 确保电脑上正确安装了 Git。",
-        "- 试试 `#咕咕牛测速` 看看网络节点情况。"
+
+      let finalSuggestionsArray = [];
+      if (matchedSuggestion) {
+        finalSuggestionsArray.push(`- ${matchedSuggestion}`);
+      } else {
+        finalSuggestionsArray.push("- 暂时没有针对此错误的特定建议，请尝试以下通用排查方法。");
+      }
+      finalSuggestionsArray.push(
+        "- 请检查您的网络连接是否通畅。",
+        "- 请检查 Yunzai-Bot 目录及插件相关目录的文件/文件夹权限。",
+        "- 请仔细查看控制台输出的详细错误日志，特别是本条错误上下的内容。",
+        "- 尝试重启 Yunzai-Bot 程序。"
       );
-    }
-    finalSuggestions.push(
-      "- 万能大法：重启 Yunzai-Bot 试试？",
-      "- 如果一直不行，终极大法：`#重置咕咕牛` 然后重新 `#下载咕咕牛`。"
-    );
-    Report.suggestions = finalSuggestions.join("\n");
-    if (stdout || stderr) {
-      Report.contextInfo += "\n--- Git 输出信息 ---";
-      const maxLen = 500;
-      if (stdout)
-        Report.contextInfo += `\n[stdout]:\n${stdout.substring(0, maxLen)}${
-          stdout.length > maxLen ? "...(后面省略)" : ""
-        }`;
-      if (stderr)
-        Report.contextInfo += `\n[stderr]:\n${stderr.substring(0, maxLen)}${
-          stderr.length > maxLen ? "...(后面省略)" : ""
-        }`;
-    }
-    return Report;
+      if (operationName.toLowerCase().includes("下载") || operationName.toLowerCase().includes("更新")) {
+        finalSuggestionsArray.push(
+          "- 确保您的设备上已正确安装 Git，并且 Git 的路径已添加到系统环境变量中。",
+          "- 尝试执行 `#咕咕牛测速` 命令检查网络节点状况。"
+        );
+      }
+      if (!operationName.toLowerCase().includes("重置")) { // 如果不是重置操作本身失败
+          finalSuggestionsArray.push("- 如果问题持续存在，作为最终手段，您可以尝试执行 `#重置咕咕牛` 命令，然后重新 `#下载咕咕牛` (请注意：这将清除所有咕咕牛图库相关数据和配置)。");
+      }
+
+
+      Report.suggestions = finalSuggestionsArray.join("\n");
+
+      // --- stdout 和 stderr 到 contextInfo ---
+      if (stdout || stderr) {
+          Report.contextInfo += "\n\n--- Git/命令输出信息 ---"; // 加个换行与之前的 context 分隔
+          const maxLen = 700; // 输出信息的最大长度
+          if (stdout.trim()) { // 只在 stdout 有实质内容时显示
+              Report.contextInfo += `\n[stdout]:\n${stdout.substring(0, maxLen)}${stdout.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`;
+          }
+          if (stderr.trim()) { // 只在 stderr 有实质内容时显示
+              Report.contextInfo += `\n[stderr]:\n${stderr.substring(0, maxLen)}${stderr.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`;
+              
+              // 提取关键 stderr 行用于摘要，附加到 Report.summary 
+              const criticalStderrLines = stderr.split('\n').filter(line =>
+                  /fatal:|error:|warning:/i.test(line) && 
+                  !/Cloning into/i.test(line) && 
+                  !/^\s*$/.test(line) && 
+                  !/trace:|http\.c:|ssl\.c:|git\.c:|run-command\.c:|credential\.c:|config\.c:|advice\.c:|pktline\.c:|pack\.c:|sha1_file\.c:|remote\.c:|connect\.c:|version\.c:|sequencer\.c:|refs\.c:|commit\.c:|diff\.c:|unpack-trees\.c:|resolve-undo\.c:|notes-utils\.c:/i.test(line) && // 过滤更多Git内部模块名
+                  !/^\s*(?:default|hint|Performance)\s/i.test(line) && // 过滤Git的advice和performance hint
+                  !/== Info:|\s*Trying\s|\s*Connected to\s|Receiving objects:|Resolving deltas:|remote: Compressing objects:|remote: Total|remote: Enumerating objects:|remote: Counting objects:/i.test(line)
+              ).map(line => line.replace(/^remote:\s*/, '').trim()) // 去掉 "remote: " 前缀并trim
+              .filter(line => line.length > 0) // 再次确保非空
+              .slice(0, 5) // 取前5条
+              .join('\n');
+
+              if (criticalStderrLines.trim()) {
+                  Report.summary += `\nGit关键消息: ${(criticalStderrLines.length > 200 ? criticalStderrLines.substring(0,200) + "..." : criticalStderrLines).trim()}`;
+              }
+          }
+      }
+      return Report;
   }
 
   /**
@@ -6238,213 +6244,341 @@ export class MiaoPluginMBT extends plugin {
    *              预渲染 HTML 到文件再截图，用户进度提示。
    *              保持核心的锁范围优化。移除多余用户提示。
    */
-  static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, eForProgress, loggerInstance = global.logger || console) {
-    const logPrefix = Default_Config.logPrefix;
-    const tempRepoPath = path.join(MiaoPluginMBT.paths.tempPath, `Repo${repoNum}-${crypto.randomBytes(4).toString("hex")}`);
-    let intermediateTempPath = null;
-    let intermediateFinalPath = null;
+  static async DownloadRepoWithFallback(
+      repoNum,
+      repoUrl, 
+      branch,
+      finalLocalPath,
+      eForProgress, 
+      loggerInstance = global.logger || console
+  ) {
+      const logPrefix = Default_Config.logPrefix;
+      const baseRawUrl = RAW_URL_Repo1; 
+      const repoTypeName = repoNum === 1 ? "核心仓库" : `附属仓库(${repoNum}号)`;
+      
+      const timestamp = Date.now(); 
+      const outerRandomSuffix = crypto.randomBytes(4).toString('hex'); 
+      
+      const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${timestamp}-${outerRandomSuffix}`;
+      const tempRepoPath = path.join(MiaoPluginMBT.paths.tempPath, "guguniu-downloads", uniqueTempCloneDirName);
 
-    try {
-      const repoTypeName = repoNum === 1 ? "核心仓库" : `附属仓库${repoNum}`;
-      let lastError = null;
-      let githubDirectAttempted = false;
+      //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] 目标: ${finalLocalPath}, 初始临时克隆路径: ${tempRepoPath}`); //调试日志-精简
 
-      const allTestResults = await MiaoPluginMBT.TestProxies();
-      let sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+      let lastError = null; 
+      let sourcesToTry = []; 
+      let allTestResults = []; 
+
+      const overallTestStartTime = Date.now();
+      try {
+          allTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance);
+      } catch (testError) {
+          //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 网络测速阶段失败:`, testError); //调试日志-精简
+          if (eForProgress) {
+              await MiaoPluginMBT.ReportError(eForProgress, `网络测速失败`, testError, 
+                  `无法为 ${repoTypeName} 开始下载`, loggerInstance);
+          }
+          return { success: false, nodeName: "网络测速失败", error: testError };
+      }
+
+      sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
 
       if (repoNum === 1 && eForProgress) {
-        const githubProxy = Default_Config.proxies.find(p => p.name === "GitHub");
-        if (githubProxy) {
-          githubDirectAttempted = true;
-          sourcesToTry = [githubProxy, ...sourcesToTry.filter(p => p.name !== "GitHub")];
-        }
-      }
+          let tempHtmlFilePath_InitialSpeedtest = ""; 
+          let tempImgFilePath_InitialSpeedtest = "";  
+          let screenshotNameInitial = `guguniu-initial-dl-speedtest-${outerRandomSuffix}`; 
 
-      if (!sourcesToTry.length) {
-        loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 无可用下载源！`);
-        if (eForProgress) {
-          await MiaoPluginMBT.ReportError(
-            eForProgress,
-            `下载${repoTypeName}`,
-            lastError || new Error("无可用下载源"),
-            `测速结果: ${JSON.stringify(allTestResults)}`,
-            loggerInstance
-          );
-        }
-        return { success: false, nodeName: "无可用源", error: lastError || new Error("无可用下载源") };
-      }
-
-      let isFirstAttempt = true;
-      for (const source of sourcesToTry) {
-        if (source.name === "GitHub" && githubDirectAttempted) continue;
-
-        const nodeName = source.name === "GitHub" ? "GitHub(直连)" : `${source.name}(代理)`;
-        if (!isFirstAttempt && eForProgress && repoNum === 1) {
-          eForProgress.reply(`『咕咕牛』正在尝试下载核心仓库，当前节点: ${nodeName}...`);
-        }
-
-        const preCleanSuccessLoop = await safeDelete(tempRepoPath);
-        if (!preCleanSuccessLoop) {
-          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] (${nodeName}) 预清理临时目录 ${tempRepoPath} 失败！跳过此节点。`);
-          lastError = new Error(`预清理临时目录 ${tempRepoPath} 失败 (节点: ${nodeName})`);
-          continue;
-        }
-        await fsPromises.mkdir(path.dirname(tempRepoPath), { recursive: true });
-
-        let cloneUrl = "";
-        let proxyForEnv = null;
-        if (source.name === "GitHub") {
-          cloneUrl = repoUrl;
-        } else if (source.cloneUrlPrefix) {
-          if (source.name === "GitClone") {
-            const repoPathWithoutProtocol = repoUrl.replace(/^https?:\/\//, "");
-            const cleanCloneUrlPrefix = source.cloneUrlPrefix.replace(/\/$/, "");
-            cloneUrl = `${cleanCloneUrlPrefix}/${repoPathWithoutProtocol}`;
-          } else {
-            cloneUrl = `${source.cloneUrlPrefix.replace(/\/$/, "")}/${repoUrl}`;
-          }
           try {
-            const proxyUrl = new URL(source.cloneUrlPrefix);
-            if (["http:", "https:"].includes(proxyUrl.protocol))
-              proxyForEnv = proxyUrl.origin;
-          } catch (urlError) {}
-        } else {
-          continue;
-        }
 
-        const cloneArgs = [
-          "clone",
-          `--depth=${Default_Config.gitCloneDepth}`,
-          "--progress",
-          cloneUrl,
-          tempRepoPath,
-        ];
-        const gitOptions = {
-          cwd: MiaoPluginMBT.paths.YunzaiPath,
-          shell: false,
-        };
-        if (proxyForEnv) {
-          gitOptions.env = {
-            ...process.env,
-            HTTP_PROXY: proxyForEnv,
-            HTTPS_PROXY: proxyForEnv,
-          };
-        }
+              if (allTestResults.length > 0) { 
+                  let renderData_Initial = {};
+                  let htmlContent_Initial = "";
+                  let canGenerateInitialReport = true; 
+                  try {
+                      const bestSourceForReport_Initial = sourcesToTry[0] || null; 
+                      const duration_Initial = ((Date.now() - overallTestStartTime) / 1000).toFixed(1);
+                      
+                      const processSpeeds = (speeds) => speeds.map(s => ({ ...s, statusText: s.testUrlPrefix === null ? "na" : Number.isFinite(s.speed) && s.speed >= 0 ? "ok" : "timeout" })).sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999) || (a.speed === Infinity || a.statusText === "na" ? 1 : b.speed === Infinity || b.statusText === "na" ? -1 : a.speed - b.speed));
+                      const processedSpeedsResult_Initial = processSpeeds(allTestResults); 
+                      const scaleStyleValue_Initial = MiaoPluginMBT.getScaleStyleValue();
+                      let best1Display_Initial = "无可用源";
+                      if (bestSourceForReport_Initial) {
+                          let speedInfo = "N/A";
+                          if (bestSourceForReport_Initial.testUrlPrefix !== null) speedInfo = Number.isFinite(bestSourceForReport_Initial.speed) && bestSourceForReport_Initial.speed >= 0 ? `${bestSourceForReport_Initial.speed}ms` : "超时";
+                          best1Display_Initial = `${bestSourceForReport_Initial.name}(${speedInfo})`;
+                      }
+                      renderData_Initial = { speeds1: processedSpeedsResult_Initial, best1Display: best1Display_Initial, duration: duration_Initial, scaleStyleValue: scaleStyleValue_Initial };
+                      
+                      htmlContent_Initial = template.render(SPEEDTEST_HTML_TEMPLATE_LOCAL, renderData_Initial);
+                      if (typeof htmlContent_Initial !== "string" || htmlContent_Initial.length === 0) throw new Error("初始测速报告 template.render 返回了无效内容!");
 
-        let progressStatusLoop = { reported10: false, reported90: false };
-
-        try {
-          await MiaoPluginMBT.gitMutex.runExclusive(async () => {
-            await ExecuteCommand(
-              "git",
-              cloneArgs,
-              gitOptions,
-              Default_Config.gitCloneTimeout,
-              (stderrChunk) => {
-                if (eForProgress && repoNum === 1) {
-                  const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
-                  if (match?.[1]) {
-                    const progress = parseInt(match[1], 10);
-                    if (progress >= 10 && !progressStatusLoop.reported10) {
-                      progressStatusLoop.reported10 = true;
-                      eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: 10%...`).catch(() => {});
-                    }
-                    if (progress >= 90 && !progressStatusLoop.reported90) {
-                      progressStatusLoop.reported90 = true;
-                      eForProgress.reply(`『咕咕牛』${repoTypeName} (${nodeName}) 下载: 90%...`).catch(() => {});
-                    }
+                      await fsPromises.mkdir(MiaoPluginMBT.paths.tempHtmlPath, { recursive: true });
+                      tempHtmlFilePath_InitialSpeedtest = path.join(MiaoPluginMBT.paths.tempHtmlPath, `initial-dl-speedtest-rendered-${timestamp}-${outerRandomSuffix}.html`);
+                      await fsPromises.writeFile(tempHtmlFilePath_InitialSpeedtest, htmlContent_Initial, "utf8");
+                  
+                  } catch (prepOrRenderError) {
+                      //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 准备或渲染初始测速报告失败:`, prepOrRenderError); //调试日志-精简
+                      if (eForProgress) await eForProgress.reply(`${logPrefix} 准备或渲染初始测速报告出错，将继续下载...`).catch(() => {});
+                      canGenerateInitialReport = false;
                   }
-                }
-              },
-              undefined
-            );
-          });
 
-          const tempParentDir = path.dirname(path.dirname(tempRepoPath));
-          const intermediateDir = path.join(tempParentDir, 'rename');
-          intermediateTempPath = path.join(intermediateDir, path.basename(tempRepoPath));
-          intermediateFinalPath = path.join(intermediateDir, path.basename(finalLocalPath));
+                  if (canGenerateInitialReport) {
+                      try {
+                          await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
+                          tempImgFilePath_InitialSpeedtest = path.join(MiaoPluginMBT.paths.tempImgPath, `initial-dl-speedtest-img-${timestamp}-${outerRandomSuffix}.png`);
+                          const img_Initial = await puppeteer.screenshot(screenshotNameInitial, {
+                              tplFile: tempHtmlFilePath_InitialSpeedtest, savePath: tempImgFilePath_InitialSpeedtest, imgType: "png",
+                              pageGotoParams: { waitUntil: "networkidle0" },
+                              ...renderData_Initial,
+                              screenshotOptions: { fullPage: false }, pageBoundingRect: { selector: "body", padding: 0 }, width: 540,
+                          });
 
-          await fsPromises.mkdir(intermediateDir, { recursive: true });
-          await safeDelete(intermediateTempPath);
-          await safeDelete(intermediateFinalPath);
-
-          try {
-            await fsPromises.rename(tempRepoPath, intermediateTempPath);
-          } catch (moveError) {
-            if (moveError.code === 'EPERM' || moveError.code === 'EXDEV') {
-              await copyFolderRecursive(tempRepoPath, intermediateTempPath, {}, loggerInstance);
-              await safeDelete(tempRepoPath);
-            } else {
-              throw moveError;
-            }
+                          if (img_Initial) {
+                              if (eForProgress) {
+                                  await eForProgress.reply(img_Initial).catch(()=>{});
+                                  await common.sleep(500); 
+                                  //await eForProgress.reply(`${logPrefix} 初始测速完成，开始下载 ${repoTypeName}...`).catch(()=>{}); //调试日志-精简
+                              }
+                          } else {
+                              if (eForProgress) await eForProgress.reply(`${logPrefix} 生成初始测速报告图片为空，继续下载...`).catch(() => {});
+                          }
+                      } catch (screenshotError) {
+                          //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] Puppeteer 生成初始测速截图失败:`, screenshotError); //调试日志-精简
+                          if (eForProgress) await eForProgress.reply(`${logPrefix} 生成初始测速报告截图出错，继续下载...`).catch(() => {});
+                      } finally {
+                          if (tempHtmlFilePath_InitialSpeedtest && fs.existsSync(tempHtmlFilePath_InitialSpeedtest)) { try { await fsPromises.unlink(tempHtmlFilePath_InitialSpeedtest); } catch (unlinkErr) {} }
+                          if (tempImgFilePath_InitialSpeedtest && fs.existsSync(tempImgFilePath_InitialSpeedtest)) { try { await fsPromises.unlink(tempImgFilePath_InitialSpeedtest); } catch (unlinkErr) {} }
+                          const possiblePuppeteerTempDir_Initial = path.join(MiaoPluginMBT.paths.tempPath, "..", screenshotNameInitial);
+                          if (fs.existsSync(possiblePuppeteerTempDir_Initial)) { try { await safeDelete(possiblePuppeteerTempDir_Initial); } catch (deleteErr) {} }
+                      }
+                  }
+              } else { 
+                  //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] 初始测速未返回有效代理结果，跳过报告生成。`); // 调试日志-精简
+                  if (eForProgress) await eForProgress.reply(`${logPrefix} 初始测速未找到可用节点，将直接尝试下载...`).catch(()=>{});
+              }
+          } catch (outerInitialSpeedTestError) { 
+              //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 执行初始测速或排序源时出错(顶层):`, outerInitialSpeedTestError); //调试日志-精简
+              if (eForProgress) await eForProgress.reply(`${logPrefix} 执行初始测速时发生错误，仍将尝试下载...`).catch(() => {}); 
+              if (!sourcesToTry || sourcesToTry.length === 0) { 
+                  if (allTestResults && allTestResults.length > 0) { 
+                      sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(allTestResults, true, loggerInstance);
+                  } else { 
+                      try {
+                          const fallbackTestResults = await MiaoPluginMBT.TestProxies(baseRawUrl, loggerInstance);
+                          sourcesToTry = MiaoPluginMBT.GetSortedAvailableSources(fallbackTestResults, true, loggerInstance);
+                      } catch (finalTestError) {
+                          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 后备测速也失败:`, finalTestError); //调试日志-精简
+                          sourcesToTry = Default_Config.proxies.filter(p => p.name === "GitHub" || p.cloneUrlPrefix); 
+                      }
+                  }
+              }
           }
-
-          try {
-            await fsPromises.rename(intermediateTempPath, intermediateFinalPath);
-          } catch (renameError) {
-            await safeDelete(intermediateTempPath);
-            throw renameError;
-          }
-
-          await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
-          await safeDelete(finalLocalPath);
-
-          try {
-            await fsPromises.rename(intermediateFinalPath, finalLocalPath);
-          } catch (finalMoveError) {
-            if (finalMoveError.code === 'EPERM' || finalMoveError.code === 'EXDEV') {
-              await copyFolderRecursive(intermediateFinalPath, finalLocalPath, {}, loggerInstance);
-              await safeDelete(intermediateFinalPath);
-            } else {
-              throw finalMoveError;
-            }
-          }
-
-          return { success: true, nodeName: nodeName };
-        } catch (error) {
-          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 使用源 ${nodeName} 下载失败。`);
-          lastError = error;
-          await safeDelete(tempRepoPath);
-          await safeDelete(intermediateTempPath);
-          await safeDelete(intermediateFinalPath);
-          await common.sleep(1000);
-        }
-
-        isFirstAttempt = false;
       }
 
-      loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 所有可用源均下载失败！`);
-      if (repoNum === 1 && eForProgress) {
-        await MiaoPluginMBT.ReportError(
-          eForProgress,
-          `下载${repoTypeName}`,
-          lastError || new Error("所有源下载失败"),
-          `尝试源: ${sourcesToTry.map((s) => s.name).join(", ")}`,
-          loggerInstance
-        );
-      } else if (repoNum !== 1) {
-        loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 最终错误:`, lastError || "未知错误");
+      const tempWriteTestPath = path.join(MiaoPluginMBT.paths.tempPath, `write_test_${timestamp}.tmp`);
+      try {
+          await fsPromises.writeFile(tempWriteTestPath, "test");
+          await fsPromises.unlink(tempWriteTestPath);
+      } catch (writeError) {
+          loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 无法写入临时目录 ${MiaoPluginMBT.paths.tempPath}. 请检查权限。`, writeError);
+          if (eForProgress) await MiaoPluginMBT.ReportError(eForProgress, `下载${repoTypeName}`, new Error("无法写入临时目录"), `路径: ${MiaoPluginMBT.paths.tempPath}`, loggerInstance);
+          return { success: false, nodeName: "环境检查失败", error: new Error("无法写入临时目录") };
       }
-      return { success: false, nodeName: "所有源失败", error: lastError };
-    } catch (criticalError) {
-      loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName} (${repoNum}号)] 发生严重错误:`, criticalError);
-      if (eForProgress) {
-        await MiaoPluginMBT.ReportError(
-          eForProgress,
-          `下载${repoTypeName} (严重错误)`,
-          criticalError,
-          "",
-          loggerInstance
-        );
+
+      if (!sourcesToTry || sourcesToTry.length === 0) { 
+          //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 在下载决策阶段无可用下载源！`); //调试日志-精简
+          const error = new Error("无可用下载源 (所有测速均失败或无结果)");
+          if (eForProgress) await MiaoPluginMBT.ReportError(eForProgress, `下载${repoTypeName}`, error, "所有测速尝试均未找到可用节点", loggerInstance);
+          return { success: false, nodeName: "无可用源", error };
       }
-      return { success: false, nodeName: "严重错误", error: criticalError };
-    } finally {
-      await safeDelete(tempRepoPath);
-      await safeDelete(intermediateTempPath);
-      await safeDelete(intermediateFinalPath);
-    }
-  }
+      
+      //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] 下载决策可用源: ${sourcesToTry.map(s => s.name).join(', ')}`); //调试日志-精简
+      
+      const githubSourceFromConfig = Default_Config.proxies.find(p => p.name === "GitHub");
+      const githubTestResultForDecision = allTestResults.find(r => r.name === "GitHub"); 
+
+      if (repoNum === 1 && githubSourceFromConfig && githubTestResultForDecision && 
+          githubTestResultForDecision.speed !== Infinity && githubTestResultForDecision.speed <= 300) { 
+          const githubIndexInSources = sourcesToTry.findIndex(s => s.name === "GitHub");
+          if (githubIndexInSources > 0) { 
+              const [githubItem] = sourcesToTry.splice(githubIndexInSources, 1);
+              sourcesToTry.unshift(githubItem);
+              //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] GitHub直连速度良好 (${githubTestResultForDecision.speed}ms)，调整为最优先尝试。`); //调试日志-精简
+          } else if (githubIndexInSources === -1 && sourcesToTry.every(s => s.name !== "GitHub")) { 
+              sourcesToTry.unshift({ ...githubSourceFromConfig, speed: githubTestResultForDecision.speed });
+              //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] GitHub直连速度良好 (${githubTestResultForDecision.speed}ms)，强制添加到最优先尝试。`);//调试日志-精简
+          }
+      }
+
+      let isFirstActualDownloadAttempt = true; 
+      let currentIntermediateDir = null; 
+
+      for (const source of sourcesToTry) {
+          const nodeName = source.name === "GitHub" ? "GitHub(直连)" : `${source.name}(代理)`;
+          
+          if (source.name === "GitHub") {
+              const ghResult = allTestResults.find(r => r.name === "GitHub"); 
+              if (ghResult && (ghResult.speed === Infinity || ghResult.speed > 300)) { 
+                  //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] GitHub直连速度 (${ghResult.speed === Infinity ? '超时' : ghResult.speed + 'ms'}) 不佳 (>300ms)，跳过此源。`); //调试日志-精简
+                  continue; 
+              }
+          }
+
+          let progressStatus = { reported10: false, reported90: false }; 
+
+          if (!isFirstActualDownloadAttempt && eForProgress && repoNum === 1) {
+              if (eForProgress) eForProgress.reply(`『咕咕牛』${repoTypeName} 尝试节点: ${nodeName}...`).catch(() => {});
+          }
+          isFirstActualDownloadAttempt = false;
+
+          let maxAttempts;
+              switch (source.name) {
+                  case "Moeyy":    maxAttempts = 3; break;
+                  case "Ghfast":   maxAttempts = 2; break;
+                  default:         maxAttempts = 1; break;
+              }
+          
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              currentIntermediateDir = null; 
+              let intermediatePathForAttempt = null; 
+
+              try {
+                  if (attempt > 1) { 
+                      const delay = 1000 * attempt * 1.5; 
+                     // loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] (${nodeName}) 第 ${attempt -1}/${maxAttempts -1} 次重试，等待 ${delay/1000}s...`); //调试日志-精简
+                      if (eForProgress && repoNum === 1) {
+                          eForProgress.reply(`『咕咕牛』${repoTypeName}(${nodeName}) 第 ${attempt-1} 次下载失败，${delay/1000}s 后重试 (总尝试 ${maxAttempts})...`).catch(()=>{});
+                      }
+                      await common.sleep(delay);
+                      progressStatus = { reported10: false, reported90: false }; 
+                  }
+
+                  await safeDelete(tempRepoPath); 
+                  await fsPromises.mkdir(path.dirname(tempRepoPath), { recursive: true });
+
+                  let actualCloneUrl = "";
+                  let proxyForEnv = null;
+                  const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+                  let userAndRepoPath = ""; 
+                  if (repoPathMatch && repoPathMatch[1]) {
+                      userAndRepoPath = repoPathMatch[1].replace(/\.git$/, "");
+                  } else {
+                      throw new Error(`(${nodeName}) 无法从原始repoUrl (${repoUrl}) 提取仓库路径。`); 
+                  }
+
+                  if (source.name === "GitHub") {
+                      actualCloneUrl = repoUrl;
+                  } else if (source.cloneUrlPrefix) {
+                      const cleanCloneUrlPrefix = source.cloneUrlPrefix.replace(/\/$/, "");
+                      if (source.name === "GitClone") {
+                          actualCloneUrl = `${cleanCloneUrlPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
+                      } else if (source.name === "Mirror" || source.cloneUrlPrefix.includes("gitmirror.com")) {
+                          actualCloneUrl = `${cleanCloneUrlPrefix}/${userAndRepoPath}`;
+                      } else { 
+                          actualCloneUrl = `${cleanCloneUrlPrefix}/${repoUrl}`;
+                      }
+                      try {
+                          const proxyUrlObj = new URL(source.cloneUrlPrefix);
+                          if (["http:", "https:"].includes(proxyUrlObj.protocol)) proxyForEnv = proxyUrlObj.origin;
+                      } catch (e) {  }
+                  } else {
+                      throw new Error(`(${nodeName}) 源配置缺少 cloneUrlPrefix。`);
+                  }
+
+                  const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", actualCloneUrl, tempRepoPath]; 
+                  const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+                  if (proxyForEnv) {
+                      gitOptions.env = { ...process.env, HTTP_PROXY: proxyForEnv, HTTPS_PROXY: proxyForEnv };
+                  }
+                  
+                  //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] (${nodeName}) 第 ${attempt}/${maxAttempts} 次尝试: git ${cloneArgs.join(" ")}`); //调试日志-精简
+
+                  await MiaoPluginMBT.gitMutex.runExclusive(async () => {
+                      await ExecuteCommand("git", cloneArgs, gitOptions, Default_Config.gitCloneTimeout,
+                          (stderrChunk) => {
+                              if (eForProgress && repoNum === 1) { 
+                                  const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
+                                  if (match?.[1]) {
+                                      const percent = parseInt(match[1], 10);
+                                      if (percent >= 10 && !progressStatus.reported10) {
+                                          progressStatus.reported10 = true;
+                                          eForProgress.reply(`『咕咕牛』${repoTypeName}(${nodeName})下载:10%...`).catch(() => {});
+                                      }
+                                      if (percent >= 90 && !progressStatus.reported90) {
+                                          progressStatus.reported90 = true;
+                                          eForProgress.reply(`『咕咕牛』${repoTypeName}(${nodeName})下载:90%...`).catch(() => {});
+                                      }
+                                  }
+                              }
+                          });
+                  });
+
+                  //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] (${nodeName}) 克隆到 ${tempRepoPath} 成功，开始部署...`); //调试日志-精简
+                  
+                  const intermediateDirName = `intermediate-${repoNum}-${timestamp}-${outerRandomSuffix}-${source.name.replace(/[^a-zA-Z0-9]/g, '')}-${attempt}`;
+                  currentIntermediateDir = path.join(path.dirname(tempRepoPath), intermediateDirName); 
+                  await safeDelete(currentIntermediateDir); 
+                  await fsPromises.mkdir(currentIntermediateDir, { recursive: true });
+
+                  intermediatePathForAttempt = path.join(currentIntermediateDir, path.basename(finalLocalPath));
+                  
+                  try { await fsPromises.rename(tempRepoPath, intermediatePathForAttempt); }
+                  catch (moveError) { if (moveError.code==='EPERM'||moveError.code==='EXDEV'){ 
+                      await copyFolderRecursive(tempRepoPath, intermediatePathForAttempt, {}, loggerInstance); 
+                      await safeDelete(tempRepoPath); } else { throw moveError; }
+                  }
+
+                  await safeDelete(finalLocalPath); 
+                  await fsPromises.mkdir(path.dirname(finalLocalPath), {recursive: true}); 
+
+                  try { await fsPromises.rename(intermediatePathForAttempt, finalLocalPath); }
+                  catch (finalMoveError) { if (finalMoveError.code==='EPERM'||finalMoveError.code==='EXDEV'){ 
+                      await copyFolderRecursive(intermediatePathForAttempt, finalLocalPath, {}, loggerInstance); 
+                      await safeDelete(intermediatePathForAttempt); } else { throw finalMoveError; }
+                  }
+                  
+                  await safeDelete(currentIntermediateDir); 
+                  currentIntermediateDir = null; 
+
+                  //loggerInstance.info(`${logPrefix} [下载流程 ${repoTypeName}] (${nodeName}) 成功部署到 ${finalLocalPath}`); //调试日志-精简
+                  return { success: true, nodeName, error: null }; 
+
+              } catch (error) {
+                  lastError = error; 
+                  //loggerInstance.warn(`${logPrefix} [下载流程 ${repoTypeName}] (${nodeName}) 第 ${attempt}/${maxAttempts} 次尝试失败: ${error.message}`); //调试日志-精简
+                  //if (error.stderr) loggerInstance.debug(`${logPrefix} Stderr for ${nodeName} attempt ${attempt}: ${error.stderr}`); //调试日志-精简
+                  
+                  await safeDelete(tempRepoPath); 
+                  if (currentIntermediateDir) { 
+                      await safeDelete(currentIntermediateDir); 
+                      currentIntermediateDir = null; 
+                  }
+
+                  const stderrText = (error.stderr || "").toLowerCase();
+                  if (stderrText.includes("repository not found") || 
+                      stderrText.includes("authentication failed") ||
+                      (error.code === 128 && stderrText.includes("access rights"))) {
+                      //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] (${nodeName}) 遇到不可恢复错误，不再对此源重试。`); //调试日志-精简
+                      break; 
+                  }
+              }
+          } 
+          if (currentIntermediateDir) {
+              await safeDelete(currentIntermediateDir);
+              currentIntermediateDir = null;
+          }
+      } 
+
+      //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 所有下载源及重试均失败。`); //调试日志-精简
+      const finalErrorToReport = lastError || new Error("所有下载尝试均失败，无具体错误信息");
+      if (eForProgress && repoNum === 1) { 
+          await MiaoPluginMBT.ReportError(eForProgress, `下载${repoTypeName}`, finalErrorToReport, "已尝试所有可用下载源及其重试次数。", loggerInstance);
+      } else if (repoNum !==1 && (!finalErrorToReport || typeof finalErrorToReport.success === 'undefined' || !finalErrorToReport.success) ) {
+          const errorDetail = finalErrorToReport?.error || finalErrorToReport;
+          //loggerInstance.error(`${logPrefix} [下载流程 ${repoTypeName}] 最终失败: Node: ${finalErrorToReport?.nodeName || 'N/A'}`, errorDetail); //调试日志-精简
+      }
+      return { success: false, nodeName: "所有源失败", error: finalErrorToReport };
+
+  } 
 
   /**
    * @description 更新单个仓库，包含冲突检测和强制重置逻辑。
