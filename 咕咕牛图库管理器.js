@@ -5670,7 +5670,7 @@ export class MiaoPluginMBT extends plugin {
         "ssl certificate problem": "网络问题: SSL 证书有问题，系统时间对不对？或者需要更新证书？",
         "403 forbidden": "访问被拒 (403): 没权限访问这个地址哦。",
         "404 not found": "资源未找到 (404): URL 写错了或者文件真的没了。",
-        "unable to access": "Git 访问失败: 检查网络、URL、代理设置对不对，或者仓库是不是私有的？",
+        "unable to access": "Git 访问失败: 检查网络、URL、代理设置对不，或者的手动测速查看问题",
         "authentication failed": "Git 认证失败: 用户名密码或者 Token 不对吧？",
         "permission denied": "权限问题: Yunzai 没权限读写文件或目录，检查下文件夹权限。",
         "index file corrupt": "Git 仓库可能坏了: 试试清理 `.git/index` 文件？不行就得 #重置咕咕牛 了。",
