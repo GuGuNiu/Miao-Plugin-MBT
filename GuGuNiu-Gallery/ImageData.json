@@ -22318,5 +22318,245 @@
         },
         "timestamp": "2025-05-03T10:18:29.753Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5933205399",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu9.webp",
+        "attributes": {
+            "filename": "遐蝶Gu9.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "de25a296092d65ec4b750f233929bc5d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:30.432Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9320123310",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu10.webp",
+        "attributes": {
+            "filename": "遐蝶Gu10.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0872fd5a9d6ea962ff86584badb195c2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:34.896Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7290176261",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu11.webp",
+        "attributes": {
+            "filename": "遐蝶Gu11.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "e4443b0287b0278acf77b98ad0806535",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:39.208Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9980743309",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu12.webp",
+        "attributes": {
+            "filename": "遐蝶Gu12.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "73408a1c8ea020c5f8b69e8f9fff802c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:44.992Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7789320098",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu13.webp",
+        "attributes": {
+            "filename": "遐蝶Gu13.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "03c24f264cfbab24515c8994486fad1e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:48.441Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5578070316",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu14.webp",
+        "attributes": {
+            "filename": "遐蝶Gu14.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f63c0fcb7c8ee06b6054c648b8c196b8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:53.128Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7783647390",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu15.webp",
+        "attributes": {
+            "filename": "遐蝶Gu15.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "63ee16bacca1fa5e2bf3180a70fc899e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:15:58.984Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9132709978",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu16.webp",
+        "attributes": {
+            "filename": "遐蝶Gu16.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "cf6c426b63e2397d53d1ec485ae7c899",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:16:03.984Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2006256583",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu17.webp",
+        "attributes": {
+            "filename": "遐蝶Gu17.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "5d87e789e73afb9e3149effe5d52ce6e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:16:07.409Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9217124568",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu18.webp",
+        "attributes": {
+            "filename": "遐蝶Gu18.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "ac7445ec37e1f61fa08e98e3d01c2779",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:16:11.584Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1005480061",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu19.webp",
+        "attributes": {
+            "filename": "遐蝶Gu19.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "e5efca88fe183a76a3e91cc0ab53ab28",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:16:15.000Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9352812825",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu20.webp",
+        "attributes": {
+            "filename": "遐蝶Gu20.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "ce534ecf4030a2f858a16c83d408ada8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-12T06:16:19.792Z",
+        "sourceGallery": "sr-character"
     }
 ]
