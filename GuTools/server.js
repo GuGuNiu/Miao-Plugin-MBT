@@ -1,5 +1,5 @@
 // ==========================================================================
-// 咕咕牛图库 Web 管理器 - 后端服务 (v4.8.5 最终整合版)
+// 咕咕牛图库 Web 管理器 - 后端服务
 // 负责 API 请求处理、文件系统交互、数据读写、多仓库支持等。
 // ==========================================================================
 
@@ -1337,7 +1337,7 @@ app.post('/api/transfer-folder', async (req, res) => {
   let filesToMove = []; // 要移动的文件列表
 
   try {
-      // 1. 查找源文件夹的完整物理路径和所属分类
+      //查找源文件夹的完整物理路径和所属分类
       let foundSource = false;
       for (const gallery of MAIN_GALLERY_FOLDERS) {
           const potentialPath = path.join(sourceRepo.path, gallery, sourceFolderName);
@@ -1356,23 +1356,23 @@ app.post('/api/transfer-folder', async (req, res) => {
           throw new Error(`在源仓库 [${sourceStorageBox}] 中未找到文件夹 "${sourceFolderName}"`);
       }
 
-      // 2. 确定目标文件夹路径 (通常使用与源相同的分类)
-      targetGallery = sourceGallery; // 假设转移后分类不变
+      // 确定目标文件夹路径 (通常使用与源相同的分类)
+      targetGallery = sourceGallery; 
       targetFolderPath = path.join(targetRepo.path, targetGallery, sourceFolderName);
       console.log(`  > 目标文件夹路径: ${targetFolderPath}`);
 
-      // 3. 检查目标路径是否已存在同名文件夹
+      //  检查目标路径是否已存在同名文件夹
       if (await pathExists(targetFolderPath)) {
           // 可以选择报错，或者合并 (合并逻辑复杂，暂不实现)
           throw new Error(`目标仓库 [${targetStorageBox}] 中已存在同名文件夹 "${sourceFolderName}"`);
       }
 
-      // 4. 移动文件夹 (使用 rename 实现移动)
+      // 移动文件夹 (使用 rename 实现移动)
       console.log(`  > 准备移动文件夹从 ${sourceFolderPath} 到 ${targetFolderPath}`);
       await fs.rename(sourceFolderPath, targetFolderPath);
       console.log(`  > 文件夹移动成功`);
 
-      // 5. 更新 ImageData.json
+      // 更新 ImageData.json
       console.log(`  > 开始更新 ImageData.json...`);
       let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
       let updatedCount = 0;
@@ -1400,9 +1400,8 @@ app.post('/api/transfer-folder', async (req, res) => {
       await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, updatedImageData, "内部用户数据");
       console.log(`  > ImageData.json 更新完成 更新了 ${updatedCount} 条记录`);
 
-      // 6. 返回成功信息
-      // ... 返回 newEntry 时也需要注意大小写 ...
-      // 查找被更新的第一个条目作为示例返回 (如果需要)
+
+      // 查找被更新的第一个条目作为示例返回 
       const sampleUpdatedEntry = updatedImageData.find(entry =>
            entry.storagebox === targetStorageboxLower &&
            entry.path?.startsWith(`${sourceGallery}/${sourceFolderName}/`)
@@ -1413,7 +1412,6 @@ app.post('/api/transfer-folder', async (req, res) => {
           message: `成功将文件夹 "${sourceFolderName}" 从 [${sourceStorageBox}] 转移到 [${targetStorageBox}]`,
           filesMoved: filesToMove.length,
           jsonUpdated: updatedCount,
-          // 可以选择性返回一个更新后的条目样本 但要处理大小写
           // sampleEntry: sampleUpdatedEntry ? { ...sampleUpdatedEntry, storageBox: targetStorageBox, storagebox: undefined } : null
       });
 
