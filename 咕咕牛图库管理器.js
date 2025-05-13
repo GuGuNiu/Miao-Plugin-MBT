@@ -1835,258 +1835,140 @@ export class MiaoPluginMBT extends plugin {
    * @description 处理 #更新咕咕牛 命令，执行多仓库更新流程，并生成图片报告。
    */
   async UpdateTuKu(e, isScheduled = false) {
-    // 检查初始化状态，仅对手动触发进行
     if (!isScheduled && !(await this.CheckInit(e))) return false;
-
     const logger = this.logger;
     const logPrefix = this.logPrefix;
-
-    // 检查各仓库下载状态
     const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
     const Repo2UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Ass_Github_URL;
     let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
     const Repo3UrlConfigured = !!MiaoPluginMBT.MBTConfig?.Sexy_Github_URL;
     let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
-
-    // 判断仓库是否缺失并回复
-    let anyRepoMissing = false;
-    if (!Repo1Exists) anyRepoMissing = true;
-    if (Repo2UrlConfigured && !Repo2Exists) anyRepoMissing = true;
-    if (Repo3UrlConfigured && !Repo3Exists) anyRepoMissing = true;
+    let anyRepoMissing = !Repo1Exists || (Repo2UrlConfigured && !Repo2Exists) || (Repo3UrlConfigured && !Repo3Exists);
 
     if (anyRepoMissing && Repo1Exists) {
       if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。",true);
-      // 即使部分缺失，也可能继续尝试更新已有的仓库
     } else if (!Repo1Exists) {
       if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库未下载",true);
-      return false; // 核心仓库未下载，无法更新
+      return false;
     }
 
-    // 开始更新流程
     const startTime = Date.now();
     if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
     logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
 
-    const reportResults = []; // 存储每个仓库的更新结果
-    let overallSuccess = true; // 总体更新是否成功
-    let overallHasChanges = false; // 是否有任何仓库检测到变更
+    const reportResults = [];
+    let overallSuccess = true;
+    let overallHasChanges = false;
 
-    // 内部辅助函数，处理单个仓库的更新逻辑和结果格式化
     const processRepoResult = async ( repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isCore = false) => {
-      const result = await MiaoPluginMBT.UpdateSingleRepo(
-        isCore ? e : null, // 核心仓库失败时向用户报告
-        repoNum,
-        localPath,
-        repoDisplayName,
-        repoUrlForUpdate,
-        branchForUpdate,
-        isScheduled,
-        logger
-      );
-      overallSuccess &&= result.success; // 更新总体成功状态
-      overallHasChanges ||= result.hasChanges; // 更新总体变更状态
-
-      // 格式化状态文本用于报告
+      const result = await MiaoPluginMBT.UpdateSingleRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isScheduled, logger);
+      overallSuccess &&= result.success;
+      overallHasChanges ||= result.hasChanges;
       let statusText = "";
       if (result.success) {
         if (result.wasForceReset) statusText = "本地冲突 (强制同步)";
         else if (result.hasChanges) statusText = "更新成功";
         else statusText = "已是最新";
-      } else {
-        statusText = "更新失败";
-      }
-      // 返回报告所需的数据结构
-      return {
-        name: repoDisplayName,
-        statusText: statusText,
-        statusClass: result.success ? (result.hasChanges || result.wasForceReset ? "status-ok" : "status-no-change") : "status-fail",
-        error: result.error, // 包含完整 stderr
-        log: result.log,
-        wasForceReset: result.wasForceReset,
-      };
+      } else { statusText = "更新失败"; }
+      return { name: repoDisplayName, statusText, statusClass: result.success ? (result.hasChanges || result.wasForceReset ? "status-ok" : "status-no-change") : "status-fail", error: result.error, log: result.log, wasForceReset: result.wasForceReset };
     };
 
-    // 依次处理各个仓库的更新
     if (Repo1Exists) {
       reportResults.push(await processRepoResult( 1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库 (核心)", Default_Config.Main_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch, true ));
     } else {
       reportResults.push({ name: "一号仓库 (核心)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-      overallSuccess = false; // 核心未下载，总体视为不成功
+      overallSuccess = false;
     }
-
     if (Repo2UrlConfigured) {
-      if (Repo2Exists) {
-        reportResults.push(await processRepoResult( 2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库 (附属)", MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch ));
-      } else {
-        reportResults.push({ name: "二号仓库 (附属)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-      }
-    } else {
-      reportResults.push({ name: "二号仓库 (附属)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    }
-
+      if (Repo2Exists) reportResults.push(await processRepoResult( 2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库 (附属)", MiaoPluginMBT.MBTConfig.Ass_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch ));
+      else reportResults.push({ name: "二号仓库 (附属)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+    } else { reportResults.push({ name: "二号仓库 (附属)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false }); }
     if (Repo3UrlConfigured) {
-      if (Repo3Exists) {
-        reportResults.push(await processRepoResult( 3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库 (涩涩)", MiaoPluginMBT.MBTConfig.Sexy_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch ));
-      } else {
-        reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-      }
-    } else {
-      reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    }
+      if (Repo3Exists) reportResults.push(await processRepoResult( 3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库 (涩涩)", MiaoPluginMBT.MBTConfig.Sexy_Github_URL, MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch ));
+      else reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+    } else { reportResults.push({ name: "三号仓库 (涩涩)", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false }); }
 
-    // 如果更新成功且检测到变更，执行更新后设置
     if (overallSuccess && overallHasChanges) {
       logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
       await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
     }
 
-    // 准备报告所需的数据
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    const reportData = {
-      pluginVersion: MiaoPluginMBT.GetVersionStatic(),
-      duration: duration,
-      scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-      results: reportResults,
-      overallSuccess: overallSuccess, // 传递总体成功状态
-      overallHasChanges: overallHasChanges, // 传递总体变更状态
-    };
+    const reportData = { pluginVersion: MiaoPluginMBT.GetVersionStatic(), duration, scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), results: reportResults, overallSuccess, overallHasChanges };
 
-    let tempImgFilePath = ""; // 存储生成的图片路径用于清理
-    let reportSent = false; // 标记报告是否已发送或处理
+    let tempImgFilePath = "";
+    let reportSent = false;
+    const rendererBaseName = "guguniu-update";
+    const rendererTempHtmlDir = path.join(MiaoPluginMBT.paths.YunzaiPath, 'temp', 'html', rendererBaseName);
 
-    try { 
+    try {
+        await fsPromises.mkdir(rendererTempHtmlDir, { recursive: true });
+    } catch (mkdirError) {
+        logger.error(`${logPrefix} [更新报告] 无法创建 Puppeteer 所需的渲染器临时目录: ${rendererTempHtmlDir}`, mkdirError);
+        await this.ReportError(e, "更新图库报告", mkdirError, "无法创建截图临时目录");
+        return overallHasChanges;
+    }
+
+    try {
         const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
-        try {
-            await fsPromises.access(sourceHtmlPath);
-        } catch (err) {
-            // 模板文件找不到，记录错误并尝试发送文本回退
-            logger.error(`${logPrefix} [更新报告] 找不到更新报告模板: ${sourceHtmlPath}`, err);
-            let fallbackMsg = `${logPrefix} 更新检查完成，但报告模板文件丢失。\n`;
-            reportResults.forEach((res) => {
-                fallbackMsg += `${res.name}: ${res.statusText}\n`;
-                if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`;
-            });
-            // 根据是否为定时任务和是否需要通知决定如何发送回退消息
-            const shouldNotifyMasterOnError = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
-            if (e && !isScheduled) { // 手动触发
-                 await e.reply(fallbackMsg);
-            } else if (shouldNotifyMasterOnError && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 定时任务且需通知
-                Bot.master.forEach((masterId) =>
-                    Bot.pickUser(masterId).sendMsg(fallbackMsg).catch((sendErr) => logger.error("发送定时更新文本报告给主人失败(模板丢失)", sendErr))
-                );
-            }
-            return overallHasChanges; // 模板丢失，无法继续生成报告，直接返回
-        }
+        await fsPromises.access(sourceHtmlPath); 
 
-        const baseTempHtmlDir = MiaoPluginMBT.paths.tempPath; 
-        try {
-            await fsPromises.mkdir(baseTempHtmlDir, { recursive: true });
-        } catch (mkdirError) {
-            logger.error(`${logPrefix} [更新报告] 无法创建 Puppeteer 所需的基础临时目录: ${baseTempHtmlDir}`, mkdirError);
-            await this.ReportError(e, "更新图库报告", mkdirError, "无法创建截图临时目录");
-            return overallHasChanges; // 创建目录失败，无法继续
-        }
-
-        // 确保最终图片保存目录存在
         await fsPromises.mkdir(MiaoPluginMBT.paths.tempImgPath, { recursive: true });
-        // 定义最终图片保存路径
         tempImgFilePath = path.join(MiaoPluginMBT.paths.tempImgPath, `update-report-${Date.now()}.png`);
 
-        const rendererBaseName = "guguniu";
-        const img = await puppeteer.screenshot(rendererBaseName, {
-            tplFile: sourceHtmlPath,
-            savePath: tempImgFilePath,
-            imgType: "png",
-            pageGotoParams: { waitUntil: "networkidle0" },
-            ...reportData, 
-            screenshotOptions: { fullPage: true },
-            pageBoundingRect: { selector: ".container", padding: 0 },
-            width: 560,
-        });
+        const img = await puppeteer.screenshot(rendererBaseName, { tplFile: sourceHtmlPath, savePath: tempImgFilePath, imgType: "png", pageGotoParams: { waitUntil: "networkidle0" }, ...reportData, screenshotOptions: { fullPage: true }, pageBoundingRect: { selector: ".container", padding: 0 }, width: 560 });
 
-        // 根据任务类型和结果决定是否发送报告
         const shouldNotifyMaster = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
 
-        if (img) { 
-            if (!isScheduled && e) { // 手动触发，总是发送给触发者
-                await e.reply(img);
-            } else if (shouldNotifyMaster && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 定时任务触发且需要通知主人
+        if (img) {
+            if (!isScheduled && e) await e.reply(img);
+            else if (shouldNotifyMaster && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) {
                 logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
                 for (const masterId of Bot.master) {
-                    try {
-                        await Bot.pickUser(masterId).sendMsg(img);
-                        logger.info(`${logPrefix} [定时更新] 图片报告已发送给主人 ${masterId}`);
-                    } catch (sendErr) {
-                        // 图片发送失败，尝试发送文本回退给该主人
+                    try { await Bot.pickUser(masterId).sendMsg(img); }
+                    catch (sendErr) {
                         logger.error(`${logPrefix} [定时更新] 发送图片报告给主人 ${masterId} 失败:`, sendErr);
                         let fallbackMsgMaster = `${logPrefix} 定时更新报告图片发送失败。\n`;
-                        reportResults.forEach((res) => {
-                            fallbackMsgMaster += `${res.name}: ${res.statusText}\n`;
-                            if (res.error && res.error.message) fallbackMsgMaster += `  错误: ${res.error.message.split("\n")[0]}\n`;
-                        });
+                        reportResults.forEach((res) => { fallbackMsgMaster += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsgMaster += `  错误: ${res.error.message.split("\n")[0]}\n`; });
                         try { await Bot.pickUser(masterId).sendMsg(fallbackMsgMaster); }
                         catch (innerSendErr) { logger.error(`${logPrefix} [定时更新] 发送文本回退给主人 ${masterId} 也失败:`, innerSendErr); }
                     }
                 }
-            } else if (isScheduled && !shouldNotifyMaster) { // 定时任务，但无变更无错误
-                logger.info(`${logPrefix} [定时更新] 未检测到变更且无错误，不发送通知。`);
-            }
-            reportSent = true; // 标记报告已处理（发送或决定不发送）
-        } else { // 图片生成失败
+            } else if (isScheduled && !shouldNotifyMaster) logger.info(`${logPrefix} [定时更新] 未检测到变更且无错误，不发送通知。`);
+            reportSent = true;
+        } else {
             logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空)。`);
-            // 准备文本回退消息
             let fallbackMsg = `${logPrefix} 更新检查完成，但报告图片生成失败。\n`;
-            reportResults.forEach((res) => {
-                fallbackMsg += `${res.name}: ${res.statusText}\n`;
-                if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`;
-            });
-
-            if (e && !isScheduled) { // 手动触发的文本回退
-                await e.reply(fallbackMsg);
-            } else if (shouldNotifyMaster && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 定时任务触发且需要通知（图片失败，文本回退）
+            reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
+            if (e && !isScheduled) await e.reply(fallbackMsg);
+            else if (shouldNotifyMaster && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) {
                 logger.warn(`${logPrefix} [定时更新] 图片生成失败，尝试向主人发送文本回退报告...`);
-                Bot.master.forEach((masterId) => {
-                    Bot.pickUser(masterId).sendMsg(fallbackMsg)
-                        .catch((sendErr) => logger.error(`${logPrefix} [定时更新] 发送文本回退报告给主人 ${masterId} 失败(图片生成错误):`, sendErr));
-                });
-            } else if (isScheduled && !shouldNotifyMaster) { // 定时任务，图片失败，但无需通知
-                logger.info(`${logPrefix} [定时更新] 图片生成失败，且无变更无错误，不发送通知。`);
-            }
-            reportSent = true; // 标记报告已处理（尝试发送文本或决定不发送）
+                Bot.master.forEach((masterId) => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch((sendErr) => logger.error(`${logPrefix} [定时更新] 发送文本回退报告给主人 ${masterId} 失败(图片生成错误):`, sendErr)));
+            } else if (isScheduled && !shouldNotifyMaster) logger.info(`${logPrefix} [定时更新] 图片生成失败，且无变更无错误，不发送通知。`);
+            reportSent = true;
         }
-    } catch (reportError) { // 捕获报告生成/发送过程中的其他错误
+    } catch (reportError) {
         logger.error(`${logPrefix} [更新报告] 生成或发送图片报告时出错:`, reportError);
-        // 根据是否需要通知，决定是否发送错误提示
         const shouldNotifyMasterOnError = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
-        if (!reportSent) { // 只有在之前没有成功发送任何报告时才尝试错误回退
+        if (!reportSent) {
             let fallbackMsg = `${logPrefix} 更新检查完成，但报告图片生成/发送失败。\n`;
-            reportResults.forEach((res) => {
-                fallbackMsg += `${res.name}: ${res.statusText}\n`;
-                if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`;
-            });
-            if (e && !isScheduled) { // 手动触发的错误回退
-                await e.reply(fallbackMsg);
-            } else if (shouldNotifyMasterOnError && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) { // 定时任务的错误回退（需要通知）
+            reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
+            if (e && !isScheduled) await e.reply(fallbackMsg);
+            else if (shouldNotifyMasterOnError && typeof Bot !== 'undefined' && Bot.master && Bot.master.length > 0) {
                 logger.error(`${logPrefix} [定时更新] 报告生成/发送失败，向主人发送文本错误提示...`);
-                Bot.master.forEach((masterId) => {
-                    Bot.pickUser(masterId).sendMsg(fallbackMsg)
-                        .catch((sendErr) => logger.error(`${logPrefix} [定时更新] 发送错误文本提示给主人 ${masterId} 失败:`, sendErr));
-                });
-            } else if (isScheduled && !shouldNotifyMasterOnError) { // 定时任务的错误回退（无需通知）
-                logger.info(`${logPrefix} [定时更新] 报告生成/发送失败，且无变更无(原始)错误，不发送通知。`);
-            }
+                Bot.master.forEach((masterId) => Bot.pickUser(masterId).sendMsg(fallbackMsg).catch((sendErr) => logger.error(`${logPrefix} [定时更新] 发送错误文本提示给主人 ${masterId} 失败:`, sendErr)));
+            } else if (isScheduled && !shouldNotifyMasterOnError) logger.info(`${logPrefix} [定时更新] 报告生成/发送失败，且无变更无(原始)错误，不发送通知。`);
         }
-    } finally { 
-      // 清理生成的图片文件
-        if (tempImgFilePath && fs.existsSync(tempImgFilePath)) {
-            try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
-        }
+    } finally {
+        if (tempImgFilePath && fs.existsSync(tempImgFilePath)) try { await fsPromises.unlink(tempImgFilePath); } catch (unlinkErr) {}
+        const tempRenderDir = path.join(MiaoPluginMBT.paths.YunzaiPath, 'temp', 'html', rendererBaseName);
+        if (fs.existsSync(tempRenderDir)) try { await safeDelete(tempRenderDir); } catch (delErr) {}
     }
 
     logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
-    return overallHasChanges; // 返回是否有变更，供 RunUpdateTask 判断
+    return overallHasChanges;
   }
-
+  
   /**
    * @description 处理 #重置咕咕牛 命令，彻底清理图库相关文件和状态。
    */
@@ -5215,7 +5097,7 @@ export class MiaoPluginMBT extends plugin {
           `${Default_Config.logPrefix} [加载元数据] 在处理过程中忽略了 ${invalidCount} 条无效或格式错误的元数据。`
         );
       logger.info(
-        `${Default_Config.logPrefix} [加载元数据] 处理完成，最终获得 ${validCount} 条有效图片元数据。`
+        `${Default_Config.logPrefix} [加载元数据] 处理完成，存在 ${validCount} 条有效元数据。`
       );
       return validData;
     } else {
@@ -5409,16 +5291,10 @@ export class MiaoPluginMBT extends plugin {
       });
     }
 
-    logger.info(
-      `${
-        Default_Config.logPrefix
-      } [生成封禁] 等级PFL=${pflLevel} (${Purify_Level.getDescription(
-        pflLevel
-      )}), 开关(Ai:${!filterAi},彩蛋:${!filterEasterEgg},横屏:${!filterLayout})`
-    );
-    // logger.info(
-    //   `${Default_Config.logPrefix} [生成封禁] 结果: 手动=${initialUserBansCount}, PFL屏蔽=${pflPurifiedCount}, 开关屏蔽=${switchPurifiedCount}, 总生效=${effectiveBans.size}`
-    // );
+    // logger.info(`${Default_Config.logPrefix} [生成封禁] 等级PFL=${pflLevel} (${Purify_Level.getDescription(pflLevel)}), 开关(Ai:${!filterAi},彩蛋:${!filterEasterEgg},横屏:${!filterLayout})`);
+       //调试日志-精简
+
+    // logger.info(`${Default_Config.logPrefix} [生成封禁] 结果: 手动=${initialUserBansCount}, PFL屏蔽=${pflPurifiedCount}, 开关屏蔽=${switchPurifiedCount}, 总生效=${effectiveBans.size}`);
     //调试日志-精简
 
     MiaoPluginMBT._activeBanSet = effectiveBans;
@@ -5767,9 +5643,7 @@ export class MiaoPluginMBT extends plugin {
         logger.warn(
           `${Default_Config.logPrefix} [加载用户封禁] 忽略 ${invalidOrDuplicateCount} 条无效/重复。`
         );
-      logger.info(
-        `${Default_Config.logPrefix} [加载用户封禁] 完成: ${validCount} 条。`
-      );
+      // logger.info(`${Default_Config.logPrefix} [加载用户封禁] 完成: ${validCount} 条。`);  //调试日志-精简
       return true;
     } else {
       if (success && !Array.isArray(data)) {
@@ -5909,9 +5783,7 @@ export class MiaoPluginMBT extends plugin {
     );
     MiaoPluginMBT._aliasData = { ...loadedAliases, combined };
     const combinedCount = Object.keys(combined).length;
-    logger.info(
-      `${Default_Config.logPrefix} [加载别名] 完成: ${combinedCount}主名。成功: ${overallSuccess}`
-    );
+    // logger.info(`${Default_Config.logPrefix} [加载别名] 完成: ${combinedCount}主名。成功: ${overallSuccess}`);  //调试日志-精简
     return overallSuccess;
   }
 
@@ -5947,9 +5819,7 @@ export class MiaoPluginMBT extends plugin {
       }
     }
     await Promise.all(deletePromises);
-    logger.info(
-      `${Default_Config.logPrefix} [应用封禁] 完成: 处理 ${deletePromises.length} 项, 删除 ${deletedCount} 文件。`
-    );
+    //logger.info(`${Default_Config.logPrefix} [应用封禁] 完成: 处理 ${deletePromises.length} 项, 删除 ${deletedCount} 文件。`);  //调试日志-精简
   }
 
   /**
