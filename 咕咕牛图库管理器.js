@@ -11,7 +11,7 @@ import puppeteer from "../../lib/puppeteer/puppeteer.js";
 
 /**
  * @description 咕咕牛图库管理器
- * @version 4.9.1
+ * @version 4.9.2
  * @based v4.8.4 & v4.8.8 & v4.8.9
  * @description_details
  *    - 支持多仓库存储与管理。
@@ -27,13 +27,7 @@ import puppeteer from "../../lib/puppeteer/puppeteer.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Purify_Level = {
-  NONE: 0,
-  RX18_ONLY: 1,
-  PX18_PLUS: 2,
-  getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"),
-};
-
+const Purify_Level = {NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"),};
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
 const Default_Config = {
   Main_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT/",
@@ -363,7 +357,9 @@ async function copyFolderRecursive(source, target, options = {}, logger = global
   try {
     await fsPromises.access(source);
   } catch (err) {
-    if (err.code === ERROR_CODES.NotFound) return;
+    if (err.code === ERROR_CODES.NotFound) {
+      return;
+    }
     logger.error(`${Default_Config.logPrefix} [递归复制] 源访问失败 ${source}:`, err);
     throw err;
   }
@@ -806,7 +802,7 @@ export class MiaoPluginMBT extends plugin {
 
   constructor() {
     super({
-      name: "『咕咕牛🐂』图库管理器 v4.9.1",
+      name: "『咕咕牛🐂』图库管理器 v4.9.2",
       dsc: "『咕咕牛🐂』图库管理器",
       event: "message",
       priority: 500,
@@ -2372,7 +2368,7 @@ export class MiaoPluginMBT extends plugin {
 
       if (isAdding) {
         if (isCurrentlyUserBanned) {
-          replyMsg = `${targetFileName} ❌️ 已经被你手动封禁啦。`;
+          replyMsg = `${targetFileName} ❌️ 封禁已存在哦。`;
         } else {
           try {
             MiaoPluginMBT._userBanSet.add(targetRelativePath);
@@ -2386,7 +2382,7 @@ export class MiaoPluginMBT extends plugin {
               configChanged = false;
               await this.ReportError(e, `${actionVerb}图片`, new Error("保存封禁列表失败"));
             } else {
-              replyMsg = `${targetFileName} 🚫 已经封禁了。`;
+              replyMsg = `${targetFileName} 🚫 封禁了~`;
             }
           } catch (err) {
             logger.error(`${logPrefix} [${actionVerb}] 添加封禁时发生内部错误:`, err);
@@ -2398,7 +2394,7 @@ export class MiaoPluginMBT extends plugin {
       } else {
         // 解禁
         if (!isCurrentlyUserBanned) {
-          replyMsg = `${targetFileName} ❓ 咦？这个就没在你的封禁列表里呀。`;
+          replyMsg = `${targetFileName} ❓ 没找到哦~`;
         } else {
           try {
             MiaoPluginMBT._userBanSet.delete(targetRelativePath);
@@ -2414,7 +2410,7 @@ export class MiaoPluginMBT extends plugin {
               needsRestore = false;
               await this.ReportError(e, `${actionVerb}图片`, new Error("保存封禁列表失败"));
             } else {
-              replyMsg = `${targetFileName} ✅️ 好嘞，已经从你的手动封禁列表里移除了。`;
+              replyMsg = `${targetFileName} ✅️ 好嘞，解封!`;
             }
           } catch (err) {
             logger.error(`${logPrefix} [${actionVerb}] 解禁时发生内部错误:`, err);
@@ -2647,7 +2643,8 @@ export class MiaoPluginMBT extends plugin {
       //   `${logPrefix} [可视化] 找到 ${totalImageCount} 张图片，将分 ${totalBatches} 批发送...`
       // );
       //调试日志-精简
-      await e.reply(`${logPrefix} 发现${totalImageCount}张 [${standardMainName}] 的图片, 分${totalBatches}批发送, 请注意查收~`);
+      //await e.reply(`${logPrefix} 发现${totalImageCount}张 [${standardMainName}] 的图片, 分${totalBatches}批发送, 请注意查收~`); //不启用
+      await e.reply(`[${standardMainName} ] 有 ${totalImageCount} 张面板图\n分 ${totalBatches} 批发送, 请注意查收~`,true); 
       await common.sleep(500);
 
       let sourceTplFilePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "visualize.html");
@@ -3031,11 +3028,11 @@ export class MiaoPluginMBT extends plugin {
 
   /**
    * @description 处理 #咕咕牛测速 命令，测试代理节点速度并发送图片报告。
-   *              模仿检查命令，使用 tplFile + ...data 截图方式。
+   *              使用 tplFile + ...data 截图方式。
    */
   async ManualTestProxies(e) {
     if (!(await this.CheckInit(e))) return true;
-    await e.reply(`${this.logPrefix} 收到！开始火力全开测试网络节点...`, true);
+    await e.reply(`收到！开始火力全开测试网络节点🚀🚀🚀🚀🚀🚀🚀🚀🚀...`, true);
     const startTime = Date.now();
     let speeds1 = [],
       best1 = null;
@@ -3137,7 +3134,7 @@ export class MiaoPluginMBT extends plugin {
   }
   /**
    * @description 显示设置面板图片。
-   *              模仿检查命令，使用 tplFile + ...data 截图方式。
+   *              使用 tplFile + ...data 截图方式。
    */
   async ShowSettingsPanel(e, extraMsg = "") {
     if (!(await this.CheckInit(e))) return true;
@@ -5357,6 +5354,27 @@ export class MiaoPluginMBT extends plugin {
       const sourcePath = path.join(sourceBasePath, relativePath);
       const targetPath = await MiaoPluginMBT.DetermineTargetPath(relativePath);
       if (targetPath) {
+        let basePluginDirForThisTarget = null;
+        const imgSourceFolderType = relativePath.split("/")[0]; 
+
+        if (imgSourceFolderType === MiaoPluginMBT.paths.sourceFolders.gs || imgSourceFolderType === MiaoPluginMBT.paths.sourceFolders.sr) {
+          basePluginDirForThisTarget = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", "miao-plugin");
+        } else if (imgSourceFolderType === MiaoPluginMBT.paths.sourceFolders.zzz) {
+          basePluginDirForThisTarget = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", "ZZZ-Plugin");
+        } else if (imgSourceFolderType === MiaoPluginMBT.paths.sourceFolders.waves) {
+          basePluginDirForThisTarget = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", "waves-plugin");
+        }
+        
+        if (basePluginDirForThisTarget) {
+          try {
+            await fsPromises.access(basePluginDirForThisTarget);
+          } catch (pluginAccessError) {
+            if (pluginAccessError.code === ERROR_CODES.NotFound) {
+              noTarget++;
+              continue; 
+            }
+          }
+        }
         promises.push(
           (async () => {
             try {
@@ -5667,9 +5685,9 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, "..", "package.json");
       const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      return pkg.version || "4.9.1";
+      return pkg.version || "4.9.2";
     } catch {
-      return "4.9.1";
+      return "4.9.2";
     }
   }
 
