@@ -22818,5 +22818,45 @@
         },
         "timestamp": "2025-05-03T10:18:29.753Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4837735027",
+        "characterName": "刻晴",
+        "path": "gs-character/刻晴/刻晴Gu20.webp",
+        "attributes": {
+            "filename": "刻晴Gu20.webp",
+            "parentFolder": "刻晴",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fa26b06637f7831c678219e8af19616f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T06:00:21.308Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2864843945",
+        "characterName": "玛拉妮",
+        "path": "gs-character/玛拉妮/玛拉妮Gu3.webp",
+        "attributes": {
+            "filename": "玛拉妮Gu3.webp",
+            "parentFolder": "玛拉妮",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8668d8a48770d80e5f5f81a1e14d64d4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T06:00:28.019Z",
+        "sourceGallery": "gs-character"
     }
 ]
