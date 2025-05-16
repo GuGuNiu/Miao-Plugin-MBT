@@ -69,14 +69,14 @@
             "parentFolder": "阿蕾奇诺",
             "isPx18": false,
             "isRx18": false,
-            "layout": "fullscreen",
+            "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "1c22fac9f658b2759ef8e95499a5193e",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-09T02:48:38.317Z",
+        "timestamp": "2025-05-16T09:49:34.685Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1349,14 +1349,14 @@
             "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "layout": "fullscreen",
+            "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "91dabc50e135765187bfa575f21cc796",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-15T03:36:30.394Z",
+        "timestamp": "2025-05-16T09:50:43.156Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1569,14 +1569,14 @@
             "parentFolder": "胡桃",
             "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "7ec852a646695bbe12399d85ef20fabe",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.255Z",
+        "timestamp": "2025-05-16T09:51:04.591Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1587,7 +1587,7 @@
         "attributes": {
             "filename": "胡桃Gu24.webp",
             "parentFolder": "胡桃",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -1596,7 +1596,7 @@
             "md5": "8b4eabba0bd2040c94f64210b8cc166b",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:51:32.946Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1907,16 +1907,16 @@
         "attributes": {
             "filename": "胡桃Gu9.webp",
             "parentFolder": "胡桃",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
-            "layout": "fullscreen",
+            "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "d4d346761f00d4bffa258a5be5fe5f71",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:50:31.747Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2267,7 +2267,7 @@
         "attributes": {
             "filename": "雷电将军Gu10.webp",
             "parentFolder": "雷电将军",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "fullscreen",
             "isEasterEgg": false,
@@ -2276,7 +2276,7 @@
             "md5": "5e3d095dad1836e2615834fcd9237556",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-05T01:31:52.404Z",
+        "timestamp": "2025-05-16T09:52:30.755Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2327,7 +2327,7 @@
         "attributes": {
             "filename": "雷电将军Gu13.webp",
             "parentFolder": "雷电将军",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -2336,7 +2336,7 @@
             "md5": "f01996d813eb45a2f261eb662088927a",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:53:05.922Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2407,7 +2407,7 @@
         "attributes": {
             "filename": "雷电将军Gu17.webp",
             "parentFolder": "雷电将军",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -2416,7 +2416,7 @@
             "md5": "c322dd82d2032e52b0d0ddcbe7305eff",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:52:41.916Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2447,7 +2447,7 @@
         "attributes": {
             "filename": "雷电将军Gu19.webp",
             "parentFolder": "雷电将军",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -2456,7 +2456,7 @@
             "md5": "ed71550cf85b7efa664365c1dc600460",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-05T01:32:15.251Z",
+        "timestamp": "2025-05-16T09:52:52.931Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -2547,7 +2547,7 @@
         "attributes": {
             "filename": "雷电将军Gu23.webp",
             "parentFolder": "雷电将军",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -2556,7 +2556,7 @@
             "md5": "b86ecfd2257226709d23f0ff6bbe49ec",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.256Z",
+        "timestamp": "2025-05-16T09:53:15.178Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -3967,7 +3967,7 @@
         "attributes": {
             "filename": "娜维娅Gu1.webp",
             "parentFolder": "娜维娅",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -3976,7 +3976,7 @@
             "md5": "6d8f339011e74af5b1eae162f5a74c98",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:55:07.082Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -3987,7 +3987,7 @@
         "attributes": {
             "filename": "娜维娅Gu10.webp",
             "parentFolder": "娜维娅",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -3996,7 +3996,7 @@
             "md5": "039398b567298a0842558e1a155029f5",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:55:46.402Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -4107,7 +4107,7 @@
         "attributes": {
             "filename": "娜维娅Gu4.webp",
             "parentFolder": "娜维娅",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -4116,7 +4116,7 @@
             "md5": "b3b6ec9cfb190d9716c44e039ea6b1a7",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.257Z",
+        "timestamp": "2025-05-16T09:55:18.154Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -4127,7 +4127,7 @@
         "attributes": {
             "filename": "娜维娅Gu5.webp",
             "parentFolder": "娜维娅",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -4136,7 +4136,7 @@
             "md5": "2cf1aa669fdd8a461101e6c7f3802070",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:55:24.778Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -4207,8 +4207,8 @@
         "attributes": {
             "filename": "娜维娅Gu9.webp",
             "parentFolder": "娜维娅",
-            "isPx18": true,
-            "isRx18": false,
+            "isPx18": false,
+            "isRx18": true,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
@@ -4216,7 +4216,7 @@
             "md5": "f7611e5217636ac9b01253705dfa989a",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:55:35.593Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -4988,7 +4988,7 @@
             "filename": "珊瑚宫心海Gu2.webp",
             "parentFolder": "珊瑚宫心海",
             "isPx18": false,
-            "isRx18": false,
+            "isRx18": true,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
@@ -4996,7 +4996,7 @@
             "md5": "735f7e886c8d7a4aa22fb39d92f8ef95",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:57:39.506Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5207,7 +5207,7 @@
         "attributes": {
             "filename": "珊瑚宫心海Gu3.webp",
             "parentFolder": "珊瑚宫心海",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -5216,7 +5216,7 @@
             "md5": "2f580fa4ec29e9e0677a49de7e94666b",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T09:57:44.988Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5387,7 +5387,7 @@
         "attributes": {
             "filename": "申鹤Gu11.webp",
             "parentFolder": "申鹤",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -5396,7 +5396,7 @@
             "md5": "39c30a0002ce333f2e3aa1f950eb4f5b",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.258Z",
+        "timestamp": "2025-05-16T09:59:22.495Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5447,7 +5447,7 @@
         "attributes": {
             "filename": "申鹤Gu14.webp",
             "parentFolder": "申鹤",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -5456,7 +5456,7 @@
             "md5": "d12683d7df86db615d9e16b293dc9410",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.258Z",
+        "timestamp": "2025-05-16T09:59:11.935Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5747,7 +5747,7 @@
         "attributes": {
             "filename": "神里绫华Gu14.webp",
             "parentFolder": "神里绫华",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -5756,7 +5756,7 @@
             "md5": "7f005fd00da4d670565871a3a3a123c8",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T10:00:06.310Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5788,7 +5788,7 @@
             "filename": "神里绫华Gu16.webp",
             "parentFolder": "神里绫华",
             "isPx18": false,
-            "isRx18": false,
+            "isRx18": true,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
@@ -5796,7 +5796,7 @@
             "md5": "be097caf04a8fd19a24ac6be5d128875",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T10:00:59.246Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5909,14 +5909,14 @@
             "parentFolder": "神里绫华",
             "isPx18": false,
             "isRx18": false,
-            "layout": "catcake",
+            "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "3a236e4716fa9fd84b85518b495f9c65",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-16T10:01:26.430Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -5947,7 +5947,7 @@
         "attributes": {
             "filename": "神里绫华Gu3.webp",
             "parentFolder": "神里绫华",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -5956,7 +5956,7 @@
             "md5": "7fd00cfc6be9709c7bb365409adfa3e8",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.258Z",
+        "timestamp": "2025-05-16T09:59:39.384Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -6068,7 +6068,7 @@
             "filename": "神里绫华Gu9.webp",
             "parentFolder": "神里绫华",
             "isPx18": false,
-            "isRx18": false,
+            "isRx18": true,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
@@ -6076,7 +6076,7 @@
             "md5": "97351be21e0b56b833f91b48ed793af5",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T08:11:10.259Z",
+        "timestamp": "2025-05-16T09:59:51.262Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -6163,9 +6163,9 @@
         "storagebox": "Miao-Plugin-MBT",
         "gid": "6732725464",
         "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦蕾莎Gu1.webp",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu1.webp",
         "attributes": {
-            "filename": "瓦蕾莎Gu1.webp",
+            "filename": "瓦雷莎Gu1.webp",
             "parentFolder": "瓦雷莎",
             "isPx18": false,
             "isRx18": false,
@@ -6183,9 +6183,9 @@
         "storagebox": "Miao-Plugin-MBT",
         "gid": "3059951933",
         "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦蕾莎Gu2.webp",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu2.webp",
         "attributes": {
-            "filename": "瓦蕾莎Gu2.webp",
+            "filename": "瓦雷莎Gu2.webp",
             "parentFolder": "瓦雷莎",
             "isPx18": true,
             "isRx18": false,
@@ -22857,6 +22857,46 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-16T06:00:28.019Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3651239917",
+        "characterName": "雷电将军",
+        "path": "gs-character/雷电将军/雷电将军Gu35.webp",
+        "attributes": {
+            "filename": "雷电将军Gu35.webp",
+            "parentFolder": "雷电将军",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b2dc38ab6b3f95e8fce7352200bf943f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T09:38:19.700Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1534666274",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu1.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu1.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "419c5ffc0692bbb2865fa2f345f58f61",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T09:38:28.345Z",
         "sourceGallery": "gs-character"
     }
 ]
