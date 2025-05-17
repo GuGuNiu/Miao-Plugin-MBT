@@ -1261,6 +1261,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "1534666274",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu1.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu1.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "419c5ffc0692bbb2865fa2f345f58f61",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T09:38:28.345Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "9940761963",
         "characterName": "胡桃",
         "path": "gs-character/胡桃/胡桃Gu1.webp",
@@ -2801,6 +2821,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "3651239917",
+        "characterName": "雷电将军",
+        "path": "gs-character/雷电将军/雷电将军Gu35.webp",
+        "attributes": {
+            "filename": "雷电将军Gu35.webp",
+            "parentFolder": "雷电将军",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b2dc38ab6b3f95e8fce7352200bf943f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T09:38:19.700Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "7625325922",
         "characterName": "雷电将军",
         "path": "gs-character/雷电将军/雷电将军Gu4.webp",
@@ -3017,6 +3057,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-10T08:11:10.256Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2864843945",
+        "characterName": "玛拉妮",
+        "path": "gs-character/玛拉妮/玛拉妮Gu3.webp",
+        "attributes": {
+            "filename": "玛拉妮Gu3.webp",
+            "parentFolder": "玛拉妮",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8668d8a48770d80e5f5f81a1e14d64d4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T06:00:28.019Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -7398,46 +7458,6 @@
         },
         "timestamp": "2025-05-03T10:18:29.752Z",
         "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "7085425047",
-        "characterName": "波提欧",
-        "path": "sr-character/波提欧/波提欧Gu1.webp",
-        "attributes": {
-            "filename": "波提欧Gu1.webp",
-            "parentFolder": "波提欧",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "d44ab666b7a1b2f35e1aec6d26b91ad4",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-15T16:40:16.053Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "6892570099",
-        "characterName": "波提欧",
-        "path": "sr-character/波提欧/波提欧Gu2.webp",
-        "attributes": {
-            "filename": "波提欧Gu2.webp",
-            "parentFolder": "波提欧",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "6e8a1db6eecb06a779dece2471523018",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-15T16:40:16.054Z",
-        "sourceGallery": "sr-character"
     },
     {
         "storagebox": "Miao-Plugin-MBT",
@@ -12517,6 +12537,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-03T10:18:29.752Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4837735027",
+        "characterName": "刻晴",
+        "path": "gs-character/刻晴/刻晴Gu20.webp",
+        "attributes": {
+            "filename": "刻晴Gu20.webp",
+            "parentFolder": "刻晴",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fa26b06637f7831c678219e8af19616f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-16T06:00:21.308Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -17841,6 +17881,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "7085425047",
+        "characterName": "波提欧",
+        "path": "sr-character/波提欧/波提欧Gu1.webp",
+        "attributes": {
+            "filename": "波提欧Gu1.webp",
+            "parentFolder": "波提欧",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d44ab666b7a1b2f35e1aec6d26b91ad4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-15T16:40:16.053Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6892570099",
+        "characterName": "波提欧",
+        "path": "sr-character/波提欧/波提欧Gu2.webp",
+        "attributes": {
+            "filename": "波提欧Gu2.webp",
+            "parentFolder": "波提欧",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6e8a1db6eecb06a779dece2471523018",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-15T16:40:16.054Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "9111129382",
         "characterName": "布洛妮娅",
         "path": "sr-character/布洛妮娅/布洛妮娅Gu1.webp",
@@ -22820,83 +22900,943 @@
         "sourceGallery": "zzz-character"
     },
     {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6826264216",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu33.webp",
+        "attributes": {
+            "filename": "花火Gu33.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "35fce0e83fa24bb52ad7378f9db0c4b8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:02.681Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9416810672",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu34.webp",
+        "attributes": {
+            "filename": "花火Gu34.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "68c6c33560612efb882f2fc9f0533658",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:05.585Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2469680069",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu35.webp",
+        "attributes": {
+            "filename": "花火Gu35.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d0e22717fe5159c1e9c22b629c49707c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:08.098Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4629958823",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu36.webp",
+        "attributes": {
+            "filename": "花火Gu36.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8c47d32c6e75339b651291c5950998f7",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:12.442Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1726995114",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu37.webp",
+        "attributes": {
+            "filename": "花火Gu37.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f78eac9a35bdae50126c97bc1a6267e8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:15.809Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7065507193",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu38.webp",
+        "attributes": {
+            "filename": "花火Gu38.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "2a62b627feac59be036a6c5d26bd7027",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:20.425Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2138387079",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu39.webp",
+        "attributes": {
+            "filename": "花火Gu39.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "13d0bf4467432a54a9ea2681c66ef326",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:23.922Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9982720459",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu40.webp",
+        "attributes": {
+            "filename": "花火Gu40.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "a82175c7ee1282defe9bc0b1c4a4d98a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:27.952Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1896615778",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu41.webp",
+        "attributes": {
+            "filename": "花火Gu41.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d99b771ceec3cb25f660054a8d864543",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:31.770Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2304027559",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu42.webp",
+        "attributes": {
+            "filename": "花火Gu42.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0a28ab91c9e119663f664fab161543fd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:35.353Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7896759510",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu43.webp",
+        "attributes": {
+            "filename": "花火Gu43.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "26256593c1dab6cd3dcd1a801d477618",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:38.465Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5101084299",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu44.webp",
+        "attributes": {
+            "filename": "花火Gu44.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "cacd35b3124efdc4a0b0d06866082fb4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:41.058Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6594195357",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu45.webp",
+        "attributes": {
+            "filename": "花火Gu45.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "512e1c1ed7c1f4c0ee58584d8965c95a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:43.625Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1163417860",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu46.webp",
+        "attributes": {
+            "filename": "花火Gu46.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bdde087a938d35d5da11a0ec1ac2033b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:46.355Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8870032917",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu47.webp",
+        "attributes": {
+            "filename": "花火Gu47.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "92e051fb373fa816021ee29f283fd041",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:19:57.249Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5538817797",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu48.webp",
+        "attributes": {
+            "filename": "花火Gu48.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "568051e0f0b5f394b7c86c7f320f9595",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:03.649Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3658657123",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu49.webp",
+        "attributes": {
+            "filename": "花火Gu49.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "04536ce312f7f16353b142a3f80996b9",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:10.930Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4307067431",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu50.webp",
+        "attributes": {
+            "filename": "花火Gu50.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "73dcc207a8176466cd924acfebd44086",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:13.633Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2812690245",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu51.webp",
+        "attributes": {
+            "filename": "花火Gu51.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "53268c328867fba8e7c08bcbf79ee384",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:17.673Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4926395867",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu52.webp",
+        "attributes": {
+            "filename": "花火Gu52.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f524c03866cefbdbc3021450f807cd50",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:21.841Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8058536040",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu53.webp",
+        "attributes": {
+            "filename": "花火Gu53.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8a17d1614369b913e438a4898cdddeed",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:26.017Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7122424182",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu54.webp",
+        "attributes": {
+            "filename": "花火Gu54.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "5de8d1db3941857636f2cac776227b81",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:30.209Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9620734844",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu55.webp",
+        "attributes": {
+            "filename": "花火Gu55.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "9f29b223d44e9d68bf3f7e122ee68e22",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:32.633Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7110494244",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu56.webp",
+        "attributes": {
+            "filename": "花火Gu56.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0e1a6114ae13a99e91f04d73b39500f9",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:35.401Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4929255387",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu57.webp",
+        "attributes": {
+            "filename": "花火Gu57.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "ee2737b2e6edac477e2648584f0f4829",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:40.297Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2829993485",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu58.webp",
+        "attributes": {
+            "filename": "花火Gu58.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "abf947c1290a4a511dbcbc45c26c49ce",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:43.592Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9180993122",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu59.webp",
+        "attributes": {
+            "filename": "花火Gu59.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "deb9550b35f1e71b285fbf6b87bfece4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:51.633Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9027657786",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu60.webp",
+        "attributes": {
+            "filename": "花火Gu60.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f6173c2e1d17bae19f71a56f1c01a2b6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:20:55.754Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5064387000",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu61.webp",
+        "attributes": {
+            "filename": "花火Gu61.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8f75d97e158ba7978a188aaacc2cfd12",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:00.857Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9862036039",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu62.webp",
+        "attributes": {
+            "filename": "花火Gu62.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8ef213ade6a92aa193aeed9127630220",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:04.170Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4285688704",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu63.webp",
+        "attributes": {
+            "filename": "花火Gu63.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f7572504f6e64f0edbc97fbfd91c165b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:22:43.321Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9573332602",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu64.webp",
+        "attributes": {
+            "filename": "花火Gu64.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "2c887a8245f06374aeec0dd644a57bd4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:12.768Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4957368083",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu65.webp",
+        "attributes": {
+            "filename": "花火Gu65.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c79be469da1e5b13410a428a3b580abb",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:16.944Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8845809741",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu66.webp",
+        "attributes": {
+            "filename": "花火Gu66.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "e22fe7921b0b3a454ceb5b8cba100d3b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:20.707Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2863813743",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu67.webp",
+        "attributes": {
+            "filename": "花火Gu67.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "312f769cfcc5462cdf9780266d844a40",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:26.273Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6426711422",
+        "characterName": "飞霄",
+        "path": "sr-character/飞霄/飞霄Gu3.webp",
+        "attributes": {
+            "filename": "飞霄Gu3.webp",
+            "parentFolder": "飞霄",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b636dd6c49649291e12ed5eac4e4b808",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:34.330Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8585219407",
+        "characterName": "飞霄",
+        "path": "sr-character/飞霄/飞霄Gu4.webp",
+        "attributes": {
+            "filename": "飞霄Gu4.webp",
+            "parentFolder": "飞霄",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bcdaace66937b4969d728a54cbb6a6c2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:36.801Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3930157856",
+        "characterName": "星期日",
+        "path": "sr-character/星期日/星期日Gu1.webp",
+        "attributes": {
+            "filename": "星期日Gu1.webp",
+            "parentFolder": "星期日",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "04c072d56c08e6e8fd9e93a8254638e2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:42.064Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1658545311",
+        "characterName": "星期日",
+        "path": "sr-character/星期日/星期日Gu2.webp",
+        "attributes": {
+            "filename": "星期日Gu2.webp",
+            "parentFolder": "星期日",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c0a429c5a5ea7e200aeb60ecfff75f42",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:45.225Z",
+        "sourceGallery": "sr-character"
+    },
+    {
         "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "4837735027",
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu20.webp",
+        "gid": "6644174732",
+        "characterName": "镜流",
+        "path": "sr-character/镜流/镜流Gu15.webp",
         "attributes": {
-            "filename": "刻晴Gu20.webp",
-            "parentFolder": "刻晴",
+            "filename": "镜流Gu15.webp",
+            "parentFolder": "镜流",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c1dd9929be7db1855ee216d5c6d0f992",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:21:52.105Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6950215238",
+        "characterName": "知更鸟",
+        "path": "sr-character/知更鸟/知更鸟Gu12.webp",
+        "attributes": {
+            "filename": "知更鸟Gu12.webp",
+            "parentFolder": "知更鸟",
             "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "fa26b06637f7831c678219e8af19616f",
+            "md5": "9d77904db82475bbd98794646e95191b",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-16T06:00:21.308Z",
-        "sourceGallery": "gs-character"
+        "timestamp": "2025-05-17T10:21:57.073Z",
+        "sourceGallery": "sr-character"
     },
     {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2864843945",
-        "characterName": "玛拉妮",
-        "path": "gs-character/玛拉妮/玛拉妮Gu3.webp",
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "5850414760",
+        "characterName": "砂金",
+        "path": "sr-character/砂金/砂金Gu11.webp",
         "attributes": {
-            "filename": "玛拉妮Gu3.webp",
-            "parentFolder": "玛拉妮",
+            "filename": "砂金Gu11.webp",
+            "parentFolder": "砂金",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "974c32d3c54ea78e37430f7572f5557b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:22:01.537Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6020529287",
+        "characterName": "停云",
+        "path": "sr-character/停云/停云Gu9.webp",
+        "attributes": {
+            "filename": "停云Gu9.webp",
+            "parentFolder": "停云",
             "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "8668d8a48770d80e5f5f81a1e14d64d4",
+            "md5": "a653e2fc622ed4f7ec5984f4b8d88748",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-16T06:00:28.019Z",
-        "sourceGallery": "gs-character"
+        "timestamp": "2025-05-17T10:22:05.362Z",
+        "sourceGallery": "sr-character"
     },
     {
         "storagebox": "Miao-Plugin-MBT",
-        "gid": "3651239917",
-        "characterName": "雷电将军",
-        "path": "gs-character/雷电将军/雷电将军Gu35.webp",
+        "gid": "9610721367",
+        "characterName": "那刻夏",
+        "path": "sr-character/那刻夏/那刻夏Gu3.webp",
         "attributes": {
-            "filename": "雷电将军Gu35.webp",
-            "parentFolder": "雷电将军",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "b2dc38ab6b3f95e8fce7352200bf943f",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-16T09:38:19.700Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "1534666274",
-        "characterName": "哥伦比娅",
-        "path": "gs-character/哥伦比娅/哥伦比娅Gu1.webp",
-        "attributes": {
-            "filename": "哥伦比娅Gu1.webp",
-            "parentFolder": "哥伦比娅",
+            "filename": "那刻夏Gu3.webp",
+            "parentFolder": "那刻夏",
             "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "419c5ffc0692bbb2865fa2f345f58f61",
+            "md5": "f63683ad0a4be0bec6476b4c223146c5",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-16T09:38:28.345Z",
-        "sourceGallery": "gs-character"
+        "timestamp": "2025-05-17T10:22:09.601Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3379016510",
+        "characterName": "灵砂",
+        "path": "sr-character/灵砂/灵砂Gu2.webp",
+        "attributes": {
+            "filename": "灵砂Gu2.webp",
+            "parentFolder": "灵砂",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8ca1449aa1fb3903031c909517cc96e4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:22:14.817Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5410438649",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu1.webp",
+        "attributes": {
+            "filename": "风堇Gu1.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d7a2545b20e9a758c16a7cd57a8a0c7b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:22:19.768Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2165177141",
+        "characterName": "赛飞儿",
+        "path": "sr-character/赛飞儿/赛飞儿Gu1.webp",
+        "attributes": {
+            "filename": "赛飞儿Gu1.webp",
+            "parentFolder": "赛飞儿",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "7c17219e7c22d1def7e3ee42d1829a2d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-17T10:22:23.968Z",
+        "sourceGallery": "sr-character"
     }
 ]
