@@ -8,12 +8,10 @@
   
 </div>
 
-<br>
 
 <div align="center"> 
-  
- 仓库1️⃣：[Miao-Plugin-MBT](https://github.com/GuGuNiu/Miao-Plugin-MBT/)   &emsp;&emsp;|  &emsp;&emsp;仓库2️⃣：[Miao-Plugin-MBT-2](https://github.com/GuGuNiu/Miao-Plugin-MBT-2/)
 
+不管是哪个角色都会更新最最新的面板图，让面板图不在是迂腐不变的，符合咕咕牛审美的都会加
 </div>
 
 ## 📄 简介
