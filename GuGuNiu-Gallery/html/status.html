@@ -5,412 +5,412 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛状态</title>
     <style>
-        @font-face {
-            font-family: 'CuteFont';
-            src: local('Yuanti SC'), 
-                 local('YouYuan'), 
-                 local('Microsoft YaHei UI Rounded'), 
-                 local('Arial Rounded MT Bold'),
-                 local('Microsoft YaHei UI'),
-                 local('PingFang SC'), 
-                 sans-serif;
-            font-weight: normal;
-            font-style: normal;
-        }
+      :root {
+        --theme-primary-color: #673ab7; 
+        --theme-secondary-color: #7e57c2; 
+        --theme-light-purple: #b39ddb;
+        --theme-lighter-purple: #d1c4e9;
+        --theme-accent-color: #9575cd;
 
-        body {
-            font-family: 'CuteFont', sans-serif;
-            width: 650px;
-            margin: 20px auto;
-            padding: 30px;
-            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
-            color: #333;
-            font-size: 14px;
-            line-height: 1.6;
-            box-sizing: border-box;
-            position: relative;
-            overflow: hidden;
-        }
+        --theme-bg-start: #ede7f6;
+        --theme-bg-end: #f3e5f5;  
+        
+        --text-color-base: #373a3c;
+        --text-color-muted: #55595c;
+        --text-color-subtle: #818a91;
 
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><polygon points="40,10 70,30 70,50 40,70 10,50 10,30" fill="none" stroke="rgba(0, 172, 230, 0.25)" stroke-width="1"/><circle cx="40" cy="40" r="3" fill="rgba(255, 105, 180, 0.3)"/></svg>') repeat;
-            opacity: 0.2;
-            z-index: -1;
-        }
+        --container-glow-border-color: var(--theme-accent-color);
+        --container-glow-color-intense: rgba(103, 58, 183, 0.35);
+        --container-glow-color-soft: rgba(126, 87, 194, 0.25);
+        --container-glow-blur-near: 12px;
+        --container-glow-spread-near: 4px;
+        --container-glow-blur-far: 28px;
+        --container-glow-spread-far: 10px;
+        --base-shadow-color-container: rgba(0, 0, 0, 0.05);
 
-        body::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="20" cy="20" r="4" fill="rgba(0, 230, 118, 0.2)"/><circle cx="80" cy="80" r="3" fill="rgba(255, 193, 7, 0.2)"/></svg>') repeat;
-            opacity: 0.15;
-            z-index: -1;
-        }
+        --block-bg-start: #f9f8fc;
+        --block-bg-end: #ffffff;
+        --block-border-color: var(--theme-lighter-purple);
+        --block-shadow-color: rgba(103, 58, 183, 0.1);
 
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
-            border: 1px solid #b3e0ff;
-            position: relative;
-            overflow: hidden;
-        }
+        --h1-color: var(--theme-primary-color);
+        --h1-border-color: var(--theme-light-purple);
+        --h1-text-shadow: 0 1px 2px rgba(103, 58, 183, 0.2);
+        
+        --h2-color: var(--theme-secondary-color);
+        --h2-border-color: var(--theme-accent-color); 
 
-        .container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><line x1="0" y1="60" x2="120" y2="60" stroke="rgba(0, 172, 230, 0.15)" stroke-width="0.5"/><line x1="60" y1="0" x2="60" y2="120" stroke="rgba(255, 105, 180, 0.15)" stroke-width="0.5"/></svg>') repeat;
-            opacity: 0.1;
-            transform: rotate(45deg);
-            z-index: -1;
-        }
+        --status-ok-color: #4caf50;
+        --status-fail-color: #e53935;
+        --status-no-change-color: var(--theme-accent-color);
+        --status-skipped-color: #9e9e9e;
+        --status-force-synced-color: #d32f2f;
 
-        h1 {
-            text-align: center;
-            color: #00acc1;
-            margin: 0 0 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #4fc3f7;
-            font-size: 26px;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
-            position: relative;
-        }
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
+        --error-details-bg: rgba(103, 58, 183, 0.05);
+        --error-details-text: var(--status-fail-color);
+        --error-details-border: var(--status-fail-color);
+        --error-details-strong: #b71c1c;
+        --error-details-pre-bg: #fce4ec;
+        --error-details-pre-border: #f8bbd0;
 
-        .stats-block {
-            flex: 1;
-            min-width: 0;
-            background: linear-gradient(to bottom, #f5faff, #ffffff);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #b3e0ff;
-            box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
+        --log-bg: #f5f5f5;
+        --log-border: #eeeeee;
+        --log-text: #424242;
 
-        .stats-block::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="rgba(0, 172, 230, 0.2)" stroke-width="0.5"/></svg>') repeat;
-            opacity: 0.15;
-            z-index: -1;
-        }
+        --summary-default-bg-start: var(--block-bg-start);
+        --summary-default-bg-end: var(--theme-bg-start);
+        --summary-default-border: var(--theme-primary-color);
+        --summary-default-text: var(--text-color-base);
 
-        h2 {
-            color: #0288d1;
-            margin: 0 0 10px;
-            border-left: 4px solid #ff4081;
-            padding-left: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-        }
+        --summary-no-changes-bg: var(--theme-lighter-purple);
+        --summary-no-changes-border: var(--theme-secondary-color);
+        --summary-no-changes-text: var(--text-color-muted);
 
-        h2 .icon {
-            margin-right: 6px;
-            font-size: 18px;
-            color: #ff4081;
-            text-shadow: 0 0 3px rgba(255, 105, 180, 0.3);
-        }
+        --summary-has-errors-bg: rgba(229, 57, 53, 0.08);
+        --summary-has-errors-border: var(--status-fail-color);
+        --summary-has-errors-text: var(--status-fail-color);
+        
+        --error-summary-bg: rgba(103, 58, 183, 0.03);
+        --error-summary-border: var(--status-fail-color);
+        --error-summary-h2-color: var(--status-fail-color);
+        --error-summary-li-border: var(--theme-lighter-purple);
+      }
 
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 8px 0 0;
-        }
+      @font-face {
+        font-family: 'CuteFont';
+        src: local('Yuanti SC'), 
+             local('YouYuan'), 
+             local('Microsoft YaHei UI Rounded'), 
+             local('Arial Rounded MT Bold'),
+             local('Microsoft YaHei UI'),
+             local('PingFang SC'), 
+             sans-serif;
+        font-weight: normal;
+        font-style: normal;
+      }
+      body {
+        font-family: 'CuteFont', sans-serif;
+        width: 650px; 
+        margin: 20px auto;
+        padding: 30px;
+        background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+        color: #333;
+        font-size: 14px;
+        line-height: 1.6;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+      }
+      .container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
+        border: 1px solid #b3e0ff;
+        position: relative;
+        overflow: hidden;
+      }
+      .container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><line x1="0" y1="60" x2="120" y2="60" stroke="rgba(0, 172, 230, 0.15)" stroke-width="0.5"/><line x1="60" y1="0" x2="60" y2="120" stroke="rgba(255, 105, 180, 0.15)" stroke-width="0.5"/></svg>') repeat;
+        opacity: 0.1;
+        transform: rotate(45deg);
+        z-index: -1;
+      }
+      h1 {
+        text-align: center;
+        color: #00acc1;
+        margin: 0 0 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #4fc3f7;
+        font-size: 26px;
+        font-weight: bold;
+        text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
+        position: relative;
+      }
+      .stats-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+      .stats-block {
+        flex: 1;
+        min-width: 0;
+        background: linear-gradient(to bottom, #f5faff, #ffffff);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #b3e0ff;
+        box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+      .stats-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="rgba(0, 172, 230, 0.2)" stroke-width="0.5"/></svg>') repeat;
+        opacity: 0.15;
+        z-index: -1;
+      }
+      h2 {
+        color: #0288d1;
+        margin: 0 0 10px;
+        border-left: 4px solid #ff4081;
+        padding-left: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+      }
+      h2 .icon {
+        margin-right: 6px;
+        font-size: 18px;
+        color: #ff4081;
+        text-shadow: 0 0 3px rgba(255, 105, 180, 0.2);
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0;
+      }
+      li {
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #e0f0ff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 20px;
+      }
+      li:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+      .label {
+        color: #555;
+        margin-right: 10px;
+        white-space: nowrap;
+        font-size: 0.95em;
+      }
+      .value {
+        font-weight: bold;
+        color: #0277bd;
+        text-align: right;
+        font-size: 0.9em;
+      }
+      strong {
+        color: #ff4081;
+        text-shadow: 0 0 3px rgba(255, 105, 180, 0.2);
+      }
+      .game-stats {
+        margin-left: 10px;
+        margin-top: 6px;
+        padding-left: 10px;
+        border-left: 2px solid #4fc3f7;
+      }
+      .game-stats:empty {
+        display: none;
+      }
+      .game-stats li {
+        font-size: 0.9em;
+        padding-bottom: 2px;
+        margin-bottom: 2px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        border-bottom: none;
+      }
+      .game-stats .label {
+        min-width: 45px;
+        flex-shrink: 0;
+        margin-right: 6px;
+      }
+      .game-details {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        flex-grow: 1;
+        flex-wrap: nowrap;
+      }
+      .game-details .value {
+        text-align: left;
+        margin-right: 8px;
+        min-width: 45px;
+        white-space: nowrap;
+      }
+      .game-size {
+        color: #78909c;
+        font-weight: normal;
+        font-size: 0.85em;
+      }
+      .storage-details-block {
+        margin: 20px 0;
+        padding: 20px;
+        border-radius: 14px;
+        background: linear-gradient(to right, #f5faff, #e6f0ff);
+        border: 1px solid #ff4081;
+        box-shadow: 0 0 12px rgba(255, 105, 180, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+      .storage-details-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="3" fill="rgba(0, 230, 118, 0.25)"/><polyline points="15,45 30,30 45,45" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5" fill="none"/></svg>') repeat;
+        opacity: 0.2;
+        z-index: -1;
+      }
+      .storage-repo-columns {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        /* padding-bottom: 20px; /* 移除这里的底部边距和边框，放到新的总览行之后 */
+        /* margin-bottom: 20px; */
+        /* border-bottom: 1px solid #e0f0ff; */
+      }
+      .storage-column {
+        flex: 1;
+        min-width: 0;
+        position: relative;
+      }
+      .storage-summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        margin-top: 20px; 
+        padding-top: 20px;
+        border-top: 1px solid #e0f0ff; 
+      }
+      .storage-summary-column { 
+        flex: 2; 
+        min-width: 0;
+      }
+      .storage-repo4-column {
+        flex: 1; 
+        min-width: 0;
+      }
+      .storage-column h3, .storage-summary-column h3, .storage-repo4-column h3 {
+        color: #00acc1;
+        margin: 0 0 10px;
+        font-size: 16px;
+        font-weight: bold;
+        border-bottom: 1px solid #4fc3f7;
+        padding-bottom: 6px;
+        display: flex;
+        align-items: center;
+      }
+      .storage-column h3 .icon, .storage-repo4-column h3 .icon {
+        margin-right: 6px;
+        font-size: 16px;
+        color: #ff4081;
+      }
+      .storage-summary-column h3 .icon {
+        margin-right: 6px;
+        font-size: 17px;
+        color: #00acc1;
+      }
+      .storage-column ul, .storage-summary-column ul, .storage-repo4-column ul {
+        margin-top: 6px;
+        padding: 0;
+      }
+      .storage-column li, .storage-summary-column li, .storage-repo4-column li {
+        font-size: 0.9em;
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+      }
+      .storage-column li:last-child, .storage-summary-column li:last-child, .storage-repo4-column li:last-child {
+        border-bottom: none;
+      }
+      .storage-column .label, .storage-summary-column .label, .storage-repo4-column .label {
+        color: #555;
+      }
+      .storage-column .value, .storage-summary-column .value, .storage-repo4-column .value {
+        color: #0277bd;
+      }
+      .storage-column strong, .storage-summary-column strong, .storage-repo4-column strong {
+        color: #ff4081;
+      }
+      .repo-not-exist {
+        text-align: center;
+        color: #90a4ae;
+        font-size: 0.9em;
+        margin-top: 12px;
+        font-style: italic;
+      }
+      /* .storage-summary-section h3, .storage-summary-section ul, .storage-summary-section li 已被上面的 .storage-summary-column 规则覆盖或合并 */
 
-        li {
-            margin-bottom: 8px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #e0f0ff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            min-height: 20px;
-        }
-
-        li:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-
-        .label {
-            color: #555;
-            margin-right: 10px;
-            white-space: nowrap;
-            font-size: 0.95em;
-        }
-
-        .value {
-            font-weight: bold;
-            color: #0277bd;
-            text-align: right;
-            font-size: 0.9em;
-        }
-
-        strong {
-            color: #ff4081;
-            text-shadow: 0 0 3px rgba(255, 105, 180, 0.2);
-        }
-
-        .game-stats {
-            margin-left: 10px;
-            margin-top: 6px;
-            padding-left: 10px;
-            border-left: 2px solid #4fc3f7;
-        }
-
-        .game-stats:empty {
-            display: none;
-        }
-
-        .game-stats li {
-            font-size: 0.9em;
-            padding-bottom: 2px;
-            margin-bottom: 2px;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            border-bottom: none;
-        }
-
-        .game-stats .label {
-            min-width: 45px;
-            flex-shrink: 0;
-            margin-right: 6px;
-        }
-
-        .game-details {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            flex-grow: 1;
-            flex-wrap: nowrap;
-        }
-
-        .game-details .value {
-            text-align: left;
-            margin-right: 8px;
-            min-width: 45px;
-            white-space: nowrap;
-        }
-
-        .game-size {
-            color: #78909c;
-            font-weight: normal;
-            font-size: 0.85em;
-        }
-
-        .storage-details-block {
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 14px;
-            background: linear-gradient(to right, #f5faff, #e6f0ff);
-            border: 1px solid #ff4081;
-            box-shadow: 0 0 12px rgba(255, 105, 180, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .storage-details-block::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="3" fill="rgba(0, 230, 118, 0.25)"/><polyline points="15,45 30,30 45,45" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5" fill="none"/></svg>') repeat;
-            opacity: 0.2;
-            z-index: -1;
-        }
-
-        .storage-repo-columns {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e0f0ff;
-        }
-
-        .storage-column {
-            flex: 1;
-            min-width: 0;
-            position: relative;
-        }
-
-        .storage-column h3 {
-            color: #00acc1;
-            margin: 0 0 10px;
-            font-size: 16px;
-            font-weight: bold;
-            border-bottom: 1px solid #4fc3f7;
-            padding-bottom: 6px;
-            display: flex;
-            align-items: center;
-        }
-
-        .storage-column h3 .icon {
-            margin-right: 6px;
-            font-size: 16px;
-            color: #ff4081;
-        }
-
-        .storage-column ul {
-            margin-top: 6px;
-            padding: 0;
-        }
-
-        .storage-column li {
-            font-size: 0.9em;
-            margin-bottom: 6px;
-            padding-bottom: 4px;
-        }
-
-        .storage-column li:last-child {
-            border-bottom: none;
-        }
-
-        .storage-column .label {
-            color: #555;
-        }
-
-        .storage-column .value {
-            color: #0277bd;
-        }
-
-        .storage-column strong {
-            color: #ff4081;
-        }
-
-        .repo-not-exist {
-            text-align: center;
-            color: #90a4ae;
-            font-size: 0.9em;
-            margin-top: 12px;
-            font-style: italic;
-        }
-
-        .storage-summary-section h3 {
-            color: #ff4081;
-            margin: 0 0 10px;
-            font-size: 17px;
-            font-weight: bold;
-            border-bottom: 1px solid #4fc3f7;
-            padding-bottom: 6px;
-            display: flex;
-            align-items: center;
-        }
-
-        .storage-summary-section h3 .icon {
-            margin-right: 6px;
-            font-size: 17px;
-            color: #00acc1;
-        }
-
-        .storage-summary-section ul {
-            margin-top: 6px;
-            padding: 0;
-        }
-
-        .storage-summary-section li {
-            font-size: 0.95em;
-            margin-bottom: 6px;
-        }
-
-        .config-section {
-            margin-top: 20px;
-            background: linear-gradient(to bottom, #f5faff, #e6f0ff);
-            padding: 15px 20px;
-            border-radius: 12px;
-            border: 1px solid #00acc1;
-            box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .config-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><polygon points="20,5 35,20 20,35 5,20" fill="none" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5"/></svg>') repeat;
-            opacity: 0.2;
-            z-index: -1;
-        }
-
-        .config-section h2 {
-            color: #00acc1;
-            border-left-color: #ff4081;
-            font-size: 18px;
-        }
-
-        .config-section ul {
-            margin-top: 10px;
-        }
-
-        .config-section li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.95em;
-            margin-bottom: 8px;
-        }
-
-        .config-value-enabled {
-            color: #00c853;
-            font-weight: bold;
-            background: rgba(0, 230, 118, 0.3);
-            padding: 3px 10px;
-            border-radius: 6px;
-        }
-
-        .config-value-disabled {
-            color: #d81b60;
-            font-weight: bold;
-            background: rgba(255, 105, 180, 0.3);
-            padding: 3px 10px;
-            border-radius: 6px;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 0.8em;
-            color: #78909c;
-            border-top: 1px solid #e0f0ff;
-            padding-top: 10px;
-            position: relative;
-        }
-
+      .config-section {
+        margin-top: 20px;
+        background: linear-gradient(to bottom, #f5faff, #e6f0ff);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid #00acc1;
+        box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+      .config-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><polygon points="20,5 35,20 20,35 5,20" fill="none" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5"/></svg>') repeat;
+        opacity: 0.2;
+        z-index: -1;
+      }
+      .config-section h2 {
+        color: #00acc1;
+        border-left-color: #ff4081;
+        font-size: 18px;
+      }
+      .config-section ul {
+        margin-top: 10px;
+      }
+      .config-section li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95em;
+        margin-bottom: 8px;
+      }
+      .config-value-enabled {
+        color: #00c853;
+        font-weight: bold;
+        background: rgba(0, 230, 118, 0.3);
+        padding: 3px 10px;
+        border-radius: 6px;
+      }
+      .config-value-disabled {
+        color: #d81b60;
+        font-weight: bold;
+        background: rgba(255, 105, 180, 0.3);
+        padding: 3px 10px;
+        border-radius: 6px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 25px;
+        font-size: 0.8em;
+        color: #78909c;
+        border-top: 1px solid #e0f0ff;
+        padding-top: 10px;
+        position: relative;
+      }
     </style>
 </head>
 <body style="{{scaleStyleValue}}">
@@ -472,14 +472,28 @@
                          <h3><span class="icon">📦</span>三号仓库</h3> <p class="repo-not-exist">(未配置)</p>
                     {{ /if }}
                 </div>
+                 <div class="storage-repo4-column"> 
+                    {{ if stats.repos['4'] }}
+                        <h3><span class="icon">📦</span>{{ stats.repos['4'].name }}</h3>
+                        {{ if stats.repos['4'].exists }}
+                        <ul> <li><span class="label">文件:</span> <span class="value">{{ stats.repos['4'].filesSizeFormatted || 'N/A' }}</span></li> <li><span class="label">Git:</span> <span class="value">{{ stats.repos['4'].gitSizeFormatted || 'N/A' }}</span></li> <li><span class="label">占用:</span> <span class="value">{{ stats.repos['4'].sizeFormatted || 'N/A' }}</span></li> </ul>
+                        {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
+                    {{ else }}
+                         <h3><span class="icon">📦</span>四号仓库</h3> <p class="repo-not-exist">(未配置)</p>
+                    {{ /if }}
+                </div>
             </div>
-            <div class="storage-summary-section">
-                 <h3><span class="icon">💾</span>存储总览</h3>
-                 <ul>
-                     <li><span class="label">总文件:</span> <span class="value"><strong>{{ stats.scan.totalFilesSizeFormatted || '0 B' }}</strong></span></li>
-                     <li><span class="label">Git缓存:</span> <span class="value"><strong>{{ stats.scan.totalGitSizeFormatted || '0 B' }}</strong></span></li>
-                     <li><span class="label">总占用:</span> <span class="value"><strong>{{ stats.scan.totalSizeFormatted || '0 B' }}</strong></span></li>
-                 </ul>
+            
+            <div class="storage-summary-row">
+                <div class="storage-summary-column">
+                    <h3><span class="icon">💾</span>存储总览</h3>
+                    <ul>
+                        <li><span class="label">总文件:</span> <span class="value"><strong>{{ stats.scan.totalFilesSizeFormatted || '0 B' }}</strong></span></li>
+                        <li><span class="label">Git缓存:</span> <span class="value"><strong>{{ stats.scan.totalGitSizeFormatted || '0 B' }}</strong></span></li>
+                        <li><span class="label">总占用:</span> <span class="value"><strong>{{ stats.scan.totalSizeFormatted || '0 B' }}</strong></span></li>
+                    </ul>
+                </div>
+               
             </div>
         </div>
 
