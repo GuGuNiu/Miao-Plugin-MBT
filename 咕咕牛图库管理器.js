@@ -713,8 +713,8 @@ export class MiaoPluginMBT extends plugin {
     }
     let finalData = [];
     if (!loadedFromFile || !Array.isArray(data) || data.length === 0) {
-      if (!loadedFromFile) logger.warn(`${logPrefix} [加载元数据] 无法从文件加载元数据，执行扫描回退...`);
-      else logger.warn(`${logPrefix} [加载元数据] 加载的元数据为空或格式错误，执行扫描回退...`);
+      // if (!loadedFromFile) logger.warn(`${logPrefix} [加载元数据] 无法从文件加载元数据，执行扫描回退...`);
+      // else logger.warn(`${logPrefix} [加载元数据] 加载的元数据为空或格式错误，执行扫描回退...`);
       try {
         finalData = await MiaoPluginMBT.ScanLocalImagesToBuildCache(logger);
       } catch (scanError) { logger.error(`${logPrefix} [加载元数据] 扫描回退过程中发生错误:`, scanError); finalData = []; }
@@ -754,8 +754,8 @@ export class MiaoPluginMBT extends plugin {
       const repoInfo = repoPathsMap[storageBoxName];
       if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) ReposToScan.push({ path: repoInfo.path, name: storageBoxName });
     }
-    if (ReposToScan.length === 0) { logger.warn(`${logPrefix} [扫描回退] 没有找到本地图库仓库目录（1-3号），无法扫描。`); return []; }
-    logger.info(`${logPrefix} [扫描回退] 开始扫描本地仓库: ${ReposToScan.map(r => r.name).join(", ")}...`);
+    //if (ReposToScan.length === 0) { logger.warn(`${logPrefix} [扫描回退] 没有找到本地图库仓库目录（1-3号），无法扫描。`); return []; }
+    //logger.info(`${logPrefix} [扫描回退] 开始扫描本地仓库: ${ReposToScan.map(r => r.name).join(", ")}...`);
     const imagePathsFound = new Set();
     for (const Repo of ReposToScan) {
       for (const gameFolderKey in MiaoPluginMBT.paths.sourceFolders) {
@@ -785,7 +785,7 @@ export class MiaoPluginMBT extends plugin {
         } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.warn(`${logPrefix} [扫描回退] 读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
       }
     }
-    logger.info(`${logPrefix} [扫描回退] 扫描完成，共找到 ${fallbackCache.length} 个 .webp 图片文件。`);
+    //logger.info(`${logPrefix} [扫描回退] 扫描完成，共找到 ${fallbackCache.length} 个 .webp 图片文件。`);
     return fallbackCache;
   }
 
@@ -1393,7 +1393,6 @@ export class MiaoPluginMBT extends plugin {
     catch (error) { logger.warn(`${logPrefix} [获取日志] Git log 失败 (${RepoPath})`); return null; }
   }
 
-  // 在 MiaoPluginMBT 类中
   static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, e, loggerInstance = global.logger || console) {
     const logPrefix = Default_Config.logPrefix;
     const logger = loggerInstance;
@@ -1402,9 +1401,9 @@ export class MiaoPluginMBT extends plugin {
     let repoTypeName;
     switch (repoNum) {
       case 1: repoTypeName = "核心仓库"; break;
-      case 2: repoTypeName = "二号仓库(GS+ZZZ)"; break;
-      case 3: repoTypeName = "三号仓库(SR+WU)"; break;
-      case 4: repoTypeName = "四号仓库(涩涩)"; break;
+      case 2: repoTypeName = "二号仓库"; break;
+      case 3: repoTypeName = "三号仓库"; break;
+      case 4: repoTypeName = "四号仓库"; break;
       default: repoTypeName = `附属仓库(${repoNum}号)`;
     }
 
@@ -1481,7 +1480,7 @@ export class MiaoPluginMBT extends plugin {
 
               if (imageBuffer) {
                 if (e) { await e.reply(imageBuffer).catch(() => {}); await common.sleep(500); }
-                 logger.info(`${logPrefix} 初始测速完成，开始下载 ${repoTypeName}...`);
+                 //logger.info(`${logPrefix} 初始测速完成，开始下载 ${repoTypeName}...`);
               } else {
                 if (e) await e.reply(`${logPrefix} 生成初始测速报告图片为空，继续下载...`, true).catch(() => {});
               }
@@ -1608,8 +1607,9 @@ export class MiaoPluginMBT extends plugin {
                 const match = stderrChunk.match(/Receiving objects:\s*(\d+)%/);
                 if (match?.[1]) {
                   const percent = parseInt(match[1], 10);
-                  if (percent >= 10 && !progressStatus.reported10) { progressStatus.reported10 = true; e.reply(`『咕咕牛』${repoTypeName}(${nodeName})下载:10%...`, true).catch(() => {}); }
-                  if (percent >= 90 && !progressStatus.reported90) { progressStatus.reported90 = true; e.reply(`『咕咕牛』${repoTypeName}(${nodeName})下载:90%...`, true).catch(() => {}); }
+                  if (percent >= 10 && !progressStatus.reported10) { progressStatus.reported10 = true; e.reply(`${repoTypeName} ${nodeName} 下载:10%`, true).catch(() => {}); }
+                  //if (percent >= 90 && !progressStatus.reported90) { progressStatus.reported90 = true; e.reply(`${repoTypeName} ${nodeName} 下载:90%`, true).catch(() => {}); }
+                  //丢弃90%进度报告
                 }
               }
             });
@@ -2085,7 +2085,7 @@ export class MiaoPluginMBT extends plugin {
       await processSubsidiary(4, "四号", "Sexy_Github_URL", "LocalTuKuPath4", Repo4Exists);
 
       if (subsidiaryPromises.length > 0) {
-        await e.reply("『咕咕牛』附属仓库聚合下载中,请等待...").catch(() => {});
+        await e.reply("『咕咕牛🐂』\n核心仓已部署✅️\n附属聚合下载中...").catch(() => {});
         const settledResults = await Promise.allSettled(subsidiaryPromises);
         for (const result of settledResults) {
           if (result.status === "fulfilled") {
@@ -2179,7 +2179,7 @@ export class MiaoPluginMBT extends plugin {
         await MiaoPluginMBT.RunPostDownloadSetup(null, logger);
         await e.reply("『咕咕牛』成功进入喵喵里面！").catch(() => {});
       } else {
-        await e.reply("『咕咕牛』部分仓库下载失败，请检查报告和日志。").catch(() => {});
+        await e.reply("『咕咕牛』部分仓库下载失败，请检查报告和日志，你可以再次执行下载补全。").catch(() => {});
       }
 
     } catch (error) { 
@@ -2329,9 +2329,9 @@ export class MiaoPluginMBT extends plugin {
     const msg = e.msg.trim();
     if (msg !== "#重置咕咕牛") return false;
 
-    const startMessage = "『咕咕牛🐂』开始重置图库，请稍等...";
-    const successMessageBase = "『咕咕牛🐂』重置完成！所有相关文件和缓存都清理干净啦。";
-    const failureMessage = "『咕咕牛🐂』重置过程中好像出了点问题，可能没清理干净，快去看看日志吧！";
+    const startMessage = "开始重置图库，请稍等...";
+    const successMessageBase = "重置完成！所有相关文件和缓存都清理干净啦。";
+    const failureMessage = "重置过程中好像出了点问题，可能没清理干净，快去看看日志吧！";
 
     await e.reply(startMessage, true);
 
@@ -2614,17 +2614,13 @@ export class MiaoPluginMBT extends plugin {
 
     const action = match[1]; const enable = action === "启用";
     let configChanged = false; let saveWarning = ""; let asyncError = null;
+    let statusMessageForPanel = ""; 
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
       await MiaoPluginMBT.LoadTuKuConfig(true, logger);
       const currentStatus = MiaoPluginMBT.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
       if (currentStatus === enable) {
-        try {
-          await this.ShowSettingsPanel(e, `${logPrefix} 图库已经是「${action}」状态了，无需更改。`);
-        } catch (panelError) {
-          logger.error(`${logPrefix} [启用禁用] 显示当前状态面板失败，发送文本回退:`, panelError);
-          await e.reply(`${logPrefix} 图库已经是「${action}」状态了，无需更改。`, true);
-        }
+        statusMessageForPanel = `${logPrefix} 图库已经是「${action}」状态了，无需更改。`;
         return;
       }
       MiaoPluginMBT.MBTConfig.TuKuOP = enable; configChanged = true;
@@ -2647,29 +2643,30 @@ export class MiaoPluginMBT extends plugin {
           await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, logger);
           await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, logger);
         }
+        statusMessageForPanel = `${logPrefix} 图库已成功设为「${action}」。`;
       } catch (error) {
         asyncError = error;
         logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
         await this.ReportError(e, `${action}咕咕牛 (后台操作)`, error);
+        statusMessageForPanel = `${logPrefix} 图库「${action}」操作已执行，但后台操作失败。`;
       }
     }
     
-    if (configChanged || saveWarning) {
-        let finalUserMessagePrefix = "";
-        if (configChanged && !saveWarning) finalUserMessagePrefix = `${logPrefix} 图库已成功设为「${action}」`;
-        else if (saveWarning) finalUserMessagePrefix = `${logPrefix} 图库「${action}」操作因配置保存失败未完全生效`;
-        
-        let panelMessage = finalUserMessagePrefix;
-        if (asyncError) panelMessage += `\n(后台${action === "启用" ? "同步" : "清理"}时遇到问题)`;
-        
-        try {
-            await this.ShowSettingsPanel(e, panelMessage.trim());
-        } catch (panelError) {
-            logger.error(`${logPrefix} [启用禁用] 显示设置面板失败，将发送文本回退:`, panelError);
-            let fallbackUserMessage = panelMessage;
-            fallbackUserMessage += `，但面板图片发送失败。`;
-            await e.reply(fallbackUserMessage.trim(), true);
+    if (statusMessageForPanel || saveWarning || asyncError) {
+        let finalPanelMessage = statusMessageForPanel;
+        if (saveWarning && !finalPanelMessage.includes(saveWarning)) { 
+            finalPanelMessage = saveWarning + (finalPanelMessage ? `\n${finalPanelMessage}` : '');
         }
+        if (asyncError && !finalPanelMessage.includes("后台")) { 
+            finalPanelMessage += `\n(后台${action === "启用" ? "同步" : "清理"}时遇到问题)`;
+        }
+        try {
+            await this.ShowSettingsPanel(e, finalPanelMessage.trim());
+        } catch (panelError) {
+            logger.error(`${logPrefix} [启用禁用] 调用ShowSettingsPanel时发生顶层意外错误:`, panelError);
+        }
+    } else if (!configChanged && !saveWarning && !asyncError && !statusMessageForPanel) { 
+        await this.ShowSettingsPanel(e, `${logPrefix} 图库已经是「${action}」状态了，无需更改。`);
     }
     return true;
   }
@@ -2686,7 +2683,7 @@ export class MiaoPluginMBT extends plugin {
     if (msg === "#ban列表" || msg === "#咕咕牛封禁列表") {
       const activeBanCount = MiaoPluginMBT._activeBanSet.size;
       if (activeBanCount === 0) return e.reply("当前没有任何图片被封禁。", true);
-      await e.reply(`正在整理列表，可能需要一点时间...`, true);
+      await e.reply(`正在整理中，请稍后...`, true);
 
       const purifiedBansData = []; const userBansData = [];
       const pluginVersion = MiaoPluginMBT.GetVersionStatic();
@@ -3033,8 +3030,8 @@ export class MiaoPluginMBT extends plugin {
 
       const targetRelativePath = imageData.path.replace(/\\/g, "/");
       targetFileName = path.basename(targetRelativePath);
-      if (MiaoPluginMBT._activeBanSet.has(targetRelativePath)) return e.reply(`图片 ${targetFileName} 被封禁了，不能导出哦。`, true);
-      
+      // if (MiaoPluginMBT._activeBanSet.has(targetRelativePath)) return e.reply(`图片 ${targetFileName} 被封禁了，不能导出哦。`, true);
+      // 封禁检查 封禁则无法导出
       absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(targetRelativePath);
       if (!absolutePath) return e.reply(`糟糕，文件丢失了：${targetFileName}，没法导出。`, true);
 
@@ -3293,17 +3290,16 @@ export class MiaoPluginMBT extends plugin {
   async setPurificationLevelInternal(e, level) {
     const logger = this.logger; const logPrefix = this.logPrefix;
     let configChanged = false; let saveWarning = ""; let asyncError = null;
+    let statusMessageForPanel = "";
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
         await MiaoPluginMBT.LoadTuKuConfig(true, logger);
         const currentLevel = MiaoPluginMBT.MBTConfig.PFL ?? Default_Config.defaultPfl;
         if (level === currentLevel) {
-            try { await this.ShowSettingsPanel(e, `净化等级已经是 ${level} (${Purify_Level.getDescription(level)}) 啦。`); }
-            catch (panelError) { logger.error(`${logPrefix} [净化设置] 显示当前状态面板失败，发送文本回退:`, panelError); await e.reply(`${logPrefix} 净化等级已经是 ${level} (${Purify_Level.getDescription(level)}) 啦。`, true); }
+            statusMessageForPanel = `净化等级已经是 ${level} (${Purify_Level.getDescription(level)}) 啦。`;
             return;
         }
         MiaoPluginMBT.MBTConfig.PFL = level; configChanged = true;
-        //logger.info(`${logPrefix} [净化设置] 内存状态变更为 -> ${level}`);  //调式日志
         const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, logger);
         if (!saveSuccess) {
             saveWarning = "⚠️ 但是配置保存失败了！设置可能不会持久生效。";
@@ -3314,9 +3310,9 @@ export class MiaoPluginMBT extends plugin {
     });
 
     if (configChanged && !saveWarning) {
+      statusMessageForPanel = `${logPrefix} 净化等级已设为 ${level} (${Purify_Level.getDescription(level)})。`;
+      if (level === Purify_Level.PX18_PLUS) statusMessageForPanel += "\n(Px18 指轻微性暗示或低度挑逗性图片)";
       setImmediate(async () => {
-        let panelMessage = `${logPrefix} 净化等级已设为 ${level} (${Purify_Level.getDescription(level)})。`;
-        if (level === Purify_Level.PX18_PLUS) panelMessage += "\n(Px18 指轻微性暗示或低度挑逗性图片)";
         try {
           logger.info(`${logPrefix} [净化设置] 后台开始应用新的净化等级 ${level}...`);
           await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
@@ -3328,34 +3324,40 @@ export class MiaoPluginMBT extends plugin {
           } else logger.info(`${logPrefix} [净化设置] 图库已禁用，跳过角色文件夹同步。`);
         } catch (applyError) {
           logger.error(`${logPrefix} [净化设置] 后台应用或同步时出错:`, applyError);
-          asyncError = applyError;
-          await this.ReportError(e, "应用净化等级 (后台)", applyError);
-        } finally { 
-          if (asyncError) panelMessage += "\n(后台应用时出错，详见日志)";
-          try { await this.ShowSettingsPanel(e, panelMessage); }
-          catch (panelErrorFinal) { logger.error(`${logPrefix} [净化设置] 后台任务后显示设置面板失败:`, panelErrorFinal); await e.reply(panelMessage, true); }
+          await this.ReportError(e, "应用净化等级 (后台)", applyError); 
         }
       });
-    } else if (saveWarning) {
-        try { await this.ShowSettingsPanel(e, saveWarning); }
-        catch (panelErrorSaveFail) { logger.error(`${logPrefix} [净化设置] 保存失败后显示面板也失败:`, panelErrorSaveFail); }
+    }
+    
+    // 统一调用 ShowSettingsPanel
+    // 如果 statusMessageForPanel 为空（例如状态未变），则构建一个默认的
+    if (!statusMessageForPanel && !saveWarning) {
+        statusMessageForPanel = `净化等级已经是 ${level} (${Purify_Level.getDescription(level)}) 啦。`;
+    }
+    if (saveWarning && !statusMessageForPanel.includes(saveWarning)) {
+        statusMessageForPanel = saveWarning + (statusMessageForPanel ? `\n${statusMessageForPanel}` : '');
+    }
+
+    try {
+        await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
+    } catch (panelError) {
+        logger.error(`${logPrefix} [净化设置] 调用ShowSettingsPanel时发生顶层意外错误:`, panelError);
     }
   }
 
   async handleSwitchCommand(e, configKey, featureName, enable) {
     const logger = this.logger; const logPrefix = this.logPrefix;
-    let configChanged = false; let saveWarning = ""; let asyncError = null;
+    let configChanged = false; let saveWarning = ""; let asyncError = null; 
+    let statusMessageForPanel = "";
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
         await MiaoPluginMBT.LoadTuKuConfig(true, logger);
         const currentStatus = MiaoPluginMBT.MBTConfig[configKey];
         if (currentStatus === enable) {
-            try { await this.ShowSettingsPanel(e, `${featureName}已经是「${enable ? "开启" : "关闭"}」状态了。`); }
-            catch (panelError) { logger.error(`${logPrefix} [${featureName}设置] 显示当前状态面板失败，发送文本回退:`, panelError); await e.reply(`${logPrefix} ${featureName}已经是「${enable ? "开启" : "关闭"}」状态了，无需更改。`, true); }
+            statusMessageForPanel = `${featureName}已经是「${enable ? "开启" : "关闭"}」状态了。`;
             return;
         }
         MiaoPluginMBT.MBTConfig[configKey] = enable; configChanged = true;
-        //logger.info(`${logPrefix} [${featureName}设置] 内存状态变更为 -> ${enable}`);  //调式日志
         const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, logger);
         if (!saveSuccess) {
             saveWarning = `⚠️ 但是配置保存失败了！设置可能不会持久生效。`;
@@ -3366,31 +3368,42 @@ export class MiaoPluginMBT extends plugin {
     });
     
     if (configChanged && !saveWarning) {
-      let panelMessage = `${featureName}已成功设为「${enable ? "开启" : "关闭"}」。`;
+      statusMessageForPanel = `${logPrefix} ${featureName}已成功设为「${enable ? "开启" : "关闭"}」。`;
       if (configKey === "PM18") {
-        //logger.info(`${logPrefix} [${featureName}设置] 配置已更改，准备启动${enable ? "部署" : "清理"}任务...`);  //调式日志 PM18 部署任务
-        panelMessage += `\n⏳ ${enable ? "部署" : "清理"}任务已在后台启动...`;
+       // logger.info(`${logPrefix} [${featureName}设置] 配置已更改，准备启动${enable ? "部署" : "清理"}任务...`);
+        statusMessageForPanel += `\n⏳ ${enable ? "部署" : "清理"}任务已在后台启动...`;
         setImmediate(async () => {
-          try { if (enable) await MiaoPluginMBT.deployPM18Files(logger); else await MiaoPluginMBT.cleanPM18Files(logger); }
-          catch (pm18Error) { logger.error(`${logPrefix} [${featureName}设置] 后台${enable ? "部署" : "清理"}PM18文件时出错:`, pm18Error); }
+          try { 
+            if (enable) await MiaoPluginMBT.deployPM18Files(logger); 
+            else await MiaoPluginMBT.cleanPM18Files(logger); 
+          }
+          catch (pm18Error) { 
+            logger.error(`${logPrefix} [${featureName}设置] 后台${enable ? "部署" : "清理"}PM18文件时出错:`, pm18Error); 
+          }
         });
-      } else {
+      } else { 
           setImmediate(async () => {
               try {
                   await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
                   if (MiaoPluginMBT.MBTConfig.TuKuOP) await MiaoPluginMBT.SyncCharacterFolders(logger);
               } catch (switchApplyError) {
-                  logger.error(`${logPrefix} [${featureName}设置] 后台应用新开关状态时出错:`, switchApplyError);
-                  asyncError = switchApplyError;
+                  //logger.error(`${logPrefix} [${featureName}设置] 后台应用新开关状态时出错:`, switchApplyError);
               }
           });
       }
-      if (asyncError) panelMessage += `\n(后台应用时可能遇到问题，请稍后检查)`;
-      try { await this.ShowSettingsPanel(e, panelMessage); }
-      catch (panelErrorFinal) { logger.error(`${logPrefix} [${featureName}设置] 显示设置面板失败:`, panelErrorFinal); await e.reply(panelMessage, true); }
-    } else if (saveWarning) {
-        try { await this.ShowSettingsPanel(e, saveWarning); }
-        catch (panelErrorSaveFail) { logger.error(`${logPrefix} [${featureName}设置] 保存失败后显示面板也失败:`, panelErrorSaveFail); }
+    }
+    
+    if (!statusMessageForPanel && !saveWarning) {
+        statusMessageForPanel = `${featureName}已经是「${enable ? "开启" : "关闭"}」状态了。`;
+    }
+    if (saveWarning && !statusMessageForPanel.includes(saveWarning)) {
+        statusMessageForPanel = saveWarning + (statusMessageForPanel ? `\n${statusMessageForPanel}` : '');
+    }
+    
+    try {
+        await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
+    } catch (panelError) {
+        logger.error(`${logPrefix} [${featureName}设置] 调用ShowSettingsPanel时发生顶层意外错误:`, panelError);
     }
   }
 }
