@@ -2240,7 +2240,7 @@ export class MiaoPluginMBT extends plugin {
     } else reportResults.push({ name: "四号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
 
     if (overallSuccess && overallHasChanges) {
-      logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
+      //logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
       await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
     }
 

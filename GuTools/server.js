@@ -857,6 +857,67 @@ app.post("/api/update-external-userdata", async (req, res) => {
   }
 });
 
+// [POST] 仓库核对修正 (使用修正后的自动确定仓库逻辑)
+app.post('/api/batch-update-storagebox', async (req, res) => {
+  console.log("请求: [POST] /api/batch-update-storagebox");
+  const { entriesToUpdate } = req.body;
+
+  if (!Array.isArray(entriesToUpdate)) {
+    console.error("  > 错误: 请求体必须是包含 'entriesToUpdate' 数组的对象。");
+    return res.status(400).json({ success: false, error: "请求体格式错误，缺少 'entriesToUpdate' 数组。" });
+  }
+  if (entriesToUpdate.length === 0) {
+    console.log("  > 信息: 收到空的更新列表，无需操作。");
+    return res.json({ success: true, message: "没有需要更新的条目。", updatedCount: 0 });
+  }
+
+  console.log(`  > 收到 ${entriesToUpdate.length} 条 storagebox 更新请求...`);
+
+  try {
+    let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
+    let updatedCount = 0;
+
+    entriesToUpdate.forEach(itemToUpdate => {
+      if (!itemToUpdate || typeof itemToUpdate.gid !== 'string' || typeof itemToUpdate.correctStorageBox !== 'string') { 
+        console.warn("  > 跳过无效的更新条目:", itemToUpdate);
+        return; 
+      }
+
+      const entryIndex = imageData.findIndex(entry => entry.gid === itemToUpdate.gid);
+
+      if (entryIndex > -1) {
+        // ***** 核心修改：直接使用前端传递的 correctStorageBox (应为原始大小写) *****
+        const newStorageBoxValue = itemToUpdate.correctStorageBox; 
+        // ***** 修改结束 *****
+
+        if (imageData[entryIndex].storagebox !== newStorageBoxValue) { // 与JSON中当前值比较
+          console.log(`    > 校准 GID: ${itemToUpdate.gid}, 从 "${imageData[entryIndex].storagebox}" -> "${newStorageBoxValue}"`);
+          imageData[entryIndex].storagebox = newStorageBoxValue; // 更新为原始大小写
+          imageData[entryIndex].timestamp = new Date().toISOString(); 
+          updatedCount++;
+        } else {
+          console.log(`    > GID: ${itemToUpdate.gid}, storagebox 无需更改 ("${imageData[entryIndex].storagebox}")`);
+        }
+      } else {
+        console.warn(`    > 未能在 ImageData.json 中找到 GID 为 ${itemToUpdate.gid} 的记录进行更新。`);
+      }
+    });
+
+    if (updatedCount > 0) {
+      await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, imageData, "内部用户数据 (storagebox校准)");
+      console.log(`  > 成功更新了 ${updatedCount} 条记录的 storagebox。`);
+      res.json({ success: true, message: `成功更新了 ${updatedCount} 条记录的 storagebox。`, updatedCount: updatedCount });
+    } else {
+      console.log("  > 没有记录的 storagebox 被实际更改。");
+      res.json({ success: true, message: "没有记录的 storagebox 需要更新。", updatedCount: 0 });
+    }
+
+  } catch (error) {
+    console.error("[API Storagebox校准] 处理更新时出错:", error);
+    res.status(500).json({ success: false, error: `校准 storagebox 失败: ${error.message}` });
+  }
+});
+
 // [POST] 导入图片 (使用修正后的自动确定仓库逻辑)
 app.post("/api/import-image", async (req, res) => {
   console.log("请求: [POST] /api/import-image (自动确定仓库)");

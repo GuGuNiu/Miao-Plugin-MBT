@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="css/Gu_Tools/GuTools_Sequence.css">
     <link rel="stylesheet" href="css/Gu_Tools/GuTools_JsonCal.css">
     <link rel="stylesheet" href="css/Gu_Tools/GuTools_StockroomGo.css">
+    <link rel="stylesheet" href="css/Gu_Tools/GuTools_StorageboxCal.css">
     <link rel="stylesheet" href="css/Data_List.css">
     <link rel="stylesheet" href="css/Plugin_Gallery.css">
     <link rel="stylesheet" href="css/Advanced_Management.css">
@@ -91,6 +92,8 @@
                                 title="切换到JSON校准模式">JSON校准</button>
                             <button id="switchToStockroomGoBtnGen" data-mode="stockroom_go" class="mode-button"
                                 title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnGen" data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到storagebox校准模式">storagebox校准</button>
                         </div>
                     </div>
                     <div class="main-content">
@@ -156,6 +159,8 @@
                                 title="切换到JSON校准模式">JSON校准</button>
                             <button id="switchToStockroomGoBtnImp" data-mode="stockroom_go" class="mode-button"
                                 title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnImp" data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到storagebox校准模式">storagebox校准</button>
                         </div>
                     </div>
                     <div class="import-content-wrapper">
@@ -232,6 +237,8 @@
                                 title="切换到JSON校准模式">JSON校准</button>
                             <button id="switchToStockroomGoBtnMD5" data-mode="stockroom_go" class="mode-button"
                                 title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnMD5" data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到storagebox校准模式">storagebox校准</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper md5-layout-wrapper">
@@ -292,6 +299,8 @@
                                 title="切换到JSON校准模式">JSON校准</button>
                             <button id="switchToStockroomGoBtnSeq" data-mode="stockroom_go" class="mode-button"
                                 title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnSeq" data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到storagebox校准模式">storagebox校准</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper sequence-layout-wrapper">
@@ -328,6 +337,8 @@
                                 class="mode-button active" title="切换到JSON校准模式">JSON校准</button>
                             <button id="switchToStockroomGoBtnJsonCal" data-mode="stockroom_go" class="mode-button"
                                 title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnJsonCal" data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到storagebox校准模式">storagebox校准</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper json-calibration-layout-wrapper">
@@ -374,6 +385,8 @@
                                 title="切换到JSON校准模式">JSON校准</button>
                             <button id="switchToStockroomGoBtnStock" data-mode="stockroom_go" class="mode-button active"
                                 title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnStock" data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到storagebox校准模式">storagebox校准</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper stockroom-go-layout-wrapper">
@@ -406,7 +419,49 @@
                         </div>
                     </div>
                 </div>
-
+                <div id="storageboxCalibrationPaneView" class="gu-tools-view hidden">
+                    <div class="gu-tools-title-bar">
+                        <div class="gu-tools-mode-buttons">
+                            <button id="switchToGeneratorBtnSbxCal" data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
+                            <button id="switchToImportBtnSbxCal" data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
+                            <button id="switchToMD5BtnSbxCal" data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
+                            <button id="switchToSequenceBtnSbxCal" data-mode="sequence" class="mode-button" title="切换到序号管理模式">序号管理</button>
+                            <button id="switchToJSONCalBtnSbxCal" data-mode="json_calibration" class="mode-button" title="切换到JSON校准模式">JSON校准</button>
+                            <button id="switchToStockroomGoBtnSbxCal" data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
+                            <button id="switchToSbxCalBtnSbxCal" data-mode="storagebox_calibration" class="mode-button active" title="切换到storagebox校准模式">storagebox校准</button>
+                        </div>
+                    </div>
+                    <div class="sbxcal-layout-wrapper">
+                        <div class="sbxcal-column sbxcal-left-column">
+                            <h4 class="column-title">仓库校准控制</h4>
+                            <div id="sbxCalStatusArea" class="sbxcal-status-area calibration-status">
+                                <p>点击“开始校准”以启动。</p>
+                                <p class="status-line"><span class="label">JSON记录总数:</span> <span id="sbxCalTotalJsonDisplay" class="value">0</span></p>
+                                <p class="status-line"><span class="label">物理文件总数:</span> <span id="sbxCalTotalFilesDisplay" class="value">0</span></p>
+                                <p class="status-line"><span class="label">已检查JSON:</span> <span id="sbxCalCheckedJsonDisplay" class="value">0</span></p>
+                                <p class="status-line"><span class="label">不一致数量:</span> <span id="sbxCalMismatchCountDisplay" class="value error">0</span></p>
+                                <hr style="border-color: var(--sbx-border-color); margin: 8px 0;">
+                                <p id="sbxCalCurrentScanItemLabel" style="font-weight: bold; color: var(--sbx-text-dark); margin-bottom: 2px;">当前检查:</p>
+                                <div id="sbxCalCurrentScanDetails" style="font-size: 0.85em; line-height: 1.4; color: var(--sbx-text-medium); min-height: 60px; word-break: break-all;">
+                                    <p><span class="label">文件名:</span> <span id="sbxCalScanFilename" class="value">-</span></p>
+                                    <p><span class="label">声称仓库:</span> <span id="sbxCalScanJsonBox" class="value">-</span></p>
+                                    <p><span class="label">实际仓库:</span> <span id="sbxCalScanActualBox" class="value">-</span></p>
+                                    <p><span class="label">是否一致:</span> <span id="sbxCalScanMatchStatus" class="value">-</span></p>
+                                </div>
+                            </div>
+                            <progress id="sbxCalProgressBar" value="0" max="100" style="display: none; width: 100%; margin-top: 10px;"></progress>
+                            <div class="sbxcal-controls-buttons" style="margin-top: auto; padding-top:15px; display: flex; flex-direction: column; gap: 10px;">
+                                <button id="sbxCalStartButton" class="tool-button">开始校准</button>
+                                <button id="sbxCalAbortButton" class="tool-button abort-button hidden" disabled>中止校准</button>
+                                <button id="sbxCalFixButton" class="tool-button fix-button full-width-button disabled">一键修正不一致项</button>
+                            </div>
+                        </div>
+                        <div class="sbxcal-column sbxcal-right-column">
+                            <h4 class="column-title">不一致列表 (<span id="sbxCalMismatchCountDisplayInner">0</span>)</h4>
+                            <textarea id="sbxCalMismatchList" class="sbxcal-output-area" placeholder="storagebox与物理位置不符的条目将显示在此..." readonly></textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="dataListPane" class="tab-pane">
@@ -658,6 +713,7 @@
     <script src="src/Gu_Tools/GuTools_Sequence.js"></script>
     <script src="src/Gu_Tools/GuTools_JsonCal.js"></script>
     <script src="src/Gu_Tools/GuTools_StockroomGo.js"></script>
+    <script src="src/Gu_Tools/GuTools_StorageboxCal.js"></script>
 </body>
 
 </html>
