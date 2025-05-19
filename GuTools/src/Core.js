@@ -20,6 +20,7 @@ const API_ENDPOINTS = {
   RENAME_SEQUENCE_FILES: "/api/rename-sequence-files",
   FETCH_BACKGROUND_IMAGES: "/api/background-images",
   FETCH_FOLDER_CONTENTS: "/api/folder-contents",
+  BATCH_UPDATE_STORAGEBOX: "/api/batch-update-storagebox",
 };
 
 const DELAYS = {
@@ -103,6 +104,7 @@ const AppState = {
   md5Checker: { isRunning: false, isAborted: false },
   sequenceManager: { isRunning: false },
   jsonCalibrator: { isRunning: false },
+  storageboxCalibrator: { isRunning: false, isAborted: false },
   dataList: {
     currentEditPath: null,
     searchDebounceTimer: null,
@@ -303,6 +305,20 @@ function cacheDomElements() {
   DOM.stockroomGoStatus = document.getElementById('stockroomGoStatus');
   DOM.stockroomInfoContainer = document.getElementById('stockroomInfoContainer');
 
+  // --- GuTools - Storagebox 校准视图 ---
+  DOM.storageboxCalibrationPaneView = document.getElementById('storageboxCalibrationPaneView'); 
+  DOM.sbxCalStartButton = document.getElementById('sbxCalStartButton');
+  DOM.sbxCalAbortButton = document.getElementById('sbxCalAbortButton');
+  DOM.sbxCalFixButton = document.getElementById('sbxCalFixButton');
+  DOM.sbxCalStatusArea = document.getElementById('sbxCalStatusArea');
+  DOM.sbxCalProgressBar = document.getElementById('sbxCalProgressBar');
+  DOM.sbxCalCurrentScanArea = document.getElementById('sbxCalCurrentScanArea');
+  DOM.sbxCalMismatchList = document.getElementById('sbxCalMismatchList');
+  DOM.sbxCalTotalJsonDisplay = document.getElementById('sbxCalTotalJsonDisplay');
+  DOM.sbxCalTotalFilesDisplay = document.getElementById('sbxCalTotalFilesDisplay');
+  DOM.sbxCalMismatchCountDisplay = document.getElementById('sbxCalMismatchCountDisplay');
+  DOM.sbxCalMismatchCountDisplayInner = document.getElementById('sbxCalMismatchCountDisplayInner'); 
+
   // --- Data List 面板 ---
   DOM.dataListPane = document.getElementById("dataListPane");
   DOM.dataListFilterGame = document.getElementById("filterGame");
@@ -373,6 +389,7 @@ function cacheDomElements() {
     DOM.sequencePaneView,
     DOM.jsonCalibrationPaneView,
     DOM.stockroomInfoContainer,
+    DOM.storageboxCalibrationPaneView,
     DOM.dataListPane,
     DOM.pluginGalleryPane,
     DOM.md5JsonListContainer,
@@ -1176,6 +1193,7 @@ async function initializeApplication() {
       },
       { name: "setupJsonCalibratorEventListeners", file: "GuTools_JsonCal.js" },
       { name: 'setupStockroomGoEventListeners', file: 'GuTools_StockroomGo.js' },
+      { name: 'setupStorageboxCalibratorEventListeners', file: 'GuTools_StorageboxCal.js' }, 
       { name: "setupDataListEventListeners", file: "Data_List.js" },
       { name: "setupPluginGalleryEventListeners", file: "Plugin_Gallery.js" },
       { name: "setupGlobalEventListeners", file: "Ui_Controls.js" },
