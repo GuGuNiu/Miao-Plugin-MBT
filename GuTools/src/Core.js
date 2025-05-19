@@ -530,13 +530,11 @@ async function updateUserData(
   successMsg = "更新成功",
   targetElementId = "generatorMessageArea",
   isExternalData = false,
-  successDuration = DELAYS.MESSAGE_CLEAR_DEFAULT
+  successDuration = DELAYS.MESSAGE_CLEAR_DEFAULT,
+  preventListRefresh = false 
 ) {
   let targetElement = document.getElementById(targetElementId);
   if (!targetElement && targetElementId !== "toast") {
-    console.warn(
-      `updateUserData: 目标消息区域 #${targetElementId} 未找到 将使用 Toast`
-    );
     targetElementId = "toast";
   }
 
@@ -544,10 +542,7 @@ async function updateUserData(
     ? API_ENDPOINTS.UPDATE_EXTERNAL_USER_DATA
     : API_ENDPOINTS.UPDATE_USER_DATA;
   const dataTypeDesc = isExternalData ? "外部插件" : "内部主图库";
-  console.log(
-    `核心更新: 开始更新 ${dataTypeDesc} 数据到 ${apiUrl} ${newData.length} 条...`
-  );
-
+  
   const displayFunc =
     targetElementId === "toast" ? displayToast : displayScopedMessage;
   const messageArgs = targetElementId === "toast" ? [] : [targetElement];
@@ -563,58 +558,42 @@ async function updateUserData(
       throw new Error(result?.error || "服务器未能成功保存数据");
     }
 
-    console.log(`核心更新: ${dataTypeDesc} 数据更新成功`);
     if (isExternalData) {
       AppState.pluginGallery.savedEntries = newData;
       AppState.pluginGallery.savedPaths = new Set(
         newData.map((entry) => entry.path).filter(Boolean)
       );
-      console.log(
-        `核心更新: 前端插件缓存已更新为 ${AppState.pluginGallery.savedEntries.length} 条`
-      );
       if (
         DOM.pluginGalleryPane?.classList.contains(UI_CLASSES.ACTIVE) &&
         typeof renderPluginFolderList === "function"
       ) {
-        console.log("核心更新: 插件图库可见 正在刷新文件夹列表...");
         renderPluginFolderList();
       }
-    }  else { // 处理内部数据更新
-      AppState.userData = newData; // newData 中 storagebox 应该是原始大小写了
-      // --- 重新构建 userDataPaths (使用原始大小写 storagebox) ---
-      console.log("Core: 重新构建 userDataPaths (updateUserData)...");
+    }  else { 
+      AppState.userData = newData; 
       AppState.userDataPaths = new Set();
       AppState.userData.forEach(e => {
-          // 直接使用 userData 中的 storagebox (现在是原始大小写)
-          if (e.path && e.storagebox) {
-              const fullPath = `/${e.storagebox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+          const originalCaseStorageBox = AppState.availableStorageBoxes.find(
+            (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
+          );
+          if (e.path && originalCaseStorageBox) {
+              const fullPath = `/${originalCaseStorageBox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
               AppState.userDataPaths.add(fullPath);
-          } else {
-              console.warn(`Core: updateUserData - userData 条目缺少 path 或 storagebox:`, e);
+          } else if (e.path && e.storagebox) {
+            const fullPath = `/${e.storagebox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+            AppState.userDataPaths.add(fullPath);
           }
       });
-      console.log(
-        `核心更新: 前端内部缓存已更新为 ${AppState.userData.length} 条 已缓存 ${AppState.userDataPaths.size} 个有效路径`
-      );
-      // --- 构建结束 ---
 
-      if (typeof updateGeneratorEntryCount === "function")
-        updateGeneratorEntryCount();
-      if (typeof updateDataListCount === "function") updateDataListCount();
-      if (
-        DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE) &&
-        typeof applyFiltersAndRenderDataList === "function"
-      ) {
-        console.log("核心更新: 数据列表可见 正在刷新...");
-        applyFiltersAndRenderDataList();
+      if (typeof updateGeneratorEntryCount === "function") updateGeneratorEntryCount();
+      if (typeof updateDataListCount === "function") updateDataListCount(); 
+
+      if (!preventListRefresh && DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE) && typeof applyFiltersAndRenderDataList === "function") {
+        applyFiltersAndRenderDataList(); 
+      } else if (preventListRefresh && DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE)) {
       }
-      if (
-        DOM.md5PaneView?.classList.contains(UI_CLASSES.ACTIVE) &&
-        typeof populateMd5JsonList === "function"
-      ) {
-        console.log("核心更新: MD5 视图可见 正在刷新 JSON 列表...");
-        populateMd5JsonList();
-      }
+      
+      if (AppState.currentGuToolMode === "md5" && typeof populateMd5JsonList === "function") populateMd5JsonList();
     }
 
     displayFunc(

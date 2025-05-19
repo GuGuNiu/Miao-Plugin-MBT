@@ -282,34 +282,52 @@ function populateCardContent(cardElement, entryData) {
 
    if (!contentContainer || !thumbnail || !thumbnailContainer) return;
 
+   contentContainer.innerHTML = ''; 
+
    const storagebox = entryData.storagebox; 
    const relativePath = entryData.path || '';
-   let imagePath = '/placeholder.png'; // 默认占位图
+   let imagePath = '/placeholder.png'; 
 
    if (storagebox && relativePath) { 
-       imagePath = `/${storagebox}/${relativePath}`; 
+       const originalCaseStorageBox = AppState.availableStorageBoxes.find(
+          (box) => box.toLowerCase() === storagebox.toLowerCase() 
+       );
+       if (originalCaseStorageBox) {
+           imagePath = buildFullWebPath(originalCaseStorageBox, relativePath);
+       } else {
+           imagePath = buildFullWebPath(storagebox, relativePath); 
+           console.warn("DataList: populateCardContent - 未找到原始大小写仓库名，使用JSON中的:", storagebox);
+       }
        imagePath = imagePath.replace(/\\/g, '/');
    } else {
-       // 现在这个警告应该不会再因为大小写问题出现了
        console.warn("DataList: 缺少 storagebox 或 path 无法生成缩略图路径:", entryData);
    }
+   
+   thumbnail.alt = entryData.attributes.filename || '图片';
+   thumbnail.style.opacity = '1'; // 直接可见
+   thumbnail.style.display = 'block'; // 确保是block，占据空间
+   thumbnailContainer.style.backgroundColor = 'transparent'; 
+   thumbnail.removeAttribute('data-src'); // 移除data-src
 
-   thumbnail.src = imagePath;
-   thumbnail.style.display = 'block';
-   thumbnailContainer.style.backgroundColor = 'transparent';
-   thumbnail.onerror = function() {
-       this.style.display = 'none';
-       thumbnailContainer.style.backgroundColor = '#eee';
-       console.warn("DataList: 缩略图加载失败:", imagePath);
+//    console.log(`[DIRECT LOAD DEBUG] Setting src for ${entryData.attributes?.filename} to: ${imagePath}`);
+   thumbnail.src = imagePath; 
+
+   thumbnail.onload = function() {
+       this.classList.remove('load-error'); 
+       console.log("[DIRECT LOAD DEBUG] Thumbnail onload triggered for:", this.src);
    };
-
+   thumbnail.onerror = function() {
+       thumbnailContainer.style.backgroundColor = '#fdd'; 
+       console.error("[DIRECT LOAD DEBUG] Thumbnail onerror triggered for:", this.src); // 注意这里用 this.src
+       this.alt = '图片加载失败';
+       this.classList.add('load-error');
+   };
+   
    const attrs = entryData.attributes;
    const filename = attrs.filename || '未知文件名';
    const gid = entryData.gid || '无 GID';
    const timestamp = formatTimestamp(entryData.timestamp);
-   const displayStorageBox = storagebox || '未知仓库'; 
-
-   // 生成标签 HTML
+   
    let tagsHtml = '';
    if (attrs.isPx18) tagsHtml += '<span class="attr-tag tag-px18">Px18</span>';
    if (attrs.isRx18) tagsHtml += '<span class="attr-tag tag-rx18">Rx18</span>';
@@ -322,20 +340,39 @@ function populateCardContent(cardElement, entryData) {
    if (attrs.isAiImage) tagsHtml += '<span class="attr-tag tag-ai">AI</span>';
    if (attrs.isBan) tagsHtml += '<span class="attr-tag tag-ban">⛔封禁</span>';
 
-   // 编辑按钮 HTML
-   const editButtonHtml = `<button class="data-item-edit-btn" data-path="${entryData.path}" title="修改属性">修改</button>`;
+   const editButtonHtml = `<button class="data-item-edit-btn" data-path="${entryData.path}" data-storagebox="${entryData.storagebox}" title="修改属性">修改</button>`;
 
-   // 填充内容区域 HTML
-   contentContainer.innerHTML = `
-       <div class="filename" title="${filename}">${filename} <span class="gid-display">(GID: ${gid})</span></div>
-       <div class="details">
-           <span class="timestamp" title="保存时间">${timestamp}</span>
-           <span class="source-gallery" title="游戏来源">${getGameName(entryData.sourceGallery)}</span>
-           <!-- 移除仓库显示: <span class="storage-box" title="所属仓库">${displayStorageBox}</span> -->
-       </div>
-       <div class="attribute-tags">${tagsHtml || '<span class="no-tags">无特殊标签</span>'}</div>
-       ${editButtonHtml}
-   `;
+   const filenameDiv = document.createElement('div');
+   filenameDiv.className = 'filename';
+   filenameDiv.title = filename;
+   filenameDiv.innerHTML = `${filename} <span class="gid-display">(GID: ${gid})</span>`;
+   contentContainer.appendChild(filenameDiv);
+
+   const detailsDiv = document.createElement('div');
+   detailsDiv.className = 'details';
+   const timestampSpan = document.createElement('span');
+   timestampSpan.className = 'timestamp';
+   timestampSpan.title = '保存时间';
+   timestampSpan.textContent = timestamp;
+   const sourceGallerySpan = document.createElement('span');
+   sourceGallerySpan.className = 'source-gallery';
+   sourceGallerySpan.title = '游戏来源';
+   sourceGallerySpan.textContent = getGameName(entryData.sourceGallery);
+   detailsDiv.appendChild(timestampSpan);
+   detailsDiv.appendChild(document.createTextNode(' ')); 
+   detailsDiv.appendChild(sourceGallerySpan);
+   contentContainer.appendChild(detailsDiv);
+
+   const attributeTagsDiv = document.createElement('div');
+   attributeTagsDiv.className = 'attribute-tags';
+   attributeTagsDiv.innerHTML = tagsHtml || '<span class="no-tags">无特殊标签</span>';
+   contentContainer.appendChild(attributeTagsDiv);
+   
+   const tempButtonContainer = document.createElement('div'); 
+   tempButtonContainer.innerHTML = editButtonHtml;
+   if (tempButtonContainer.firstChild) {
+       contentContainer.appendChild(tempButtonContainer.firstChild);
+   }
 }
 /**
  * 处理列表容器的滚动事件
@@ -360,7 +397,7 @@ function handleScroll() {
  * 打开属性编辑模态框
  * @param {string} path 被编辑条目的路径
  */
-function openEditModal(path) {
+function openEditModal(path, storagebox) { 
     const modalElements = [
         DOM.editAttributeModal, DOM.modalFilenameSpan, DOM.modalEntryPathInput,
         DOM.modalIsEasterEggCheckbox, DOM.modalIsAiImageCheckbox, DOM.modalisBanCheckbox,
@@ -372,45 +409,37 @@ function openEditModal(path) {
         return;
     }
 
-    // 从 AppState.userData 中查找对应条目
-    const entry = AppState.userData.find(e => e.path === path);
+    const entry = AppState.userData.find(e => e.path === path && e.storagebox === storagebox); 
     if (!entry?.attributes) {
-        console.error(`DataList: 找不到路径 "${path}" 的条目数据`);
+        console.error(`DataList: 找不到路径 "${path}" (仓库: ${storagebox}) 的条目数据`);
         displayToast(`错误：找不到要编辑的数据`, UI_CLASSES.ERROR);
         return;
     }
 
-    console.log(`DataList: 打开编辑模态框 编辑: ${entry.attributes.filename}`);
-    AppState.dataList.currentEditPath = path; // 记录当前编辑的路径
+    AppState.dataList.currentEditPath = path; 
+    AppState.dataList.currentEditStoragebox = storagebox; 
 
-    // 填充模态框内容
     DOM.modalFilenameSpan.textContent = entry.attributes.filename;
-    DOM.modalEntryPathInput.value = path;
-    if (DOM.modalStorageBoxDisplay) { // 显示仓库信息
-        DOM.modalStorageBoxDisplay.textContent = `所属仓库: ${entry.storagebox || '未知'}`;
-    }
-
-    // 设置限制级 Radio
+    DOM.modalEntryPathInput.value = path; 
+    
     let ratingValue = 'none';
     if (entry.attributes.isPx18) ratingValue = 'px18';
     else if (entry.attributes.isRx18) ratingValue = 'rx18';
     const ratingRadio = document.querySelector(`input[name="modalRating"][value="${ratingValue}"]`);
     if (ratingRadio) ratingRadio.checked = true;
 
-    // 设置构图 Radio
     const layoutValue = entry.attributes.layout || 'normal';
     const layoutRadio = document.querySelector(`input[name="modalLayout"][value="${layoutValue}"]`);
     if (layoutRadio) layoutRadio.checked = true;
 
-    // 设置特殊 Checkbox
     DOM.modalIsEasterEggCheckbox.checked = !!entry.attributes.isEasterEgg;
     DOM.modalIsAiImageCheckbox.checked = !!entry.attributes.isAiImage;
     DOM.modalisBanCheckbox.checked = !!entry.attributes.isBan;
 
-    hideModalMessage(); // 清除旧消息
-    if (DOM.modalSaveButton) DOM.modalSaveButton.disabled = false; // 启用保存按钮
+    hideModalMessage(); 
+    if (DOM.modalSaveButton) DOM.modalSaveButton.disabled = false; 
 
-    DOM.editAttributeModal.classList.remove(UI_CLASSES.HIDDEN); // 显示模态框
+    DOM.editAttributeModal.classList.remove(UI_CLASSES.HIDDEN); 
 }
 
 /**
@@ -428,53 +457,49 @@ function closeEditModal() {
  * 保存属性编辑模态框中的更改
  */
 async function saveAttributeChanges() {
-    if (!AppState.dataList.currentEditPath || !DOM.modalEntryPathInput || !DOM.modalSaveButton) {
+    if (!AppState.dataList.currentEditPath || !AppState.dataList.currentEditStoragebox || !DOM.modalEntryPathInput || !DOM.modalSaveButton) { 
         console.error("DataList: 保存属性更改失败 状态或元素缺失");
         displayToast("保存失败：内部状态错误", UI_CLASSES.ERROR);
         return;
     }
 
-    // 找到要更新的条目在 AppState.userData 中的索引
-    const entryIndex = AppState.userData.findIndex(e => e.path === AppState.dataList.currentEditPath);
+    const entryIndex = AppState.userData.findIndex(e => 
+        e.path === AppState.dataList.currentEditPath && 
+        e.storagebox === AppState.dataList.currentEditStoragebox 
+    );
     if (entryIndex === -1) {
-        console.error("DataList: 保存错误 在 userData 中找不到路径", AppState.dataList.currentEditPath);
+        console.error("DataList: 保存错误 在 userData 中找不到路径", AppState.dataList.currentEditPath, "仓库", AppState.dataList.currentEditStoragebox);
         displayToast("保存失败：数据不一致 请刷新", UI_CLASSES.ERROR);
         return;
     }
 
-    DOM.modalSaveButton.disabled = true; // 禁用保存按钮 防止重复提交
+    DOM.modalSaveButton.disabled = true; 
 
-    // 创建要更新的条目的深拷贝 以免直接修改 AppState
-    const updatedEntry = JSON.parse(JSON.stringify(AppState.userData[entryIndex]));
-
-    // 从模态框控件读取新值
+    const updatedEntryFromModal = JSON.parse(JSON.stringify(AppState.userData[entryIndex]));
     const rating = document.querySelector('input[name="modalRating"]:checked')?.value || 'none';
     const layout = document.querySelector('input[name="modalLayout"]:checked')?.value || 'normal';
-    updatedEntry.attributes.isPx18 = rating === 'px18';
-    updatedEntry.attributes.isRx18 = rating === 'rx18';
-    updatedEntry.attributes.layout = layout;
-    updatedEntry.attributes.isEasterEgg = DOM.modalIsEasterEggCheckbox.checked;
-    updatedEntry.attributes.isAiImage = DOM.modalIsAiImageCheckbox.checked;
-    updatedEntry.attributes.isBan = DOM.modalisBanCheckbox.checked;
-    updatedEntry.timestamp = new Date().toISOString(); // 更新时间戳
+    updatedEntryFromModal.attributes.isPx18 = rating === 'px18';
+    updatedEntryFromModal.attributes.isRx18 = rating === 'rx18';
+    updatedEntryFromModal.attributes.layout = layout;
+    updatedEntryFromModal.attributes.isEasterEgg = DOM.modalIsEasterEggCheckbox.checked;
+    updatedEntryFromModal.attributes.isAiImage = DOM.modalIsAiImageCheckbox.checked;
+    updatedEntryFromModal.attributes.isBan = DOM.modalisBanCheckbox.checked;
+    updatedEntryFromModal.timestamp = new Date().toISOString(); 
 
-    console.log("DataList: 准备保存修改:", updatedEntry);
-
-    // 创建包含已更新条目的新数据列表
-    const updatedList = AppState.userData.map((entry, index) =>
-        index === entryIndex ? updatedEntry : entry
+    const newDataListForBackend = AppState.userData.map((entry, index) =>
+        index === entryIndex ? updatedEntryFromModal : entry
     );
 
     let success = false;
     try {
-        // 调用核心更新函数
         if (typeof updateUserData === "function") {
              success = await updateUserData(
-                updatedList,
-                `成功修改 "${updatedEntry.attributes.filename}" 的属性`,
-                'toast', // 消息显示在 Toast
-                false, // false = 内部数据
-                DELAYS.MESSAGE_CLEAR_DEFAULT
+                newDataListForBackend,
+                `成功修改 "${updatedEntryFromModal.attributes.filename}" 的属性`,
+                'toast', 
+                false, 
+                DELAYS.MESSAGE_CLEAR_DEFAULT,
+                true 
             );
         } else {
             throw new Error("核心函数 updateUserData 未定义");
@@ -482,19 +507,42 @@ async function saveAttributeChanges() {
     } catch (error) {
          console.error("DataList: 保存属性调用 updateUserData 失败:", error);
          success = false;
-         // 错误消息由 updateUserData 显示在 toast
     } finally {
-        DOM.modalSaveButton.disabled = false; // 重新启用按钮
+        DOM.modalSaveButton.disabled = false; 
     }
 
     if (success) {
-        // 成功后延迟关闭模态框
+        const vsInfo = AppState.dataList.virtualScrollInfo;
+        if (vsInfo.filteredData && vsInfo.filteredData.length > 0) {
+            let originalStorageBoxForSearch = "";
+            const originalEntry = AppState.userData.find(e => e.path === AppState.dataList.currentEditPath && e.storagebox === updatedEntryFromModal.storagebox);
+            if(originalEntry && originalEntry.storagebox){
+                 const foundOriginalCase = AppState.availableStorageBoxes.find(box => box.toLowerCase() === originalEntry.storagebox.toLowerCase());
+                 if(foundOriginalCase) originalStorageBoxForSearch = foundOriginalCase;
+                 else originalStorageBoxForSearch = originalEntry.storagebox; 
+            }
+
+            const entryIndexInFilteredData = vsInfo.filteredData.findIndex(e => 
+                e.path === AppState.dataList.currentEditPath && 
+                e.storageBox === originalStorageBoxForSearch 
+            );
+
+            if (entryIndexInFilteredData > -1) {
+                let entryForFilteredData = { ...updatedEntryFromModal };
+                if (originalStorageBoxForSearch) {
+                    entryForFilteredData.storageBox = originalStorageBoxForSearch; 
+                    delete entryForFilteredData.storagebox; 
+                }
+                vsInfo.filteredData[entryIndexInFilteredData] = entryForFilteredData;
+                renderVisibleItems(); 
+            } else {
+                // 如果条目因修改而不符合当前过滤条件，不刷新是正常的
+                // 但如果确实希望刷新（会丢滚动条），可以调用 applyFiltersAndRenderDataList();
+            }
+        }
         setTimeout(closeEditModal, 800);
-    } else {
-         // 失败信息已显示
     }
 }
-
 //  图片放大模态框 Image Magnifier Modal 
 /**
  * 打开图片放大模态框
@@ -604,16 +652,25 @@ function handleDataListItemClick(event) {
 
     // 检查是否点击了编辑按钮
     const editButton = target.closest('.data-item-edit-btn');
-    if (editButton?.dataset.path) {
-        openEditModal(editButton.dataset.path);
-        return; // 处理完毕
+    if (editButton?.dataset.path && editButton.dataset.storagebox) { 
+        openEditModal(editButton.dataset.path, editButton.dataset.storagebox);
+        return; 
     }
 
-    // 检查是否点击了缩略图 确保图片已加载且未出错
     const thumbnail = target.closest('.data-item-thumbnail');
-    if (thumbnail && thumbnail.src && !thumbnail.classList.contains('load-error')) {
-        openImageModal(thumbnail.src);
-        return; // 处理完毕
+    if (thumbnail && (thumbnail.src || thumbnail.dataset.src) && !thumbnail.classList.contains('load-error')) {
+        let imageUrlToOpen = thumbnail.src;
+        if (!imageUrlToOpen || imageUrlToOpen.endsWith('/placeholder.png') || imageUrlToOpen === window.location.href) { // 防止src是空字符串或当前页面URL
+            imageUrlToOpen = thumbnail.dataset.src;
+        }
+        
+        if (imageUrlToOpen && !imageUrlToOpen.endsWith('/placeholder.png')) {
+            //console.log("[Click Zoom] Attempting to open image modal for:", imageUrlToOpen); // 调试日志
+            openImageModal(imageUrlToOpen);
+        } else {
+           // console.warn("[Click Zoom] Thumbnail clicked, but image URL is invalid or placeholder:", thumbnail.src, thumbnail.dataset.src);
+        }
+        return; 
     }
 }
 
