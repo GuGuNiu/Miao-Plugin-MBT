@@ -6,18 +6,19 @@
     <title>咕咕牛更新报告</title>
     <style>
       :root {
-        --theme-primary-color: #673ab7; /* Deep Purple */
-        --theme-secondary-color: #7e57c2; /* Lighter Deep Purple */
+        --theme-primary-color: #673ab7;
+        --theme-secondary-color: #7e57c2;
         --theme-light-purple: #b39ddb;
         --theme-lighter-purple: #d1c4e9;
-        --theme-accent-color: #9575cd; /* Accent Purple */
+        --theme-accent-color: #9575cd;
 
-        --theme-bg-start: #ede7f6; /* Very Light Purple */
-        --theme-bg-end: #f3e5f5;   /* Light Lilac */
+        --theme-bg-start: #ede7f6;
+        --theme-bg-end: #f3e5f5;  
         
         --text-color-base: #373a3c;
         --text-color-muted: #55595c;
         --text-color-subtle: #818a91;
+        --text-color-error: #e53935;
 
         --container-glow-border-color: var(--theme-accent-color);
         --container-glow-color-intense: rgba(103, 58, 183, 0.35);
@@ -38,10 +39,10 @@
         --h1-text-shadow: 0 1px 2px rgba(103, 58, 183, 0.2);
         
         --h2-color: var(--theme-secondary-color);
-        --h2-border-color: var(--theme-accent-color); /* Using accent for H2 border */
+        --h2-border-color: var(--theme-accent-color);
 
         --status-ok-color: #4caf50;
-        --status-fail-color: #e53935;
+        --status-fail-color: var(--text-color-error);
         --status-no-change-color: var(--theme-accent-color);
         --status-skipped-color: #9e9e9e;
         --status-force-synced-color: #d32f2f;
@@ -50,12 +51,12 @@
         --error-details-text: var(--status-fail-color);
         --error-details-border: var(--status-fail-color);
         --error-details-strong: #b71c1c;
-        --error-details-pre-bg: #fce4ec; /* Light pink for pre background */
+        --error-details-pre-bg: #fce4ec;
         --error-details-pre-border: #f8bbd0;
-
-        --log-bg: #f5f5f5;
-        --log-border: #eeeeee;
-        --log-text: #424242;
+        
+        --log-title-color: var(--text-color-muted);
+        --log-text-color: var(--text-color-base); 
+        --commit-entry-border: var(--theme-lighter-purple);
 
         --summary-default-bg-start: var(--block-bg-start);
         --summary-default-bg-end: var(--theme-bg-start);
@@ -74,23 +75,21 @@
         --error-summary-border: var(--status-fail-color);
         --error-summary-h2-color: var(--status-fail-color);
         --error-summary-li-border: var(--theme-lighter-purple);
+        
+        --base-font-size: 14px; 
+        --font-family-main: 'CuteFont', sans-serif; 
+        --font-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
       }
 
-      @font-face {
-        font-family: 'CuteFont';
-        src: local('Yuanti SC'), local('YouYuan'), local('Microsoft YaHei UI Rounded'), local('Arial Rounded MT Bold'), local('Microsoft YaHei UI'), local('PingFang SC'), sans-serif;
-        font-weight: normal;
-        font-style: normal;
-      }
       body {
-        font-family: 'CuteFont', sans-serif;
+        font-family: var(--font-family-main);
         max-width: 520px;
-        margin: 30px auto;
-        padding: 20px;
+        margin: 30px auto; 
+        padding: 20px;   
         background: linear-gradient(145deg, var(--theme-bg-start) 0%, var(--theme-bg-end) 100%);
         color: var(--text-color-base);
-        font-size: 14px;
-        line-height: 1.6;
+        font-size: var(--base-font-size);
+        line-height: 1.6; 
         box-sizing: border-box;
         position: relative;
         overflow-x: hidden;
@@ -107,208 +106,154 @@
         position: relative;
         z-index: 1;
       }
-      .container::before {
-        content: '✨';
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        font-size: 28px;
-        opacity: 0.7;
-      }
-      .container::after {
-        content: '🔮';
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        font-size: 28px;
-        opacity: 0.7;
-        transform: rotate(-12deg);
-      }
-      h1 {
-        text-align: center;
-        color: var(--h1-color);
-        margin: 0 0 25px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid var(--h1-border-color);
-        font-size: 26px;
-        font-weight: bold;
-        text-shadow: var(--h1-text-shadow);
-        position: relative;
-      }
-      .update-details-block {
-        margin-bottom: 20px;
-        padding: 18px;
-        border-radius: 14px;
-        background: linear-gradient(to bottom, var(--block-bg-start), var(--block-bg-end));
-        border: 1px solid var(--block-border-color);
-        box-shadow: 0 2px 8px var(--block-shadow-color);
-      }
-      h2 {
-        color: var(--h2-color);
-        margin: 0 0 12px;
-        border-left: 4px solid var(--h2-border-color);
-        padding-left: 10px;
-        font-size: 18px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-      }
+      .container::before { content: '✨'; position: absolute; top: 20px; left: 20px; font-size: 28px; opacity: 0.7; }
+      .container::after { content: '🔮'; position: absolute; bottom: 20px; right: 20px; font-size: 28px; opacity: 0.7; transform: rotate(-12deg); }
+      h1 { text-align: center; color: var(--h1-color); margin: 0 0 25px; padding-bottom: 12px; border-bottom: 2px solid var(--h1-border-color); font-size: 26px; font-weight: bold; text-shadow: var(--h1-text-shadow); position: relative; }
+      .update-details-block { margin-bottom: 20px; padding: 18px; border-radius: 14px; background: linear-gradient(to bottom, var(--block-bg-start), var(--block-bg-end)); border: 1px solid var(--block-border-color); box-shadow: 0 2px 8px var(--block-shadow-color); }
+      h2 { color: var(--h2-color); margin: 0 0 12px; border-left: 4px solid var(--h2-border-color); padding-left: 10px; font-size: 18px; font-weight: bold; display: flex; align-items: center; }
       h2 .icon { margin-right: 6px; vertical-align: -3px; font-size: 17px; }
       ul { list-style: none; padding-left: 0px; margin-top: 5px; margin-bottom: 0; }
-      li {
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--theme-lighter-purple);
-        min-height: 18px;
-      }
+      li { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--theme-lighter-purple); min-height: 18px; }
       li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
-      .repo-status-line {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 6px;
-      }
-      .label {
-        color: var(--text-color-muted);
-        margin-right: 8px;
-        white-space: nowrap;
-        font-size: 0.95em;
-      }
-      .value {
-        font-weight: bold;
-      }
+      .repo-status-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+      .label { color: var(--text-color-muted); margin-right: 8px; white-space: nowrap; font-size: 0.95em; font-weight: normal; }
+      .value { font-weight: bold; }
       .status-ok { color: var(--status-ok-color); }
       .status-fail { color: var(--status-fail-color); }
       .status-no-change { color: var(--status-no-change-color); }
       .status-skipped { color: var(--status-skipped-color); }
       .status-force-synced { color: var(--status-force-synced-color); font-weight: bold; }
-      .error-details {
-        font-size: 12px;
-        white-space: pre-wrap;
-        word-break: break-all;
-        color: var(--error-details-text);
-        margin-top: 6px;
-        padding: 10px;
-        background-color: var(--error-details-bg);
-        border-radius: 6px;
-        border-left: 3px solid var(--error-details-border);
-      }
+      .error-details { font-size: 12px; white-space: pre-wrap; word-break: break-all; color: var(--error-details-text); margin-top: 6px; padding: 10px; background-color: var(--error-details-bg); border-radius: 6px; border-left: 3px solid var(--error-details-border); }
       .error-details strong { color: var(--error-details-strong); }
-      .error-details pre {
-        font-size:10px;
-        max-height: 60px;
-        overflow-y:auto;
-        background: var(--error-details-pre-bg);
-        padding: 6px;
-        border-radius:4px;
-        margin-top:4px;
-        border: 1px solid var(--error-details-pre-border);
-        white-space: pre-wrap;
-        word-break: break-all;
-      }
+      .error-details pre { font-size:10px; max-height: 60px; overflow-y:auto; background: var(--error-details-pre-bg); padding: 6px; border-radius:4px; margin-top:4px; border: 1px solid var(--error-details-pre-border); white-space: pre-wrap; word-break: break-all; font-family: var(--font-monospace); }
+      
       .log-details {
-        margin-top: 10px;
+        margin-top: 6px; 
       }
-      .log-details h3 {
-        color: var(--text-color-muted);
-        margin-bottom: 6px;
-        font-size: 14px;
-        font-weight: 500;
+      .log-details h3 { 
+        color: var(--text-color-muted); 
+        margin-bottom: 4px;
+        font-size: var(--base-font-size); 
+        font-weight: 500; 
       }
-      .log-content {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 11px;
-        font-weight: bold;
-        white-space: pre-wrap;
-        word-break: break-all;
-        background-color: var(--log-bg);
-        padding: 10px;
-        border-radius: 6px;
-        max-height: 90px;
-        overflow-y: auto;
-        border: 1px solid var(--log-border);
-        color: var(--log-text);
+      .log-content-container { 
+        border: 1px solid var(--commit-entry-border); 
+        border-radius: 3px; 
+        background-color: #fff; 
+        padding: 2px 5px; 
+        font-family: var(--font-family-main);
+        font-size: var(--base-font-size);
+        color: var(--text-color-base);
       }
-      .log-content:empty::before {
-        content: "(无相关日志记录)";
-        color: #aaa;
-        font-style: italic;
+      .commit-entry { 
+        padding: 2px 0;   
+        border-bottom: 1px dashed var(--commit-entry-border); 
+        line-height: 1.7; 
       }
+      .commit-entry:last-child { border-bottom: none; }
+      
+      .commit-meta { 
+        font-size: inherit; 
+        color: inherit;  
+        font-weight: normal; 
+        white-space: nowrap; 
+        display: inline-block;
+        vertical-align: middle; 
+        margin-right: 5px;
+      }
+      .commit-message-wrapper { 
+        display: inline; 
+        font-size: inherit;
+        color: inherit;
+        font-weight: normal; 
+        line-height: inherit; 
+      }
+      .text-part { 
+         display: inline; 
+         vertical-align: middle; 
+         line-height: inherit;
+         font-weight: normal; 
+      }
+      .character-mention { 
+         display: inline-flex; 
+         align-items: center;    
+         vertical-align: middle; 
+         margin: 0 2px 0 1px; 
+         padding: 0px 4px; 
+         line-height: 1.3; 
+         border-radius: 3px; 
+         font-weight: normal; 
+         height: 1.4em; 
+         box-sizing: border-box;
+      }
+      .character-mention.game-gs {
+        background-color: #e9f5fe;
+        border: 1px solid #cce7fa; 
+      }
+      .character-mention.game-sr {
+          background-color: rgba(60, 60, 60, 0.85); 
+          border: 1px solid #4a4a4a;    
+      }
+      .character-mention.no-image .character-face-placeholder,
+      .character-face {
+        width: 1.1em;  
+        height: 1.1em; 
+        border-radius: 50%;
+        margin-right: 3px; 
+        object-fit: cover;
+        background-color: #fff; 
+        display: inline-block; 
+      }
+      .character-mention.game-gs .character-face {
+         border: 1px solid #019de6; 
+      }
+      .character-mention.game-gs.no-image .character-face-placeholder {
+          border: 1px solid #019de6; 
+      }
+      .character-mention.game-sr .character-face {
+          border: 1px solid #e2c20e; 
+      }
+      .character-mention.game-sr.no-image .character-face-placeholder {
+          border: 1px solid #e2c20e; 
+      }
+      .character-name {
+        font-size: inherit; 
+        line-height: 1; 
+        white-space: nowrap; 
+        color: var(--text-color-base); 
+        font-weight: normal;
+      }
+      .game-gs .character-name { color: #1e88e5; }
+      .game-sr .character-name { color: #f0f0f0; } 
+      
       .summary-section {
-        margin-top: 25px;
-        padding: 18px;
-        background: linear-gradient(to bottom, var(--summary-default-bg-start), var(--summary-default-bg-end));
-        border-radius: 14px;
-        text-align: center;
-        font-size: 16px;
-        font-weight: 500;
-        color: var(--summary-default-text);
-        border: 1px solid var(--summary-default-border);
-        box-shadow: 0 2px 8px var(--block-shadow-color);
+        margin-top: 25px; padding: 18px; background: linear-gradient(to bottom, var(--summary-default-bg-start), var(--summary-default-bg-end)); border-radius: 14px; text-align: center; font-size: 16px; font-weight: 500; color: var(--summary-default-text); border: 1px solid var(--summary-default-border); box-shadow: 0 2px 8px var(--block-shadow-color);
       }
       .summary-section.no-changes { background: var(--summary-no-changes-bg); border-color: var(--summary-no-changes-border); color: var(--summary-no-changes-text); }
       .summary-section.has-errors { background: var(--summary-has-errors-bg); border-color: var(--summary-has-errors-border); color: var(--summary-has-errors-text); }
-      .error-summary-block {
-        margin-top: 20px;
-        padding: 18px;
-        border-radius: 14px;
-        background: var(--error-summary-bg);
-        border: 1px solid var(--error-summary-border);
-        box-shadow: 0 2px 8px rgba(103, 58, 183, 0.08);
-      }
-      .error-summary-block h2 {
-        color: var(--error-summary-h2-color);
-        border-left-color: var(--error-summary-h2-color);
-      }
-      .error-summary-block ul li {
-        border-bottom: 1px solid var(--error-summary-li-border);
-      }
-      .error-summary-block ul li strong {
-        color: var(--error-details-strong);
-      }
-      .error-summary-block ul li p {
-        font-size: 0.9em;
-        margin: 3px 0 0 10px;
-        color: var(--error-details-text);
-      }
-      .error-summary-block .error-details {
-        margin-left:10px;
-        margin-top:4px;
-        font-size:10px;
-        max-height: 40px;
-        background-color: rgba(103, 58, 183, 0.02);
-      }
-      .error-summary-block .error-details pre {
-        background: var(--error-details-pre-bg);
-        padding: 4px 6px;
-        max-height: 35px;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 30px;
-        font-size: 0.8em;
-        color: var(--text-color-subtle);
-        border-top: 1px solid var(--theme-lighter-purple);
-        padding-top: 15px;
-      }
+      .error-summary-block { margin-top: 20px; padding: 18px; border-radius: 14px; }
+      .error-summary-block h2 { color: var(--error-summary-h2-color); border-left-color: var(--error-summary-h2-color); font-size: 18px;}
+      .error-summary-block ul li { border-bottom: 1px solid var(--error-summary-li-border); font-size: 14px;}
+      .error-summary-block .error-details { font-size:12px; }
+      .error-summary-block .error-details pre { font-size:10px; font-family: var(--font-monospace); }
+      .footer { text-align: center; margin-top: 30px; font-size: 0.8em; color: var(--text-color-subtle); border-top: 1px solid var(--theme-lighter-purple); padding-top: 15px; }
        @media (max-width: 580px) {
-          body { margin: 15px; padding: 15px; max-width: 100%;}
-          .container { padding: 20px; }
-        }
-        @media (max-width: 480px) {
-          body { margin: 10px; padding: 10px; }
-          .container { padding: 15px; border-radius: 16px; }
-          .container::before, .container::after { font-size: 24px; top: 15px; left: 15px; bottom: 15px; right: 15px;}
-          h1 { font-size: 22px; margin-bottom: 20px; padding-bottom: 10px;}
-          .update-details-block, .summary-section, .error-summary-block { padding: 15px; border-radius: 12px; }
-          h2 { font-size: 17px; margin-bottom: 10px;}
-          .footer { margin-top: 25px; padding-top: 10px; }
+          body { margin: 15px; padding: 15px; max-width: 100%; font-size: 14px;}
+          .container { padding: 20px; } 
+          h1 { font-size: 22px; margin-bottom: 20px; }
+          .update-details-block, .summary-section, .error-summary-block { padding: 15px; border-radius: 12px; } 
+          h2 { font-size: 17px; } 
+          .repo-status-line { font-size: 14px; } 
+          .log-details h3, .commit-meta, .character-name { font-size: 14px; } 
+          .character-mention { height: 1.3em; } 
+          .character-face, .character-mention.no-image .character-face-placeholder { width: 1em; height: 1em; }
+          .footer { font-size: 12px; } 
         }
     </style>
 </head>
 <body style="{{scaleStyleValue}}">
     <div class="container">
-        <h1>咕咕牛更新报告</h1>
+        <h1>咕咕牛的更新报告</h1>
         <div class="update-details-block">
             <h2><span class="icon">🔄</span>更新详情</h2>
             <ul>
@@ -329,15 +274,61 @@
                                 {{ /if }}
                             </div>
                         {{ /if }}
-                        {{ if repoResult.log && !repoResult.error }}
-                            <div class="log-details">
-                                <h3>最新提交记录 (近3条):</h3>
-                                <pre class="log-content">{{ repoResult.log }}</pre>
+
+                        {{ if isArray(repoResult.log) && repoResult.log.length > 0 }}
+                            <div class="log-details"> 
+                                <h3> 
+                                    {{ if repoResult.error && repoResult.log.length === 1 && repoResult.log[0].hash === 'N/A' && (repoResult.log[0].originalMessage.includes("无法获取日志") || repoResult.log[0].originalMessage.includes("失败且无法获取日志") || repoResult.log[0].originalMessage.includes("日志获取也异常") || repoResult.log[0].originalMessage.includes("意外错误，无法获取日志")) }}
+                                        错误导致无法获取有效日志
+                                    {{ else if repoResult.error }}
+                                        相关日志 (可能包含线索):
+                                    {{ else if repoResult.log.length === 1 && repoResult.log[0].hash === 'N/A' && repoResult.log[0].originalMessage === "无提交记录" }}
+                                        最新提交记录:
+                                    {{ else }}
+                                        最新提交记录 (近{{repoResult.log.filter(c => c.hash !== 'N/A').length}}条):
+                                    {{ /if }}
+                                </h3>
+                                <div class="log-content-container">
+                                    {{ each repoResult.log commit }}
+                                        <div class="commit-entry">
+                                            <div class="commit-meta">
+                                                {{ if commit.hash !== 'N/A' && commit.date !== 'N/A' }}
+                                                    {{ commit.date.substring(5) }} [{{ commit.hash }}]
+                                                {{ /if }}
+                                            </div>
+                                            <div class="commit-message-wrapper">
+                                                {{ each commit.displayParts part }}
+                                                    {{ if part.type === 'text' }}
+                                                        <span class="text-part">{{@ part.content }}</span>
+                                                    {{ else if part.type === 'character' }}
+                                                        <span class="character-mention game-{{ part.game }} {{ if !part.imageUrl }}no-image{{ /if }}">
+                                                            {{ if part.imageUrl }}
+                                                                <img src="{{ part.imageUrl }}" alt="{{ part.name }}" class="character-face">
+                                                            {{ else }}
+                                                                <span class="character-face-placeholder"></span>
+                                                            {{ /if }}
+                                                            <span class="character-name">{{ part.name }}</span>
+                                                        </span>
+                                                    {{ /if }}
+                                                {{ /each }}
+                                            </div>
+                                        </div>
+                                    {{ /each }}
+                                </div>
                             </div>
-                        {{ else if repoResult.log && repoResult.error && (!repoResult.error.stderr || !(repoResult.error.stderr.split('\n').filter(line => line.match(/^(fatal|error|warning):/i)).length > 0)) }}
+                        {{ else if repoResult.log && typeof repoResult.log === 'string' }} 
+                            <div class="log-details">
+                                <h3>日志:</h3>
+                                <pre class="log-content">{{@ repoResult.log }}</pre>
+                            </div>
+                        {{ else if !repoResult.error }}
                              <div class="log-details">
-                                <h3>相关日志 (可能包含线索):</h3>
-                                <pre class="log-content">{{ repoResult.log }}</pre>
+                                <h3>最新提交记录:</h3>
+                                <div class="log-content-container"> 
+                                   <div class="commit-entry">
+                                       <div class="commit-message-wrapper">(无提交记录或图库已是最新)</div>
+                                   </div>
+                                </div>
                             </div>
                         {{ /if }}
                     </li>
