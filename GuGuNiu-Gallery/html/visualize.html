@@ -11,33 +11,25 @@
             --theme-light-blue: #81d4fa;
             --theme-lighter-blue: #b3e5fc;
             --theme-accent-blue: #00b0ff;
-
             --theme-bg-start: #e1f5fe;
             --theme-bg-end: #ffffff;
-            
             --theme-shadow-color: rgba(3, 169, 244, 0.12);
             --theme-shadow-strong-color: rgba(3, 169, 244, 0.2);
-
             --text-color-dark: #212529;
             --text-color-light: #495057;
             --text-color-subtle: #6c757d;
-            
             --highlight-gu-text-color: #01579B;
             --highlight-gu-bg-color: rgba(179, 229, 252, 0.5);
-
             --error-bg-color: rgba(255, 235, 238, 0.9);
             --error-text-color: #c62828;
             --error-border-color: #ef5350;
-            
-            --item-hover-border-color: var(--theme-accent-blue); 
-            --item-hover-shadow-color: rgba(0, 176, 255, 0.25); 
-
+            --item-hover-border-color: var(--theme-accent-blue);
+            --item-hover-shadow-color: rgba(0, 176, 255, 0.45); 
             --card-border-radius: 16px;
             --card-border-color: var(--theme-lighter-blue);
             --card-inner-shadow: inset 0 0 0 1px rgba(255,255,255,0.5),
                                  inset 0 1px 3px rgba(0,123,255,0.1);
             --card-outer-shadow: 0 4px 12px var(--theme-shadow-color);
-
             --container-glow-main: var(--theme-accent-blue);
             --container-glow-border-color: var(--theme-primary-color);
             --container-glow-color-intense: rgba(0, 176, 255, 0.3);
@@ -108,7 +100,6 @@
             font-weight: bold;
             display: flex;
             align-items: center;
-            text-align: center;
             justify-content: center;
             margin-bottom: 30px;
             padding-bottom: 12px;
@@ -141,17 +132,49 @@
             transform: translateY(-4px) scale(1.02);
             border-color: var(--item-hover-border-color);
             box-shadow: var(--card-inner-shadow),
-                        0 8px 20px var(--item-hover-shadow-color);
+                        0 0 15px 5px var(--item-hover-shadow-color);
         }
 
-        .image-item img {
-            display: block;
+        .image-container {
+            position: relative;
             width: 100%;
             height: 120px;
-            object-fit: contain;
-            margin: 0 auto 10px;
+            background-color: white;
             border-radius: 6px;
-            background-color: transparent;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8),
+                        0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .image-container img {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .gu-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--theme-primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 0 6px 0 6px;
+            font-size: 0.75em;
+            font-weight: 600;
+            line-height: 1;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .image-item .filename {
@@ -176,7 +199,7 @@
 
         .image-item .error-placeholder {
             width: 100%;
-            height: 120px;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -185,7 +208,7 @@
             font-size: 12px;
             border-radius: 6px;
             border: 1px dashed var(--error-border-color);
-            margin: 0 auto 10px;
+            margin: 0;
             padding: 10px;
             box-sizing: border-box;
             text-align: center;
@@ -217,7 +240,7 @@
             grid-auto-rows: minmax(170px, auto);
           }
           .image-item { padding: 10px; border-radius: 12px; }
-          .image-item img, .image-item .error-placeholder {
+          .image-container {
             height: 100px;
             margin-bottom: 8px;
           }
@@ -242,18 +265,21 @@
 </head>
 <body style="{{scaleStyleValue}}">
     <div class="container">
-        <h1>『{{ characterName }}』 已应用在插件内的面板图可视化</h1>
+        <h1>『{{ characterName }}』 已应用在插件内的面板图</h1>
         <div class="sub-title">共 {{ imageCount }} 张 | 当前第 {{ batchNum }}/{{ totalBatches }} 批</div>
 
         <div class="image-grid">
             {{ if images && images.length > 0 }}
                 {{ each images item index }}
                 <div class="image-item">
-                    <img
-                        src="{{ item.filePath }}"
-                        alt="{{ item.fileName }}"
-                        onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);"
-                    />
+                    <div class="image-container">
+                        <img
+                            src="{{ item.filePath }}"
+                            alt="{{ item.fileName }}"
+                            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);"
+                        />
+                        {{ if item.isGu }}<span class="gu-label">GU</span>{{ /if }}
+                    </div>
                     <div class="filename {{if item.isGu}}highlight-gu{{/if}}">
                         {{ item.originalIndex + 1 }}. {{ item.fileName }}
                     </div>

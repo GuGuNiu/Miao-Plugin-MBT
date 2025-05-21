@@ -1381,16 +1381,39 @@ export class MiaoPluginMBT extends plugin {
   }
 
   static async GetTuKuLog(count = 5, RepoPath, logger = global.logger || console) {
-    const logPrefix = Default_Config.logPrefix;
-    if (!RepoPath) return null;
-    const gitDir = path.join(RepoPath, ".git");
-    try { await fsPromises.access(gitDir); const stats = await fsPromises.stat(gitDir); if (!stats.isDirectory()) throw new Error(".git is not a directory"); }
-    catch (err) { return null; }
-    const format = Default_Config.gitLogFormat; const dateformat = Default_Config.gitLogDateFormat;
-    const args = ["log", `-n ${Math.max(1, count)}`, `--date=${dateformat}`, `--pretty=format:${format}`];
-    const gitOptions = { cwd: RepoPath };
-    try { const result = await ExecuteCommand("git", args, gitOptions, 5000); return result.stdout.trim(); }
-    catch (error) { logger.warn(`${logPrefix} [获取日志] Git log 失败 (${RepoPath})`); return null; }
+      const logPrefix = Default_Config.logPrefix;
+      if (!RepoPath) return null;
+      const gitDir = path.join(RepoPath, ".git");
+      try {
+          await fsPromises.access(gitDir);
+          const stats = await fsPromises.stat(gitDir);
+          if (!stats.isDirectory()) throw new Error(".git is not a directory");
+      } catch (err) {
+          return null;
+      }
+
+      const logFormat = "%H<DELIMITER>%ad<DELIMITER>%s"; 
+      const dateFormat = "format:%Y-%m-%d %H:%M";
+      const args = ["log", `-n ${Math.max(1, count)}`, `--date=${dateFormat}`, `--pretty=format:${logFormat}`];
+      const gitOptions = { cwd: RepoPath };
+
+      try {
+          const result = await ExecuteCommand("git", args, gitOptions, 5000);
+          const stdout = result.stdout.trim();
+          if (!stdout) return []; 
+          
+          return stdout.split("\n").map(line => {
+              const parts = line.split("<DELIMITER>");
+              return {
+                  hash: parts[0] || '',
+                  date: parts[1] || '',
+                  message: parts[2] || ''
+              };
+          });
+      } catch (error) {
+          logger.warn(`${logPrefix} [获取日志] Git log 失败 (${RepoPath})`);
+          return null; 
+      }
   }
 
   static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, e, loggerInstance = global.logger || console) {
@@ -1655,112 +1678,192 @@ export class MiaoPluginMBT extends plugin {
   }
 
   static async UpdateSingleRepo(e, RepoNum, localPath, RepoName, RepoUrl, branch, isScheduled, logger) {
-    const logPrefix = Default_Config.logPrefix;
-    let success = false;
-    let hasChanges = false;
-    let latestLog = null;
-    let pullError = null;
-    let wasForceReset = false;
+      const logPrefix = Default_Config.logPrefix;
+      let success = false, hasChanges = false, latestLog = null, pullError = null, wasForceReset = false;
 
-    await MiaoPluginMBT.gitMutex.acquire();
-    try {
-      let oldCommit = "";
+      await MiaoPluginMBT.gitMutex.acquire();
       try {
-        const revParseResult = await ExecuteCommand("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000);
-        oldCommit = revParseResult.stdout.trim();
-      } catch (revParseError) {
-        logger.warn(`${logPrefix} [更新仓库] ${RepoName} 获取当前 commit 失败:`, revParseError.message);
+          let oldCommit = "";
+          try {
+              const revParseResult = await ExecuteCommand("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000);
+              oldCommit = revParseResult.stdout.trim();
+          } catch (revParseError) {}
+
+          let needsReset = false, pullOutput = "";
+          try {
+              const pullResult = await ExecuteCommand("git", ["pull", "origin", branch, "--ff-only", "--progress"], { cwd: localPath }, Default_Config.gitPullTimeout, (stderrChunk) => {}, undefined);
+              pullOutput = (pullResult.stdout || "") + (pullResult.stderr || "");
+              success = true;
+          } catch (err) {
+              pullError = err;
+              pullOutput = err.stderr || err.stdout || err.message || String(err);
+              if (err.code !== 0 && (err.stderr || "").match(/Not possible to fast-forward|diverging|unrelated histories|commit your changes or stash them|needs merge|lock file/) || (err.message || "").includes("failed")) {
+                  needsReset = true;
+              } else {
+                  success = false;
+              }
+          }
+
+          if (needsReset && !success) {
+              try {
+                  await ExecuteCommand("git", ["fetch", "origin"], { cwd: localPath }, Default_Config.gitPullTimeout);
+                  await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], { cwd: localPath });
+                  success = true; hasChanges = true; wasForceReset = true; pullError = null;
+              } catch (resetError) {
+                  success = false; pullError = resetError;
+              }
+          }
+
+          if (success) {
+              let newCommit = "";
+              try {
+                  const newRevParseResult = await ExecuteCommand("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000);
+                  newCommit = newRevParseResult.stdout.trim();
+              } catch (newRevParseError) {}
+              if (!wasForceReset) hasChanges = oldCommit && newCommit && oldCommit !== newCommit;
+
+              try {
+                  const rawCommits = await MiaoPluginMBT.GetTuKuLog(3, localPath, logger);
+                  if (rawCommits && rawCommits.length > 0) {
+                      latestLog = await Promise.all(rawCommits.map(async (commit) => {
+                          const processedCommit = { hash: commit.hash.substring(0, 7), date: commit.date, originalMessage: commit.message, displayParts: [] };
+                          const gamePrefixes = [
+                              { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs", processChars: true },
+                              { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr", processChars: true },
+                              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz", processChars: false },
+                              { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves", processChars: false }
+                          ];
+
+                          let Rmessage = commit.message, prefixProcessed = false;
+                          for (const entry of gamePrefixes) {
+                              const prefixMatch = Rmessage.match(entry.prefixPattern);
+                              if (prefixMatch) {
+                                  const matchedPrefixStr = prefixMatch[0];
+                                  Rmessage = Rmessage.substring(matchedPrefixStr.length);
+                                  prefixProcessed = true;
+
+                                  if (entry.processChars && (entry.gameType === "gs" || entry.gameType === "sr")) {
+                                      const charNamesRawSegment = Rmessage.split(/(\s*(?:绝区零UP|鸣潮UP|原神UP|星铁UP)[:：])/i)[0];
+                                      const charNames = charNamesRawSegment.split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
+                                      let textAfterChars = Rmessage.substring(charNamesRawSegment.length).trim();
+
+                                      for (const rawName of charNames) {
+                                          if (!rawName) continue;
+                                          let nameToDisplay = rawName, finalStandardNameForPath = rawName, faceImageUrl = null;
+                                          let aliasResult = await MiaoPluginMBT.FindRoleAlias(rawName, logger);
+
+                                          if (aliasResult.exists) {
+                                              nameToDisplay = aliasResult.mainName;
+                                              finalStandardNameForPath = aliasResult.mainName;
+                                          } else if (rawName.length > 0 && MiaoPluginMBT._aliasData && MiaoPluginMBT._aliasData.combined) {
+                                              const allKnownNames = Object.keys(MiaoPluginMBT._aliasData.combined);
+                                              let bestMatch = null, highestScore = -Infinity;
+
+                                              for (const knownName of allKnownNames) {
+                                                  let currentScore = 0, matchedCharsCount = 0;
+                                                  const rawNameCharsArray = rawName.split('');
+                                                  for (const char of rawNameCharsArray) {
+                                                      if (knownName.includes(char)) matchedCharsCount++;
+                                                  }
+                                                  if (matchedCharsCount === 0 && rawName.length > 0) continue;
+
+                                                  currentScore = matchedCharsCount * 2;
+                                                  currentScore -= Math.abs(knownName.length - rawName.length);
+                                                  if (rawName.length > 0 && knownName.length > 0) {
+                                                      if (knownName.charAt(0) === rawName.charAt(0)) currentScore += 1.5;
+                                                      if (knownName.startsWith(rawName)) currentScore += 2;
+                                                      else if (rawName.startsWith(knownName) && knownName.length > 1) currentScore += 1;
+                                                  }
+
+                                                  if (currentScore > highestScore) {
+                                                      highestScore = currentScore;
+                                                      bestMatch = knownName;
+                                                  } else if (currentScore === highestScore && bestMatch) {
+                                                      if (Math.abs(knownName.length - rawName.length) < Math.abs(bestMatch.length - rawName.length)) {
+                                                          bestMatch = knownName;
+                                                      } else if (Math.abs(knownName.length - rawName.length) === Math.abs(bestMatch.length - rawName.length)) {
+                                                          if (knownName.startsWith(rawName.charAt(0)) && !bestMatch.startsWith(rawName.charAt(0))) {
+                                                              bestMatch = knownName;
+                                                          }
+                                                      }
+                                                  }
+                                              }
+
+                                              const minAcceptableScore = Math.max(1, rawName.length * 0.5);
+                                              if (bestMatch && highestScore >= minAcceptableScore) {
+                                                  nameToDisplay = bestMatch;
+                                                  let correctedAliasResult = await MiaoPluginMBT.FindRoleAlias(bestMatch, logger);
+                                                  finalStandardNameForPath = correctedAliasResult.exists ? correctedAliasResult.mainName : bestMatch;
+                                              } else {
+                                                  finalStandardNameForPath = rawName;
+                                              }
+                                          }
+
+                                          let imagePath = null;
+                                          if (entry.gameType === "gs") {
+                                              imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", finalStandardNameForPath, "imgs", "face.webp");
+                                          } else if (entry.gameType === "sr") {
+                                              imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", finalStandardNameForPath, "imgs", "face.webp");
+                                          }
+
+                                          if (imagePath) {
+                                              try {
+                                                  await fsPromises.access(imagePath);
+                                                  faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`;
+                                              } catch (err) {}
+                                          }
+                                          processedCommit.displayParts.push({ type: 'character', name: nameToDisplay, game: entry.gameType, imageUrl: faceImageUrl });
+                                      }
+                                      if (textAfterChars) {
+                                          processedCommit.displayParts.push({ type: 'text', content: textAfterChars });
+                                      }
+                                  } else {
+                                      processedCommit.displayParts.push({ type: 'text', content: matchedPrefixStr + Rmessage });
+                                  }
+                                  Rmessage = "";
+                                  break;
+                              }
+                          }
+
+                          if (Rmessage && !prefixProcessed) {
+                              processedCommit.displayParts.push({ type: 'text', content: Rmessage });
+                          }
+                          if (processedCommit.displayParts.length === 0 && commit.message) {
+                              processedCommit.displayParts.push({ type: 'text', content: commit.message });
+                          }
+                          return processedCommit;
+                      }));
+                  } else {
+                      latestLog = [{ originalMessage: "无提交记录", displayParts: [{ type: 'text', content: "无提交记录" }], hash: 'N/A', date: 'N/A' }];
+                  }
+              } catch (logError) {
+                  latestLog = [{ originalMessage: "获取日志异常", displayParts: [{ type: 'text', content: "获取日志异常" }], hash: 'N/A', date: 'N/A' }];
+              }
+          } else {
+              try {
+                  const rawCommitsOnError = await MiaoPluginMBT.GetTuKuLog(3, localPath, logger);
+                  if (rawCommitsOnError && rawCommitsOnError.length > 0) {
+                      latestLog = rawCommitsOnError.map(commit => ({
+                          originalMessage: commit.message,
+                          hash: commit.hash.substring(0, 7),
+                          date: commit.date,
+                          displayParts: [{ type: 'text', content: commit.message }]
+                      }));
+                  } else {
+                      latestLog = [{ originalMessage: "更新失败且无法获取日志", displayParts: [{ type: 'text', content: "更新失败且无法获取日志" }], hash: 'N/A', date: 'N/A' }];
+                  }
+              } catch (logErrorOnFail) {
+                  latestLog = [{ originalMessage: "更新失败，日志获取也异常", displayParts: [{ type: 'text', content: "更新失败，日志获取也异常" }], hash: 'N/A', date: 'N/A' }];
+              }
+          }
+      } catch (outerError) {
+          success = false; hasChanges = false; pullError = outerError; wasForceReset = false;
+          latestLog = [{ originalMessage: "发生意外错误，无法获取日志", displayParts: [{ type: 'text', content: "发生意外错误，无法获取日志" }], hash: 'N/A', date: 'N/A' }];
+      } finally {
+          MiaoPluginMBT.gitMutex.release();
       }
 
-      let needsReset = false;
-      let pullOutput = "";
-
-      try {
-        const pullResult = await ExecuteCommand(
-          "git",
-          ["pull", "origin", branch, "--ff-only", "--progress"],
-          { cwd: localPath },
-          Default_Config.gitPullTimeout,
-          (stderrChunk) => { },
-          undefined
-        );
-        pullOutput = (pullResult.stdout || "") + (pullResult.stderr || "");
-        success = true;
-      } catch (err) {
-        pullError = err;
-        pullOutput = err.stderr || "" || err.stdout || "" || err.message || String(err);
-        logger.warn(`${logPrefix} [更新仓库] ${RepoName} 'git pull --ff-only' 失败，错误码: ${err.code}`);
-        const criticalLines = (pullOutput.split("\n") || []).filter((line) => line.match(/^(fatal|error|warning):/i) && !["trace:", "http.c:", "== Info:"].some((p) => line.trim().startsWith(p))).join("\n");
-        if (criticalLines) logger.warn(`${logPrefix} [更新仓库] ${RepoName} Git 关键错误:\n${criticalLines}`);
-        else if (err.message) logger.warn(`${logPrefix} [更新仓库] ${RepoName} 错误信息: ${err.message}`);
-        
-        if ( err.code !== 0 && ((err.stderr || "").includes("Not possible to fast-forward") || (err.stderr || "").includes("diverging") || (err.stderr || "").includes("unrelated histories") || (err.stderr || "").includes("commit your changes or stash them") || (err.stderr || "").includes("needs merge") || (err.stderr || "").includes("lock file") || (err.message || "").includes("failed")) ) {
-          needsReset = true;
-          logger.warn(`${logPrefix} [更新仓库] ${RepoName} 检测到冲突或状态异常，准备尝试强制重置...`);
-        } else {
-          success = false;
-        }
-      }
-
-      if (needsReset && !success) {
-        logger.warn(`${logPrefix} [更新仓库] ${RepoName} 正在执行强制重置 (git fetch & git reset --hard)...`);
-        try {
-          await ExecuteCommand("git", ["fetch", "origin"], { cwd: localPath }, Default_Config.gitPullTimeout);
-          await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], { cwd: localPath });
-          success = true; hasChanges = true; wasForceReset = true; pullError = null;
-          logger.info(`${logPrefix} [更新仓库] ${RepoName} 强制重置成功。`);
-        } catch (resetError) {
-          logger.error(`${logPrefix} [更新仓库] ${RepoName} 强制重置失败！`);
-          success = false; pullError = resetError;
-          const resetOutput = resetError.stderr || "" || resetError.stdout || "" || resetError.message || String(resetError);
-          const resetCriticalLines = (resetOutput.split("\n") || []).filter((line) => line.match(/^(fatal|error|warning):/i) && !["trace:", "http.c:", "== Info:"].some((p) => line.trim().startsWith(p))).join("\n");
-          if (resetCriticalLines) logger.error(`${logPrefix} [更新仓库] ${RepoName} 重置关键错误:\n${resetCriticalLines}`);
-          else if (resetError.message) logger.error(`${logPrefix} [更新仓库] ${RepoName} 重置错误信息: ${resetError.message}`);
-        }
-      }
-
-      if (success) {
-        let newCommit = "";
-        try {
-          const newRevParseResult = await ExecuteCommand("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000);
-          newCommit = newRevParseResult.stdout.trim();
-        } catch (newRevParseError) {
-          logger.warn(`${logPrefix} [更新仓库] ${RepoName} 获取新 commit 失败:`, newRevParseError.message);
-        }
-        if (!wasForceReset) hasChanges = oldCommit && newCommit && oldCommit !== newCommit;
-        
-        if (hasChanges) logger.info(`${logPrefix} [更新仓库] ${RepoName} 检测到新的提交${wasForceReset ? " (通过强制重置)" : ""}。`);
-        else if (pullOutput.includes("Already up to date") && !wasForceReset) logger.info(`${logPrefix} [更新仓库] ${RepoName} 已是最新。`);
-        else if (success && !wasForceReset) { logger.info(`${logPrefix} [更新仓库] ${RepoName} pull 操作完成，未检测到新提交或无 "Already up to date" 消息。`); hasChanges = false; }
-        
-        try { latestLog = await MiaoPluginMBT.GetTuKuLog(3, localPath, logger); } 
-        catch (logError) { logger.warn(`${logPrefix} [更新仓库] ${RepoName} 获取提交日志失败:`, logError.message); latestLog = "获取日志失败"; }
-      } else {
-        try { latestLog = await MiaoPluginMBT.GetTuKuLog(3, localPath, logger); } 
-        catch (logError) { logger.warn(`${logPrefix} [更新仓库] ${RepoName} (失败状态下) 获取提交日志失败:`, logError.message); latestLog = "获取日志失败"; }
-        if (!pullError) pullError = new Error(`${RepoName} 更新失败，但未捕获到具体错误对象`);
-      }
-    } catch (outerError) {
-      success = false; hasChanges = false;
-      logger.error(`${logPrefix} [更新仓库] ${RepoName} 更新操作中发生顶层意外错误:`, outerError);
-      if (!pullError) pullError = outerError;
-      else pullError.message += ` | OuterError: ${outerError.message}`;
-      wasForceReset = false; latestLog = "发生意外错误，无法获取日志";
-    } finally {
-      MiaoPluginMBT.gitMutex.release();
-    }
-
-    if (!success && RepoNum === 1 && e && !isScheduled) {
-      const errorToReport = pullError || new Error(`${RepoName} 更新最终失败，原因未知`);
-      const stderrForReport = errorToReport.stderr || "";
-      const criticalLinesForReport = (stderrForReport.split("\n") || []).filter((line) => line.match(/^(fatal|error|warning):/i) && !["trace:", "http.c:", "== Info:"].some((p) => line.trim().startsWith(p))).slice(0, 5).join("\n");
-      const contextMessage = criticalLinesForReport ? `Git关键错误(部分):\n${criticalLinesForReport}` : "无关键Git错误输出，请查阅控制台。";
-      await MiaoPluginMBT.ReportError(e, `更新${RepoName}`, errorToReport, contextMessage, logger);
-    } else if (!success && !isScheduled) {
-      logger.error(`${logPrefix} [更新仓库] ${RepoName} 更新最终失败:`, pullError || "未知错误");
-    }
-
-    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, };
+      return { success, hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset };
   }
 
   static async RunPostDownloadSetup(e, logger = global.logger || console) {
@@ -2171,132 +2274,132 @@ export class MiaoPluginMBT extends plugin {
   }
 
   async UpdateTuKu(e, isScheduled = false) {
-    if (!isScheduled && !(await this.CheckInit(e))) return false;
-    const logger = this.logger;
-    const logPrefix = this.logPrefix;
+      if (!isScheduled && !(await this.CheckInit(e))) return false;
+      const logger = this.logger;
+      const logPrefix = this.logPrefix;
 
-    const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
-    const Repo2UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass_Github_URL || Default_Config.Ass_Github_URL);
-    let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
-    const Repo3UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass2_Github_URL || Default_Config.Ass2_Github_URL);
-    let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
-    const Repo4UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Sexy_Github_URL || Default_Config.Sexy_Github_URL);
-    let Repo4Exists = Repo4UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(4));
+      const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
+      const Repo2UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass_Github_URL || Default_Config.Ass_Github_URL);
+      let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
+      const Repo3UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass2_Github_URL || Default_Config.Ass2_Github_URL);
+      let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
+      const Repo4UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Sexy_Github_URL || Default_Config.Sexy_Github_URL);
+      let Repo4Exists = Repo4UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(4));
 
-    let anyConfiguredRepoMissing = false;
-    if (!Repo1Exists) anyConfiguredRepoMissing = true;
-    if (Repo2UrlConfigured && !Repo2Exists) anyConfiguredRepoMissing = true;
-    if (Repo3UrlConfigured && !Repo3Exists) anyConfiguredRepoMissing = true;
-    if (Repo4UrlConfigured && !Repo4Exists) anyConfiguredRepoMissing = true;
+      let anyConfiguredRepoMissing = false;
+      if (!Repo1Exists) anyConfiguredRepoMissing = true;
+      if (Repo2UrlConfigured && !Repo2Exists) anyConfiguredRepoMissing = true;
+      if (Repo3UrlConfigured && !Repo3Exists) anyConfiguredRepoMissing = true;
+      if (Repo4UrlConfigured && !Repo4Exists) anyConfiguredRepoMissing = true;
 
-    if (!Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库未下载", true);
-      return false;
-    }
-    if (anyConfiguredRepoMissing && Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
-    }
+      if (!Repo1Exists) {
+        if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库未下载", true);
+        return false;
+      }
+      if (anyConfiguredRepoMissing && Repo1Exists) {
+        if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
+      }
 
-    const startTime = Date.now();
-    if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
-    logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
+      const startTime = Date.now();
+      if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
+      logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
 
-    const reportResults = [];
-    let overallSuccess = true;
-    let overallHasChanges = false;
+      const reportResults = [];
+      let overallSuccess = true;
+      let overallHasChanges = false;
 
-    const processRepoResult = async (repoNum, localPath, repoDisplayName, urlConfigKeyInMBT, urlConfigKeyInDefault, branchForUpdate, isCore = false) => {
-      const repoUrlForUpdate = MiaoPluginMBT.MBTConfig?.[urlConfigKeyInMBT] || Default_Config[urlConfigKeyInDefault || urlConfigKeyInMBT];
-      const result = await MiaoPluginMBT.UpdateSingleRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isScheduled, logger);
-      overallSuccess &&= result.success;
-      overallHasChanges ||= result.hasChanges;
-      let statusText = "";
-      if (result.success) {
-        if (result.wasForceReset) statusText = "本地冲突 (强制同步)";
-        else if (result.hasChanges) statusText = "更新成功";
-        else statusText = "已是最新";
-      } else statusText = "更新失败";
-      return { name: repoDisplayName, statusText, statusClass: result.success ? (result.hasChanges || result.wasForceReset ? "status-ok" : "status-no-change") : "status-fail", error: result.error, log: result.log, wasForceReset: result.wasForceReset };
-    };
+      const processRepoResult = async (repoNum, localPath, repoDisplayName, urlConfigKeyInMBT, urlConfigKeyInDefault, branchForUpdate, isCore = false) => {
+        const repoUrlForUpdate = MiaoPluginMBT.MBTConfig?.[urlConfigKeyInMBT] || Default_Config[urlConfigKeyInDefault || urlConfigKeyInMBT];
+        const result = await MiaoPluginMBT.UpdateSingleRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isScheduled, logger);
+        overallSuccess &&= result.success;
+        overallHasChanges ||= result.hasChanges;
+        let statusText = "";
+        if (result.success) {
+          if (result.wasForceReset) statusText = "本地冲突 (强制同步)";
+          else if (result.hasChanges) statusText = "更新成功";
+          else statusText = "已是最新";
+        } else statusText = "更新失败";
+        return { name: repoDisplayName, statusText, statusClass: result.success ? (result.hasChanges || result.wasForceReset ? "status-ok" : "status-no-change") : "status-fail", error: result.error, log: result.log, wasForceReset: result.wasForceReset };
+      };
 
-    const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;
+      const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;
 
-    if (Repo1Exists) reportResults.push( await processRepoResult( 1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true ) );
-    else { reportResults.push({ name: "一号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false }); overallSuccess = false; }
+      if (Repo1Exists) reportResults.push( await processRepoResult( 1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true ) );
+      else { reportResults.push({ name: "一号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false }); overallSuccess = false; }
 
-    if (Repo2UrlConfigured) {
-      if (Repo2Exists) reportResults.push( await processRepoResult( 2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch ) );
-      else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    } else reportResults.push({ name: "二号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+      if (Repo2UrlConfigured) {
+        if (Repo2Exists) reportResults.push( await processRepoResult( 2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch ) );
+        else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+      } else reportResults.push({ name: "二号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
 
-    if (Repo3UrlConfigured) {
-      if (Repo3Exists) reportResults.push( await processRepoResult( 3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch ) );
-      else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    } else reportResults.push({ name: "三号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+      if (Repo3UrlConfigured) {
+        if (Repo3Exists) reportResults.push( await processRepoResult( 3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch ) );
+        else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+      } else reportResults.push({ name: "三号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
 
-    if (Repo4UrlConfigured) {
-      if (Repo4Exists) reportResults.push( await processRepoResult( 4, MiaoPluginMBT.paths.LocalTuKuPath4, "四号仓库", "Sexy_Github_URL", "Sexy_Github_URL", branch ) );
-      else reportResults.push({ name: "四号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    } else reportResults.push({ name: "四号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+      if (Repo4UrlConfigured) {
+        if (Repo4Exists) reportResults.push( await processRepoResult( 4, MiaoPluginMBT.paths.LocalTuKuPath4, "四号仓库", "Sexy_Github_URL", "Sexy_Github_URL", branch ) );
+        else reportResults.push({ name: "四号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+      } else reportResults.push({ name: "四号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
 
-    if (overallSuccess && overallHasChanges) {
-      //logger.info(`${logPrefix} 检测到更新，开始执行更新后设置...`);
-      await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
-    }
+      if (overallSuccess && overallHasChanges) {
+        await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
+      }
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
-    const coreRepoReport = reportResults.find(r => r.name === "一号仓库");
-    const subsidiaryRepoReports = reportResults.filter(r => r.name !== "一号仓库");
+      const coreRepoReport = reportResults.find(r => r.name === "一号仓库");
+      const subsidiaryRepoReports = reportResults.filter(r => r.name !== "一号仓库");
 
-    const reportData = { 
-        pluginVersion: MiaoPluginMBT.GetVersionStatic(), 
-        duration, 
-        scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), 
-        coreResult: coreRepoReport,               
-        subsidiaryResults: subsidiaryRepoReports,  
-        results: reportResults, 
-        overallSuccess, 
-        overallHasChanges 
-    };
-    let imageBuffer = null;
-    const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
-    let reportSent = false;
-    try {
-        await fsPromises.access(sourceHtmlPath);
-        imageBuffer = await renderPageToImage("update-report", {
-            tplFile: sourceHtmlPath, data: reportData, imgType: "png",
-            pageGotoParams: { waitUntil: "networkidle0" },
-            pageBoundingRect: { selector: ".container", padding: 0 }, width: 560,
-        }, this);
-    } catch (accessOrRenderError) { logger.error(`${logPrefix} [更新报告] 模板访问或渲染时出错:`, accessOrRenderError); }
+      const reportData = { 
+          pluginVersion: MiaoPluginMBT.GetVersionStatic(), 
+          duration, 
+          scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), 
+          coreResult: coreRepoReport,               
+          subsidiaryResults: subsidiaryRepoReports,  
+          results: reportResults, 
+          overallSuccess, 
+          overallHasChanges,
+          isArray: Array.isArray 
+      };
+      let imageBuffer = null;
+      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
+      let reportSent = false;
+      try {
+          await fsPromises.access(sourceHtmlPath);
+          imageBuffer = await renderPageToImage("update-report", {
+              tplFile: sourceHtmlPath, data: reportData, imgType: "png",
+              pageGotoParams: { waitUntil: "networkidle0" },
+              pageBoundingRect: { selector: ".container", padding: 0 }, width: 560,
+          }, this);
+      } catch (accessOrRenderError) { logger.error(`${logPrefix} [更新报告] 模板访问或渲染时出错:`, accessOrRenderError); }
 
-    const shouldNotifyMaster = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
-    if (imageBuffer) {
-      if (!isScheduled && e) { await e.reply(imageBuffer); reportSent = true; }
-      else if (shouldNotifyMaster) {
-        logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
-        await MiaoPluginMBT.SendMasterMsg(imageBuffer, e, 0, logger);
-        reportSent = true;
-      } else if (isScheduled && !shouldNotifyMaster) { 
-          logger.info(`${logPrefix} [定时更新] 未检测到变更且无错误，不发送通知。`); 
+      const shouldNotifyMaster = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
+      if (imageBuffer) {
+        if (!isScheduled && e) { await e.reply(imageBuffer); reportSent = true; }
+        else if (shouldNotifyMaster) {
+          logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
+          await MiaoPluginMBT.SendMasterMsg(imageBuffer, e, 0, logger);
           reportSent = true;
-      }
-    } 
-    
-    if (!reportSent) {
-      logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空) 或不满足发送条件。`);
-      let fallbackMsg = `${logPrefix} 更新检查完成。\n`;
-      reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
+        } else if (isScheduled && !shouldNotifyMaster) { 
+            logger.info(`${logPrefix} [定时更新] 未检测到变更且无错误，不发送通知。`); 
+            reportSent = true;
+        }
+      } 
       
-      if (e && !isScheduled) await e.reply(fallbackMsg);
-      else if (shouldNotifyMaster) {
-        logger.warn(`${logPrefix} [定时更新] 图片生成失败，尝试向主人发送文本回退报告...`);
-        await MiaoPluginMBT.SendMasterMsg(fallbackMsg, e, 0, logger);
+      if (!reportSent) {
+        logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空) 或不满足发送条件。`);
+        let fallbackMsg = `${logPrefix} 更新检查完成。\n`;
+        reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
+        
+        if (e && !isScheduled) await e.reply(fallbackMsg);
+        else if (shouldNotifyMaster) {
+          logger.warn(`${logPrefix} [定时更新] 图片生成失败，尝试向主人发送文本回退报告...`);
+          await MiaoPluginMBT.SendMasterMsg(fallbackMsg, e, 0, logger);
+        }
       }
-    }
-    logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
-    return overallHasChanges;
+      logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
+      return overallHasChanges;
   }
 
   async ManageTuKu(e) {
