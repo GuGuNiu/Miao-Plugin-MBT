@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://s2.loli.net/2025/05/21/PGRHraq1OZ7efkE.webp" width="100%">
+  <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%">
 </p>
 
 <div align="center"> 
@@ -11,7 +11,7 @@
 
 ## 📄 简介
 
-&emsp;&emsp;V4新版管理器使用多个镜像站自动测速最优下载以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，请不要手动删除和修改图库下载的任何文件当前是全静态加载并且存在高耦合，否则将无法通过Js初始化自检，有疑问可以喵群AT咨询，issues处理不及时。
+&emsp;&emsp;新版管理器拥有智能下载以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，请不要手动删除和修改图库下载的任何文件当前是全静态加载并且存在高耦合，否则将无法通过Js初始化自检，有疑问可以喵群AT咨询，issues处理不及时。
 
 🔶2025年起将提供超高清以上面板图，不再使用巨型水印，新模板已使用QR Code代替 <br><br>
 ⤵️V4新版的管理器的下载逻辑 >>><br>
