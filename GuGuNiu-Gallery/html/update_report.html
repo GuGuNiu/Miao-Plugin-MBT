@@ -291,11 +291,9 @@
                                 <div class="log-content-container">
                                     {{ each repoResult.log commit }}
                                         <div class="commit-entry">
-                                            <div class="commit-meta">
-                                                {{ if commit.hash !== 'N/A' && commit.date !== 'N/A' }}
-                                                    {{ commit.date.substring(5) }} [{{ commit.hash }}]
-                                                {{ /if }}
-                                            </div>
+                                        <div class="commit-meta">
+                                            {{ commit.date }} [{{ commit.hash }}]
+                                        </div>
                                             <div class="commit-message-wrapper">
                                                 {{ each commit.displayParts part }}
                                                     {{ if part.type === 'text' }}
