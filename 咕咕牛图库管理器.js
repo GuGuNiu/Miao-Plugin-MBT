@@ -485,6 +485,7 @@ export class MiaoPluginMBT extends plugin {
       { sourceSubPath: "GuGuNiu-Gallery/html/settings_panel.html", destFileName: "html/settings_panel.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/visualize.html", destFileName: "html/visualize.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/update_report.html", destFileName: "html/update_report.html", copyIfExists: true },
+      { sourceSubPath: "GuGuNiu-Gallery/html/check_gallerymap.html", destFileName: "html/check_gallerymap.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/img", destFileName: "html/img", copyIfExists: true, isDir: true },
     ],
     filesToSyncSpecific: [{ sourceSubPath: "咕咕牛图库管理器.js", destDir: path.join(YunzaiPath, "plugins", "example"), destFileName: "咕咕牛图库管理器.js" }],
@@ -2237,7 +2238,7 @@ export class MiaoPluginMBT extends plugin {
       try {
         const ttl = await redis.ttl(redisKey);
         if (ttl && ttl > 0) {
-          await e.reply(`${logPrefix} 指令冷却中，剩余 ${ttl} 秒后可再次使用哦~`, true);
+          await e.reply(`指令冷却中，剩余 ${ttl} 秒后可再次使用哦~`, true);
           return true;
         }
       } catch (redisError) {
@@ -2245,7 +2246,7 @@ export class MiaoPluginMBT extends plugin {
       }
     }
 
-    logger.info(`${logPrefix} [${commandName}] 用户 ${userId || '未知'} 开始执行下载流程。`);
+    //logger.info(`${logPrefix} [${commandName}] 用户 ${userId || '未知'} 开始执行下载流程。`);
 
     const baseRawUrl = RAW_URL_Repo1;
     let allTestResults = [];
@@ -2272,10 +2273,10 @@ export class MiaoPluginMBT extends plugin {
     if (redisKey) {
       try {
         await redis.set(redisKey, '1', { EX: cooldownDuration });
-        logger.info(`${logPrefix} [${commandName}] 用户 ${userId} 的冷却已在测速通过后设置，时长 ${cooldownDuration} 秒。`);
+        //logger.info(`${logPrefix} [${commandName}] 用户 ${userId} 的冷却已在测速通过后设置，时长 ${cooldownDuration} 秒。`);
       } catch (redisError) {
-        logger.error(`${logPrefix} [${commandName}] Redis (set) 操作失败:`, redisError);
-        await e.reply(`${logPrefix} 内部错误，冷却功能可能暂时失效，请稍后再试或联系管理员。`, true);
+        //logger.error(`${logPrefix} [${commandName}] Redis (set) 操作失败:`, redisError);
+        //await e.reply(`${logPrefix} 内部错误，冷却功能可能暂时失效，请稍后再试或联系管理员。`, true);
       }
     }
 
