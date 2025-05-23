@@ -138,7 +138,7 @@
       }
       .log-content-container { 
         border: 1px solid var(--commit-entry-border); 
-        border-radius: 3px; 
+        border-radius: 5px; 
         background-color: #fff; 
         padding: 2px 5px; 
         font-family: var(--font-family-main);
@@ -292,7 +292,7 @@
                                     {{ each repoResult.log commit }}
                                         <div class="commit-entry">
                                         <div class="commit-meta">
-                                            {{ commit.date }} [{{ commit.hash }}]
+                                            {{ commit.date }} : [{{ commit.hash }}]
                                         </div>
                                             <div class="commit-message-wrapper">
                                                 {{ each commit.displayParts part }}
