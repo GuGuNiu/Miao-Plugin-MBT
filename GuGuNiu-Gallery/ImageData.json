@@ -261,6 +261,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "5887419967",
+        "characterName": "爱可菲",
+        "path": "gs-character/爱可菲/爱可菲Gu14.webp",
+        "attributes": {
+            "filename": "爱可菲Gu14.webp",
+            "parentFolder": "爱可菲",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b4ca20b4f90f00fcd6f8b7ed7e18d2b8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:08.208Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8425326057",
+        "characterName": "爱可菲",
+        "path": "gs-character/爱可菲/爱可菲Gu15.webp",
+        "attributes": {
+            "filename": "爱可菲Gu15.webp",
+            "parentFolder": "爱可菲",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "654a0c0c50ea15e074296e461dbef307",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:11.896Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "1016578887",
         "characterName": "爱可菲",
         "path": "gs-character/爱可菲/爱可菲Gu2.webp",
@@ -2101,6 +2141,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "2434306449",
+        "characterName": "玛薇卡",
+        "path": "gs-character/玛薇卡/玛薇卡Gu4.webp",
+        "attributes": {
+            "filename": "玛薇卡Gu4.webp",
+            "parentFolder": "玛薇卡",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "694f36445220aa7e3344c9305e21d4ae",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:25.728Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7017661785",
+        "characterName": "玛薇卡",
+        "path": "gs-character/玛薇卡/玛薇卡Gu5.webp",
+        "attributes": {
+            "filename": "玛薇卡Gu5.webp",
+            "parentFolder": "玛薇卡",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "9e66908cae1d451b38510073a9f3c03d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:29.304Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "1250578730",
         "characterName": "梦见月瑞希",
         "path": "gs-character/梦见月瑞希/梦见月瑞希Gu1.webp",
@@ -2501,6 +2581,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "8028067120",
+        "characterName": "恰斯卡",
+        "path": "gs-character/恰斯卡/恰斯卡Gu2.webp",
+        "attributes": {
+            "filename": "恰斯卡Gu2.webp",
+            "parentFolder": "恰斯卡",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0e119860c6d0563c833d42536f234cd6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:43.248Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1281676546",
+        "characterName": "恰斯卡",
+        "path": "gs-character/恰斯卡/恰斯卡Gu3.webp",
+        "attributes": {
+            "filename": "恰斯卡Gu3.webp",
+            "parentFolder": "恰斯卡",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0019668e1f8d3f6c4afbd998adf32386",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:45.496Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "7460212203",
         "characterName": "茜特菈莉",
         "path": "gs-character/茜特菈莉/茜特菈莉Gu1.webp",
@@ -2621,6 +2741,106 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "6240024049",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu15.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu15.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8ed5250f2d9ec0bbae4dc9a17d63fde2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:22.176Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7394737406",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu16.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu16.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f03fba4ceacffdd2b085656eaaa16906",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:28.903Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3965033401",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu17.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu17.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8e22e835d943a472ece36434525232a0",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:12.603Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1320710505",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu18.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu18.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "aed9e8e41279221856828c1b03817a3c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:17.267Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8308384883",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu19.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu19.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b31a65a02586bbde9eb443d9cc950b66",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:25.563Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "7285878705",
         "characterName": "茜特菈莉",
         "path": "gs-character/茜特菈莉/茜特菈莉Gu2.webp",
@@ -2641,6 +2861,206 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "3044844584",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu20.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu20.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b141758ebc69cae47c1f6ecaa3fa4979",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:30.443Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1973940857",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu21.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu21.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d105c7b0e4f2668069c40be503b93428",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:39.203Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5289719054",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu22.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu22.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "50d3973982193c9edfd395048dbb78f0",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:42.539Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9389803627",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu23.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu23.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8267c3f0024d199aa8352db82ad8d94f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:47.043Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2467220334",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu24.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu24.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3a538debacb622ab5aaa014783c5284e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:52.323Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6619700490",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu25.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu25.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "a6faa50073a992523c13c5a8d469dc6c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:56.260Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6658329498",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu26.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu26.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "080c98e65a2aa460e4b05f14a5a3e914",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:26:58.851Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6010383302",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu27.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu27.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "504dbcd9140d968f2428aed5fe330dfa",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:01.371Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1506734473",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu28.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu28.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "245cb9f5f5436248f892cc80621ea9e8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:04.869Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9139899926",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu29.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu29.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "606c28d6ba3b25a034ba19b24ffc7f24",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:07.453Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "2296087874",
         "characterName": "茜特菈莉",
         "path": "gs-character/茜特菈莉/茜特菈莉Gu3.webp",
@@ -2657,6 +3077,46 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-15T03:36:30.394Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2704461971",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu30.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu30.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "b4c63d90f41ff33c21b5f16ca09bb8e8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:25.437Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6246306820",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu31.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu31.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "9528a7e7dc78cfa19f0ce92710378cd1",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:30.260Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -3181,6 +3641,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "7567235030",
+        "characterName": "丝柯克",
+        "path": "gs-character/丝柯克/丝柯克Gu6.webp",
+        "attributes": {
+            "filename": "丝柯克Gu6.webp",
+            "parentFolder": "丝柯克",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "ce2e84ca0ae01ad3c34f46c886f75c79",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:38:01.695Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5075197519",
+        "characterName": "丝柯克",
+        "path": "gs-character/丝柯克/丝柯克Gu7.webp",
+        "attributes": {
+            "filename": "丝柯克Gu7.webp",
+            "parentFolder": "丝柯克",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "a53ddef6e97e48a50dbcf508523f36ce",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:14.954Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "6732725464",
         "characterName": "瓦雷莎",
         "path": "gs-character/瓦雷莎/瓦雷莎Gu1.webp",
@@ -3197,6 +3697,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-03T10:18:29.752Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9540511609",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu10.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu10.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3d955475bc5e662e33f771d6a5a0cc66",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:20.605Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -3218,6 +3738,286 @@
         },
         "timestamp": "2025-05-03T10:18:29.752Z",
         "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8588078588",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu3.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu3.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bf5c6206cb85237acb831fe29da8a52a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:36.741Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4589644032",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu4.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu4.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fa7cceb61a290161bd9f16047950d4f2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:40.588Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3187647010",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu5.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu5.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": true,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8db9d98db6403f19509c337734675960",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:46.789Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8618804202",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu6.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu6.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "422e8bed6cfb68db3459fdf9f6f10f3e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:49.548Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2533550002",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu7.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu7.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bf6e77437065fd6834940017ee9f93bd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:54.868Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5791580458",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu8.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu8.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8dcde1e10e29bbb0ece9eb5d85e127d1",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:27:58.652Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5889954809",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu9.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu9.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "7603b8daf62fd7527d6c8ea4c0fb5b90",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:02.453Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9582462034",
+        "characterName": "阿格莱雅",
+        "path": "sr-character/阿格莱雅/阿格莱雅Gu1.webp",
+        "attributes": {
+            "filename": "阿格莱雅Gu1.webp",
+            "parentFolder": "阿格莱雅",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "728736a2084910239353f84a81ede3bd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T07:12:49.133Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6477133057",
+        "characterName": "阿格莱雅",
+        "path": "sr-character/阿格莱雅/阿格莱雅Gu2.webp",
+        "attributes": {
+            "filename": "阿格莱雅Gu2.webp",
+            "parentFolder": "阿格莱雅",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6e33c5a36524c5c3c493ffc6b9799589",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:58.240Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4246987896",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu1.webp",
+        "attributes": {
+            "filename": "大黑塔Gu1.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3f56697c1c69378e46ba329537ee82c8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:59.173Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5235260714",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu2.webp",
+        "attributes": {
+            "filename": "大黑塔Gu2.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "1a90ab2ac20f65616884291f9c0f134e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:01.742Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8888780160",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu3.webp",
+        "attributes": {
+            "filename": "大黑塔Gu3.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b7d0290a5a322d118b84ab787ff6d73d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:04.895Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4102781040",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu4.webp",
+        "attributes": {
+            "filename": "大黑塔Gu4.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "9839e663eb916e6ba804bb79886cb0b7",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:07.576Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2562172981",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu5.webp",
+        "attributes": {
+            "filename": "大黑塔Gu5.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c0b53a01e0f57ccc40489ffbe578859e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:10.287Z",
+        "sourceGallery": "sr-character"
     },
     {
         "storagebox": "Miao-Plugin-MBT",
@@ -3301,6 +4101,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "7318501842",
+        "characterName": "飞霄",
+        "path": "sr-character/飞霄/飞霄Gu5.webp",
+        "attributes": {
+            "filename": "飞霄Gu5.webp",
+            "parentFolder": "飞霄",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0b083bc75326741da73f98af3ec3b81b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:20.065Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "5410438649",
         "characterName": "风堇",
         "path": "sr-character/风堇/风堇Gu1.webp",
@@ -3317,6 +4137,166 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-17T10:22:19.768Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8264743255",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu2.webp",
+        "attributes": {
+            "filename": "风堇Gu2.webp",
+            "parentFolder": "风堇",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "72ffe1257fc4b5db2a4ad81f8fe82918",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:26.630Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6233212413",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu3.webp",
+        "attributes": {
+            "filename": "风堇Gu3.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "2f619d35d044c972e43802c9a0cfa4a8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:29.886Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3343862243",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu4.webp",
+        "attributes": {
+            "filename": "风堇Gu4.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d566db7b589ce79cdb03dddaeeef37f9",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:33.694Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6368751017",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu5.webp",
+        "attributes": {
+            "filename": "风堇Gu5.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "50bbccb9e307640ccd50540b4c989d16",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:36.190Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3222924286",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu6.webp",
+        "attributes": {
+            "filename": "风堇Gu6.webp",
+            "parentFolder": "风堇",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3ac71b00123ae03cdca6cb390982119e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:40.462Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9781493591",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu7.webp",
+        "attributes": {
+            "filename": "风堇Gu7.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "067725fc338315ea44d7730996d628f9",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:44.341Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4157039254",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu8.webp",
+        "attributes": {
+            "filename": "风堇Gu8.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "5303774eb3140bc5b55e980ffa1ef683",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:48.445Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3969348019",
+        "characterName": "风堇",
+        "path": "sr-character/风堇/风堇Gu9.webp",
+        "attributes": {
+            "filename": "风堇Gu9.webp",
+            "parentFolder": "风堇",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "2974606e6dcd0e3453d72628e52c4207",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:28:52.494Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -4601,6 +5581,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "1595156977",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu68.webp",
+        "attributes": {
+            "filename": "花火Gu68.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "1147eadc768a7d0d50ff26c237a94ab3",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:35.831Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4016648955",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu69.webp",
+        "attributes": {
+            "filename": "花火Gu69.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": true,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "780bad009975e59d997ac555883de380",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:40.510Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "6513246254",
         "characterName": "花火",
         "path": "sr-character/花火/花火Gu7.webp",
@@ -5421,6 +6441,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "2473666410",
+        "characterName": "那刻夏",
+        "path": "sr-character/那刻夏/那刻夏Gu4.webp",
+        "attributes": {
+            "filename": "那刻夏Gu4.webp",
+            "parentFolder": "那刻夏",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fd6f0ec65705aabe770904cf2ff58142",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:29.001Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "2165177141",
         "characterName": "赛飞儿",
         "path": "sr-character/赛飞儿/赛飞儿Gu1.webp",
@@ -5437,6 +6477,186 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-17T10:22:23.968Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2769401639",
+        "characterName": "赛飞儿",
+        "path": "sr-character/赛飞儿/赛飞儿Gu2.webp",
+        "attributes": {
+            "filename": "赛飞儿Gu2.webp",
+            "parentFolder": "赛飞儿",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "e2fc66b897c325b7bc1d51fac7430d47",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:47.289Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3223100165",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu1.webp",
+        "attributes": {
+            "filename": "缇宝Gu1.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3acb829911b674acf9e57b50fc9e3dec",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:00.424Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1118646303",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu2.webp",
+        "attributes": {
+            "filename": "缇宝Gu2.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "cec982567e74c86f9d62246af6b6e637",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:04.372Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3204320023",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu3.webp",
+        "attributes": {
+            "filename": "缇宝Gu3.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "74de674dae68089e12068bbf9e4238fb",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:08.455Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7613318945",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu4.webp",
+        "attributes": {
+            "filename": "缇宝Gu4.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "1b1a00ae09a83be8bb49a60ecdc1b062",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:11.703Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6290335908",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu5.webp",
+        "attributes": {
+            "filename": "缇宝Gu5.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "cc418176c6bbde32f0fbb0c47897be80",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:15.663Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6420823851",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu6.webp",
+        "attributes": {
+            "filename": "缇宝Gu6.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "60de2ecf5caf7c710e6375d6b4983517",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:18.159Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6061105159",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu7.webp",
+        "attributes": {
+            "filename": "缇宝Gu7.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "88e787efcccba5934ee710d1c8fd3f3b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:20.759Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2863378139",
+        "characterName": "缇宝",
+        "path": "sr-character/缇宝/缇宝Gu8.webp",
+        "attributes": {
+            "filename": "缇宝Gu8.webp",
+            "parentFolder": "缇宝",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6f872a9505d6509c9b1a3bd9780cf40b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:23.272Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -5701,6 +6921,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "5271596888",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu21.webp",
+        "attributes": {
+            "filename": "遐蝶Gu21.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "41f5a73d71545cf3038f328dbf62e5ca",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:59.423Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7260401021",
+        "characterName": "遐蝶",
+        "path": "sr-character/遐蝶/遐蝶Gu22.webp",
+        "attributes": {
+            "filename": "遐蝶Gu22.webp",
+            "parentFolder": "遐蝶",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bd73080ee53457e9bdbcd351b0529458",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:03.359Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "6393914944",
         "characterName": "遐蝶",
         "path": "sr-character/遐蝶/遐蝶Gu3.webp",
@@ -5881,6 +7141,46 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
+        "gid": "2740529886",
+        "characterName": "星期日",
+        "path": "sr-character/星期日/星期日Gu3.webp",
+        "attributes": {
+            "filename": "星期日Gu3.webp",
+            "parentFolder": "星期日",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "592be32524448fbbeeeb02344207e16f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:33.560Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3065123580",
+        "characterName": "星期日",
+        "path": "sr-character/星期日/星期日Gu4.webp",
+        "attributes": {
+            "filename": "星期日Gu4.webp",
+            "parentFolder": "星期日",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "af4bb80714aec34ebc5c90f3b4a700f1",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:37.688Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
         "gid": "8418170910",
         "characterName": "知更鸟",
         "path": "sr-character/知更鸟/知更鸟Gu1.webp",
@@ -5957,6 +7257,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-17T10:21:57.073Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7062952490",
+        "characterName": "知更鸟",
+        "path": "sr-character/知更鸟/知更鸟Gu13.webp",
+        "attributes": {
+            "filename": "知更鸟Gu13.webp",
+            "parentFolder": "知更鸟",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "1d2092d253ab5f0985bd9b87844798e8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:03.706Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -6861,6 +8181,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4586475593",
+        "characterName": "达达利亚",
+        "path": "gs-character/达达利亚/达达利亚Gu1.webp",
+        "attributes": {
+            "filename": "达达利亚Gu1.webp",
+            "parentFolder": "达达利亚",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "06ebef19740da5d80f1ae966cdff2ade",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:32:10.467Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "1706171833",
         "characterName": "迪奥娜",
         "path": "gs-character/迪奥娜/迪奥娜Gu1.webp",
@@ -7673,10 +9013,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "87d8efb5cd8f74ace1b13653c021a15d",
+            "md5": "c7718a9b718a0eb314a7811f85e526ca",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.751Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -7873,10 +9213,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "cae0f9f26767274bbc41b18104de1d48",
+            "md5": "854102b341ead11ddded1d53caf2f716",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:40:10.631Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -8881,6 +10221,66 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4954514802",
+        "characterName": "基尼奇",
+        "path": "gs-character/基尼奇/基尼奇Gu3.webp",
+        "attributes": {
+            "filename": "基尼奇Gu3.webp",
+            "parentFolder": "基尼奇",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "971356221dfbfc3eeb6696217c5ec341",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:27.959Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "5808779061",
+        "characterName": "基尼奇",
+        "path": "gs-character/基尼奇/基尼奇Gu4.webp",
+        "attributes": {
+            "filename": "基尼奇Gu4.webp",
+            "parentFolder": "基尼奇",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "16e76a17c605717295f22326a92c5338",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:30.007Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "8197401098",
+        "characterName": "基尼奇",
+        "path": "gs-character/基尼奇/基尼奇Gu5.webp",
+        "attributes": {
+            "filename": "基尼奇Gu5.webp",
+            "parentFolder": "基尼奇",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "829f52b67aa72f7eb8450cb5fe7ac3d8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:31.727Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "5456501091",
         "characterName": "嘉明",
         "path": "gs-character/嘉明/嘉明Gu1.webp",
@@ -9401,6 +10801,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "7989769198",
+        "characterName": "柯莱",
+        "path": "gs-character/柯莱/柯莱Gu4.webp",
+        "attributes": {
+            "filename": "柯莱Gu4.webp",
+            "parentFolder": "柯莱",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "b05ba6c5e70446054a3e11b3a0d522f4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:38:20.271Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "3440277127",
         "characterName": "可莉",
         "path": "gs-character/可莉/可莉Gu1.webp",
@@ -9721,6 +11141,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "2267922762",
+        "characterName": "克洛琳德",
+        "path": "gs-character/克洛琳德/克洛琳德Gu7.webp",
+        "attributes": {
+            "filename": "克洛琳德Gu7.webp",
+            "parentFolder": "克洛琳德",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0889ae12baf1bdec8353e11ce96cc4e4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:49.647Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "5016079849",
         "characterName": "刻晴",
         "path": "gs-character/刻晴/刻晴Gu1.webp",
@@ -9733,10 +11173,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "15c93cdec597e7fa40b86c2e52befd46",
+            "md5": "cb134f69230c67f6d0d3f74229eda424",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -9833,10 +11273,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "c9e66abf177cb05e7e7f90f69dd89685",
+            "md5": "07314d31fff9a5aa38c847de9e2b4bb5",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T10:03:30.831Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -9977,6 +11417,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-16T06:00:21.308Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "8407171330",
+        "characterName": "刻晴",
+        "path": "gs-character/刻晴/刻晴Gu21.webp",
+        "attributes": {
+            "filename": "刻晴Gu21.webp",
+            "parentFolder": "刻晴",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "9f6edd12bc9c5c4a420fdc163f35d209",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:33.446Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -10377,6 +11837,66 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-03T10:18:29.752Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6923540744",
+        "characterName": "蓝砚",
+        "path": "gs-character/蓝砚/蓝砚Gu1.webp",
+        "attributes": {
+            "filename": "蓝砚Gu1.webp",
+            "parentFolder": "蓝砚",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "04c4029b5f1f64a91f452cf5dfe8b43a",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:44.231Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "1729317994",
+        "characterName": "蓝砚",
+        "path": "gs-character/蓝砚/蓝砚Gu2.webp",
+        "attributes": {
+            "filename": "蓝砚Gu2.webp",
+            "parentFolder": "蓝砚",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c9e7526217f192b3975a4a89af461011",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:46.085Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "5883890451",
+        "characterName": "蓝砚",
+        "path": "gs-character/蓝砚/蓝砚Gu3.webp",
+        "attributes": {
+            "filename": "蓝砚Gu3.webp",
+            "parentFolder": "蓝砚",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "07192a95f40345b823a2e54fe79241d7",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:29:48.063Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -11093,10 +12613,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "10210769e5dc9ae3c05354d00fcb5144",
+            "md5": "2b4c8fa03299b066cb38044a57ed38b4",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -11633,10 +13153,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "a5099aebcdc17101aa29e4fbb89e2ea4",
+            "md5": "83f2d3a07be24aa5b9c888511addd78c",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-17T14:45:01.643Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -12133,10 +13653,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "6d8f339011e74af5b1eae162f5a74c98",
+            "md5": "1dabd47988d65d24c473ac2b1ea8defc",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:41:32.615Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -12153,10 +13673,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "039398b567298a0842558e1a155029f5",
+            "md5": "4234c512a45a7041e43af9b89f4ad21c",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-17T14:40:59.684Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -12393,10 +13913,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "d107a240220c89c888c8655d55cb5cd1",
+            "md5": "ef78068ae3ee26dc15b4bf698bc54ab3",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:40:21.791Z",
+        "timestamp": "2025-05-23T05:24:54.118Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -12473,10 +13993,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "a27b4a345c968707d5ede54c32c5c2b9",
+            "md5": "9b311266d663ed40b783b087cc5d6de2",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-14T06:43:27.435Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -13093,10 +14613,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "5d1cd52be795123655f7b67b2dba5b2f",
+            "md5": "c601dbc2bf7e2c432873947dd6c4acad",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-14T06:43:27.437Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -13113,10 +14633,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "3cf77bd29be41f455a2864b4858524fa",
+            "md5": "9bdb72a8c00cd71c8f9a4f1943c805f8",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -13157,6 +14677,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-20T02:34:49.443Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "9654526790",
+        "characterName": "欧洛伦",
+        "path": "gs-character/欧洛伦/欧洛伦Gu2.webp",
+        "attributes": {
+            "filename": "欧洛伦Gu2.webp",
+            "parentFolder": "欧洛伦",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "b5b230140a4cfe532ec7e8fcefa663f0",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:51.585Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -13237,6 +14777,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-03T10:18:29.752Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4714182211",
+        "characterName": "七七",
+        "path": "gs-character/七七/七七Gu12.webp",
+        "attributes": {
+            "filename": "七七Gu12.webp",
+            "parentFolder": "七七",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "eb72b1f7319b711579d0db8a5be72b81",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:09.211Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -15033,10 +16593,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "6353c8795fef8d2c546d3d2e3205c945",
+            "md5": "120f2460de91117e46ec845e0c886251",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:40:49.367Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -15053,10 +16613,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "32cdfae46d207d7fefd7fa7ca14a5956",
+            "md5": "b93b4d1eb76be535cc6fce77838c79d0",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:41:07.799Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -15073,10 +16633,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "29261b38551cbe16642e3b004bdf9562",
+            "md5": "8101034ddee33f7188c2f2d062b0369e",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-17T14:41:12.826Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -15281,6 +16841,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "5488310873",
+        "characterName": "塔利雅",
+        "path": "gs-character/塔利雅/塔利雅Gu2.webp",
+        "attributes": {
+            "filename": "塔利雅Gu2.webp",
+            "parentFolder": "塔利雅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "02517ab60986ee98454364d85d4f9d94",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:55.905Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "6386148643",
         "characterName": "提纳里",
         "path": "gs-character/提纳里/提纳里Gu1.webp",
@@ -15433,10 +17013,50 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "f177fb21e08602f8f3f396e8882808c3",
+            "md5": "7aa485062f229bb0a47debf10441307e",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-17T14:44:08.627Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "1954645820",
+        "characterName": "温迪",
+        "path": "gs-character/温迪/温迪Gu12.webp",
+        "attributes": {
+            "filename": "温迪Gu12.webp",
+            "parentFolder": "温迪",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d7a090a3f3d59d1d394aa54036c7c9fd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:16.504Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6359846032",
+        "characterName": "温迪",
+        "path": "gs-character/温迪/温迪Gu13.webp",
+        "attributes": {
+            "filename": "温迪Gu13.webp",
+            "parentFolder": "温迪",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "2efd2a305d4cea4bd8b0b24795ea8c04",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:30:19.720Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -15553,10 +17173,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "dd4ef89c9167b9062294bec7d31d527c",
+            "md5": "03ed11bf863e1de59defb1f6fa3337f8",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-17T14:44:08.627Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -15997,6 +17617,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-14T06:43:27.438Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6208087793",
+        "characterName": "夏洛蒂",
+        "path": "gs-character/夏洛蒂/夏洛蒂Gu4.webp",
+        "attributes": {
+            "filename": "夏洛蒂Gu4.webp",
+            "parentFolder": "夏洛蒂",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "526f9d1a79b8db76ab3e432894f8d4ad",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:33.394Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -18173,10 +19813,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "bd40c0749c70efe26d840dea91dd8b6f",
+            "md5": "1b47a6cee04d01cf46770947b02e3515",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -18233,10 +19873,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "3eaa7b626d89e84043dda223808f8f2d",
+            "md5": "71e434e8a15334ffed6b1046bbc65c78",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-05-23T05:24:54.119Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -19353,10 +20993,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "cdc8ed38a423355219dc8f6a589b5e0a",
+            "md5": "30bfb818159fb3282cc5ac50335c4e85",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.796Z",
+        "timestamp": "2025-05-23T05:24:54.120Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -19437,6 +21077,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-19T07:45:25.797Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "8988650876",
+        "characterName": "桂乃芬",
+        "path": "sr-character/桂乃芬/桂乃芬Gu2.webp",
+        "attributes": {
+            "filename": "桂乃芬Gu2.webp",
+            "parentFolder": "桂乃芬",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "9020732bbb100c3ca85673dfeecc0876",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:32:02.089Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -19721,6 +21381,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "6927439860",
+        "characterName": "藿藿",
+        "path": "sr-character/藿藿/藿藿Gu14.webp",
+        "attributes": {
+            "filename": "藿藿Gu14.webp",
+            "parentFolder": "藿藿",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "75de03d5da9a0f690519b9d5d861fad8",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-21T03:37:40.359Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
         "gid": "2935337328",
         "characterName": "藿藿",
         "path": "sr-character/藿藿/藿藿Gu2.webp",
@@ -19773,10 +21453,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "96957e8d5e3a6a4af773ee0b00eb6587",
+            "md5": "19bb4e9503a700a2ba9155ab2a587c6b",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:39:41.535Z",
+        "timestamp": "2025-05-23T05:24:54.120Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -20373,10 +22053,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "984b95bb44249bcd206b10dcd77a3438",
+            "md5": "5af4e395688a1dda0361164bec63c3a5",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.802Z",
+        "timestamp": "2025-05-23T05:24:54.120Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -21061,6 +22741,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "3350974554",
+        "characterName": "貊泽",
+        "path": "sr-character/貊泽/貊泽Gu1.webp",
+        "attributes": {
+            "filename": "貊泽Gu1.webp",
+            "parentFolder": "貊泽",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "921e25e5a72219ec7f1601df4460b6cb",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:32:14.242Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
         "gid": "9899298552",
         "characterName": "娜塔莎",
         "path": "sr-character/娜塔莎/娜塔莎Gu1.webp",
@@ -21137,6 +22837,26 @@
             "Downloaded_From": "none"
         },
         "timestamp": "2025-05-19T07:45:25.815Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "1464335358",
+        "characterName": "佩拉",
+        "path": "sr-character/佩拉/佩拉Gu2.webp",
+        "attributes": {
+            "filename": "佩拉Gu2.webp",
+            "parentFolder": "佩拉",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "e99099c399ed71b0b12f9e0353c94b21",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:32:07.019Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -21333,10 +23053,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "bf777e4324b76382aef2b3f6b497d03b",
+            "md5": "be9d7e1f09d8c2a8327680d4428b1b2c",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.816Z",
+        "timestamp": "2025-05-23T05:24:54.120Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -22253,10 +23973,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "c2ec3cc246b23f8f673128cb7e263ca4",
+            "md5": "70550bf9c332f34b8d1a785ae185ab4d",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.828Z",
+        "timestamp": "2025-05-23T05:24:54.121Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -22293,10 +24013,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "546febba8a471c92566ac375a8602a25",
+            "md5": "eca4cf934018429889ed61eb2c5b486e",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.828Z",
+        "timestamp": "2025-05-23T05:24:54.121Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -22533,10 +24253,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "8a8c1402253f24ba17ab240e69883b35",
+            "md5": "7205c58a24b5f9baf1d0a839a1dd7e54",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.830Z",
+        "timestamp": "2025-05-23T05:24:54.121Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -22693,10 +24413,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "98427de1ac7462e0e05e000f2d206441",
+            "md5": "58415196dad6039f370500517f677d66",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T07:45:25.831Z",
+        "timestamp": "2025-05-23T05:24:54.121Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -23461,6 +25181,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "6330308911",
+        "characterName": "雪衣",
+        "path": "sr-character/雪衣/雪衣Gu5.webp",
+        "attributes": {
+            "filename": "雪衣Gu5.webp",
+            "parentFolder": "雪衣",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "952b9858d33f6752ca6c6f0faf905cbc",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:25.354Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
         "gid": "5971556724",
         "characterName": "彦卿",
         "path": "sr-character/彦卿/彦卿Gu1.webp",
@@ -23713,10 +25453,10 @@
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "34dac03e1b602c8ce8200ea626c31f1b",
+            "md5": "6e46477411d49aced0df27729a1be44f",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-19T10:13:29.971Z",
+        "timestamp": "2025-05-23T05:24:54.121Z",
         "sourceGallery": "sr-character"
     },
     {
@@ -23901,6 +25641,26 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "8459940163",
+        "characterName": "云璃",
+        "path": "sr-character/云璃/云璃Gu3.webp",
+        "attributes": {
+            "filename": "云璃Gu3.webp",
+            "parentFolder": "云璃",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fb250a89994a138b985b365d69bc9910",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-05-23T04:31:38.578Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
         "gid": "8758835411",
         "characterName": "真理医生",
         "path": "sr-character/真理医生/真理医生Gu1.webp",
@@ -24001,1762 +25761,42 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
-        "gid": "3223100165",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu1.webp",
+        "gid": "7547958217",
+        "characterName": "柏妮思",
+        "path": "zzz-character/柏妮思/柏妮思Gu1.webp",
         "attributes": {
-            "filename": "缇宝Gu1.webp",
-            "parentFolder": "缇宝",
+            "filename": "柏妮思Gu1.webp",
+            "parentFolder": "柏妮思",
             "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "3acb829911b674acf9e57b50fc9e3dec",
+            "md5": "ac35878165d49586568fc50af8a2325c",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:37:00.424Z",
-        "sourceGallery": "sr-character"
+        "timestamp": "2025-05-23T07:12:29.342Z",
+        "sourceGallery": "zzz-character"
     },
     {
         "storagebox": "Miao-Plugin-MBT",
-        "gid": "1118646303",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu2.webp",
+        "gid": "1165390602",
+        "characterName": "可琳",
+        "path": "zzz-character/可琳/可琳Gu1.webp",
         "attributes": {
-            "filename": "缇宝Gu2.webp",
-            "parentFolder": "缇宝",
+            "filename": "可琳Gu1.webp",
+            "parentFolder": "可琳",
             "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
-            "md5": "cec982567e74c86f9d62246af6b6e637",
+            "md5": "6598ee195be73595bd9b8f0eaeecbe61",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-21T03:37:04.372Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3204320023",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu3.webp",
-        "attributes": {
-            "filename": "缇宝Gu3.webp",
-            "parentFolder": "缇宝",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "fullscreen",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "74de674dae68089e12068bbf9e4238fb",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:08.455Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7613318945",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu4.webp",
-        "attributes": {
-            "filename": "缇宝Gu4.webp",
-            "parentFolder": "缇宝",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "1b1a00ae09a83be8bb49a60ecdc1b062",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:11.703Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6240024049",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu15.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu15.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "8ed5250f2d9ec0bbae4dc9a17d63fde2",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:22.176Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7394737406",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu16.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu16.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "f03fba4ceacffdd2b085656eaaa16906",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:28.903Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "8407171330",
-        "characterName": "刻晴",
-        "path": "gs-character/刻晴/刻晴Gu21.webp",
-        "attributes": {
-            "filename": "刻晴Gu21.webp",
-            "parentFolder": "刻晴",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "9f6edd12bc9c5c4a420fdc163f35d209",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:33.446Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-3",
-        "gid": "6927439860",
-        "characterName": "藿藿",
-        "path": "sr-character/藿藿/藿藿Gu14.webp",
-        "attributes": {
-            "filename": "藿藿Gu14.webp",
-            "parentFolder": "藿藿",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "75de03d5da9a0f690519b9d5d861fad8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:40.359Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "2267922762",
-        "characterName": "克洛琳德",
-        "path": "gs-character/克洛琳德/克洛琳德Gu7.webp",
-        "attributes": {
-            "filename": "克洛琳德Gu7.webp",
-            "parentFolder": "克洛琳德",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "0889ae12baf1bdec8353e11ce96cc4e4",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:37:49.647Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7567235030",
-        "characterName": "丝柯克",
-        "path": "gs-character/丝柯克/丝柯克Gu6.webp",
-        "attributes": {
-            "filename": "丝柯克Gu6.webp",
-            "parentFolder": "丝柯克",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "ce2e84ca0ae01ad3c34f46c886f75c79",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:38:01.695Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "7989769198",
-        "characterName": "柯莱",
-        "path": "gs-character/柯莱/柯莱Gu4.webp",
-        "attributes": {
-            "filename": "柯莱Gu4.webp",
-            "parentFolder": "柯莱",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": true,
-            "isBan": false,
-            "md5": "b05ba6c5e70446054a3e11b3a0d522f4",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-21T03:38:20.271Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3965033401",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu17.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu17.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "8e22e835d943a472ece36434525232a0",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:12.603Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "1320710505",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu18.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu18.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "aed9e8e41279221856828c1b03817a3c",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:17.267Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8308384883",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu19.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu19.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "b31a65a02586bbde9eb443d9cc950b66",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:25.563Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3044844584",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu20.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu20.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "b141758ebc69cae47c1f6ecaa3fa4979",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:30.443Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "1973940857",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu21.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu21.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "d105c7b0e4f2668069c40be503b93428",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:39.203Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5289719054",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu22.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu22.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "50d3973982193c9edfd395048dbb78f0",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:42.539Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "9389803627",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu23.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu23.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "8267c3f0024d199aa8352db82ad8d94f",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:47.043Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2467220334",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu24.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu24.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "3a538debacb622ab5aaa014783c5284e",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:52.323Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6619700490",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu25.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu25.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "a6faa50073a992523c13c5a8d469dc6c",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:56.260Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6658329498",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu26.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu26.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "080c98e65a2aa460e4b05f14a5a3e914",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:26:58.851Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6010383302",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu27.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu27.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "504dbcd9140d968f2428aed5fe330dfa",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:01.371Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "1506734473",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu28.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu28.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "245cb9f5f5436248f892cc80621ea9e8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:04.869Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "9139899926",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu29.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu29.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "606c28d6ba3b25a034ba19b24ffc7f24",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:07.453Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2704461971",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu30.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu30.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": true,
-            "isBan": false,
-            "md5": "b4c63d90f41ff33c21b5f16ca09bb8e8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:25.437Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6246306820",
-        "characterName": "茜特菈莉",
-        "path": "gs-character/茜特菈莉/茜特菈莉Gu31.webp",
-        "attributes": {
-            "filename": "茜特菈莉Gu31.webp",
-            "parentFolder": "茜特菈莉",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "9528a7e7dc78cfa19f0ce92710378cd1",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:30.260Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8588078588",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu3.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu3.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "bf5c6206cb85237acb831fe29da8a52a",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:36.741Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "4589644032",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu4.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu4.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "fa7cceb61a290161bd9f16047950d4f2",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:40.588Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3187647010",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu5.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu5.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": true,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "8db9d98db6403f19509c337734675960",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:46.789Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8618804202",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu6.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu6.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "422e8bed6cfb68db3459fdf9f6f10f3e",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:49.548Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2533550002",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu7.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu7.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "bf6e77437065fd6834940017ee9f93bd",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:54.868Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5791580458",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu8.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu8.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "8dcde1e10e29bbb0ece9eb5d85e127d1",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:27:58.652Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5889954809",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu9.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu9.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "7603b8daf62fd7527d6c8ea4c0fb5b90",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:02.453Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "9540511609",
-        "characterName": "瓦雷莎",
-        "path": "gs-character/瓦雷莎/瓦雷莎Gu10.webp",
-        "attributes": {
-            "filename": "瓦雷莎Gu10.webp",
-            "parentFolder": "瓦雷莎",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "3d955475bc5e662e33f771d6a5a0cc66",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:20.605Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8264743255",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu2.webp",
-        "attributes": {
-            "filename": "风堇Gu2.webp",
-            "parentFolder": "风堇",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "72ffe1257fc4b5db2a4ad81f8fe82918",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:26.630Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6233212413",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu3.webp",
-        "attributes": {
-            "filename": "风堇Gu3.webp",
-            "parentFolder": "风堇",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "2f619d35d044c972e43802c9a0cfa4a8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:29.886Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3343862243",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu4.webp",
-        "attributes": {
-            "filename": "风堇Gu4.webp",
-            "parentFolder": "风堇",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "d566db7b589ce79cdb03dddaeeef37f9",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:33.694Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6368751017",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu5.webp",
-        "attributes": {
-            "filename": "风堇Gu5.webp",
-            "parentFolder": "风堇",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "50bbccb9e307640ccd50540b4c989d16",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:36.190Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3222924286",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu6.webp",
-        "attributes": {
-            "filename": "风堇Gu6.webp",
-            "parentFolder": "风堇",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "3ac71b00123ae03cdca6cb390982119e",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:40.462Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "9781493591",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu7.webp",
-        "attributes": {
-            "filename": "风堇Gu7.webp",
-            "parentFolder": "风堇",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "067725fc338315ea44d7730996d628f9",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:44.341Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "4157039254",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu8.webp",
-        "attributes": {
-            "filename": "风堇Gu8.webp",
-            "parentFolder": "风堇",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "5303774eb3140bc5b55e980ffa1ef683",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:48.445Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3969348019",
-        "characterName": "风堇",
-        "path": "sr-character/风堇/风堇Gu9.webp",
-        "attributes": {
-            "filename": "风堇Gu9.webp",
-            "parentFolder": "风堇",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "fullscreen",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "2974606e6dcd0e3453d72628e52c4207",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:52.494Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "4246987896",
-        "characterName": "大黑塔",
-        "path": "sr-character/大黑塔/大黑塔Gu1.webp",
-        "attributes": {
-            "filename": "大黑塔Gu1.webp",
-            "parentFolder": "大黑塔",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "3f56697c1c69378e46ba329537ee82c8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:28:59.173Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5235260714",
-        "characterName": "大黑塔",
-        "path": "sr-character/大黑塔/大黑塔Gu2.webp",
-        "attributes": {
-            "filename": "大黑塔Gu2.webp",
-            "parentFolder": "大黑塔",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "1a90ab2ac20f65616884291f9c0f134e",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:01.742Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8888780160",
-        "characterName": "大黑塔",
-        "path": "sr-character/大黑塔/大黑塔Gu3.webp",
-        "attributes": {
-            "filename": "大黑塔Gu3.webp",
-            "parentFolder": "大黑塔",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "b7d0290a5a322d118b84ab787ff6d73d",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:04.895Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "4102781040",
-        "characterName": "大黑塔",
-        "path": "sr-character/大黑塔/大黑塔Gu4.webp",
-        "attributes": {
-            "filename": "大黑塔Gu4.webp",
-            "parentFolder": "大黑塔",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "9839e663eb916e6ba804bb79886cb0b7",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:07.576Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2562172981",
-        "characterName": "大黑塔",
-        "path": "sr-character/大黑塔/大黑塔Gu5.webp",
-        "attributes": {
-            "filename": "大黑塔Gu5.webp",
-            "parentFolder": "大黑塔",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "c0b53a01e0f57ccc40489ffbe578859e",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:10.287Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6290335908",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu5.webp",
-        "attributes": {
-            "filename": "缇宝Gu5.webp",
-            "parentFolder": "缇宝",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "cc418176c6bbde32f0fbb0c47897be80",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:15.663Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6420823851",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu6.webp",
-        "attributes": {
-            "filename": "缇宝Gu6.webp",
-            "parentFolder": "缇宝",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "60de2ecf5caf7c710e6375d6b4983517",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:18.159Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6061105159",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu7.webp",
-        "attributes": {
-            "filename": "缇宝Gu7.webp",
-            "parentFolder": "缇宝",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "88e787efcccba5934ee710d1c8fd3f3b",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:20.759Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2863378139",
-        "characterName": "缇宝",
-        "path": "sr-character/缇宝/缇宝Gu8.webp",
-        "attributes": {
-            "filename": "缇宝Gu8.webp",
-            "parentFolder": "缇宝",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "6f872a9505d6509c9b1a3bd9780cf40b",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:23.272Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "4954514802",
-        "characterName": "基尼奇",
-        "path": "gs-character/基尼奇/基尼奇Gu3.webp",
-        "attributes": {
-            "filename": "基尼奇Gu3.webp",
-            "parentFolder": "基尼奇",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "971356221dfbfc3eeb6696217c5ec341",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:27.959Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "5808779061",
-        "characterName": "基尼奇",
-        "path": "gs-character/基尼奇/基尼奇Gu4.webp",
-        "attributes": {
-            "filename": "基尼奇Gu4.webp",
-            "parentFolder": "基尼奇",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "16e76a17c605717295f22326a92c5338",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:30.007Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "8197401098",
-        "characterName": "基尼奇",
-        "path": "gs-character/基尼奇/基尼奇Gu5.webp",
-        "attributes": {
-            "filename": "基尼奇Gu5.webp",
-            "parentFolder": "基尼奇",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "829f52b67aa72f7eb8450cb5fe7ac3d8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:31.727Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "1595156977",
-        "characterName": "花火",
-        "path": "sr-character/花火/花火Gu68.webp",
-        "attributes": {
-            "filename": "花火Gu68.webp",
-            "parentFolder": "花火",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "1147eadc768a7d0d50ff26c237a94ab3",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:35.831Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "4016648955",
-        "characterName": "花火",
-        "path": "sr-character/花火/花火Gu69.webp",
-        "attributes": {
-            "filename": "花火Gu69.webp",
-            "parentFolder": "花火",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": true,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "780bad009975e59d997ac555883de380",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:40.510Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "6923540744",
-        "characterName": "蓝砚",
-        "path": "gs-character/蓝砚/蓝砚Gu1.webp",
-        "attributes": {
-            "filename": "蓝砚Gu1.webp",
-            "parentFolder": "蓝砚",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "04c4029b5f1f64a91f452cf5dfe8b43a",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:44.231Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "1729317994",
-        "characterName": "蓝砚",
-        "path": "gs-character/蓝砚/蓝砚Gu2.webp",
-        "attributes": {
-            "filename": "蓝砚Gu2.webp",
-            "parentFolder": "蓝砚",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "c9e7526217f192b3975a4a89af461011",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:46.085Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "5883890451",
-        "characterName": "蓝砚",
-        "path": "gs-character/蓝砚/蓝砚Gu3.webp",
-        "attributes": {
-            "filename": "蓝砚Gu3.webp",
-            "parentFolder": "蓝砚",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "07192a95f40345b823a2e54fe79241d7",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:48.063Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5271596888",
-        "characterName": "遐蝶",
-        "path": "sr-character/遐蝶/遐蝶Gu21.webp",
-        "attributes": {
-            "filename": "遐蝶Gu21.webp",
-            "parentFolder": "遐蝶",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": true,
-            "isBan": false,
-            "md5": "41f5a73d71545cf3038f328dbf62e5ca",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:29:59.423Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7260401021",
-        "characterName": "遐蝶",
-        "path": "sr-character/遐蝶/遐蝶Gu22.webp",
-        "attributes": {
-            "filename": "遐蝶Gu22.webp",
-            "parentFolder": "遐蝶",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "bd73080ee53457e9bdbcd351b0529458",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:03.359Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5887419967",
-        "characterName": "爱可菲",
-        "path": "gs-character/爱可菲/爱可菲Gu14.webp",
-        "attributes": {
-            "filename": "爱可菲Gu14.webp",
-            "parentFolder": "爱可菲",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "b4ca20b4f90f00fcd6f8b7ed7e18d2b8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:08.208Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8425326057",
-        "characterName": "爱可菲",
-        "path": "gs-character/爱可菲/爱可菲Gu15.webp",
-        "attributes": {
-            "filename": "爱可菲Gu15.webp",
-            "parentFolder": "爱可菲",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "654a0c0c50ea15e074296e461dbef307",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:11.896Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "1954645820",
-        "characterName": "温迪",
-        "path": "gs-character/温迪/温迪Gu12.webp",
-        "attributes": {
-            "filename": "温迪Gu12.webp",
-            "parentFolder": "温迪",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "d7a090a3f3d59d1d394aa54036c7c9fd",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:16.504Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "6359846032",
-        "characterName": "温迪",
-        "path": "gs-character/温迪/温迪Gu13.webp",
-        "attributes": {
-            "filename": "温迪Gu13.webp",
-            "parentFolder": "温迪",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "2efd2a305d4cea4bd8b0b24795ea8c04",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:19.720Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2434306449",
-        "characterName": "玛薇卡",
-        "path": "gs-character/玛薇卡/玛薇卡Gu4.webp",
-        "attributes": {
-            "filename": "玛薇卡Gu4.webp",
-            "parentFolder": "玛薇卡",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "694f36445220aa7e3344c9305e21d4ae",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:25.728Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7017661785",
-        "characterName": "玛薇卡",
-        "path": "gs-character/玛薇卡/玛薇卡Gu5.webp",
-        "attributes": {
-            "filename": "玛薇卡Gu5.webp",
-            "parentFolder": "玛薇卡",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "9e66908cae1d451b38510073a9f3c03d",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:29.304Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2740529886",
-        "characterName": "星期日",
-        "path": "sr-character/星期日/星期日Gu3.webp",
-        "attributes": {
-            "filename": "星期日Gu3.webp",
-            "parentFolder": "星期日",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "592be32524448fbbeeeb02344207e16f",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:33.560Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "3065123580",
-        "characterName": "星期日",
-        "path": "sr-character/星期日/星期日Gu4.webp",
-        "attributes": {
-            "filename": "星期日Gu4.webp",
-            "parentFolder": "星期日",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "fullscreen",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "af4bb80714aec34ebc5c90f3b4a700f1",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:37.688Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "8028067120",
-        "characterName": "恰斯卡",
-        "path": "gs-character/恰斯卡/恰斯卡Gu2.webp",
-        "attributes": {
-            "filename": "恰斯卡Gu2.webp",
-            "parentFolder": "恰斯卡",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "0e119860c6d0563c833d42536f234cd6",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:43.248Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "1281676546",
-        "characterName": "恰斯卡",
-        "path": "gs-character/恰斯卡/恰斯卡Gu3.webp",
-        "attributes": {
-            "filename": "恰斯卡Gu3.webp",
-            "parentFolder": "恰斯卡",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "0019668e1f8d3f6c4afbd998adf32386",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:45.496Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "9582462034",
-        "characterName": "阿格莱雅",
-        "path": "sr-character/阿格莱雅/阿格莱雅Gu1.webp",
-        "attributes": {
-            "filename": "阿格莱雅Gu1.webp",
-            "parentFolder": "阿格莱雅",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "728736a2084910239353f84a81ede3bd",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:53.385Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "6477133057",
-        "characterName": "阿格莱雅",
-        "path": "sr-character/阿格莱雅/阿格莱雅Gu2.webp",
-        "attributes": {
-            "filename": "阿格莱雅Gu2.webp",
-            "parentFolder": "阿格莱雅",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "6e33c5a36524c5c3c493ffc6b9799589",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:30:58.240Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7062952490",
-        "characterName": "知更鸟",
-        "path": "sr-character/知更鸟/知更鸟Gu13.webp",
-        "attributes": {
-            "filename": "知更鸟Gu13.webp",
-            "parentFolder": "知更鸟",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "1d2092d253ab5f0985bd9b87844798e8",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:03.706Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "4714182211",
-        "characterName": "七七",
-        "path": "gs-character/七七/七七Gu12.webp",
-        "attributes": {
-            "filename": "七七Gu12.webp",
-            "parentFolder": "七七",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "eb72b1f7319b711579d0db8a5be72b81",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:09.211Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "5075197519",
-        "characterName": "丝柯克",
-        "path": "gs-character/丝柯克/丝柯克Gu7.webp",
-        "attributes": {
-            "filename": "丝柯克Gu7.webp",
-            "parentFolder": "丝柯克",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "a53ddef6e97e48a50dbcf508523f36ce",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:14.954Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "7318501842",
-        "characterName": "飞霄",
-        "path": "sr-character/飞霄/飞霄Gu5.webp",
-        "attributes": {
-            "filename": "飞霄Gu5.webp",
-            "parentFolder": "飞霄",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "0b083bc75326741da73f98af3ec3b81b",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:20.065Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-3",
-        "gid": "6330308911",
-        "characterName": "雪衣",
-        "path": "sr-character/雪衣/雪衣Gu5.webp",
-        "attributes": {
-            "filename": "雪衣Gu5.webp",
-            "parentFolder": "雪衣",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "952b9858d33f6752ca6c6f0faf905cbc",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:25.354Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2473666410",
-        "characterName": "那刻夏",
-        "path": "sr-character/那刻夏/那刻夏Gu4.webp",
-        "attributes": {
-            "filename": "那刻夏Gu4.webp",
-            "parentFolder": "那刻夏",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "fd6f0ec65705aabe770904cf2ff58142",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:29.001Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "6208087793",
-        "characterName": "夏洛蒂",
-        "path": "gs-character/夏洛蒂/夏洛蒂Gu4.webp",
-        "attributes": {
-            "filename": "夏洛蒂Gu4.webp",
-            "parentFolder": "夏洛蒂",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "526f9d1a79b8db76ab3e432894f8d4ad",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:33.394Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-3",
-        "gid": "8459940163",
-        "characterName": "云璃",
-        "path": "sr-character/云璃/云璃Gu3.webp",
-        "attributes": {
-            "filename": "云璃Gu3.webp",
-            "parentFolder": "云璃",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "fb250a89994a138b985b365d69bc9910",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:38.578Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2769401639",
-        "characterName": "赛飞儿",
-        "path": "sr-character/赛飞儿/赛飞儿Gu2.webp",
-        "attributes": {
-            "filename": "赛飞儿Gu2.webp",
-            "parentFolder": "赛飞儿",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "e2fc66b897c325b7bc1d51fac7430d47",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:47.289Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "9654526790",
-        "characterName": "欧洛伦",
-        "path": "gs-character/欧洛伦/欧洛伦Gu2.webp",
-        "attributes": {
-            "filename": "欧洛伦Gu2.webp",
-            "parentFolder": "欧洛伦",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "b5b230140a4cfe532ec7e8fcefa663f0",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:51.585Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "5488310873",
-        "characterName": "塔利雅",
-        "path": "gs-character/塔利雅/塔利雅Gu2.webp",
-        "attributes": {
-            "filename": "塔利雅Gu2.webp",
-            "parentFolder": "塔利雅",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "02517ab60986ee98454364d85d4f9d94",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:31:55.905Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-3",
-        "gid": "8988650876",
-        "characterName": "桂乃芬",
-        "path": "sr-character/桂乃芬/桂乃芬Gu2.webp",
-        "attributes": {
-            "filename": "桂乃芬Gu2.webp",
-            "parentFolder": "桂乃芬",
-            "isPx18": true,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": true,
-            "isBan": false,
-            "md5": "9020732bbb100c3ca85673dfeecc0876",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:32:02.089Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-3",
-        "gid": "1464335358",
-        "characterName": "佩拉",
-        "path": "sr-character/佩拉/佩拉Gu2.webp",
-        "attributes": {
-            "filename": "佩拉Gu2.webp",
-            "parentFolder": "佩拉",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "e99099c399ed71b0b12f9e0353c94b21",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:32:07.019Z",
-        "sourceGallery": "sr-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-2",
-        "gid": "4586475593",
-        "characterName": "达达利亚",
-        "path": "gs-character/达达利亚/达达利亚Gu1.webp",
-        "attributes": {
-            "filename": "达达利亚Gu1.webp",
-            "parentFolder": "达达利亚",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "06ebef19740da5d80f1ae966cdff2ade",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:32:10.467Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT-3",
-        "gid": "3350974554",
-        "characterName": "貊泽",
-        "path": "sr-character/貊泽/貊泽Gu1.webp",
-        "attributes": {
-            "filename": "貊泽Gu1.webp",
-            "parentFolder": "貊泽",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "921e25e5a72219ec7f1601df4460b6cb",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-05-23T04:32:14.242Z",
-        "sourceGallery": "sr-character"
+        "timestamp": "2025-05-23T07:12:34.789Z",
+        "sourceGallery": "zzz-character"
     }
 ]
