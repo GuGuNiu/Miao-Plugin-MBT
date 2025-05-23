@@ -85,35 +85,56 @@ const ERROR_CODES = {
 /**
  * @description 安全地递归删除文件或目录，带重试逻辑。这玩意儿要是卡住了，我多踹几脚。
  */
-async function safeDelete(targetPath, maxAttempts = 3, delay = 1000) {
+async function safeDelete(targetPath, maxAttempts = 3, delay = 1000, throwOnError = false) {
   if (targetPath === null || typeof targetPath === "undefined" || targetPath === "") {
     return true;
   }
   let attempts = 0;
   const logger = global.logger || console;
+  let lastErr = null;
+
   while (attempts < maxAttempts) {
     try {
       await fsPromises.rm(targetPath, { recursive: true, force: true });
       return true;
     } catch (err) {
+      lastErr = err;
       if (err.code === ERROR_CODES.NotFound) {
         return true;
       }
       if ([ERROR_CODES.Busy, ERROR_CODES.Perm, ERROR_CODES.NotEmpty].includes(err.code)) {
         attempts++;
         if (attempts >= maxAttempts) {
-          //logger.error(`${Default_Config.logPrefix} [安全删除] ${targetPath} 最终失败 (${attempts}次): ${err.code}`);
-          return false;
+          //logger.error(`${Default_Config.logPrefix} [安全删除] ${targetPath} 最终失败 (${attempts}次): ${lastErr.code || '未知错误码'}`);
+          if (throwOnError) {
+            const detailedError = new Error(`无法删除 ${targetPath} (尝试 ${attempts} 次后失败: ${lastErr.message})`);
+            detailedError.code = lastErr.code || 'SAFE_DELETE_FAILED';
+            detailedError.path = targetPath;
+            throw detailedError;
+          }
+          return false; 
         }
-        //logger.warn(`${Default_Config.logPrefix} [安全删除] ${targetPath} 失败 (${attempts}/${maxAttempts}): ${err.code}, ${delay / 1000}s 后重试...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
-        logger.error(`${Default_Config.logPrefix} [安全删除] ${targetPath} 遇到未处理异常:`, err);
-        return false;
+        //logger.error(`${Default_Config.logPrefix} [安全删除] ${targetPath} 遇到未处理异常:`, err);
+        if (throwOnError) {
+            const detailedError = new Error(`删除 ${targetPath} 时遇到未处理异常: ${err.message}`);
+            detailedError.code = err.code || 'SAFE_DELETE_UNHANDLED';
+            detailedError.path = targetPath;
+            throw detailedError;
+        }
+        return false; 
       }
     }
   }
-  return false;
+  // 如果循环意外结束
+  if (lastErr && throwOnError) {
+    const detailedError = new Error(`无法删除 ${targetPath} (尝试 ${maxAttempts} 次后失败: ${lastErr.message})`);
+    detailedError.code = lastErr.code || 'SAFE_DELETE_FAILED_UNEXPECTED';
+    detailedError.path = targetPath;
+    throw detailedError;
+  }
+  return false; // 默认返回false表示失败
 }
 
 /**
@@ -2624,14 +2645,14 @@ export class MiaoPluginMBT extends plugin {
     if (msg !== "#重置咕咕牛") return false;
 
     const startMessage = "开始重置图库，请稍等...";
-    const successMessageBase = "重置完成！所有相关文件和缓存都清理干净啦。";
-    const failureMessage = "重置过程中出了点问题，可能没清理干净，快去看看日志吧！";
-
     await e.reply(startMessage, true);
-    //this.logger.info(`${this.logPrefix} 用户 ${e.user_id} 执行重置操作.`); 
-
-    let mainDirsDeleteSuccess = true; let pluginDirsCleanSuccess = true; let tempDirsCleanSuccess = true;
+    
+    let mainDirsDeleteSuccess = true; 
+    let pluginDirsCleanSuccess = true; 
+    let tempDirsCleanSuccess = true; 
     let firstError = null;
+    const errorOperations = []; 
+
     const pathsToDeleteDirectly = [
       MiaoPluginMBT.paths.LocalTuKuPath, MiaoPluginMBT.paths.LocalTuKuPath2,
       MiaoPluginMBT.paths.LocalTuKuPath3, MiaoPluginMBT.paths.LocalTuKuPath4,
@@ -2639,21 +2660,17 @@ export class MiaoPluginMBT extends plugin {
     ].filter(Boolean);
 
     for (const dirPath of pathsToDeleteDirectly) {
-      //.logger.info(`${this.logPrefix} [重置] 正在删除: ${dirPath}`); 
       try {
-        const deleted = await safeDelete(dirPath);
-        //if (!deleted) this.logger.warn(`${this.logPrefix} [重置] 删除 ${dirPath} 可能未完全成功 (safeDelete 返回 false)`);
+        await safeDelete(dirPath, 3, 1000, true); //  throwOnError 设置为 true
       } catch (err) {
-        //this.logger.error(`${this.logPrefix} [重置] 删除 ${dirPath} 时发生错误:`, err);
-        mainDirsDeleteSuccess = false; if (!firstError) firstError = { operation: `删除目录 ${path.basename(dirPath)}`, error: err };
+        mainDirsDeleteSuccess = false; 
+        const opName = `删除核心目录 ${path.basename(dirPath)}`;
+        errorOperations.push(opName);
+        if (!firstError) firstError = { operation: opName, error: err };
       }
     }
 
-    //this.logger.info(`${this.logPrefix} [重置] 开始清理 temp/html/ 目录下所有包含 "guguniu" 的临时文件夹...`);
     const tempHtmlBasePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "temp", "html");
-    let cleanedTempDirsCount = 0;
-    let failedTempDirsCleanCount = 0;
-
     try {
       if (fs.existsSync(tempHtmlBasePath)) {
         const entries = await fsPromises.readdir(tempHtmlBasePath, { withFileTypes: true });
@@ -2661,66 +2678,69 @@ export class MiaoPluginMBT extends plugin {
         for (const entry of entries) {
           if (entry.isDirectory() && entry.name.toLowerCase().includes("guguniu")) {
             const dirToClean = path.join(tempHtmlBasePath, entry.name);
-            //this.logger.info(`${this.logPrefix} [重置] 发现匹配的临时目录，尝试删除: ${dirToClean}`);
             cleanupPromises.push(
               (async () => {
-                const deleted = await safeDelete(dirToClean);
-                if (deleted) {
-                  cleanedTempDirsCount++;
-                } else {
-                  //this.logger.warn(`${this.logPrefix} [重置] 清理临时目录 ${dirToClean} 可能未完全成功。`);
-                  failedTempDirsCleanCount++;
-                  tempDirsCleanSuccess = false;
+                try {
+                    await safeDelete(dirToClean);
+                } catch (err) { // 捕获safeDelete抛出的错误
+                    tempDirsCleanSuccess = false; 
+                    const opName = `清理临时目录 ${entry.name}`;
+                    errorOperations.push(opName);
+                    if (!firstError) firstError = { operation: opName, error: err };
                 }
               })()
             );
           }
         }
         await Promise.all(cleanupPromises);
-        if (cleanedTempDirsCount > 0) {
-          //this.logger.info(`${this.logPrefix} [重置] 成功清理了 ${cleanedTempDirsCount} 个包含 "guguniu" 的临时文件夹。`);
-        }
-        if (failedTempDirsCleanCount > 0) {
-          //this.logger.warn(`${this.logPrefix} [重置] 有 ${failedTempDirsCleanCount} 个包含 "guguniu" 的临时文件夹清理失败或未完全成功。`);
-        }
-        if (cleanupPromises.length === 0 && cleanedTempDirsCount === 0) { // 进一步判断是否真的没找到
-          //this.logger.info(`${this.logPrefix} [重置] 在 temp/html/ 目录下未发现需要清理的包含 "guguniu" 的临时文件夹。`);
-        }
-      } else {
-        //this.logger.info(`${this.logPrefix} [重置] temp/html/ 目录不存在，无需清理。`);
       }
-    } catch (err) {
-      //this.logger.error(`${this.logPrefix} [重置] 扫描或清理 temp/html/ 目录时发生错误:`, err);
+    } catch (err) { // 这个catch是捕获readdir等操作的错误
       tempDirsCleanSuccess = false;
-      if (!firstError) firstError = { operation: `清理temp/html目录`, error: err };
+      const opName = `扫描或清理temp/html`;
+      errorOperations.push(opName);
+      if (!firstError) firstError = { operation: opName, error: err };
     }
-
-    //this.logger.info(`${this.logPrefix} [重置] 开始清理目标插件目录中的图片文件...`);
+    
     const targetPluginDirs = [MiaoPluginMBT.paths.target.miaoChar, MiaoPluginMBT.paths.target.zzzChar, MiaoPluginMBT.paths.target.wavesChar].filter(Boolean);
     for (const dirPath of targetPluginDirs) {
       if (!dirPath) continue;
-      try { await MiaoPluginMBT.CleanTargetCharacterDirs(dirPath, this.logger); }
+      try { 
+        await MiaoPluginMBT.CleanTargetCharacterDirs(dirPath, this.logger); 
+      }
       catch (err) {
-        //this.logger.error(`${this.logPrefix} [重置] 清理目标插件目录 ${dirPath} 时出错:`, err);
-        pluginDirsCleanSuccess = false; if (!firstError) firstError = { operation: `清理插件目录 ${path.basename(dirPath)}`, error: err };
+        pluginDirsCleanSuccess = false; 
+        const opName = `清理插件资源 ${path.basename(dirPath)}`;
+        errorOperations.push(opName);
+        if (!firstError) firstError = { operation: opName, error: err };
       }
     }
 
-    //this.logger.info(`${this.logPrefix} [重置] 重置内存状态...`);
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
       MiaoPluginMBT.MBTConfig = {}; MiaoPluginMBT._imgDataCache = Object.freeze([]); MiaoPluginMBT._userBanSet = new Set();
       MiaoPluginMBT._activeBanSet = new Set(); MiaoPluginMBT._aliasData = null; MiaoPluginMBT.isGloballyInitialized = false;
       MiaoPluginMBT.initializationPromise = null; this.isPluginInited = false;
-      //this.logger.info(`${this.logPrefix} [重置] 内存状态已重置。`);
     });
 
     const overallSuccess = mainDirsDeleteSuccess && pluginDirsCleanSuccess && tempDirsCleanSuccess;
+    
     if (overallSuccess) {
+      const successMessageBase = "重置完成！所有相关文件和缓存都清理干净啦。";
       await e.reply(successMessageBase, true);
     } else {
-      await e.reply(failureMessage, true);
-      if (firstError) await this.ReportError(e, `重置咕咕牛 (${firstError.operation})`, firstError.error, "");
-      else await e.reply(`${this.logPrefix} 重置过程中发生了一个或多个未明确捕获的错误，请检查日志。`, true);
+      if (firstError && firstError.error) { // 确保 firstError.error 存在
+        let contextMessage = "";
+        if (errorOperations.length > 1) {
+            contextMessage = `在执行以下多个操作时可能均存在问题: ${errorOperations.join(", ")}。以下是捕获到的第一个错误详情：`;
+        } else if (errorOperations.length === 1 && errorOperations[0] !== firstError.operation) {
+            contextMessage = `操作 ${errorOperations[0]} 可能也存在问题。以下是捕获到的第一个错误详情：`;
+        }
+        // 现在传递给 ReportError 的 error 对象是 safeDelete 抛出的包含具体 code 的错误
+        await this.ReportError(e, `重置咕咕牛 (${firstError.operation})`, firstError.error, contextMessage);
+      } else {
+        const failureMessage = "重置过程中出了点问题，但未捕获到具体错误原因，请检查日志吧！";
+        await e.reply(failureMessage, true);
+        logger.warn(`${this.logPrefix} 重置操作标记为失败，但没有捕获到有效的firstError对象。`);
+      }
     }
     return true;
   }
