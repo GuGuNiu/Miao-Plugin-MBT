@@ -1032,7 +1032,7 @@ export class MiaoPluginMBT extends plugin {
         catch (err) { if (err.code !== ERROR_CODES.NotFound) logger.warn(`${logPrefix} [查找路径] 访问仓库 ${repo.nameForLog} (${absPath}) 出错:`, err.code); }
       }
     }
-    logger.warn(`${logPrefix} [查找路径] 在所有已配置的常规仓库中均未找到: ${normalizedPath}`);
+    //logger.warn(`${logPrefix} [查找路径] 在所有已配置的常规仓库中均未找到: ${normalizedPath}`);
     return null;
   }
 
@@ -3314,7 +3314,7 @@ export class MiaoPluginMBT extends plugin {
         parseInt(b.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0")
       );
 
-      const ITEMS_PER_BATCH = 28;
+      const ITEMS_PER_BATCH = 28; 
       const totalItems = rawRoleImageData.length;
       const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
 
@@ -3326,118 +3326,109 @@ export class MiaoPluginMBT extends plugin {
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
         const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
         const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
-
         const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
-
-        const forwardListBatch = [];
+        
+        const forwardListBatch = []; 
         if (batchNum === 1) {
           forwardListBatch.push(`查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`);
-          forwardListBatch.push(`想导出图片？试试: #咕咕牛导出${standardMainName}1`);
+          if (totalItems > 0) {
+            forwardListBatch.push(`想导出图片？试试: #咕咕牛导出${standardMainName}1`);
+          }
         } else {
           forwardListBatch.push(`查看『${standardMainName}』(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`);
         }
 
-
         for (let i = 0; i < currentBatchData.length; i++) {
           const item = currentBatchData[i];
+          const itemGlobalIndex = startIndex + i + 1; // 计算全局序号
           const relativePath = item.path.replace(/\\/g, "/");
-
-          const descriptionParts = [];
-          const imageNumberMatch = relativePath.match(/(Gu\d+)\.webp$/i);
-
-          if (imageNumberMatch && imageNumberMatch[1]) {
-            descriptionParts.push(`[${imageNumberMatch[1]}]`);
-          } else {
-            descriptionParts.push(`[${path.basename(relativePath, '.webp')}]`);
-          }
-
-          const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
-          const isActiveBanned = MiaoPluginMBT._activeBanSet.has(relativePath); // 这个包含了用户封禁和自动净化
-          let pflLevelApplied = null;
-
-          if (isUserBanned) {
-            descriptionParts.push("❌封禁");
-          }
-
-          // 即使被用户封禁，也独立检查是否符合净化规则
-          // 我们需要找出它是否因为 *自动规则* 而在 activeBanSet 中
-          // 一个简单的判断是：如果在 activeBanSet 中，但 *不是* 因为用户手动封禁，那么就是自动净化
-          // 或者，更准确地，直接检查它是否符合当前的净化规则，无论它是否已被用户手动封禁
-          const imgDataForPurifyCheck = MiaoPluginMBT._imgDataCache.find(img => img.path?.replace(/\\/g, "/") === relativePath);
-          let isAutoPurified = false;
-
-          if (imgDataForPurifyCheck) {
-            const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
-            if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, Purify_Level.PX18_PLUS) && currentPFL === Purify_Level.PX18_PLUS) {
-              pflLevelApplied = 2;
-              isAutoPurified = true;
-            } else if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, Purify_Level.RX18_ONLY) && currentPFL >= Purify_Level.RX18_ONLY) {
-              pflLevelApplied = 1;
-              isAutoPurified = true;
-            }
-            if (!isAutoPurified && MiaoPluginMBT.MBTConfig?.Ai === false && imgDataForPurifyCheck.attributes?.isAiImage === true) isAutoPurified = true;
-            if (!isAutoPurified && MiaoPluginMBT.MBTConfig?.EasterEgg === false && imgDataForPurifyCheck.attributes?.isEasterEgg === true) isAutoPurified = true;
-            if (!isAutoPurified && MiaoPluginMBT.MBTConfig?.layout === false && imgDataForPurifyCheck.attributes?.layout === "fullscreen") isAutoPurified = true;
-          }
-
-
-          if (isAutoPurified) { // 只要它符合自动净化规则，就显示净化标记
-            if (pflLevelApplied) {
-              descriptionParts.push(`🌱净化${pflLevelApplied}`);
-            } else {
-              descriptionParts.push("🌱净化");
-            }
-          }
-
+          const fileName = path.basename(relativePath);
           const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
+          
+          const messageNode = []; // 每个节点的 message 数组
+          let fileExistsAndAccessible = false;
           let fileSizeFormatted = "";
-          if (absolutePath) {
-            try {
-              const stats = await fsPromises.stat(absolutePath);
-              fileSizeFormatted = FormatBytes(stats.size);
-              if (fileSizeFormatted) descriptionParts.push(fileSizeFormatted);
-            } catch (statErr) {
-              logger.warn(`${logPrefix} [查看] 获取文件大小失败: ${absolutePath}`, statErr.code);
-            }
-          }
 
-          let descriptionText = "";
-          if (descriptionParts.length > 0) {
-            descriptionText = descriptionParts[0];
-
-            const infoSegments = descriptionParts.slice(1).filter(Boolean); // 过滤掉可能产生的空字符串或null
-
-            if (infoSegments.length > 0) {
-              descriptionText += " " + infoSegments.join(" | ");
-            }
-          }
-
-          const messageNode = [];
-          if (descriptionText) {
-            messageNode.push(descriptionText);
-          }
-
+          // 第一部分：图片 (如果存在)
           if (absolutePath) {
             try {
               await fsPromises.access(absolutePath, fs.constants.R_OK);
               messageNode.push(segment.image(`file://${absolutePath}`));
+              fileExistsAndAccessible = true;
+              try {
+                  const stats = await fsPromises.stat(absolutePath);
+                  fileSizeFormatted = FormatBytes(stats.size);
+              } catch (statErr) {
+                  logger.warn(`${logPrefix} [查看] 获取文件大小失败: ${absolutePath}`, statErr.code);
+              }
             } catch (accessErr) {
               logger.warn(`${logPrefix} [查看] 图片文件无法访问: ${absolutePath}`, accessErr.code);
-              if (messageNode.length === 0) messageNode.push("(图片状态异常)");
-              else messageNode.push("\n(图片状态异常)");
+              messageNode.push(`[图片无法加载: ${fileName}]`);
             }
           } else {
             logger.warn(`${logPrefix} [查看] 图片文件丢失: ${relativePath}`);
-            if (messageNode.length === 0) messageNode.push("(图片文件丢失)");
-            else messageNode.push("\n(图片文件丢失)");
+            messageNode.push(`[图片文件丢失: ${fileName}]`);
+          }
+          
+          // 第二部分：构造新的文本描述字符串
+          const textInfoLines = [];
+          textInfoLines.push(`${itemGlobalIndex}. ${fileName}`); // 添加序号和文件名
+
+          const tags = [];
+          if (item.attributes?.isAiImage === true) tags.push("Ai");
+          if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
+          if (tags.length > 0) {
+            textInfoLines.push(`Tag：${tags.join(", ")}`);
           }
 
-          if (messageNode.length > 0) {
-            forwardListBatch.push(messageNode);
+          if (fileSizeFormatted) { // 只在获取到大小后显示
+            textInfoLines.push(`占用：${fileSizeFormatted}`);
           }
+          
+          const constraints = [];
+          const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
+          
+          // 重新进行净化判断逻辑 
+          let isAutoPurifiedByRule = false; 
+          const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
+          const imgDataForPurifyCheck = MiaoPluginMBT._imgDataCache.find(img => img.path?.replace(/\\/g, "/") === relativePath);
+
+          if (imgDataForPurifyCheck) {
+            if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, currentPFL)) {
+                isAutoPurifiedByRule = true;
+            }
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && imgDataForPurifyCheck.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && imgDataForPurifyCheck.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && imgDataForPurifyCheck.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
+          }
+
+
+          if (isUserBanned) constraints.push("❌封禁");
+          // 只有当它是因为自动规则而被屏蔽，并且用户没有手动封禁它时，才单独显示净化
+          // 或者，如果您的逻辑是：只要符合净化规则就显示净化标记，即使用户也封禁了它，那么可以简化
+          if (isAutoPurifiedByRule) {
+             // 检查是否因为PFL等级被净化，如果是，可以附加等级
+            let pflLevelAppliedText = "";
+            if (imgDataForPurifyCheck && currentPFL > Purify_Level.NONE) {
+                 if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, Purify_Level.PX18_PLUS) && currentPFL === Purify_Level.PX18_PLUS) {
+                    pflLevelAppliedText = `(Lv2)`;
+                 } else if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, Purify_Level.RX18_ONLY) && currentPFL >= Purify_Level.RX18_ONLY) {
+                    pflLevelAppliedText = `(Lv1)`;
+                 }
+            }
+            constraints.push(`🌱净化${pflLevelAppliedText}`);
+          }
+          
+          if (constraints.length > 0) {
+            textInfoLines.push(`约束:  ${constraints.join("     ")}`); 
+          }
+          
+          messageNode.push(textInfoLines.join("\n")); 
+          
+          forwardListBatch.push(messageNode);
         }
 
-        if (forwardListBatch.length > (batchNum === 1 ? 2 : 1)) {
+        if (forwardListBatch.length > (batchNum === 1 ? 2 : 1)) { 
           try {
             const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
             if (forwardMsg) {
@@ -3451,6 +3442,19 @@ export class MiaoPluginMBT extends plugin {
             await e.reply(`发送第 ${batchNum}/${totalBatches} 批图片列表失败了，请检查后台日志。`, true);
           }
           if (batchNum < totalBatches && totalBatches > 1) await common.sleep(1800);
+        } else if (totalItems === 0 && batchNum === 1 && forwardListBatch.length <=2 ){ 
+             // 确保只有在确实没有图片内容时才发送“图库中没有图片”
+             // (forwardListBatch 长度可能为1或2，取决于是否有导出提示)
+             let hasActualContent = false;
+             for(let k = (batchNum === 1 ? 2:1) ; k < forwardListBatch.length; k++){
+                 if(forwardListBatch[k] && forwardListBatch[k].length > 0){
+                     hasActualContent = true;
+                     break;
+                 }
+             }
+             if(!hasActualContent){
+                await e.reply(`『${standardMainName}』图库中没有图片。`, true);
+             }
         }
       }
     } catch (error) {
