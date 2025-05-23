@@ -11167,7 +11167,7 @@
         "attributes": {
             "filename": "刻晴Gu1.webp",
             "parentFolder": "刻晴",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -11176,7 +11176,7 @@
             "md5": "cb134f69230c67f6d0d3f74229eda424",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-23T05:24:54.118Z",
+        "timestamp": "2025-05-23T07:27:41.370Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -12609,14 +12609,14 @@
             "parentFolder": "流浪者",
             "isPx18": false,
             "isRx18": false,
-            "layout": "fullscreen",
+            "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "2b4c8fa03299b066cb38044a57ed38b4",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-23T05:24:54.118Z",
+        "timestamp": "2025-05-23T07:28:15.673Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -13987,7 +13987,7 @@
         "attributes": {
             "filename": "妮露Gu13.webp",
             "parentFolder": "妮露",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -13996,7 +13996,7 @@
             "md5": "9b311266d663ed40b783b087cc5d6de2",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-23T05:24:54.119Z",
+        "timestamp": "2025-05-23T07:27:51.289Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -16627,7 +16627,7 @@
         "attributes": {
             "filename": "神里绫华Gu7.webp",
             "parentFolder": "神里绫华",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -16636,7 +16636,7 @@
             "md5": "8101034ddee33f7188c2f2d062b0369e",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-23T05:24:54.119Z",
+        "timestamp": "2025-05-23T07:27:59.837Z",
         "sourceGallery": "gs-character"
     },
     {
