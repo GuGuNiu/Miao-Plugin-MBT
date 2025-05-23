@@ -2051,7 +2051,7 @@ export class MiaoPluginMBT extends plugin {
       } else if (MiaoPluginMBT.MBTConfig.PM18 === true) {
         //logger.warn(`${logPrefix} [更新后设置] PM18 功能已开启，但四号仓库未下载，跳过PM18图片部署。`);
       } else {
-        logger.info(`${logPrefix} [更新后设置] PM18 功能已关闭，跳过部署。`);
+        //logger.info(`${logPrefix} [更新后设置] PM18 功能已关闭，跳过部署。`);
       }
     } catch (error) {
       logger.error(`${logPrefix} [更新后设置] 执行过程中发生错误:`, error);
@@ -2516,7 +2516,7 @@ export class MiaoPluginMBT extends plugin {
 
     const startTime = Date.now();
     if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
-    logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
+    //logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
 
     const reportResults = [];
     let overallSuccess = true;
