@@ -21,16 +21,9 @@
 #### [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
 > [!TIP]
 > - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
-> - `鹤望兰星铁插件`正在适配中 
 > - ✅️原神 & ✅️星铁 & ✅️鸣潮 & ✅️绝区零 
 
-#### [Karin]框架下支持的插件：
-> [!TIP]
-> - `karin-plugin-MysTool`正在适配中 
-> - ✅️原神 & ✅️星铁 & ✅️绝区零
-
 ####  关于封禁 & 净化面板图
-
 > [!WARNING]
 > 如不希望出现容易引起封号的面板图可以使用 #设置咕咕牛净化等级<br>
 > - 0：无过滤
@@ -40,7 +33,7 @@
 
 ####  关于R18++的面板图
 > [!IMPORTANT]
->  已提供R18_PRO_MAX的面板图,默认不启用,请自己确认风险~<br> &emsp;启用后会加载本地加密面板图仅在导入插件内的状态下解密 <br>&emsp;&emsp;不受 `[封禁][净化等级][查看]`功能约束
+>  已提供R18++的面板图,默认不启用,请自己确认风险~<br> &emsp;启用后会加载本地加密面板图仅在导入插件内的状态下解密 <br>&emsp;&emsp;不受 `[封禁][净化等级][查看]`功能约束
 > - #咕咕牛设置PM18开启/关闭
 
 ## ⚠️ 使用须知
@@ -49,7 +42,7 @@
 
 ❗ **输入 #咕咕牛帮助 查看使用方式**
 
-## 🛠️ 多个框架下的管理器安装
+## 🛠️ 管理器安装
 
 ### ✳️ `Miao-Yunzai/TRSS-Yunzai` 框架根目录下执行以下指令：
 
@@ -70,11 +63,6 @@ curl -sL "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕�
 curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 ---
-
-### ✴️ `Karin` 框架根目录下执行以下指令：
-
-##### 适配中
-
 
 <br>
 <br>
