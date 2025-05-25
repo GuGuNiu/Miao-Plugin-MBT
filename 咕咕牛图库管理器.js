@@ -1596,14 +1596,15 @@ export class MiaoPluginMBT extends plugin {
       let maxAttempts;
       switch (source.name) { case "Moeyy": maxAttempts = 3; break; case "Ghfast": maxAttempts = 2; break; default: maxAttempts = 1; }
 
+      let currentIntermediateDir = null;  //每次 source 循环开始时初始化 
+      let intermediatePathForAttempt = null;  //每次 source 循环开始时初始化
+ 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const attemptTimestamp = Date.now();
         const attemptOuterRandomSuffix = crypto.randomBytes(4).toString("hex");
         const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${attemptTimestamp}-${attemptOuterRandomSuffix}`;
         const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
 
-        let currentIntermediateDir = null;
-        let intermediatePathForAttempt = null;
         progressStatus = { reported10: false, reported90: false };
 
         try {
