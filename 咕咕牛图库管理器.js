@@ -61,7 +61,7 @@ const Default_Config = {
   gitCloneTimeout: 900000,
   gitPullTimeout: 120000,
   gitCloneDepth: 1,
-  cronUpdate: "0 5 */3 * *",
+  cronUpdate: "0 */12 * * *",
   defaultTuKuOp: true,
   defaultPfl: Purify_Level.NONE,
   logPrefix: "『咕咕牛🐂』",
