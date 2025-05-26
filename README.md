@@ -10,10 +10,10 @@
 
 
 
-&emsp;&emsp;新管理器会智能使用全自动拼接镜像站下载以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，管理器已经支持插件内的别名功能，请不要手动删除和修改图库下载的任何文件，当前是静态加载并且存在高耦合一环扣一环，否则将无法通过Js初始化自检。如果你没有安装绝区零和鸣潮插件，管理器会跳过它们。绝区零和鸣潮插件自身并不携带角色的头像文件因此管理器无法显示。
+&emsp;&emsp;新管理器智能使用全自动拼接镜像站下载以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，管理器已经支持角色别名模糊匹配，请不要手动删除和修改图库下载的任何文件，当前是静态加载并且存在高耦合一环扣一环，否则将无法通过Js初始化自检。如果你没有安装绝区零和鸣潮插件，管理器会跳过它们。绝区零和鸣潮插件自身并不携带角色的头像文件因此管理器无法显示。
 
 # 注意
-本页面并非唯一仓库，当前是四仓库分流，十分建议阁下使用自带的管理器安装图库，如果阁下觉得没必要可以单独访问以下其它仓库：
+本页面并非唯一仓库，当前是四仓库分流，建议阁下使用管理器安装图库，如果阁下觉得没必要可访问以下其它仓库：
 
 [一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT) &emsp;&emsp;[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2) &emsp;&emsp; [三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3) &emsp;&emsp;[四号仓库(PM18)](https://github.com/GuGuNiu/Miao-Plugin-MBT-4)
 
@@ -29,8 +29,8 @@
 > - 1：仅过滤R18，不过滤暗示和低挑逗性面板图
 > - 2：最高等级净化，过滤JSON数据内的全部被标记的敏感内容<br><br>
 ========净化等级的定义========<br>
-> - Px18：角色非主观展示上半身和下半身无露点，低挑逗性/暗示动作<br>
-> - Rx18：明显主观展示上半身和下半身且存在人类身体构造痕迹刻意露出且存在部分露点，高挑逗性/暗示动作 <br> <br>
+> - P18：角色非主观展示上半身和下半身无露点，低挑逗性/暗示动作<br>
+> - R18：明显主观展示上半身和下半身且存在人类身体构造痕迹刻意露出且存在部分露点，高挑逗性/暗示动作 <br> <br>
 > - #咕咕牛封禁xxx 针对某一个面板图进行封禁，后续操作会围绕封禁列表，直至解封
 
 ####  关于R18++的面板图
@@ -44,31 +44,39 @@
 
 ❗ **输入 #咕咕牛帮助 查看使用方式**
 
+## 💐致谢提供图片的平台
+
+[[Pixiv](https://www.pixiv.net/)]  &emsp;
+[[韩国阿卡社区](arca.live)]  &emsp;
+[[小红书](https://www.xiaohongshu.com/explore)]  &emsp;
+[[艾泽拉斯论坛](https://nga.178.com/)]  &emsp;
+[[推特](https://x.com)]
+
+<br>
+
 ## 🛠️ 管理器安装
 
-### ✳️ `Miao-Yunzai/TRSS-Yunzai` 框架根目录下执行以下指令：
+###  `Miao-Yunzai/TRSS-Yunzai` 框架根目录下执行以下指令：
 
-##### &emsp;&emsp;|_使用Moeyy源安装【推荐】>>
+##### ✳️|_使用Moeyy源安装【推荐】>>
 
 ```bash
 curl -sL "https://github.moeyy.xyz/https://github.com/GuGuNiu/Miao-Plugin-MBT/blob/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 
-##### &emsp;&emsp;|_使用GitHub源安装->>
+##### ✴|_使用GitHub源安装->>
 ```bash
 curl -sL "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 
-##### &emsp;&emsp;|_使用jsdelivr源安装->>
+##### ✴|_使用jsdelivr源安装->>
 
 ```bash
 curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 ---
 
-<br>
-<br>
-
+<details> <summary>点击展开显示帮助图</summary>
 <div align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
     <img src="https://s2.loli.net/2025/05/05/zirbKvjTAByl3HS.webp" 
@@ -77,3 +85,6 @@ curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图�
          style="display: block; border-radius: 8px;">
   </a>
 </div>
+</details>
+
+
