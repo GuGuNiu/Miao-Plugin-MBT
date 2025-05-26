@@ -2119,19 +2119,116 @@ export class MiaoPluginMBT extends plugin {
   }
 
   static async SendMasterMsg(msg, e = null, delay = 0, logger = global.logger || console) {
-    const logPrefix = Default_Config.logPrefix;
-    if (delay > 0) await common.sleep(delay);
-    if (typeof Bot === "undefined" || !Bot.master || Bot.master.length === 0) {
-      logger.warn(`${logPrefix} [通知主人] Bot.master 未配置或为空，无法发送消息。`);
-      return;
-    }
-    for (const masterId of Bot.master) {
-      try {
-        await Bot.pickUser(masterId).sendMsg(msg);
-      } catch (sendError) {
-        logger.error(`${logPrefix} [通知主人] 发送消息给主人 ${masterId} 失败:`, sendError);
+      const logPrefix = Default_Config.logPrefix;
+      let masterQQList = [];
+
+      async function getValidMasterListInternal() {
+          let mastersRaw = [];
+
+          if (typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady && typeof Bot.ready !== 'function')) {
+              let retries = 0; const maxRetries = 15; 
+              while ((typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady)) && retries < maxRetries) {
+                  if (typeof Bot !== "undefined" && ((typeof Bot.isReady === 'boolean' && Bot.isReady) || (Bot.master && Bot.master.length > 0) )) break;
+                  await common.sleep(300 + retries * 20); 
+                  retries++;
+              }
+          } else if (typeof Bot !== "undefined" && typeof Bot.ready === 'function') {
+              try { await Bot.ready(); } catch (err) { /* 静默 */ }
+          }
+          
+          if (typeof Bot === "undefined") {
+              logger.error(`${logPrefix} [通知主人] 全局 Bot 对象在等待后仍未定义，无法获取主人。`);
+              return []; 
+          }
+
+          if (typeof Bot.getConfig === 'function') {
+              try {
+                  const configMaster = Bot.getConfig('masterQQ') || Bot.getConfig('master');
+                  if (configMaster) {
+                      mastersRaw.push(...(Array.isArray(configMaster) ? configMaster : [configMaster]));
+                  }
+              } catch (err) { /* 静默 */ }
+          }
+
+          if (mastersRaw.length === 0 && Bot.master && Bot.master.length > 0) {
+              mastersRaw.push(...(Array.isArray(Bot.master) ? Bot.master : [Bot.master]));
+          }
+
+          if (mastersRaw.length === 0) {
+              try {
+                  const configPath = path.join(MiaoPluginMBT.paths.YunzaiPath, 'config', 'config', 'other.yaml');
+                  if (fs.existsSync(configPath)) {
+                      const fileContent = fs.readFileSync(configPath, 'utf8');
+                      let configData = null;
+                      if (typeof yaml.parse === 'function') { configData = yaml.parse(fileContent); } 
+                      else if (typeof yaml.load === 'function') { configData = yaml.load(fileContent); } 
+                      
+                      if (configData) {
+                          const confMasterQQ = configData.masterQQ;
+                          const confMasterField = configData.master; 
+                          
+                          if (confMasterQQ && (Array.isArray(confMasterQQ) ? confMasterQQ.length > 0 : confMasterQQ )) {
+                              mastersRaw.push(...(Array.isArray(confMasterQQ) ? confMasterQQ : [confMasterQQ]));
+                          }
+                          if (confMasterField) { 
+                              if(Array.isArray(confMasterField)) {
+                                  const extractedFromMasterField = confMasterField.map(item => {
+                                      if (typeof item === 'string' && item.includes(':')) {
+                                          return item.split(':')[1]; 
+                                      }
+                                      return item;
+                                  });
+                                  mastersRaw.push(...extractedFromMasterField);
+                              } else if (typeof confMasterField === 'string' || typeof confMasterField === 'number') {
+                                  mastersRaw.push(confMasterField);
+                              }
+                          }
+                      }
+                  }
+              } catch (err) {
+                  logger.error(`${logPrefix} [通知主人] 兜底读取 other.yaml 失败:`, err.message);
+              }
+          }
+
+          const uniqueMasters = [...new Set(mastersRaw)];
+          return uniqueMasters.map(id => {
+              let strId = String(id).trim();
+              if (strId.toLowerCase().startsWith('z') && /^[zZ][1-9][0-9]{4,14}$/.test(strId)) {
+                  strId = strId.substring(1);
+              }
+              return strId;
+          }).filter(id => id && /^[1-9][0-9]{4,14}$/.test(id));
       }
-    }
+
+      masterQQList = await getValidMasterListInternal();
+
+      if (!masterQQList || masterQQList.length === 0) {
+          logger.warn(`${logPrefix} [通知主人] 最终未能获取到有效的主人QQ列表，无法发送消息。`);
+          return;
+      }
+
+      if (typeof Bot === "undefined" || typeof Bot.pickUser !== 'function') {
+          logger.error(`${logPrefix} [通知主人] Bot 对象或 Bot.pickUser 方法无效，无法发送消息。`);
+          return;
+      }
+
+      if (delay > 0) {
+          await common.sleep(delay);
+      }
+
+      const firstMasterId = masterQQList[0]; // 只取第一个有效的主人QQ
+
+      try {
+          const user = Bot.pickUser(firstMasterId);
+          if (user && typeof user.sendMsg === 'function') {
+              await user.sendMsg(msg);
+              logger.info(`${logPrefix} [通知主人] 消息已尝试发送给主人 ${firstMasterId}。`);
+          } else {
+              logger.warn(`${logPrefix} [通知主人] 未能为主人QQ ${firstMasterId} 获取到有效的用户对象或sendMsg方法。`);
+          }
+      } catch (sendError) {
+          logger.error(`${logPrefix} [通知主人] 发送消息给主人 ${firstMasterId} 失败:`, sendError.message, sendError);
+      }
   }
 
   // --- 实例方法 ---
@@ -3370,7 +3467,6 @@ export class MiaoPluginMBT extends plugin {
           let fileExistsAndAccessible = false;
           let fileSizeFormatted = "";
 
-          // 第一部分：图片 (如果存在)
           if (absolutePath) {
             try {
               await fsPromises.access(absolutePath, fs.constants.R_OK);
@@ -3391,7 +3487,6 @@ export class MiaoPluginMBT extends plugin {
             messageNode.push(`[图片文件丢失: ${fileName}]`);
           }
           
-          // 第二部分：构造新的文本描述字符串
           const textInfoLines = [];
           textInfoLines.push(`${itemGlobalIndex}. ${fileName}`); // 添加序号和文件名
 
@@ -3426,7 +3521,7 @@ export class MiaoPluginMBT extends plugin {
 
           if (isUserBanned) constraints.push("❌封禁");
           // 只有当它是因为自动规则而被屏蔽，并且用户没有手动封禁它时，才单独显示净化
-          // 或者，如果您的逻辑是：只要符合净化规则就显示净化标记，即使用户也封禁了它，那么可以简化
+          // 只要符合净化规则就显示净化标记，即使用户也封禁了它，那么可以简化
           if (isAutoPurifiedByRule) {
              // 检查是否因为PFL等级被净化，如果是，可以附加等级
             let pflLevelAppliedText = "";
