@@ -11,7 +11,7 @@ import puppeteer from "../../lib/puppeteer/puppeteer.js";
 
 /**
  * @description 咕咕牛图库管理器
- * @version 4.9.5
+ * @version 4.9.6
  * @description_details
  *    - 全面支持四仓库体系。
  *    - Puppeteer流程统一化。
@@ -19,6 +19,7 @@ import puppeteer from "../../lib/puppeteer/puppeteer.js";
  *    - 优化了配置加载与保存逻辑，增强了并发处理能力。
  *    - 降低了高耦合特征。
  *    - 统一了设置类命令的交互方式。
+ *    - 智能降低图库的占用。
  */
 
 const __filename = fileURLToPath(import.meta.url);
@@ -522,10 +523,10 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, "..", "package.json");
       const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      return pkg.version || "4.9.5";
+      return pkg.version || "4.9.6";
     }
     catch {
-      return "4.9.5";
+      return "4.9.6";
     }
   }
 
@@ -800,6 +801,158 @@ export class MiaoPluginMBT extends plugin {
       logger.error(`${logPrefix} [加载元数据] CRITICAL: 最终元数据结果不是一个数组！返回空数组。`);
       return [];
     }
+  }
+
+  static async IsGamePluginInstalled(gameKey, logger) {
+    const currentLogPrefix = Default_Config.logPrefix;
+    let pluginPathToCheck = "";
+    if (gameKey === "zzz") {
+      pluginPathToCheck = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", "ZZZ-Plugin");
+    } else if (gameKey === "waves") {
+      pluginPathToCheck = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", "waves-plugin");
+    } else {
+      return false;
+    }
+
+    try {
+      await fsPromises.access(pluginPathToCheck);
+      const pluginStats = await fsPromises.stat(pluginPathToCheck);
+      return pluginStats.isDirectory();
+    } catch (accessError) {
+      if (accessError.code === ERROR_CODES.NotFound) {
+        return false;
+      }
+      return false;
+    }
+  }
+
+ static async ManageGitExcludeRules(repositoryPath, rulesToAdd, rulesToRemove, logger) {
+    const currentLogPrefix = Default_Config.logPrefix;
+    const excludeFilePath = path.join(repositoryPath, ".git", "info", "exclude");
+
+    try {
+      try {
+          await fsPromises.access(path.join(repositoryPath, ".git", "config"));
+      } catch (gitConfigError) {
+          return true;
+      }
+
+      let existingRules = [];
+      try {
+        const fileContent = await fsPromises.readFile(excludeFilePath, "utf-8");
+        existingRules = fileContent.split('\n').map(rule => rule.trim()).filter(rule => rule && !rule.startsWith("#"));
+      } catch (readError) {
+        if (readError.code !== ERROR_CODES.NotFound) {
+          if (logger && typeof logger.error === 'function') {
+            //logger.error(`${currentLogPrefix} 读取文件 ${excludeFilePath} 出错: ${readError.message}`);
+          }
+          throw readError;
+        }
+      }
+
+      let rulesSet = new Set(existingRules);
+      let rulesModified = false;
+
+      if (rulesToRemove && Array.isArray(rulesToRemove)) {
+        rulesToRemove.forEach(ruleToRemoveItem => {
+          if (ruleToRemoveItem && typeof ruleToRemoveItem === 'string') {
+            const trimmedRule = ruleToRemoveItem.trim();
+            if (rulesSet.has(trimmedRule)) {
+              rulesSet.delete(trimmedRule);
+              rulesModified = true;
+            }
+          }
+        });
+      }
+
+      if (rulesToAdd && Array.isArray(rulesToAdd)) {
+        rulesToAdd.forEach(ruleToAddItem => {
+          if (ruleToAddItem && typeof ruleToAddItem === 'string') {
+            const trimmedRule = ruleToAddItem.trim();
+            if (!rulesSet.has(trimmedRule)) {
+              rulesSet.add(trimmedRule);
+              rulesModified = true;
+            }
+          }
+        });
+      }
+      
+      let excludeFileNowExists = false;
+      try {
+          await fsPromises.access(excludeFilePath);
+          excludeFileNowExists = true;
+      } catch (accessError) {
+          if (accessError.code !== ERROR_CODES.NotFound) {
+              throw accessError; 
+          }
+      }
+
+      if (rulesModified || (rulesSet.size > 0 && !excludeFileNowExists)) { 
+          const finalRulesContent = Array.from(rulesSet).join("\n") + (rulesSet.size > 0 ? "\n" : "");
+          await fsPromises.mkdir(path.dirname(excludeFilePath), { recursive: true });
+          await fsPromises.writeFile(excludeFilePath, finalRulesContent, "utf-8");
+      }
+      return true;
+    } catch (error) {
+      if (logger && typeof logger.error === 'function') {
+        //logger.error(`${currentLogPrefix} 处理 ${repositoryPath} 失败: ${error.message}`);
+      }
+      return false; 
+    }
+  }
+
+  static async ManageOptionalGameContent(repositoryPath, gameKey, gameFolderName, logger) {
+    const currentLogPrefix = Default_Config.logPrefix;
+
+    try {
+      const pluginInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKey, logger);
+      const fullGameFolderPath = path.join(repositoryPath, gameFolderName);
+
+      if (!pluginInstalled) {
+        try {
+          await fsPromises.access(fullGameFolderPath); 
+          await safeDelete(fullGameFolderPath);
+        } catch (deleteError) {
+          if (deleteError.code !== ERROR_CODES.NotFound) {
+            if (logger && typeof logger.warn === 'function') {
+               //logger.warn(`${currentLogPrefix} 删除 ${fullGameFolderPath} (游戏: ${gameKey}) 出错: ${deleteError.code}`);
+            }
+          }
+        }
+        await MiaoPluginMBT.ManageGitExcludeRules(repositoryPath, [gameFolderName], null, logger);
+      } else {
+        await MiaoPluginMBT.ManageGitExcludeRules(repositoryPath, null, [gameFolderName], logger);
+      }
+      return true;
+    } catch (error) {
+      if (logger && typeof logger.error === 'function') {
+        //logger.error(`${currentLogPrefix} 处理 ${gameKey} 于 ${repositoryPath} 出错: ${error.message}`);
+      }
+      return false;
+    }
+  }
+
+  static async GetRelevantRepoPathsForGame(gameKey, logger) { 
+    const currentPaths = MiaoPluginMBT.paths;
+    const potentialRepoConfigs = []; 
+
+    if (gameKey === "zzz") {
+        if (currentPaths.LocalTuKuPath) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath, num: 1, name: "一号库" });
+        if (currentPaths.LocalTuKuPath2) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath2, num: 2, name: "二号库" });
+        if (currentPaths.LocalTuKuPath4) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath4, num: 4, name: "四号库" });
+    } else if (gameKey === "waves") {
+        if (currentPaths.LocalTuKuPath) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath, num: 1, name: "一号库" });
+        if (currentPaths.LocalTuKuPath3) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath3, num: 3, name: "三号库" });
+        if (currentPaths.LocalTuKuPath4) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath4, num: 4, name: "四号库" });
+    }
+
+    const downloadedRepoPaths = [];
+    for (const repoConfig of potentialRepoConfigs) {
+        if (await MiaoPluginMBT.IsTuKuDownloaded(repoConfig.num)) {
+            downloadedRepoPaths.push(repoConfig.path);
+        }
+    }
+    return downloadedRepoPaths;
   }
 
   static async ScanLocalImagesToBuildCache(logger = global.logger || console) {
@@ -1795,6 +1948,22 @@ export class MiaoPluginMBT extends plugin {
     let pullError = null;
     let wasForceReset = false;
 
+    const gameKeysForPreUpdateManage = ["zzz", "waves"];
+    for (const gameKeyToManage of gameKeysForPreUpdateManage) {
+        const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+        if (!gameFolderToManage) {
+            continue;
+        }
+        
+        const isRepoRelevant = 
+            (gameKeyToManage === "zzz" && (RepoNum === 1 || RepoNum === 2 || RepoNum === 4)) ||
+            (gameKeyToManage === "waves" && (RepoNum === 1 || RepoNum === 3 || RepoNum === 4));
+
+        if (isRepoRelevant) {
+            await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger);
+        }
+    }
+
     await MiaoPluginMBT.gitMutex.acquire();
     try {
       let oldCommit = "";
@@ -2137,7 +2306,7 @@ export class MiaoPluginMBT extends plugin {
           }
           
           if (typeof Bot === "undefined") {
-              logger.error(`${logPrefix} [通知主人] 全局 Bot 对象在等待后仍未定义，无法获取主人。`);
+              //logger.error(`${logPrefix} [通知主人] 全局 Bot 对象在等待后仍未定义，无法获取主人。`);
               return []; 
           }
 
@@ -2186,7 +2355,7 @@ export class MiaoPluginMBT extends plugin {
                       }
                   }
               } catch (err) {
-                  logger.error(`${logPrefix} [通知主人] 兜底读取 other.yaml 失败:`, err.message);
+                  //logger.error(`${logPrefix} [通知主人] 兜底读取 other.yaml 失败:`, err.message);
               }
           }
 
@@ -2203,12 +2372,12 @@ export class MiaoPluginMBT extends plugin {
       masterQQList = await getValidMasterListInternal();
 
       if (!masterQQList || masterQQList.length === 0) {
-          logger.warn(`${logPrefix} [通知主人] 最终未能获取到有效的主人QQ列表，无法发送消息。`);
+          //logger.warn(`${logPrefix} [通知主人] 最终未能获取到有效的主人QQ列表，无法发送消息。`);
           return;
       }
 
       if (typeof Bot === "undefined" || typeof Bot.pickUser !== 'function') {
-          logger.error(`${logPrefix} [通知主人] Bot 对象或 Bot.pickUser 方法无效，无法发送消息。`);
+          //logger.error(`${logPrefix} [通知主人] Bot 对象或 Bot.pickUser 方法无效，无法发送消息。`);
           return;
       }
 
@@ -2224,10 +2393,10 @@ export class MiaoPluginMBT extends plugin {
               await user.sendMsg(msg);
               logger.info(`${logPrefix} [通知主人] 消息已尝试发送给主人 ${firstMasterId}。`);
           } else {
-              logger.warn(`${logPrefix} [通知主人] 未能为主人QQ ${firstMasterId} 获取到有效的用户对象或sendMsg方法。`);
+              //logger.warn(`${logPrefix} [通知主人] 未能为主人QQ ${firstMasterId} 获取到有效的用户对象或sendMsg方法。`);
           }
       } catch (sendError) {
-          logger.error(`${logPrefix} [通知主人] 发送消息给主人 ${firstMasterId} 失败:`, sendError.message, sendError);
+          //logger.error(`${logPrefix} [通知主人] 发送消息给主人 ${firstMasterId} 失败:`, sendError.message, sendError);
       }
   }
 
@@ -2395,7 +2564,7 @@ export class MiaoPluginMBT extends plugin {
         //logger.info(`${logPrefix} [${commandName}] 用户 ${userId} 的冷却已在测速通过后设置，时长 ${cooldownDuration} 秒。`);
       } catch (redisError) {
         //logger.error(`${logPrefix} [${commandName}] Redis (set) 操作失败:`, redisError);
-        //await e.reply(`${logPrefix} 内部错误，冷却功能可能暂时失效，请稍后再试或联系管理员。`, true);
+        //await e.reply(`${logPrefix} 内部错误，冷却功能可能暂时失效，请稍后再试。`, true);
       }
     }
 
@@ -2513,8 +2682,6 @@ export class MiaoPluginMBT extends plugin {
           overallSuccess &&= res.success;
         }
       }
-
-
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
       const reportData = {
@@ -2582,6 +2749,19 @@ export class MiaoPluginMBT extends plugin {
         if (!reportSent && e) {
           await this.ReportError(e, "发送下载结果", reportError);
         }
+      }
+
+      //鸣潮-绝区零插件存在性
+      const gameKeysForPostDownloadManage = ["zzz", "waves"];
+      for (const gameKeyToManage of gameKeysForPostDownloadManage) {
+          const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+          if (!gameFolderToManage) {
+              continue;
+          }
+          const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
+          for (const repoPath of relevantRepoPaths) {
+              await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
+          }
       }
 
       if (overallSuccess) {
@@ -2674,6 +2854,19 @@ export class MiaoPluginMBT extends plugin {
       if (Repo4Exists) reportResults.push(await processRepoResult(4, MiaoPluginMBT.paths.LocalTuKuPath4, "四号仓库", "Sexy_Github_URL", "Sexy_Github_URL", branch));
       else reportResults.push({ name: "四号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
     } else reportResults.push({ name: "四号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
+
+    //鸣潮-绝区零插件存在性
+    const gameKeysForPostUpdateManage = ["zzz", "waves"];
+    for (const gameKeyToManage of gameKeysForPostUpdateManage) {
+        const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+        if (!gameFolderToManage) {
+            continue;
+        }
+        const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
+        for (const repoPath of relevantRepoPaths) {
+            await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
+        }
+    }
 
     if (overallSuccess && overallHasChanges) {
       await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
@@ -2847,33 +3040,34 @@ export class MiaoPluginMBT extends plugin {
     if (!(await this.CheckInit(e))) return true;
 
     const logger = this.logger;
-    const logPrefix = this.logPrefix;
+    const currentLogPrefix = this.logPrefix;
 
-    const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
-    if (!Repo1Exists) {
+    const repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
+    if (!repo1Exists) {
       return e.reply("『咕咕牛🐂』图库还没下载呢，先 `#下载咕咕牛` 吧！", true);
     }
 
-    const Repo2UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass_Github_URL || Default_Config.Ass_Github_URL);
-    const Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
-    const Repo3UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass2_Github_URL || Default_Config.Ass2_Github_URL);
-    const Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
-    const Repo4UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Sexy_Github_URL || Default_Config.Sexy_Github_URL);
-    const Repo4Exists = Repo4UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(4));
+    const repo2UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass_Github_URL || Default_Config.Ass_Github_URL);
+    const repo2Exists = repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
+    const repo3UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass2_Github_URL || Default_Config.Ass2_Github_URL);
+    const repo3Exists = repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
+    const repo4UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Sexy_Github_URL || Default_Config.Sexy_Github_URL);
+    const repo4Exists = repo4UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(4));
 
     let missingConfiguredSubsidiary = false;
-    if (Repo2UrlConfigured && !Repo2Exists) missingConfiguredSubsidiary = true;
-    if (Repo3UrlConfigured && !Repo3Exists) missingConfiguredSubsidiary = true;
-    if (Repo4UrlConfigured && !Repo4Exists) missingConfiguredSubsidiary = true;
+    if (repo2UrlConfigured && !repo2Exists) missingConfiguredSubsidiary = true;
+    if (repo3UrlConfigured && !repo3Exists) missingConfiguredSubsidiary = true;
+    if (repo4UrlConfigured && !repo4Exists) missingConfiguredSubsidiary = true;
 
-    if (Repo1Exists && missingConfiguredSubsidiary) {
+    if (repo1Exists && missingConfiguredSubsidiary) {
       await e.reply("『咕咕牛🐂』核心仓库已下载，但部分附属仓库未下载或丢失。建议先 `#下载咕咕牛` 补全或 `#重置咕咕牛` 后重新下载。", true);
     }
 
     try {
-      const pluginVersion = MiaoPluginMBT.GetVersionStatic();
-      const GameFoldersMap = { gs: "原神", sr: "星铁", zzz: "绝区零", waves: "鸣潮" };
-      const stats = {
+      const pluginVersionForStatus = MiaoPluginMBT.GetVersionStatic();
+      const gameFoldersMapForStatus = { gs: "原神", sr: "星铁", zzz: "绝区零", waves: "鸣潮" };
+      
+      const statsData = {
         meta: { roles: 0, images: 0, games: {} },
         scan: {
           roles: 0, images: 0, gameImages: {}, gameRoles: {}, gameSizes: {}, gameSizesFormatted: {},
@@ -2881,72 +3075,72 @@ export class MiaoPluginMBT extends plugin {
           totalSizeFormatted: "0 B", totalGitSizeFormatted: "0 B", totalFilesSizeFormatted: "0 B"
         },
         repos: {
-          1: { name: "一号仓库", exists: Repo1Exists, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
-          2: { name: "二号仓库", exists: Repo2Exists && Repo2UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
-          3: { name: "三号仓库", exists: Repo3Exists && Repo3UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
-          4: { name: "四号仓库", exists: Repo4Exists && Repo4UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
+          1: { name: "一号仓库", exists: repo1Exists, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
+          2: { name: "二号仓库", exists: repo2Exists && repo2UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
+          3: { name: "三号仓库", exists: repo3Exists && repo3UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
+          4: { name: "四号仓库", exists: repo4Exists && repo4UrlConfigured, size: 0, gitSize: 0, filesSize: 0, sizeFormatted: "N/A", gitSizeFormatted: "N/A", filesSizeFormatted: "N/A" },
         },
       };
-      Object.values(GameFoldersMap).forEach((gameName) => { stats.meta.games[gameName] = 0; stats.scan.gameImages[gameName] = 0; stats.scan.gameRoles[gameName] = 0; stats.scan.gameSizes[gameName] = 0; stats.scan.gameSizesFormatted[gameName] = "0 B"; });
+      Object.values(gameFoldersMapForStatus).forEach((gameName) => { statsData.meta.games[gameName] = 0; statsData.scan.gameImages[gameName] = 0; statsData.scan.gameRoles[gameName] = 0; statsData.scan.gameSizes[gameName] = 0; statsData.scan.gameSizesFormatted[gameName] = "0 B"; });
 
-      const currentConfig = MiaoPluginMBT.MBTConfig;
-      const configForRender = {
-        enabled: currentConfig?.TuKuOP ?? Default_Config.defaultTuKuOp,
-        pflLevel: currentConfig?.PFL ?? Default_Config.defaultPfl,
-        aiEnabled: currentConfig?.Ai ?? true,
-        easterEggEnabled: currentConfig?.EasterEgg ?? true,
-        layoutEnabled: currentConfig?.layout ?? true,
-        pm18Enabled: currentConfig?.PM18 ?? false,
+      const currentConfigForStatus = MiaoPluginMBT.MBTConfig;
+      const configDataForRender = {
+        enabled: currentConfigForStatus?.TuKuOP ?? Default_Config.defaultTuKuOp,
+        pflLevel: currentConfigForStatus?.PFL ?? Default_Config.defaultPfl,
+        aiEnabled: currentConfigForStatus?.Ai ?? true,
+        easterEggEnabled: currentConfigForStatus?.EasterEgg ?? true,
+        layoutEnabled: currentConfigForStatus?.layout ?? true,
+        pm18Enabled: currentConfigForStatus?.PM18 ?? false,
         activeBans: MiaoPluginMBT._activeBanSet?.size ?? 0,
         userBans: MiaoPluginMBT._userBanSet?.size ?? 0,
       };
-      configForRender.enabledText = configForRender.enabled ? "已启用" : "已禁用";
-      configForRender.purifiedBans = Math.max(0, configForRender.activeBans - configForRender.userBans);
-      configForRender.pflDesc = Purify_Level.getDescription(configForRender.pflLevel);
-      configForRender.aiStatusText = configForRender.aiEnabled ? "开启" : "关闭";
-      configForRender.easterEggStatusText = configForRender.easterEggEnabled ? "开启" : "关闭";
-      configForRender.layoutStatusText = configForRender.layoutEnabled ? "开启" : "关闭";
-      configForRender.pm18StatusText = configForRender.pm18Enabled ? "开启" : "关闭";
-
-      const characterSet = new Set();
+      configDataForRender.enabledText = configDataForRender.enabled ? "已启用" : "已禁用";
+      configDataForRender.purifiedBans = Math.max(0, configDataForRender.activeBans - configDataForRender.userBans);
+      configDataForRender.pflDesc = Purify_Level.getDescription(configDataForRender.pflLevel);
+      configDataForRender.aiStatusText = configDataForRender.aiEnabled ? "开启" : "关闭";
+      configDataForRender.easterEggStatusText = configDataForRender.easterEggEnabled ? "开启" : "关闭";
+      configDataForRender.layoutStatusText = configDataForRender.layoutEnabled ? "开启" : "关闭";
+      configDataForRender.pm18StatusText = configDataForRender.pm18Enabled ? "开启" : "关闭";
+      
+      const characterSetForStatus = new Set();
       if (Array.isArray(MiaoPluginMBT._imgDataCache) && MiaoPluginMBT._imgDataCache.length > 0) {
-        stats.meta.images = MiaoPluginMBT._imgDataCache.length;
+        statsData.meta.images = MiaoPluginMBT._imgDataCache.length;
         MiaoPluginMBT._imgDataCache.forEach((item) => {
-          if (item && item.characterName) characterSet.add(item.characterName);
-          const PathParts = item?.path?.split("/");
-          if (PathParts?.length > 0) { const GameKey = PathParts[0].split("-")[0]; const GameName = GameFoldersMap[GameKey]; if (GameName) stats.meta.games[GameName] = (stats.meta.games[GameName] || 0) + 1; }
+          if (item && item.characterName) characterSetForStatus.add(item.characterName);
+          const pathParts = item?.path?.split("/");
+          if (pathParts?.length > 0) { const gameKey = pathParts[0].split("-")[0]; const gameName = gameFoldersMapForStatus[gameKey]; if (gameName) statsData.meta.games[gameName] = (statsData.meta.games[gameName] || 0) + 1; }
         });
       }
-      stats.meta.roles = characterSet.size;
+      statsData.meta.roles = characterSetForStatus.size;
 
-      const RepoStatsScan = {
-        1: { path: MiaoPluginMBT.paths.LocalTuKuPath, gitPath: MiaoPluginMBT.paths.gitFolderPath, exists: Repo1Exists, isContentRepo: true },
-        2: { path: MiaoPluginMBT.paths.LocalTuKuPath2, gitPath: MiaoPluginMBT.paths.gitFolderPath2, exists: Repo2Exists && Repo2UrlConfigured, isContentRepo: true },
-        3: { path: MiaoPluginMBT.paths.LocalTuKuPath3, gitPath: MiaoPluginMBT.paths.gitFolderPath3, exists: Repo3Exists && Repo3UrlConfigured, isContentRepo: true },
-        4: { path: MiaoPluginMBT.paths.LocalTuKuPath4, gitPath: MiaoPluginMBT.paths.gitFolderPath4, exists: Repo4Exists && Repo4UrlConfigured, isContentRepo: false },
+      const repoStatsScanConfig = {
+        1: { path: MiaoPluginMBT.paths.LocalTuKuPath, gitPath: MiaoPluginMBT.paths.gitFolderPath, exists: repo1Exists, isContentRepo: true },
+        2: { path: MiaoPluginMBT.paths.LocalTuKuPath2, gitPath: MiaoPluginMBT.paths.gitFolderPath2, exists: repo2Exists && repo2UrlConfigured, isContentRepo: true },
+        3: { path: MiaoPluginMBT.paths.LocalTuKuPath3, gitPath: MiaoPluginMBT.paths.gitFolderPath3, exists: repo3Exists && repo3UrlConfigured, isContentRepo: true },
+        4: { path: MiaoPluginMBT.paths.LocalTuKuPath4, gitPath: MiaoPluginMBT.paths.gitFolderPath4, exists: repo4Exists && repo4UrlConfigured, isContentRepo: false },
       };
-      const ScannedRoleImageCounts = {}; Object.values(GameFoldersMap).forEach(gn => ScannedRoleImageCounts[gn] = {});
-      const ScannedGameSizes = {}; Object.values(GameFoldersMap).forEach(gn => ScannedGameSizes[gn] = 0);
-      let totalGitSizeScan = 0; let totalFilesSizeScan = 0;
+      const scannedRoleImageCounts = {}; Object.values(gameFoldersMapForStatus).forEach(gn => scannedRoleImageCounts[gn] = {});
+      const scannedGameSizes = {}; Object.values(gameFoldersMapForStatus).forEach(gn => scannedGameSizes[gn] = 0);
+      let totalGitSizeScanned = 0; let totalFilesSizeScanned = 0;
 
-      for (const RepoNumStr of Object.keys(RepoStatsScan)) {
-        const RepoNum = parseInt(RepoNumStr, 10);
-        const Repo = RepoStatsScan[RepoNumStr];
-        if (!Repo.exists) continue;
+      for (const repoNumStr of Object.keys(repoStatsScanConfig)) {
+        const repoNum = parseInt(repoNumStr, 10);
+        const repoInfo = repoStatsScanConfig[repoNumStr];
+        if (!repoInfo.exists) continue;
 
         let repoGitSize = 0; let repoFilesSize = 0;
-        try { repoGitSize = await FolderSize(Repo.gitPath); }
-        catch (sizeError) { stats.repos[RepoNum].gitSizeFormatted = "错误"; }
-        stats.repos[RepoNum].gitSize = repoGitSize;
-        stats.repos[RepoNum].gitSizeFormatted = FormatBytes(repoGitSize);
-        totalGitSizeScan += repoGitSize;
+        try { repoGitSize = await FolderSize(repoInfo.gitPath); }
+        catch (sizeError) { statsData.repos[repoNum].gitSizeFormatted = "错误"; }
+        statsData.repos[repoNum].gitSize = repoGitSize;
+        statsData.repos[repoNum].gitSizeFormatted = FormatBytes(repoGitSize);
+        totalGitSizeScanned += repoGitSize;
 
-        if (Repo.isContentRepo) {
-          for (const GameKey in GameFoldersMap) {
-            const GameName = GameFoldersMap[GameKey];
-            const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[GameKey];
-            if (!sourceFolderName || GameKey === "gallery") continue;
-            const gameFolderPath = path.join(Repo.path, sourceFolderName);
+        if (repoInfo.isContentRepo) {
+          for (const gameKey in gameFoldersMapForStatus) {
+            const gameName = gameFoldersMapForStatus[gameKey];
+            const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[gameKey];
+            if (!sourceFolderName || gameKey === "gallery") continue;
+            const gameFolderPath = path.join(repoInfo.path, sourceFolderName);
             try {
               await fsPromises.access(gameFolderPath);
               const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true });
@@ -2963,199 +3157,305 @@ export class MiaoPluginMBT extends plugin {
                       if (imageFile.isFile() && supportedScanExt.includes(path.extname(imageFile.name).toLowerCase())) {
                         imageCountInCharDir++;
                         const imagePath = path.join(charFolderPath, imageFile.name);
-                        try { const fileStat = await fsPromises.stat(imagePath); ScannedGameSizes[GameName] = (ScannedGameSizes[GameName] || 0) + fileStat.size; repoFilesSize += fileStat.size; }
+                        try { const fileStat = await fsPromises.stat(imagePath); scannedGameSizes[gameName] = (scannedGameSizes[gameName] || 0) + fileStat.size; repoFilesSize += fileStat.size; }
                         catch (statErr) { }
                       }
                     }
                   } catch (readCharErr) { }
-                  if (imageCountInCharDir > 0) ScannedRoleImageCounts[GameName][characterName] = (ScannedRoleImageCounts[GameName][characterName] || 0) + imageCountInCharDir;
+                  if (imageCountInCharDir > 0) scannedRoleImageCounts[gameName][characterName] = (scannedRoleImageCounts[gameName][characterName] || 0) + imageCountInCharDir;
                 }
               }
             } catch (accessGameErr) { }
           }
         } else {
-          try { repoFilesSize = Math.max(0, (await FolderSize(Repo.path)) - repoGitSize); }
-          catch (sizeError) { stats.repos[RepoNum].filesSizeFormatted = "错误"; }
+          try { repoFilesSize = Math.max(0, (await FolderSize(repoInfo.path)) - repoGitSize); }
+          catch (sizeError) { statsData.repos[repoNum].filesSizeFormatted = "错误"; }
         }
-        stats.repos[RepoNum].filesSize = repoFilesSize;
-        stats.repos[RepoNum].filesSizeFormatted = FormatBytes(repoFilesSize);
-        stats.repos[RepoNum].size = repoGitSize + repoFilesSize;
-        stats.repos[RepoNum].sizeFormatted = FormatBytes(stats.repos[RepoNum].size);
-        totalFilesSizeScan += repoFilesSize;
+        statsData.repos[repoNum].filesSize = repoFilesSize;
+        statsData.repos[repoNum].filesSizeFormatted = FormatBytes(repoFilesSize);
+        statsData.repos[repoNum].size = repoGitSize + repoFilesSize;
+        statsData.repos[repoNum].sizeFormatted = FormatBytes(statsData.repos[repoNum].size);
+        totalFilesSizeScanned += repoFilesSize;
       }
 
-      const scanResult = stats.scan;
-      scanResult.totalGitSize = totalGitSizeScan;
-      scanResult.totalGitSizeFormatted = FormatBytes(totalGitSizeScan);
-      scanResult.totalFilesSize = totalFilesSizeScan;
-      scanResult.totalFilesSizeFormatted = FormatBytes(totalFilesSizeScan);
+      const scanResultData = statsData.scan;
+      scanResultData.totalGitSize = totalGitSizeScanned;
+      scanResultData.totalGitSizeFormatted = FormatBytes(totalGitSizeScanned);
+      scanResultData.totalFilesSize = totalFilesSizeScanned;
+      scanResultData.totalFilesSizeFormatted = FormatBytes(totalFilesSizeScanned);
 
-      Object.values(GameFoldersMap).forEach((GameName) => {
-        const rolesInGame = ScannedRoleImageCounts[GameName] || {};
+      Object.values(gameFoldersMapForStatus).forEach((gameName) => {
+        const rolesInGame = scannedRoleImageCounts[gameName] || {};
         const roleNames = Object.keys(rolesInGame);
         const roleCount = roleNames.length;
         let gameImageCount = 0;
         roleNames.forEach((roleName) => { gameImageCount += rolesInGame[roleName] || 0; });
-        scanResult.gameRoles[GameName] = roleCount;
-        scanResult.gameImages[GameName] = gameImageCount;
-        scanResult.roles += roleCount;
-        scanResult.images += gameImageCount;
-        const gameSizeBytes = ScannedGameSizes[GameName] || 0;
-        scanResult.gameSizes[GameName] = gameSizeBytes;
-        scanResult.gameSizesFormatted[GameName] = FormatBytes(gameSizeBytes);
+        scanResultData.gameRoles[gameName] = roleCount;
+        scanResultData.gameImages[gameName] = gameImageCount;
+        scanResultData.roles += roleCount;
+        scanResultData.images += gameImageCount;
+        const gameSizeBytes = scannedGameSizes[gameName] || 0;
+        scanResultData.gameSizes[gameName] = gameSizeBytes;
+        scanResultData.gameSizesFormatted[gameName] = FormatBytes(gameSizeBytes);
       });
-      scanResult.totalSize = scanResult.totalFilesSize + scanResult.totalGitSize;
-      scanResult.totalSizeFormatted = FormatBytes(scanResult.totalSize);
+      scanResultData.totalSize = scanResultData.totalFilesSize + scanResultData.totalGitSize;
+      scanResultData.totalSizeFormatted = FormatBytes(scanResultData.totalSize);
+      
+      const renderDataForStatusPage = { 
+          pluginVersion: pluginVersionForStatus, 
+          stats: statsData, 
+          config: configDataForRender, 
+          repoCount: Object.values(statsData.repos || {}).filter(repo => repo?.exists).length, 
+          scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), 
+          isArray: Array.isArray 
+      };
+      const statusHtmlTemplatePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "status.html");
+      try {
+          const statusImageBuffer = await renderPageToImage("status-report", {
+            tplFile: statusHtmlTemplatePath, data: renderDataForStatusPage, imgType: "png",
+            pageGotoParams: { waitUntil: "networkidle0" },
+            pageBoundingRect: { selector: ".container", padding: 0 }, width: 540,
+          }, this);
+          if (statusImageBuffer) await e.reply(statusImageBuffer);
+      } catch (statusRenderError) {
+          logger.error(`${currentLogPrefix} [检查状态] 生成状态报告图片时出错:`, statusRenderError);
+      }
 
-      const repoCount = Object.values(stats.repos || {}).filter((repo) => repo?.exists).length;
-      const renderDataStatus = { pluginVersion, stats, config: configForRender, repoCount, scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), isArray: Array.isArray };
-      const sourceHtmlPathStatus = path.join(MiaoPluginMBT.paths.commonResPath, "html", "status.html");
+      const generatedMapImages = [];
+      const gameMapGenerationConfigs = [
+          { gameKeys: ["gs"], titleSuffix: "原神", width: 800, isOptionalPluginGame: false },
+          { gameKeys: ["sr"], titleSuffix: "星穹铁道", width: 800, isOptionalPluginGame: false },
+          { gameKeys: ["zzz"], titleSuffix: "绝区零", width: 800, isOptionalPluginGame: true, gameIdentifier: "zzz" },
+          { gameKeys: ["waves"], titleSuffix: "鸣潮", width: 800, isOptionalPluginGame: true, gameIdentifier: "waves" }
+      ];
 
-      const imageBufferStatus = await renderPageToImage("status-report", {
-        tplFile: sourceHtmlPathStatus, data: renderDataStatus, imgType: "png",
-        pageGotoParams: { waitUntil: "networkidle0" },
-        pageBoundingRect: { selector: ".container", padding: 0 }, width: 540,
-      }, this);
+      let validMapsToGenerateCount = 0;
+      for (const mapCfg of gameMapGenerationConfigs) {
+          if (mapCfg.isOptionalPluginGame) {
+              const pluginIsInstalledForCfg = await MiaoPluginMBT.IsGamePluginInstalled(mapCfg.gameIdentifier, logger);
+              if (pluginIsInstalledForCfg) {
+                  validMapsToGenerateCount++;
+              }
+          } else {
+              validMapsToGenerateCount++;
+          }
+      }
+      
+      let generatedCount = 0;
+      for (const mapCfg of gameMapGenerationConfigs) {
+          if (mapCfg.isOptionalPluginGame) {
+              const pluginIsInstalledForRender = await MiaoPluginMBT.IsGamePluginInstalled(mapCfg.gameIdentifier, logger);
+              if (!pluginIsInstalledForRender) {
+                  continue; 
+              }
+          }
 
-      if (imageBufferStatus) await e.reply(imageBufferStatus);
-      else {
-        await e.reply("生成状态报告图片失败 (截图环节出错)，请查看日志。", true);
+          const imageBuffer = await this.generateSingleGameMapImageInternal(
+              e, 
+              mapCfg.gameKeys, 
+              mapCfg.titleSuffix, 
+              mapCfg.width,
+              logger,
+              mapCfg.isOptionalPluginGame ? mapCfg.gameIdentifier : null
+          );
+          if (imageBuffer) {
+              generatedMapImages.push(imageBuffer);
+              generatedCount++;
+              if (generatedCount < validMapsToGenerateCount && generatedMapImages.length > 0) {
+                   await common.sleep(300); 
+              }
+          }
+      }
+
+      if (generatedMapImages.length > 0) {
+          if (generatedMapImages.length === 1) {
+              await e.reply(generatedMapImages[0]);
+          } else {
+              try {
+                  const forwardMapMsg = await common.makeForwardMsg(e, generatedMapImages, "咕咕牛图库地图总览");
+                  if (forwardMapMsg) {
+                      await e.reply(forwardMapMsg);
+                  } else {
+                      logger.error(`${currentLogPrefix} [图库地图] 创建合并消息失败 (返回空)，尝试分条发送...`);
+                      for (const singleMapImage of generatedMapImages) {
+                          await e.reply(singleMapImage);
+                          await common.sleep(500); 
+                      }
+                  }
+              } catch (forwardingError) {
+                  logger.error(`${currentLogPrefix} [图库地图] 发送合并消息失败:`, forwardingError);
+                  //await e.reply("生成图库地图合并消息时遇到问题，部分地图可能未能正确显示。", true);
+              }
+          }
       }
     } catch (error) {
-      await this.ReportError(e, "生成状态报告图片", error);
-      return true;
+      await this.ReportError(e, "检查咕咕牛状态或地图", error);
     }
+    return true;
+  }
 
-    //await e.reply(`${logPrefix} 正在生成详细的图库地图，请稍候...`, true).catch(() => { });
+  async generateSingleGameMapImageInternal(eventParam, gameKeysToShow, mapTitleSuffix, renderWidth, logger, optionalGameKeyIdentifier = null) {
+    const localLogPrefix = this.logPrefix;
 
-    const gameDataForMap = {
-      gs: { name: "原神", key: "gs", characters: {}, order: 1, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-      sr: { name: "星铁", key: "sr", characters: {}, order: 2, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-      zzz: { name: "绝区零", key: "zzz", characters: {}, order: 3, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-      waves: { name: "鸣潮", key: "waves", characters: {}, order: 4, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 }
-    };
+    const gameDataForThisMap = {}; 
     const gameKeyMapping = {
       "gs-character": "gs", "sr-character": "sr",
       "zzz-character": "zzz", "waves-character": "waves"
     };
+    
+    const gameDefinitions = {
+        gs: { name: "原神", key: "gs", characters: {}, order: 1, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+        sr: { name: "星穹铁道", key: "sr", characters: {}, order: 2, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+        zzz: { name: "绝区零", key: "zzz", characters: {}, order: 3, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+        waves: { name: "鸣潮", key: "waves", characters: {}, order: 4, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 }
+    };
+
+    gameKeysToShow.forEach(gameKey => {
+        if (gameDefinitions[gameKey]) {
+            gameDataForThisMap[gameKey] = JSON.parse(JSON.stringify(gameDefinitions[gameKey]));
+        }
+    });
 
     if (!MiaoPluginMBT._imgDataCache || MiaoPluginMBT._imgDataCache.length === 0) {
-      //await e.reply(`${logPrefix} 图库元数据为空，无法生成详细地图。`, true);
-      return true;
+        return null;
     }
 
-    for (const item of MiaoPluginMBT._imgDataCache) {
-      if (!item.path || !item.characterName || !item.sourceGallery) continue;
-      const gameKey = gameKeyMapping[item.sourceGallery];
-      if (!gameKey || !gameDataForMap[gameKey]) continue;
+    const currentPluginConfig = MiaoPluginMBT.MBTConfig;
+    const purificationRulesActive = 
+        (currentPluginConfig?.PFL ?? Default_Config.defaultPfl) > Purify_Level.NONE ||
+        currentPluginConfig?.Ai === false ||
+        currentPluginConfig?.EasterEgg === false ||
+        currentPluginConfig?.layout === false;
 
-      const charName = item.characterName;
-      if (!gameDataForMap[gameKey].characters[charName]) {
-        gameDataForMap[gameKey].characters[charName] = {
-          name: charName, imageCount: 0, totalSize: 0, faceUrl: null
+    let applySpecialPurificationFilterForUninstalledPlugin = false;
+    if (optionalGameKeyIdentifier && purificationRulesActive) {
+        const pluginForThisGameActuallyInstalled = await MiaoPluginMBT.IsGamePluginInstalled(optionalGameKeyIdentifier, logger);
+        if (!pluginForThisGameActuallyInstalled) {
+            applySpecialPurificationFilterForUninstalledPlugin = true;
+        }
+    }
+
+    for (const imageDataItem of MiaoPluginMBT._imgDataCache) {
+      if (!imageDataItem.path || !imageDataItem.characterName || !imageDataItem.sourceGallery) continue;
+      
+      const currentGameKey = gameKeyMapping[imageDataItem.sourceGallery];
+      if (!currentGameKey || !gameDataForThisMap[currentGameKey] || !gameKeysToShow.includes(currentGameKey)) continue;
+
+      if (applySpecialPurificationFilterForUninstalledPlugin && currentGameKey === optionalGameKeyIdentifier) {
+          let imageIsPurified = MiaoPluginMBT.CheckIfPurifiedByLevel(imageDataItem, currentPluginConfig.PFL);
+          if (!imageIsPurified && currentPluginConfig.Ai === false && imageDataItem.attributes?.isAiImage === true) imageIsPurified = true;
+          if (!imageIsPurified && currentPluginConfig.EasterEgg === false && imageDataItem.attributes?.isEasterEgg === true) imageIsPurified = true;
+          if (!imageIsPurified && currentPluginConfig.layout === false && imageDataItem.attributes?.layout === "fullscreen") imageIsPurified = true;
+          
+          if (imageIsPurified) {
+              continue; 
+          }
+      }
+
+      const characterName = imageDataItem.characterName;
+      if (!gameDataForThisMap[currentGameKey].characters[characterName]) {
+        gameDataForThisMap[currentGameKey].characters[characterName] = {
+          name: characterName, imageCount: 0, totalSize: 0, faceUrl: null
         };
       }
-      gameDataForMap[gameKey].characters[charName].imageCount++;
-      gameDataForMap[gameKey].totalImageCountInGame++;
+      gameDataForThisMap[currentGameKey].characters[characterName].imageCount++;
+      gameDataForThisMap[currentGameKey].totalImageCountInGame++;
 
-      const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(item.path);
-      if (absolutePath) {
+      const absoluteImagePath = await MiaoPluginMBT.FindImageAbsolutePath(imageDataItem.path);
+      if (absoluteImagePath) {
         try {
-          const stats = await fsPromises.stat(absolutePath);
-          const fileSize = stats.size;
-          gameDataForMap[gameKey].characters[charName].totalSize += fileSize;
-          gameDataForMap[gameKey].totalByteSizeInGame += fileSize;
-        } catch (statErr) { }
+          const imageStats = await fsPromises.stat(absoluteImagePath);
+          gameDataForThisMap[currentGameKey].characters[characterName].totalSize += imageStats.size;
+          gameDataForThisMap[currentGameKey].totalByteSizeInGame += imageStats.size;
+        } catch (statError) { }
       }
     }
 
-    const processAndSendMap = async (gameKeysToShow, mapTitleSuffix = "") => {
-      const gamesForThisMap = [];
-      for (const gk of gameKeysToShow) {
-        if (gameDataForMap[gk] && Object.keys(gameDataForMap[gk].characters).length > 0) {
-          const gameEntry = {
-            name: gameDataForMap[gk].name,
-            key: gameDataForMap[gk].key,
-            hasFace: gameDataForMap[gk].hasFace,
-            totalImageCountDisplay: gameDataForMap[gk].totalImageCountInGame,
-            totalSizeFormattedDisplay: FormatBytes(gameDataForMap[gk].totalByteSizeInGame),
-            characters: []
-          };
-          const characterNames = Object.keys(gameDataForMap[gk].characters).sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
-          for (const charName of characterNames) {
-            const charData = gameDataForMap[gk].characters[charName];
-            let faceImageUrl = null;
-            if (gameDataForMap[gk].hasFace) {
-              const aliasForFace = await MiaoPluginMBT.FindRoleAlias(charName, logger);
-              const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charName;
-              let facePath = null;
-              if (gk === "gs") facePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-              else if (gk === "sr") facePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-              if (facePath) { try { await fsPromises.access(facePath); faceImageUrl = `file://${facePath.replace(/\\/g, "/")}`; } catch (err) { } }
+    const gamesToRenderOnMap = [];
+    for (const gameKey of gameKeysToShow) {
+        if (gameDataForThisMap[gameKey] && gameDataForThisMap[gameKey].totalImageCountInGame > 0) {
+            const gameEntry = {
+                name: gameDataForThisMap[gameKey].name,
+                key: gameDataForThisMap[gameKey].key,
+                hasFace: gameDataForThisMap[gameKey].hasFace,
+                totalImageCountDisplay: gameDataForThisMap[gameKey].totalImageCountInGame,
+                totalSizeFormattedDisplay: FormatBytes(gameDataForThisMap[gameKey].totalByteSizeInGame),
+                characters: []
+            };
+            const characterNamesSorted = Object.keys(gameDataForThisMap[gameKey].characters).sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
+            for (const charName of characterNamesSorted) {
+                const charData = gameDataForThisMap[gameKey].characters[charName];
+                if (charData.imageCount === 0) continue;
+
+                let characterFaceUrl = null;
+                if (gameDataForThisMap[gameKey].hasFace) {
+                    const aliasForFace = await MiaoPluginMBT.FindRoleAlias(charName, logger);
+                    const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charName;
+                    let faceImagePath = null;
+                    if (gameKey === "gs") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+                    else if (gameKey === "sr") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+                    
+                    if (faceImagePath) { try { await fsPromises.access(faceImagePath); characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { } }
+                }
+                gameEntry.characters.push({
+                    name: charData.name,
+                    imageCount: charData.imageCount,
+                    totalSizeFormatted: FormatBytes(charData.totalSize),
+                    faceUrl: characterFaceUrl
+                });
             }
-            gameEntry.characters.push({
-              name: charData.name,
-              imageCount: charData.imageCount,
-              totalSizeFormatted: FormatBytes(charData.totalSize),
-              faceUrl: faceImageUrl
-            });
-          }
-          gamesForThisMap.push(gameEntry);
+            if (gameEntry.characters.length > 0) {
+                 gamesToRenderOnMap.push(gameEntry);
+            }
         }
-      }
+    }
 
-      if (gamesForThisMap.length === 0) {
-        //logger.info(`${logPrefix} [图库地图-${mapTitleSuffix}] 没有可供显示的角色数据。`);
-        return;
-      }
+    if (gamesToRenderOnMap.length === 0) {
+        return null;
+    }
 
-      try {
-        let galleryMapHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "check_gallerymap.html");
-        try { await fsPromises.access(galleryMapHtmlPath); }
+    try {
+        let galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "check_gallerymap.html");
+        try { await fsPromises.access(galleryMapTemplatePath); }
         catch (commonPathError) {
           if (commonPathError.code === ERROR_CODES.NotFound) {
-            galleryMapHtmlPath = path.join(__dirname, "..", "resources", "html", "check_gallerymap.html");
-            await fsPromises.access(galleryMapHtmlPath);
+            const assumedPluginFolderName = "GuGuNiu-Plugin-MBT"; 
+            galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", assumedPluginFolderName, "resources", "GuGuNiu-Gallery", "html", "check_gallerymap.html");
+             try { await fsPromises.access(galleryMapTemplatePath); }
+             catch (pluginPathError) {
+                //logger.error(`${localLogPrefix} [图库地图-${mapTitleSuffix}] 模板文件在公共和插件路径 (${assumedPluginFolderName}) 均未找到。`);
+                throw pluginPathError;
+             }
           } else { throw commonPathError; }
         }
 
-        const imageBuffer = await renderPageToImage(`gallery-map-${mapTitleSuffix.toLowerCase().replace(/\s+/g, '-')}`, {
-          tplFile: galleryMapHtmlPath,
-          data: {
-            games: gamesForThisMap,
-            pluginVersion: MiaoPluginMBT.GetVersionStatic(),
-            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-            isArray: Array.isArray,
-            FormatBytes: FormatBytes
-          },
-          imgType: "png",
-          pageGotoParams: { waitUntil: "networkidle0", timeout: 60000 },
-          screenshotOptions: { fullPage: true },
-          width: gameKeysToShow.length > 1 ? 1200 : 800 
-        }, this);
-
-        if (imageBuffer) {
-          await e.reply(imageBuffer);
-          await common.sleep(500);
+        const imageBuffer = await renderPageToImage(
+            `gallery-map-${mapTitleSuffix.toLowerCase().replace(/\s+/g, '-')}`, 
+            {
+                tplFile: galleryMapTemplatePath,
+                data: {
+                    games: gamesToRenderOnMap,
+                    pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+                    scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+                    isArray: Array.isArray,
+                    FormatBytes: FormatBytes 
+                },
+                imgType: "png",
+                pageGotoParams: { waitUntil: "networkidle0", timeout: 60000 },
+                screenshotOptions: { fullPage: true }, 
+                width: renderWidth 
+            }, 
+            this 
+        );
+        return imageBuffer;
+    } catch (mapRenderingError) {
+        if (eventParam) { 
+             await MiaoPluginMBT.ReportError(eventParam, `生成 ${mapTitleSuffix} 图库地图`, mapRenderingError, "", this);
         } else {
-          //logger.error(`${logPrefix} [图库地图-${mapTitleSuffix}] Puppeteer 未能成功生成图片。`);
-          //await e.reply(`生成 ${mapTitleSuffix} 图库地图图片失败。`, true);
+           //logger.error(`${localLogPrefix} [图库地图] 生成 ${mapTitleSuffix} 地图时出错 (无事件上下文): ${mapRenderingError.message}`);
         }
-      } catch (mapRenderError) {
-        //logger.error(`${logPrefix} [图库地图-${mapTitleSuffix}] 生成时发生错误:`, mapRenderError);
-        if (mapRenderError.code === ERROR_CODES.NotFound && mapRenderError.message.includes("check_gallerymap.html")) {
-          //await e.reply(`${logPrefix} 生成图库地图失败：找不到模板文件 check_gallerymap.html。`, true);
-        } else {
-          //await this.ReportError(e, `生成 ${mapTitleSuffix} 图库地图`, mapRenderError);
-        }
-      }
-    };
-
-    await processAndSendMap(["gs"], "原神");
-    await processAndSendMap(["sr"], "星铁");
-    await processAndSendMap(["zzz", "waves"], "其他游戏");
-
-    return true;
+        return null;
+    }
   }
 
   async ManageTuKuOption(e) {
@@ -3232,113 +3532,185 @@ export class MiaoPluginMBT extends plugin {
     const logPrefix = this.logPrefix;
     const logger = this.logger;
 
-    if ((msg.startsWith("#咕咕牛封禁 ") || msg.startsWith("#咕咕牛解禁 ")) && !isMaster) return e.reply(`${logPrefix} 只有主人才能进行封禁或解禁操作哦~`, true);
+    if ((msg.startsWith("#咕咕牛封禁 ") || msg.startsWith("#咕咕牛解禁 ")) && !isMaster) {
+        return e.reply(`${logPrefix} 只有主人才能进行封禁或解禁操作哦~`, true);
+    }
 
+    // 在 ManageUserBans 函数内部，替换掉 if (msg === "#ban列表" || msg === "#咕咕牛封禁列表") { ... } 整个条件块
     if (msg === "#ban列表" || msg === "#咕咕牛封禁列表") {
       const activeBanCount = MiaoPluginMBT._activeBanSet.size;
       if (activeBanCount === 0) return e.reply("当前没有任何图片被封禁。", true);
       await e.reply(`正在整理中，请稍后...`, true);
 
-      const purifiedBansData = []; const userBansData = [];
-      const pluginVersion = MiaoPluginMBT.GetVersionStatic();
-      const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Purify_Level.NONE;
-      const config = MiaoPluginMBT.MBTConfig;
-      const sortedActiveBans = Array.from(MiaoPluginMBT._activeBanSet).sort();
+      const purifiedBansDisplayData = []; 
+      const userBansDisplayData = [];
+      const pluginVersionString = MiaoPluginMBT.GetVersionStatic();
+      const currentPFLSetting = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
+      const currentConfig = MiaoPluginMBT.MBTConfig;
+      const sortedActiveBansList = Array.from(MiaoPluginMBT._activeBanSet).sort();
+      
+      const gameKeyFromSourceFolderValue = {
+          [MiaoPluginMBT.paths.sourceFolders.gs]: "gs",
+          [MiaoPluginMBT.paths.sourceFolders.sr]: "sr",
+          [MiaoPluginMBT.paths.sourceFolders.zzz]: "zzz",
+          [MiaoPluginMBT.paths.sourceFolders.waves]: "waves"
+      };
 
       await Promise.all(
-        sortedActiveBans.map(async (relativePath) => {
-          const fileName = path.basename(relativePath);
-          const fileNameNoExt = fileName.replace(/\.webp$/i, "");
-          const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
-          const thumbnailPath = absolutePath ? `file://${absolutePath.replace(/\\/g, "/")}` : "";
-          if (MiaoPluginMBT._userBanSet.has(relativePath)) {
-            userBansData.push({ fileNameNoExt, thumbnailPath });
+        sortedActiveBansList.map(async (imageRelativePath) => {
+          const pathSegments = imageRelativePath.split('/');
+          let gameKeyForThisItem = null;
+          if (pathSegments.length > 0) {
+              gameKeyForThisItem = gameKeyFromSourceFolderValue[pathSegments[0]] || null;
+          }
+
+          if (gameKeyForThisItem === "zzz" || gameKeyForThisItem === "waves") {
+              const pluginForThisItemInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForThisItem, logger); 
+              if (!pluginForThisItemInstalled) {
+                  return; 
+              }
+          }
+
+          const baseFileName = path.basename(imageRelativePath);
+          const fileNameWithoutExtension = baseFileName.replace(/\.webp$/i, "");
+          const absoluteImagePath = await MiaoPluginMBT.FindImageAbsolutePath(imageRelativePath);
+          const thumbnailFileUrl = absoluteImagePath ? `file://${absoluteImagePath.replace(/\\/g, "/")}` : ""; 
+          
+          if (MiaoPluginMBT._userBanSet.has(imageRelativePath)) {
+            userBansDisplayData.push({ fileNameNoExt: fileNameWithoutExtension, thumbnailPath: thumbnailFileUrl });
           } else {
-            const imgData = MiaoPluginMBT._imgDataCache.find((img) => img.path?.replace(/\\/g, "/") === relativePath);
-            const reasons = [];
-            if (imgData && currentPFL > Purify_Level.NONE && MiaoPluginMBT.CheckIfPurifiedByLevel(imgData, currentPFL)) reasons.push("净化");
-            if (imgData?.attributes) {
-              const attrs = imgData.attributes;
-              if (config?.Ai === false && attrs.isAiImage === true) reasons.push("Ai");
-              if (config?.EasterEgg === false && attrs.isEasterEgg === true) reasons.push("彩蛋");
-              if (config?.layout === false && attrs.layout === "fullscreen") reasons.push("横屏");
+            const imageDataEntry = MiaoPluginMBT._imgDataCache.find((img) => img.path?.replace(/\\/g, "/") === imageRelativePath);
+            const banReasons = [];
+            if (imageDataEntry && currentPFLSetting > Purify_Level.NONE && MiaoPluginMBT.CheckIfPurifiedByLevel(imageDataEntry, currentPFLSetting)) {
+                banReasons.push("净化");
             }
-            if (reasons.length === 0) { reasons.push("未知"); logger.warn(`${logPrefix} [封禁列表] 图片 ${relativePath} 在生效列表但未找到明确屏蔽原因?`); }
-            purifiedBansData.push({ fileNameNoExt, thumbnailPath, reasons });
+            if (imageDataEntry?.attributes) {
+              const attrs = imageDataEntry.attributes;
+              if (currentConfig?.Ai === false && attrs.isAiImage === true && !banReasons.includes("Ai")) banReasons.push("Ai");
+              if (currentConfig?.EasterEgg === false && attrs.isEasterEgg === true && !banReasons.includes("彩蛋")) banReasons.push("彩蛋");
+              if (currentConfig?.layout === false && attrs.layout === "fullscreen" && !banReasons.includes("横屏")) banReasons.push("横屏");
+            }
+            if (banReasons.length === 0 && imageDataEntry) { 
+                 banReasons.push("规则");
+            } else if (banReasons.length === 0 && !imageDataEntry) {
+                 banReasons.push("自动"); 
+            }
+            purifiedBansDisplayData.push({ fileNameNoExt: fileNameWithoutExtension, thumbnailPath: thumbnailFileUrl, reasons: banReasons });
           }
         })
       );
 
-      let manualSent = false;
-      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "banlist.html");
-      const scaleStyleValue = MiaoPluginMBT.getScaleStyleValue();
+      let manualBanListSent = false;
+      const banListHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "banlist.html");
+      const currentScaleStyle = MiaoPluginMBT.getScaleStyleValue();
 
-      if (userBansData.length > 0) {
+      if (userBansDisplayData.length > 0) {
         try {
-          const renderDataManual = { pluginVersion, purifiedBans: [], userBans: userBansData, listType: "手动封禁", scaleStyleValue, batchInfo: "" };
+          const renderDataForManual = { pluginVersion: pluginVersionString, purifiedBans: [], userBans: userBansDisplayData, listType: "手动封禁", scaleStyleValue: currentScaleStyle, batchInfo: "" };
           const imageBuffer = await renderPageToImage("banlist-manual", {
-            tplFile: sourceHtmlPath, data: renderDataManual, imgType: "png",
+            tplFile: banListHtmlPath, data: renderDataForManual, imgType: "png",
             pageGotoParams: { waitUntil: "networkidle0" },
             screenshotOptions: { fullPage: true }, width: 640,
           }, this);
-          if (imageBuffer) { await e.reply(imageBuffer); manualSent = true; if (purifiedBansData.length > 0) await common.sleep(1000); }
-          else logger.error(`${logPrefix} [封禁列表] 生成手动列表截图失败。`);
-        } catch (renderError) { logger.error(`${logPrefix} [封禁列表] 生成手动列表截图时出错:`, renderError); await this.ReportError(e, "生成手动封禁列表", renderError); }
+          if (imageBuffer) { await e.reply(imageBuffer); manualBanListSent = true; if (purifiedBansDisplayData.length > 0) await common.sleep(1000); }
+        } catch (renderError) { 
+            this.logger.error(`${this.logPrefix} [封禁列表] 生成手动列表截图时出错:`, renderError); 
+            await this.ReportError(e, "生成手动封禁列表", renderError);
+        }
       }
 
-      if (purifiedBansData.length > 0) {
-        const ITEMS_PER_BATCH = 28;
-        const totalBatchesPurified = Math.ceil(purifiedBansData.length / ITEMS_PER_BATCH);
-        const forwardListPurified = [[`[自动屏蔽列表 (共 ${purifiedBansData.length} 项)]`]];
+      if (purifiedBansDisplayData.length > 0) {
+        const ITEMS_PER_PURIFIED_BATCH = 28;
+        const totalPurifiedBatches = Math.ceil(purifiedBansDisplayData.length / ITEMS_PER_PURIFIED_BATCH);
+        const forwardMessageListPurified = [[`[自动屏蔽列表 (共 ${purifiedBansDisplayData.length} 项)]`]];
 
-        for (let batchNum = 1; batchNum <= totalBatchesPurified; batchNum++) {
-          const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
-          const currentBatchData = purifiedBansData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
+        for (let batchIndex = 1; batchIndex <= totalPurifiedBatches; batchIndex++) {
+          const startIndex = (batchIndex - 1) * ITEMS_PER_PURIFIED_BATCH;
+          const currentPurifiedBatch = purifiedBansDisplayData.slice(startIndex, startIndex + ITEMS_PER_PURIFIED_BATCH);
           try {
-            const renderDataPurifiedBatch = { pluginVersion, purifiedBans: currentBatchData, userBans: [], listType: "自动屏蔽", scaleStyleValue, batchInfo: `(第 ${batchNum} / ${totalBatchesPurified} 批)` };
-            const imgBatch = await renderPageToImage(`banlist-auto-batch${batchNum}`, {
-              tplFile: sourceHtmlPath, data: renderDataPurifiedBatch, imgType: "png",
+            const renderDataForPurifiedBatch = { pluginVersion: pluginVersionString, purifiedBans: currentPurifiedBatch, userBans: [], listType: "自动屏蔽", scaleStyleValue: currentScaleStyle, batchInfo: `(第 ${batchIndex} / ${totalPurifiedBatches} 批)` };
+            const batchImageBuffer = await renderPageToImage(`banlist-auto-batch${batchIndex}`, {
+              tplFile: banListHtmlPath, data: renderDataForPurifiedBatch, imgType: "png",
               pageGotoParams: { waitUntil: "networkidle0" },
               screenshotOptions: { fullPage: true }, width: 640,
             }, this);
-            if (imgBatch) { forwardListPurified.push(imgBatch); }
-            else { logger.error(`${logPrefix} [封禁列表] 生成自动屏蔽列表第 ${batchNum}/${totalBatchesPurified} 批截图失败。`); forwardListPurified.push(`[❌ 第 ${batchNum}/${totalBatchesPurified} 批渲染失败]`); }
-          } catch (renderBatchError) { logger.error(`${logPrefix} [封禁列表] 生成自动屏蔽列表第 ${batchNum}/${totalBatchesPurified} 批截图时出错:`, renderBatchError); forwardListPurified.push(`[❌ 第 ${batchNum}/${totalBatchesPurified} 批处理出错]`); await this.ReportError(e, `生成自动屏蔽列表 (批次 ${batchNum})`, renderBatchError); }
+            if (batchImageBuffer) { forwardMessageListPurified.push(batchImageBuffer); }
+            else { 
+                forwardMessageListPurified.push(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批渲染失败]`); 
+                this.logger.error(`${this.logPrefix} [封禁列表] 生成自动列表批次 ${batchIndex} 截图返回空。`);
+            }
+          } catch (renderBatchError) { 
+            this.logger.error(`${this.logPrefix} [封禁列表] 生成自动屏蔽列表第 ${batchIndex}/${totalPurifiedBatches} 批截图时出错:`, renderBatchError);
+            forwardMessageListPurified.push(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批处理出错]`);
+          }
         }
-        if (forwardListPurified.length > 1) {
-          try { const forwardMsgPurified = await common.makeForwardMsg(e, forwardListPurified, "自动屏蔽列表详情"); if (forwardMsgPurified) await e.reply(forwardMsgPurified); else { logger.error(`${logPrefix} [封禁列表] 创建自动屏蔽列表合并消息失败。`); await e.reply("生成合并的自动屏蔽列表消息失败 (内部错误)。", true); } }
-          catch (sendForwardError) { logger.error(`${logPrefix} [封禁列表] 发送自动屏蔽列表合并消息失败:`, sendForwardError); await e.reply("发送合并的自动屏蔽列表消息失败，请查看日志。", true); }
+        if (forwardMessageListPurified.length > 1) {
+          try { 
+            const forwardMsg = await common.makeForwardMsg(e, forwardMessageListPurified, "自动屏蔽列表详情"); 
+            if (forwardMsg) await e.reply(forwardMsg); 
+            else { 
+                this.logger.error(`${this.logPrefix} [封禁列表] 创建自动屏蔽列表合并消息失败。`);
+                await e.reply("生成合并的自动屏蔽列表消息失败 (内部错误)。", true); 
+            }
+          } catch (sendForwardError) { 
+            this.logger.error(`${this.logPrefix} [封禁列表] 发送自动屏蔽列表合并消息失败:`, sendForwardError);
+            await e.reply("发送合并的自动屏蔽列表消息失败，请查看日志。", true); 
+          }
         }
       }
-      if (userBansData.length === 0 && purifiedBansData.length === 0 && !manualSent) await e.reply("当前没有手动封禁，也没有被自动规则屏蔽的图片。", true);
-      else if (userBansData.length > 0 && !manualSent) await e.reply("生成手动封禁列表图片失败了，请检查日志。", true);
+      if (userBansDisplayData.length === 0 && purifiedBansDisplayData.length === 0 && !manualBanListSent) {
+        await e.reply("当前没有手动封禁，也没有被自动规则屏蔽的图片。", true);
+      } else if (userBansDisplayData.length > 0 && !manualBanListSent) {
+        // 错误已在上面报告
+      }
       return true;
     }
+    
+    const addMatch = msg.match(/^#咕咕牛封禁\s*(.+)/i); 
+    const delMatch = msg.match(/^#咕咕牛解禁\s*(.+)/i); 
 
-    const addMatch = msg.match(/^#咕咕牛封禁\s*(.+)/i);
-    const delMatch = msg.match(/^#咕咕牛解禁\s*(.+)/i);
     if (addMatch || delMatch) {
       const isAdding = !!addMatch;
-      const targetIdentifierRaw = (isAdding ? addMatch[1] : delMatch[1]).trim();
-      const actionVerb = isAdding ? "封禁" : "解禁";
+      const targetIdentifierRaw = (isAdding ? addMatch[1] : delMatch[1]).trim(); 
+      const actionVerb = isAdding ? "封禁" : "解禁"; 
+
       if (!targetIdentifierRaw) return e.reply(`要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb}角色名+编号`, true);
-      const parsedId = MiaoPluginMBT.ParseRoleIdentifier(targetIdentifierRaw);
-      if (!parsedId) return e.reply("格式好像不对哦，应该是 角色名+编号", true);
-      const { mainName: rawMainName, imageNumber } = parsedId;
-      const aliasResult = await MiaoPluginMBT.FindRoleAlias(rawMainName, logger);
-      const standardMainName = aliasResult.exists ? aliasResult.mainName : rawMainName;
-      const expectedFilenameLower = `${standardMainName.toLowerCase()}gu${imageNumber}.webp`;
-      const imageData = MiaoPluginMBT._imgDataCache.find((img) => img.characterName === standardMainName && img.path?.toLowerCase().replace(/\\/g, "/").endsWith(`/${expectedFilenameLower}`));
+      
+      const parsedId = MiaoPluginMBT.ParseRoleIdentifier(targetIdentifierRaw); 
+      if (!parsedId) return e.reply("格式好像不对哦，应该是 角色名+编号 (例如：花火1)", true);
+      
+      const { mainName: rawMainName, imageNumber: imageNumber } = parsedId; 
+
+      const aliasResult = await MiaoPluginMBT.FindRoleAlias(rawMainName, logger); // 内部使用的 rawMainName 是上面解析的
+      const standardMainName = aliasResult.exists ? aliasResult.mainName : rawMainName; // 
+
+      const expectedFilenameLower = `${standardMainName.toLowerCase()}gu${imageNumber}.webp`; 
+      const imageData = MiaoPluginMBT._imgDataCache.find((img) => 
+          img.characterName === standardMainName &&
+          img.path?.toLowerCase().replace(/\\/g, "/").endsWith(`/${expectedFilenameLower}`)
+      );
+      
       if (!imageData || !imageData.path) {
-        let hint = `(可能原因：编号不存在、角色名/别名打错了？)`;
-        const roleExistsInData = MiaoPluginMBT._imgDataCache.some((img) => img.characterName === standardMainName);
-        if (!roleExistsInData && MiaoPluginMBT._imgDataCache.length > 0) hint = `(图库里好像没有 '${standardMainName}' 这个角色哦)`;
-        else if (roleExistsInData) hint = `(找到了角色 '${standardMainName}'，但是没有找到编号 ${imageNumber} 的图片)`;
-        else if (MiaoPluginMBT._imgDataCache.length === 0) hint = `(图库元数据当前为空)`;
-        return e.reply(`在图库数据里没找到这个图片: ${standardMainName}Gu${imageNumber}。\n${hint}`, true);
+        return e.reply(`在图库数据里没找到这个图片: ${targetIdentifierRaw}。\n(请检查角色名和编号是否准确，或角色是否存在于图库中)`, true);
       }
-      const targetRelativePath = imageData.path.replace(/\\/g, "/");
-      const targetFileName = path.basename(targetRelativePath);
+
+      const sourceGallery = imageData.sourceGallery; 
+      let gameKeyForPluginCheck = null; 
+      if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.zzz) {
+        gameKeyForPluginCheck = "zzz";
+      } else if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.waves) {
+        gameKeyForPluginCheck = "waves";
+      }
+
+      if (gameKeyForPluginCheck) { // 只对 ZZZ/Waves 检查
+        const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck, logger); 
+        if (!pluginIsInstalled) {
+          return e.reply(`图库数据无记录: ${targetIdentifierRaw}。\n(插件 ${gameKeyForPluginCheck === "zzz" ? "ZZZ-Plugin" : "waves-plugin"} 未安装)`, true); 
+        }
+      }
+      
+      const targetRelativePath = imageData.path.replace(/\\/g, "/"); 
+      const targetFileName = path.basename(targetRelativePath); 
       await this.PerformBanOperation(e, isAdding, targetRelativePath, targetFileName, actionVerb);
       return true;
     }
@@ -3413,18 +3785,29 @@ export class MiaoPluginMBT extends plugin {
 
     try {
       const aliasResult = await MiaoPluginMBT.FindRoleAlias(roleNameInput, logger);
-      const standardMainName = aliasResult.exists ? aliasResult.mainName : roleNameInput;
+      const standardMainName = aliasResult.exists ? aliasResult.mainName : roleNameInput; 
 
-      const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter((img) =>
+      const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter((img) => 
         img.characterName === standardMainName && img.path && typeof img.path === 'string'
       );
 
       if (rawRoleImageData.length === 0) {
-        const dirExists = await MiaoPluginMBT.CheckRoleDirExists(standardMainName);
-        if (dirExists) {
-          return e.reply(`『${standardMainName}』的角色文件夹在，但是图库元数据里没有该角色的图片信息哦。`);
+        return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true); 
+      }
+
+      const sourceGallery = rawRoleImageData[0].sourceGallery;
+      let gameKeyForPluginCheck = null; 
+      if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.zzz) {
+        gameKeyForPluginCheck = "zzz";
+      } else if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.waves) {
+        gameKeyForPluginCheck = "waves";
+      }
+
+      if (gameKeyForPluginCheck) { // 只对 ZZZ/Waves 检查
+        const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck, logger);
+        if (!pluginIsInstalled) {
+          return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true); //插件未安装视为未找到
         }
-        return e.reply(`图库里好像没有『${standardMainName}』这个角色呢。`);
       }
 
       rawRoleImageData.sort((a, b) =>
@@ -3432,21 +3815,21 @@ export class MiaoPluginMBT extends plugin {
         parseInt(b.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0")
       );
 
-      const ITEMS_PER_BATCH = 28; 
+      const ITEMS_PER_BATCH = 28;
       const totalItems = rawRoleImageData.length;
       const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
 
       if (totalItems > 0 && totalBatches > 1) {
         await e.reply(`正在为『${standardMainName}』整理 ${totalItems} 张图片，共 ${totalBatches} 批，请稍候...`, true);
       }
-
+      // 如果 totalItems === 0，前面的逻辑已经 return 了
 
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
         const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
         const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
         const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
-        
-        const forwardListBatch = []; 
+
+        const forwardListBatch = [];
         if (batchNum === 1) {
           forwardListBatch.push(`查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`);
           if (totalItems > 0) {
@@ -3457,38 +3840,26 @@ export class MiaoPluginMBT extends plugin {
         }
 
         for (let i = 0; i < currentBatchData.length; i++) {
-          const item = currentBatchData[i];
-          const itemGlobalIndex = startIndex + i + 1; // 计算全局序号
+          const item = currentBatchData[i]; 
+          const itemGlobalIndex = startIndex + i + 1;
           const relativePath = item.path.replace(/\\/g, "/");
-          const fileName = path.basename(relativePath);
-          const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
-          
-          const messageNode = []; // 每个节点的 message 数组
-          let fileExistsAndAccessible = false;
-          let fileSizeFormatted = "";
+          const fileName = path.basename(relativePath); 
+          const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath); 
 
+          const messageNode = []; 
           if (absolutePath) {
             try {
               await fsPromises.access(absolutePath, fs.constants.R_OK);
               messageNode.push(segment.image(`file://${absolutePath}`));
-              fileExistsAndAccessible = true;
-              try {
-                  const stats = await fsPromises.stat(absolutePath);
-                  fileSizeFormatted = FormatBytes(stats.size);
-              } catch (statErr) {
-                  logger.warn(`${logPrefix} [查看] 获取文件大小失败: ${absolutePath}`, statErr.code);
-              }
             } catch (accessErr) {
-              logger.warn(`${logPrefix} [查看] 图片文件无法访问: ${absolutePath}`, accessErr.code);
               messageNode.push(`[图片无法加载: ${fileName}]`);
             }
           } else {
-            logger.warn(`${logPrefix} [查看] 图片文件丢失: ${relativePath}`);
             messageNode.push(`[图片文件丢失: ${fileName}]`);
           }
-          
+
           const textInfoLines = [];
-          textInfoLines.push(`${itemGlobalIndex}. ${fileName}`); // 添加序号和文件名
+          textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
 
           const tags = [];
           if (item.attributes?.isAiImage === true) tags.push("Ai");
@@ -3497,54 +3868,51 @@ export class MiaoPluginMBT extends plugin {
             textInfoLines.push(`Tag：${tags.join(", ")}`);
           }
 
-          if (fileSizeFormatted) { // 只在获取到大小后显示
+          let fileSizeFormatted = "";
+          if (absolutePath) {
+            try {
+                const stats = await fsPromises.stat(absolutePath);
+                fileSizeFormatted = FormatBytes(stats.size);
+            } catch (statErr) { /* 静默处理 */ }
+          }
+          if (fileSizeFormatted) {
             textInfoLines.push(`占用：${fileSizeFormatted}`);
           }
-          
+
           const constraints = [];
           const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
-          
-          // 重新进行净化判断逻辑 
-          let isAutoPurifiedByRule = false; 
+
+          let isAutoPurifiedByRule = false;
           const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
-          const imgDataForPurifyCheck = MiaoPluginMBT._imgDataCache.find(img => img.path?.replace(/\\/g, "/") === relativePath);
-
-          if (imgDataForPurifyCheck) {
-            if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, currentPFL)) {
-                isAutoPurifiedByRule = true;
-            }
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && imgDataForPurifyCheck.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && imgDataForPurifyCheck.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && imgDataForPurifyCheck.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
+          if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, currentPFL)) {
+              isAutoPurifiedByRule = true;
           }
-
+          if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && item.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
+          if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && item.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
+          if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && item.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
 
           if (isUserBanned) constraints.push("❌封禁");
-          // 只有当它是因为自动规则而被屏蔽，并且用户没有手动封禁它时，才单独显示净化
-          // 只要符合净化规则就显示净化标记，即使用户也封禁了它，那么可以简化
           if (isAutoPurifiedByRule) {
-             // 检查是否因为PFL等级被净化，如果是，可以附加等级
             let pflLevelAppliedText = "";
-            if (imgDataForPurifyCheck && currentPFL > Purify_Level.NONE) {
-                 if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, Purify_Level.PX18_PLUS) && currentPFL === Purify_Level.PX18_PLUS) {
+            if (item && currentPFL > Purify_Level.NONE) {
+                 if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, Purify_Level.PX18_PLUS) && currentPFL === Purify_Level.PX18_PLUS) {
                     pflLevelAppliedText = `(Lv2)`;
-                 } else if (MiaoPluginMBT.CheckIfPurifiedByLevel(imgDataForPurifyCheck, Purify_Level.RX18_ONLY) && currentPFL >= Purify_Level.RX18_ONLY) {
+                 } else if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, Purify_Level.RX18_ONLY) && currentPFL >= Purify_Level.RX18_ONLY) {
                     pflLevelAppliedText = `(Lv1)`;
                  }
             }
             constraints.push(`🌱净化${pflLevelAppliedText}`);
           }
-          
           if (constraints.length > 0) {
             textInfoLines.push(`约束:  ${constraints.join("     ")}`); 
           }
-          
-          messageNode.push(textInfoLines.join("\n")); 
-          
+
+          messageNode.push(textInfoLines.join("\n"));
           forwardListBatch.push(messageNode);
         }
 
-        if (forwardListBatch.length > (batchNum === 1 ? 2 : 1)) { 
+        const minExpectedNodes = batchNum === 1 ? (totalItems > 0 ? 2 : 1) : 1;
+        if (forwardListBatch.length > minExpectedNodes) {
           try {
             const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
             if (forwardMsg) {
@@ -3558,19 +3926,6 @@ export class MiaoPluginMBT extends plugin {
             await e.reply(`发送第 ${batchNum}/${totalBatches} 批图片列表失败了，请检查后台日志。`, true);
           }
           if (batchNum < totalBatches && totalBatches > 1) await common.sleep(1800);
-        } else if (totalItems === 0 && batchNum === 1 && forwardListBatch.length <=2 ){ 
-             // 确保只有在确实没有图片内容时才发送“图库中没有图片”
-             // (forwardListBatch 长度可能为1或2，取决于是否有导出提示)
-             let hasActualContent = false;
-             for(let k = (batchNum === 1 ? 2:1) ; k < forwardListBatch.length; k++){
-                 if(forwardListBatch[k] && forwardListBatch[k].length > 0){
-                     hasActualContent = true;
-                     break;
-                 }
-             }
-             if(!hasActualContent){
-                await e.reply(`『${standardMainName}』图库中没有图片。`, true);
-             }
         }
       }
     } catch (error) {
@@ -3802,7 +4157,7 @@ export class MiaoPluginMBT extends plugin {
             }, {
               repo: 3, success: true, nodeName: "本地", gitLog: "已存在"
             }],
-            duration: "12.3", pluginVersion: "4.9.5", scaleStyleValue: ""
+            duration: "12.3", pluginVersion: "4.9.6", scaleStyleValue: ""
           };
           const img = await renderPageToImage("dl-report-mixed", { htmlContent: DOWNLOAD_REPORT_HTML_TEMPLATE, data: reportData }, this);
           if (img) await e.reply(["模拟下载报告(混合结果):", img]); else await e.reply("模拟下载报告(混合结果)图片生成失败");
@@ -3978,13 +4333,13 @@ export class MiaoPluginMBT extends plugin {
       if (level === Purify_Level.PX18_PLUS) statusMessageForPanel += "\n(Px18 指轻微性暗示或低度挑逗性图片)";
       setImmediate(async () => {
         try {
-          logger.info(`${logPrefix} [净化设置] 后台开始应用新的净化等级 ${level}...`);
+          //logger.info(`${logPrefix} [净化设置] 后台开始应用新的净化等级 ${level}...`);
           await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
-          logger.info(`${logPrefix} [净化设置] 新的生效封禁列表已应用。`);
+          //logger.info(`${logPrefix} [净化设置] 新的生效封禁列表已应用。`);
           if (MiaoPluginMBT.MBTConfig.TuKuOP) {
-            logger.info(`${logPrefix} [净化设置] 图库已启用，开始重新同步角色文件夹...`);
+            //logger.info(`${logPrefix} [净化设置] 图库已启用，开始重新同步角色文件夹...`);
             await MiaoPluginMBT.SyncCharacterFolders(logger);
-            logger.info(`${logPrefix} [净化设置] 角色文件夹重新同步完成。`);
+            //logger.info(`${logPrefix} [净化设置] 角色文件夹重新同步完成。`);
           } else logger.info(`${logPrefix} [净化设置] 图库已禁用，跳过角色文件夹同步。`);
         } catch (applyError) {
           logger.error(`${logPrefix} [净化设置] 后台应用或同步时出错:`, applyError);
