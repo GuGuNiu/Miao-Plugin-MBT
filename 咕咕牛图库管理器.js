@@ -2512,8 +2512,6 @@ export class MiaoPluginMBT extends plugin {
   }
 
   async DownloadTuKu(e) {
-    //if (!(await this.CheckInit(e))) return true;
-
     const logPrefix = this.logPrefix;
     const logger = this.logger;
     const userId = e.user_id;
