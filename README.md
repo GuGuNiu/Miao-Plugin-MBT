@@ -2,11 +2,11 @@
   <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%">
 </p>
 
-&emsp;&emsp;咕咕牛的管理器已经有智能使用多维度的下载模式以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，已支持角色别名模糊匹配。如果你没有安装 [绝区零/鸣潮] 插件，管理器会跳过它们并且会动态识别 [绝区零/鸣潮] 插件是否安装避免占用多余的空间
+# 简介
+&emsp;&emsp;咕咕牛的管理器已经有智能使用多维度的下载模式以及JSON作为索引数据源`(四号仓库不受JSON索引相关功能的约束)`，已支持角色别名模糊匹配。如果你没有安装 [绝区零/鸣潮] 插件，管理器会跳过它们并且会动态识别 [绝区零/鸣潮] 插件是否安装避免占用多余的空间，支持不启用图库只更新图库。
 
 # 注意
 本页面并非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
-
 [[一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT)] &emsp;
 [[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2)] &emsp;
 [[三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3)] &emsp;
@@ -51,20 +51,20 @@
 
 ###  `[Miao-Yunzai/TRSS-Yunzai]` 框架根目录下执行以下指令：
 
-##### ✳️|_使用Moeyy源安装【推荐】>>
+##### ✳️|_使用Moeyy源安装->>
 
 ```bash
 curl -sL "https://github.moeyy.xyz/https://github.com/GuGuNiu/Miao-Plugin-MBT/blob/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 
-##### ✴|_使用jsdelivr源安装->>
+##### ✴|_使用Jsdelivr源安装->>
 
 ```bash
 curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 ---
 
-<div align="center"> 
+<div align="left"> 
   
   [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
   
