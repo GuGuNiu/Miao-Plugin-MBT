@@ -7,6 +7,7 @@
 
 # 注意
 本页面并非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
+
 [[一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT)] &emsp;
 [[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2)] &emsp;
 [[三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3)] &emsp;
