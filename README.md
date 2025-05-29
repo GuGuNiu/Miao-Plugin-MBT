@@ -2,10 +2,10 @@
   <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%">
 </p>
 
-&emsp;&emsp;新管理器智能使用多维度的下载模式以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，已支持角色别名模糊匹配。如果你没有安装 [绝区零/鸣潮] 插件，管理器会跳过它们并且会动态识别 [绝区零/鸣潮] 是否安装避免占用多余的空间
+&emsp;&emsp;咕咕牛的管理器已经有智能使用多维度的下载模式以及JSON作为索引数据源`(PM18面板图则不受JSON索引相关功能的约束)`，已支持角色别名模糊匹配。如果你没有安装 [绝区零/鸣潮] 插件，管理器会跳过它们并且会动态识别 [绝区零/鸣潮] 插件是否安装避免占用多余的空间
 
 # 注意
-本页面并非唯一仓库，当前是四仓库分流，建议阁下用管理器安装，如阁下觉得没必要可访问以下仓库：
+本页面并非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
 
 [[一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT)] &emsp;
 [[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2)] &emsp;
@@ -28,9 +28,9 @@
 > - R18：明显主观展示上半身和下半身且存在人类身体构造痕迹刻意露出且存在部分露点，高挑逗性/暗示动作 <br> <br>
 > - #咕咕牛封禁xxx 针对某一个面板图进行封禁，后续操作会围绕封禁列表，直至解封
 
-####  关于R18+的面板图
+####  不受约束的高危级别面板图库
 > [!IMPORTANT]
->  已提供R18+的面板图,默认不启用,请自己确认风险~<br> &emsp;启用后会加载本地加密面板图仅在导入插件内的状态下解密 <br>&emsp;&emsp;不受 `[封禁][净化等级][查看]`功能约束
+>  四号仓库携带的是不受除`[图库开关]`外的任何约束启用后会加载本地加密面板图仅在导入插件内的状态下解密
 > - #咕咕牛设置PM18开启/关闭
 
 ## ⚠️ 使用须知
@@ -49,17 +49,12 @@
 
 ## 🛠️ 管理器安装
 
-###  `Miao-Yunzai/TRSS-Yunzai` 框架根目录下执行以下指令：
+###  `[Miao-Yunzai/TRSS-Yunzai]` 框架根目录下执行以下指令：
 
 ##### ✳️|_使用Moeyy源安装【推荐】>>
 
 ```bash
 curl -sL "https://github.moeyy.xyz/https://github.com/GuGuNiu/Miao-Plugin-MBT/blob/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
-```
-
-##### ✴|_使用GitHub源安装->>
-```bash
-curl -sL "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
 ```
 
 ##### ✴|_使用jsdelivr源安装->>
