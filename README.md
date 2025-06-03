@@ -13,6 +13,8 @@
 [[三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3)] &emsp;
 [[四号仓库(PM18)](https://github.com/GuGuNiu/Miao-Plugin-MBT-4)]
 
+假设有部分仓库下载失败，你依然可以 #下载咕咕牛 补全
+
 #### [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
 > [!TIP]
 > - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
