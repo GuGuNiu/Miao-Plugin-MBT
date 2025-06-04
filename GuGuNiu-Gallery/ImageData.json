@@ -11288,15 +11288,15 @@
             "filename": "琳妮特Gu3.webp",
             "parentFolder": "琳妮特",
             "isPx18": false,
-            "isRx18": true,
+            "isRx18": false,
             "layout": "normal",
-            "isEasterEgg": true,
+            "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "10ceb55a998391705c19a2abf3f79bd0",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-06-04T04:28:20.081Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -11308,15 +11308,15 @@
             "filename": "琳妮特Gu4.webp",
             "parentFolder": "琳妮特",
             "isPx18": false,
-            "isRx18": true,
+            "isRx18": false,
             "layout": "normal",
-            "isEasterEgg": true,
+            "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "2c6317760695ca2bd0c79a9ebee6a644",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-06-04T04:28:29.809Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -27698,5 +27698,325 @@
         },
         "timestamp": "2025-05-19T07:45:25.847Z",
         "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2370602690",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu20.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu20.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c55788fa50e3bc8a41fae41b26943d11",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:02.593Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3016857359",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu21.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu21.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "92dfd19316164b9fae1eaf3af76325a0",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:05.098Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5454977094",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu22.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu22.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d38b605071f924e8fe53818c6fa5a2f2",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:07.641Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5864930998",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu23.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu23.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "5fc4abde92dd617c3325640132bda8f1",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:10.258Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5962390740",
+        "characterName": "阿蕾奇诺",
+        "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu9.webp",
+        "attributes": {
+            "filename": "阿蕾奇诺Gu9.webp",
+            "parentFolder": "阿蕾奇诺",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f5588d893417b6131a50372f7f66a730",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:16.625Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8133558675",
+        "characterName": "阿蕾奇诺",
+        "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu10.webp",
+        "attributes": {
+            "filename": "阿蕾奇诺Gu10.webp",
+            "parentFolder": "阿蕾奇诺",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "d6aa6f7400ca1ddc00b1f709db13d4a9",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:20.330Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6722076468",
+        "characterName": "阿蕾奇诺",
+        "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu11.webp",
+        "attributes": {
+            "filename": "阿蕾奇诺Gu11.webp",
+            "parentFolder": "阿蕾奇诺",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "4759d7d2460c9b8e47e4411ce1658144",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:26:23.914Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3544247218",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu45.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu45.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "dc86d80127d052a7dcd3e44f22ea9f9c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:17.993Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9444643657",
+        "characterName": "茜特菈莉",
+        "path": "gs-character/茜特菈莉/茜特菈莉Gu46.webp",
+        "attributes": {
+            "filename": "茜特菈莉Gu46.webp",
+            "parentFolder": "茜特菈莉",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "79f8b756c1297560c63f46d84ffaffcd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:20.633Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "3546465624",
+        "characterName": "雷电将军",
+        "path": "gs-character/雷电将军/雷电将军Gu36.webp",
+        "attributes": {
+            "filename": "雷电将军Gu36.webp",
+            "parentFolder": "雷电将军",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f6556cbf8294098406c18b627ae32b81",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:40.257Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "8538102662",
+        "characterName": "琳妮特",
+        "path": "gs-character/琳妮特/琳妮特Gu18.webp",
+        "attributes": {
+            "filename": "琳妮特Gu18.webp",
+            "parentFolder": "琳妮特",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "df54c266be586d25d8dab078f4ec5926",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:44.969Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1414457190",
+        "characterName": "玛薇卡",
+        "path": "gs-character/玛薇卡/玛薇卡Gu8.webp",
+        "attributes": {
+            "filename": "玛薇卡Gu8.webp",
+            "parentFolder": "玛薇卡",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "69370a44b7fe6df93d2d448aba29722d",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:49.065Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4632143380",
+        "characterName": "夏洛蒂",
+        "path": "gs-character/夏洛蒂/夏洛蒂Gu5.webp",
+        "attributes": {
+            "filename": "夏洛蒂Gu5.webp",
+            "parentFolder": "夏洛蒂",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "098da823bf137dd286b9109f4992d586",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:52.698Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4685402931",
+        "characterName": "恰斯卡",
+        "path": "gs-character/恰斯卡/恰斯卡Gu4.webp",
+        "attributes": {
+            "filename": "恰斯卡Gu4.webp",
+            "parentFolder": "恰斯卡",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bf8a25fde19c7580b34f1ca611f2d0ed",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:27:57.777Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "1142476116",
+        "characterName": "林尼",
+        "path": "gs-character/林尼/林尼Gu4.webp",
+        "attributes": {
+            "filename": "林尼Gu4.webp",
+            "parentFolder": "林尼",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "1c7a6f55360994a0e527c1a5f6b3dc52",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:28:01.201Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4119991016",
+        "characterName": "伊法",
+        "path": "gs-character/伊法/伊法Gu1.webp",
+        "attributes": {
+            "filename": "伊法Gu1.webp",
+            "parentFolder": "伊法",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "70b87a4f42c51634d4820f61acd40600",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-04T04:28:04.585Z",
+        "sourceGallery": "gs-character"
     }
 ]
