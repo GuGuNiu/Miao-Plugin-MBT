@@ -15,6 +15,8 @@
 
 假设有部分仓库下载失败，你依然可以 #下载咕咕牛 补全
 
+Js有报错或出现问题，直接重新下载新的并重启机器人
+
 #### [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
 > [!TIP]
 > - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
