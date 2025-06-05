@@ -28000,7 +28000,7 @@
         "sourceGallery": "gs-character"
     },
     {
-        "storagebox": "Miao-Plugin-MBT",
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "4119991016",
         "characterName": "伊法",
         "path": "gs-character/伊法/伊法Gu1.webp",
@@ -28016,7 +28016,7 @@
             "md5": "70b87a4f42c51634d4820f61acd40600",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-06-04T04:28:04.585Z",
+        "timestamp": "2025-06-04T04:36:55.279Z",
         "sourceGallery": "gs-character"
     }
 ]
