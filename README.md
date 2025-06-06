@@ -17,6 +17,14 @@
 
 Js有报错或出现问题，直接重新下载新的并重启机器人
 
+<p align="center">
+  <img src="https://s2.loli.net/2025/06/06/g7XeNcFvMq8Jr9Q.webp" width="100%">
+</p>
+
+<p align="center">
+ <<<<管理器核心界面的截图>>>>
+</p>
+
 #### [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
 > [!TIP]
 > - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
