@@ -235,9 +235,9 @@ function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onSt
       if (streamName === "stdout") stdout += outputChunk;
       else {
         stderr += outputChunk; lastStderrChunk = outputChunk;
-        const शांतLogPrefixes = ["trace:", "http.c:", "== Info:", " Trying", " Connected to", " CONNECT tunnel:", " allocate connect buffer", " Establish HTTP proxy tunnel", " Send header:", " Recv header:", " CONNECT phase completed", " CONNECT tunnel established", " ALPN:", " TLSv1.", " SSL connection using", " Server certificate:", "  subject:", "  start date:", "  expire date:", "  subjectAltName:", "  issuer:", "  SSL certificate verify ok.", "   Certificate level", " using HTTP/", " [HTTP/", " Request completely sent off", " old SSL session ID is stale", " Connection #", " Found bundle for host", " Re-using existing connection", " upload completely sent off",];
+        const NoLogPrefixes = ["trace:", "http.c:", "== Info:", " Trying", " Connected to", " CONNECT tunnel:", " allocate connect buffer", " Establish HTTP proxy tunnel", " Send header:", " Recv header:", " CONNECT phase completed", " CONNECT tunnel established", " ALPN:", " TLSv1.", " SSL connection using", " Server certificate:", "  subject:", "  start date:", "  expire date:", "  subjectAltName:", "  issuer:", "  SSL certificate verify ok.", "   Certificate level", " using HTTP/", " [HTTP/", " Request completely sent off", " old SSL session ID is stale", " Connection #", " Found bundle for host", " Re-using existing connection", " upload completely sent off",];
         let isDetailedDebugLogForConsole = false; const trimmedChunk = outputChunk.trim();
-        for (const prefix of शांतLogPrefixes) { if (trimmedChunk.startsWith(prefix)) { isDetailedDebugLogForConsole = true; break; } }
+        for (const prefix of NoLogPrefixes) { if (trimmedChunk.startsWith(prefix)) { isDetailedDebugLogForConsole = true; break; } }
         const isCriticalErrorForConsole = trimmedChunk.match(/^(fatal|error|warning):/i) && !isDetailedDebugLogForConsole;
         if (isCriticalErrorForConsole) logger.error(`${Default_Config.logPrefix} [CMD ERR] ${trimmedChunk}`);
         else if (!isDetailedDebugLogForConsole && !trimmedChunk.match(/(Receiving objects|Resolving deltas|remote: Compressing objects|remote: Total|remote: Enumerating objects|remote: Counting objects):\s*(\d+)%/i) && trimmedChunk.length > 0) { /* 保持原始空else if */ }
@@ -266,9 +266,6 @@ function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onSt
   });
 }
 
-/**
- * @description 计算文件夹大小，大概，有时候会漏算亿点点。
- */
 async function FolderSize(folderPath) {
   let totalSize = 0;
   const queue = [folderPath];
@@ -316,7 +313,7 @@ function FormatBytes(bytes, decimals = 1) {
 }
 
 /**
- * @description 原生异步互斥锁，确保资源访问的原子性。并发不是问题，只要排好队，一个一个来，谁也别想插队。
+ * @description 原生异步互斥锁，确保资源访问的原子性
  */
 class SimpleAsyncMutex {
   _locked = false;
@@ -447,12 +444,7 @@ async function renderPageToImage(rendererName, options, pluginInstanceOrLogger) 
   }
 }
 
-// ================================================================= //
-// ======================= 公共函数区域结束 ========================== //
-// ================================================================= //
-
 export class MiaoPluginMBT extends plugin {
-  // --- 静态属性 ---
   static initializationPromise = null;
   static isGloballyInitialized = false;
   static MBTConfig = {};
