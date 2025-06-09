@@ -7629,14 +7629,14 @@
             "parentFolder": "甘雨",
             "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "a8156db739d93deb9db7b8c584676437",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-14T06:43:27.431Z",
+        "timestamp": "2025-06-09T03:01:21.222Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -29318,5 +29318,145 @@
         },
         "timestamp": "2025-06-07T05:57:13.068Z",
         "sourceGallery": "waves-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "9141126058",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu72.webp",
+        "attributes": {
+            "filename": "花火Gu72.webp",
+            "parentFolder": "花火",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "194e77b03999899a20e0e2034c109700",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:11.470Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "2561368506",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu73.webp",
+        "attributes": {
+            "filename": "花火Gu73.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f6e419f13261534fa2f04bce72e7e4f4",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:15.670Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "9860785590",
+        "characterName": "花火",
+        "path": "sr-character/花火/花火Gu74.webp",
+        "attributes": {
+            "filename": "花火Gu74.webp",
+            "parentFolder": "花火",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f9a9ca143b783323300daf178afbd59c",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:19.421Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6251557253",
+        "characterName": "神里绫华",
+        "path": "gs-character/神里绫华/神里绫华Gu28.webp",
+        "attributes": {
+            "filename": "神里绫华Gu28.webp",
+            "parentFolder": "神里绫华",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "129364f85be6d24527a0d506c166f59b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:25.022Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1443926523",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu24.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu24.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "2fe0043c001da2f61e1c687d40cb00f6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:29.053Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1455039725",
+        "characterName": "知更鸟",
+        "path": "sr-character/知更鸟/知更鸟Gu19.webp",
+        "attributes": {
+            "filename": "知更鸟Gu19.webp",
+            "parentFolder": "知更鸟",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "481f5fbded5a99fe54588e2a60a584c3",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:46.462Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "1448065563",
+        "characterName": "藿藿",
+        "path": "sr-character/藿藿/藿藿Gu15.webp",
+        "attributes": {
+            "filename": "藿藿Gu15.webp",
+            "parentFolder": "藿藿",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "631e96790ead4cfaa103300d02ac9f5f",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-09T03:25:36.758Z",
+        "sourceGallery": "sr-character"
     }
 ]
