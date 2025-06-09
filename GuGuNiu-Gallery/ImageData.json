@@ -707,7 +707,7 @@
         "attributes": {
             "filename": "芙宁娜Gu12.webp",
             "parentFolder": "芙宁娜",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -716,7 +716,7 @@
             "md5": "f86aef1e881b14798f461115883e40f0",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-06-09T01:52:35.383Z",
+        "timestamp": "2025-06-09T07:56:28.931Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -1327,7 +1327,7 @@
         "attributes": {
             "filename": "芙宁娜Gu40.webp",
             "parentFolder": "芙宁娜",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -1336,7 +1336,7 @@
             "md5": "881451e32e88e52fbb6028f827429b47",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-13T17:04:14.901Z",
+        "timestamp": "2025-06-09T07:56:51.283Z",
         "sourceGallery": "gs-character"
     },
     {
