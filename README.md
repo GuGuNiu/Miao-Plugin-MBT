@@ -8,21 +8,23 @@
 # 注意
 本页面并非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
 
-[[一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT)] &emsp;
-[[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2)] &emsp;
-[[三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3)] &emsp;
-[[四号仓库(PM18)](https://github.com/GuGuNiu/Miao-Plugin-MBT-4)]
+[![一号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true)](../../../Miao-Plugin-MBT)
+[![二号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-2&show_owner=true)](../../../Miao-Plugin-MBT-2)  
+[![三号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-3&show_owner=true)](../../../Miao-Plugin-MBT-3)
+[![四号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true)](../../../Miao-Plugin-MBT-4)
+
+
 
 假设有部分仓库下载失败，你依然可以 #下载咕咕牛 补全
 
 Js有报错或出现问题，直接重新下载新的并重启机器人
 
 <p align="center">
-  <img src="https://s2.loli.net/2025/06/06/g7XeNcFvMq8Jr9Q.webp" width="100%">
+  <img src="https://s2.loli.net/2025/06/09/ZbNwqARpt9uM1kG.webp" width="100%">
 </p>
 
 <p align="center">
- <<<<管理器核心界面的截图>>>>
+ <<<<管理器的核心界面的截图>>>>
 </p>
 
 #### [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
@@ -92,6 +94,11 @@ curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图�
          width="1200" 
          style="display: block; border-radius: 8px;">
   </a>
+
+[[一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT)] &emsp;
+[[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2)] &emsp;
+[[三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3)] &emsp;
+[[四号仓库(PM18)](https://github.com/GuGuNiu/Miao-Plugin-MBT-4)]
 </div>
 </details>
 
