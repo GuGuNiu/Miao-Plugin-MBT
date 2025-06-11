@@ -1,107 +1,136 @@
 <p align="center">
-  <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%">
+  <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%" alt="咕咕牛图库 Banner"/>
 </p>
 
-## [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
- - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
- - ✅️原神 & ✅️星铁 & ✅️鸣潮 & ✅️绝区零
-  
-本页面非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
+<p align="center">
+    <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/graphs/contributors"><img src="https://img.shields.io/github/contributors/GuGuNiu/Miao-Plugin-MBT?color=orange" alt="Contributors"></a>
+    <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?color=yellow" alt="Stars"></a>
+    <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
+</p>
+
+## ✨ 简介
+
+- **多插件兼容**：完美支持 `Miao-Plugin` / `ZZZ-Plugin` / `Waves-Plugin`
+- **多游戏覆盖**：✅️ 原神 & ✅️ 崩坏：星穹铁道 & ✅️ 鸣潮 & ✅️ 绝区零
+- **四仓分流**：内容分布在四个仓库，通过管理器智能下载，确保稳定与高速。
+- **高度可控**：提供净化等级、PM18特殊图库开关等多种设置项，满足不同需求。
+- **智能管理**：内置强大的图库管理器，更新、配置、查看状态！
+
+### 🖼️ 净化等级设置
+
+> [!WARNING]
+> 为了避免机器人账号被封禁，咕咕牛提供了面板图净化功能。
+
+使用指令 `#咕咕牛设置净化等级 <等级>` 来调整，等级定义如下：
+
+| 等级 | 效果 | 详细说明 |
+|:---:|:---|:---|
+| **0** | **无过滤** | 显示所有图片，风险自负。 |
+| **1** | **常规净化** | 过滤 R18 内容，但保留部分低风险的暗示性图片。 |
+| **2** | **最高净化** | 过滤所有被标记的敏感内容，最安全的选择。 |
+
+-   **P18 定义**: 角色非主观展示身体，无露点，存在低度挑逗或暗示性动作。
+-   **R18 定义**: 明显主观展示身体，存在关键部位的刻意裸露或露点，具有高度挑逗或暗示性。
+
+### 🔞 PM18 特殊仓库
+
+> [!IMPORTANT]
+> 四号仓库包含不受常规净化约束的 **高危级别** 面板图。它默认关闭，启用后会加载本地加密的面板图。
+
+-   **开关指令**: `#咕咕牛设置PM18开启/关闭`
+-   **封禁单图**: 如果遇到不喜欢的特定图片，可使用 `#咕咕牛封禁<图片ID>` 进行屏蔽。
+
+## 📦 四仓分流说明
+
+为了提升下载速度和稳定性，咕咕牛将图库资源分散在四个不同的 GitHub 仓库中。
 
 [![一号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true)](../../../Miao-Plugin-MBT)
 [![二号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-2&show_owner=true)](../../../Miao-Plugin-MBT-2)  
 [![三号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-3&show_owner=true)](../../../Miao-Plugin-MBT-3)
 [![四号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true)](../../../Miao-Plugin-MBT-4)
 
-## ⁉️常见问题解决方案
+## 🤔 常见问题 (Q&A)
 
-```
+-   **Q: 部分仓库下载失败怎么办？**
+    -   **A:** 不用担心，管理器支持断点续传。你可以再次发送 `#下载咕咕牛` 即可继续未完成的下载。
 
-1. 如有部分仓库下载失败，你依然可以 #下载咕咕牛.
-2. Js有报错或出现问题，直接重新下载新的并重启机器人.
-3. 管理器出现蜜汁操作的时候说明是时序出问题了需要重启机器人了.
+-   **Q: 插件报错或运行不正常怎么办？**
+    -   **A:** 可能是文件损坏或版本过旧。请先尝试重新执行安装指令覆盖旧文件，然后重启机器人。
 
-```
+-   **Q: 管理器出现奇怪的问题，指令没反应？**
+    -   **A:** 这通常是临时的时序错乱导致，**重启机器人** 即可解决绝大部分问题。
 
----
+
+## 🎨 界面一览
+
 <p align="center">
+  <i>咕咕牛图库管理器的核心界面截图</i>
+  <br><br>
   <img src="https://s2.loli.net/2025/06/09/ZbNwqARpt9uM1kG.webp" width="100%">
 </p>
 
-<p align="center">
- <<<<管理器的核心界面的截图>>>>
-</p>
-   
 ---
 
-####  关于封禁 & 净化面板图
-> [!WARNING]
-> 如不希望出现容易封号的面板图可以使用 #设置咕咕牛净化等级<br>
-> - 0：无过滤
-> - 1：仅过滤R18，不过滤暗示和低挑逗性面板图
-> - 2：最高等级净化，过滤JSON数据内的全部被标记的敏感内容<br><br>
-========净化等级的定义========<br>
-> - P18：角色非主观展示上半身和下半身无露点，低挑逗性/暗示动作<br>
-> - R18：明显主观展示上半身和下半身且存在人类身体构造痕迹刻意露出且存在部分露点，高挑逗性/暗示动作 <br> <br>
-> - #咕咕牛封禁xxx 针对某一个面板图进行封禁，后续操作会围绕封禁列表，直至解封
+## 🚀 管理器的安装
 
-####  不受约束的高危级别面板图库
-> [!IMPORTANT]
->  四号仓库携带的是不受除`[图库开关]`外的任何约束启用后会加载本地加密面板图仅在导入插件内的状态下解密
-> - #咕咕牛设置PM18开启/关闭
+在你的机器人项目 **根目录** 下，打开终端并执行以下任一指令即可安装管理器：
 
-## ⚠️ 使用须知
-
-❗ **仅供学习交流使用,严禁用于任何商业用途,如涉及侵权内容请立即联系删除**
-
-❗ **输入 #咕咕牛帮助 查看使用方式**
-
-## 💐致谢提供图片的平台
-
-[[Pixiv](https://www.pixiv.net/)]  &emsp;
-[[韩国阿卡社区](arca.live)]  &emsp;
-[[小红书](https://www.xiaohongshu.com/explore)]  &emsp;
-[[艾泽拉斯论坛](https://nga.178.com/)]  &emsp;
-[[推特](https://x.com)]
-
-## 🛠️ 管理器安装
-
-###  `[Miao-Yunzai/TRSS-Yunzai]` 框架根目录下执行以下指令：
-
-##### ✳️|_使用Moeyy源安装->>
-
+**✅ 推荐源 (使用 Jsdelivr CDN)**
+<br>
+  
 ```bash
-curl -sL "https://github.moeyy.xyz/https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
+curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js"
 ```
 
-##### ✴|_使用Jsdelivr源安装->>
+<br>
 
+**☑️ 备用源 (使用 Moeyy-GitHub Raw)**
+<br>
+  
 ```bash
-curl -sL "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js" -o "./plugins/example/咕咕牛图库管理器.js"
+curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js"
 ```
----
-
-<div align="left"> 
-  
-  [![访问量](https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg)](https://github.com/GuGuNiu/Miao-Plugin-MBT)
-  
-</div>
 
 
-<details> <summary>点击展开显示帮助图</summary>
+> [!TIP]
+>  生效后，发送 `#下载咕咕牛` 指令，即可开始下载并自动应用！
+
+## 📖 使用指南
+
+发送 `#咕咕牛帮助` 查看所有可用指令和功能说明。
+
+<details> <summary><strong>👉 点击展开/折叠帮助图</strong></summary>
 <div align="center">
+  <br>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
     <img src="https://s2.loli.net/2025/05/05/zirbKvjTAByl3HS.webp" 
-         alt="帮助" 
-         width="1200" 
+         alt="帮助图" 
+         width="100%" 
          style="display: block; border-radius: 8px;">
   </a>
-
-[[一号仓库(热门角色)](https://github.com/GuGuNiu/Miao-Plugin-MBT)] &emsp;
-[[二号仓库(原神+绝区零)](https://github.com/GuGuNiu/Miao-Plugin-MBT-2)] &emsp;
-[[三号仓库(星铁+鸣潮)](https://github.com/GuGuNiu/Miao-Plugin-MBT-3)] &emsp;
-[[四号仓库(PM18)](https://github.com/GuGuNiu/Miao-Plugin-MBT-4)]
 </div>
 </details>
 
+## ⚠️ 使用须知
 
+❗ **本项目仅供学习交流使用，严禁用于任何商业用途。**
+
+❗ **如图库内容涉及侵权，请立即联系作者进行删除。**
+
+## 💐 特别鸣谢
+
+感谢以下平台为本图库提供丰富的图片资源：
+
+-   [Pixiv](https://www.pixiv.net/)
+-   [Arca.live (韩国阿卡社区)](https://arca.live)
+-   [小红书](https://www.xiaohongshu.com/explore)
+-   [NGA (艾泽拉斯国家地理论坛)](https://nga.178.com/)
+-   [X (原推特)](https://x.com)
+
+---
+
+<div align="left"> 
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
+    <img src="https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg" alt="Visitor Count">
+  </a>
+</div>
