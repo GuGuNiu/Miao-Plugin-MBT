@@ -9,19 +9,6 @@ import template from "art-template";
 import common from "../../lib/common/common.js";
 import puppeteer from "../../lib/puppeteer/puppeteer.js";
 
-/**
- * @description 咕咕牛图库管理器
- * @version 4.9.6
- * @description_details
- *    - 全面支持四仓库体系。
- *    - Puppeteer流程统一化。
- *    - 修复了多个命令执行流程与截图渲染问题。
- *    - 优化了配置加载与保存逻辑，增强了并发处理能力。
- *    - 降低了高耦合特征。
- *    - 统一了设置类命令的交互方式。
- *    - 智能降低图库的占用。
- */
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
@@ -73,6 +60,8 @@ const Default_Config = {
   EasterEgg: true,
   layout: true,
   PM18: false,
+  Execution_Mode: 'Batch', // 默认执行模式: 'Batch' (高速并发处理), 'Serial' (低负载串行)
+  Command_Interval_Ms: 800, // 仅在串行模式下生效的发送间隔(毫秒)
 };
 
 const ERROR_CODES = {
@@ -515,10 +504,10 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, "..", "package.json");
       const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      return pkg.version || "4.9.6";
+      return pkg.version || "4.9.7";
     }
     catch {
-      return "4.9.6";
+      return "4.9.7";
     }
   }
 
@@ -674,6 +663,8 @@ export class MiaoPluginMBT extends plugin {
       layout: parseBoolLike(configData.layout, Default_Config.layout),
       PM18: parseBoolLike(configData.PM18, Default_Config.PM18),
       cronUpdate: configData.cronUpdate || Default_Config.cronUpdate,
+      Execution_Mode: configData.Execution_Mode || Default_Config.Execution_Mode,
+      Command_Interval_Ms: configData.Command_Interval_Ms || Default_Config.Command_Interval_Ms,
     };
     if (![Purify_Level.NONE, Purify_Level.RX18_ONLY, Purify_Level.PX18_PLUS].includes(loadedConfig.PFL)) {
       logger.warn(`${logPrefix} [加载配置] 检测到无效的净化等级配置 (${loadedConfig.PFL})，已重置为默认值 (${Default_Config.defaultPfl})。`);
@@ -695,6 +686,8 @@ export class MiaoPluginMBT extends plugin {
         layout: configData.layout ? 1 : 0,
         PM18: configData.PM18 ? 1 : 0,
         cronUpdate: configData.cronUpdate,
+        Execution_Mode: configData.Execution_Mode,
+        Command_Interval_Ms: configData.Command_Interval_Ms,
       };
       const dirPath = path.dirname(configFilePath);
       try { await fsPromises.mkdir(dirPath, { recursive: true }); }
@@ -3073,24 +3066,30 @@ export class MiaoPluginMBT extends plugin {
       };
       Object.values(gameFoldersMapForStatus).forEach((gameName) => { statsData.meta.games[gameName] = 0; statsData.scan.gameImages[gameName] = 0; statsData.scan.gameRoles[gameName] = 0; statsData.scan.gameSizes[gameName] = 0; statsData.scan.gameSizesFormatted[gameName] = "0 B"; });
 
-      const currentConfigForStatus = MiaoPluginMBT.MBTConfig;
+      const currentConfig = MiaoPluginMBT.MBTConfig;
+      const isSerialMode = (currentConfig?.Execution_Mode ?? 'Batch') === 'Serial';
+      
       const configDataForRender = {
-        enabled: currentConfigForStatus?.TuKuOP ?? Default_Config.defaultTuKuOp,
-        pflLevel: currentConfigForStatus?.PFL ?? Default_Config.defaultPfl,
-        aiEnabled: currentConfigForStatus?.Ai ?? true,
-        easterEggEnabled: currentConfigForStatus?.EasterEgg ?? true,
-        layoutEnabled: currentConfigForStatus?.layout ?? true,
-        pm18Enabled: currentConfigForStatus?.PM18 ?? false,
+        enabled: currentConfig?.TuKuOP ?? Default_Config.defaultTuKuOp,
+        enabledText: (currentConfig?.TuKuOP ?? Default_Config.defaultTuKuOp) ? "已启用" : "已禁用",
+        pflLevel: currentConfig?.PFL ?? Default_Config.defaultPfl,
+        pflDesc: Purify_Level.getDescription(currentConfig?.PFL ?? Default_Config.defaultPfl),
         activeBans: MiaoPluginMBT._activeBanSet?.size ?? 0,
         userBans: MiaoPluginMBT._userBanSet?.size ?? 0,
+        purifiedBans: Math.max(0, (MiaoPluginMBT._activeBanSet?.size ?? 0) - (MiaoPluginMBT._userBanSet?.size ?? 0)),
+        aiEnabled: currentConfig?.Ai ?? true,
+        aiStatusText: (currentConfig?.Ai ?? true) ? "开启" : "关闭",
+        easterEggEnabled: currentConfig?.EasterEgg ?? true,
+        easterEggStatusText: (currentConfig?.EasterEgg ?? true) ? "开启" : "关闭",
+        layoutEnabled: currentConfig?.layout ?? true,
+        layoutStatusText: (currentConfig?.layout ?? true) ? "开启" : "关闭",
+        pm18Enabled: currentConfig?.PM18 ?? false,
+        pm18StatusText: (currentConfig?.PM18 ?? false) ? "开启" : "关闭",
+        executionMode: {
+          text: isSerialMode ? "已开启" : "已关闭",
+          class: isSerialMode ? 'config-value-enabled' : 'config-value-disabled'
+        }
       };
-      configDataForRender.enabledText = configDataForRender.enabled ? "已启用" : "已禁用";
-      configDataForRender.purifiedBans = Math.max(0, configDataForRender.activeBans - configDataForRender.userBans);
-      configDataForRender.pflDesc = Purify_Level.getDescription(configDataForRender.pflLevel);
-      configDataForRender.aiStatusText = configDataForRender.aiEnabled ? "开启" : "关闭";
-      configDataForRender.easterEggStatusText = configDataForRender.easterEggEnabled ? "开启" : "关闭";
-      configDataForRender.layoutStatusText = configDataForRender.layoutEnabled ? "开启" : "关闭";
-      configDataForRender.pm18StatusText = configDataForRender.pm18Enabled ? "开启" : "关闭";
       
       const characterSetForStatus = new Set();
       if (Array.isArray(MiaoPluginMBT._imgDataCache) && MiaoPluginMBT._imgDataCache.length > 0) {
@@ -3262,9 +3261,9 @@ export class MiaoPluginMBT extends plugin {
               await e.reply(generatedMapImages[0]);
           } else {
               try {
-                  const forwardMapMsg = await common.makeForwardMsg(e, generatedMapImages, "咕咕牛图库地图总览");
-                  if (forwardMapMsg) {
-                      await e.reply(forwardMapMsg);
+                  const forwardMsg = await common.makeForwardMsg(e, generatedMapImages, "咕咕牛图库地图总览");
+                  if (forwardMsg) {
+                      await e.reply(forwardMsg);
                   } else {
                       logger.error(`${currentLogPrefix} [图库地图] 创建合并消息失败 (返回空)，尝试分条发送...`);
                       for (const singleMapImage of generatedMapImages) {
@@ -3274,7 +3273,6 @@ export class MiaoPluginMBT extends plugin {
                   }
               } catch (forwardingError) {
                   logger.error(`${currentLogPrefix} [图库地图] 发送合并消息失败:`, forwardingError);
-                  //await e.reply("生成图库地图合并消息时遇到问题，部分地图可能未能正确显示。", true);
               }
           }
       }
@@ -3457,7 +3455,7 @@ export class MiaoPluginMBT extends plugin {
     if (!match) return false;
 
     const action = match[1]; const enable = action === "启用";
-    let configChanged = false; let saveWarning = ""; let asyncError = null;
+    let configChanged = false; let saveWarning = "";
     let statusMessageForPanel = "";
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
@@ -3478,39 +3476,32 @@ export class MiaoPluginMBT extends plugin {
     });
 
     if (configChanged && !saveWarning) {
-      try {
-        if (enable) {
-          await MiaoPluginMBT.SyncCharacterFolders(logger);
-          await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
-        } else {
-          await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, logger);
-          await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, logger);
-          await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, logger);
-        }
-        statusMessageForPanel = `${logPrefix} 图库已成功设为「${action}」。`;
-      } catch (error) {
-        asyncError = error;
-        logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
-        await this.ReportError(e, `${action}咕咕牛 (后台操作)`, error);
-        statusMessageForPanel = `${logPrefix} 图库「${action}」操作已执行，但后台操作失败。`;
-      }
+      statusMessageForPanel = `${logPrefix} 图库已成功设为「${action}」。`;
+      setImmediate(async () => {
+          try {
+            if (enable) {
+              await MiaoPluginMBT.SyncCharacterFolders(logger);
+              await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
+            } else {
+              await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, logger);
+              await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, logger);
+              await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, logger);
+            }
+          } catch (error) {
+            logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
+            await this.ReportError(e, `${action}咕咕牛 (后台操作)`, error);
+          }
+      });
     }
 
-    if (statusMessageForPanel || saveWarning || asyncError) {
-      let finalPanelMessage = statusMessageForPanel;
-      if (saveWarning && !finalPanelMessage.includes(saveWarning)) {
-        finalPanelMessage = saveWarning + (finalPanelMessage ? `\n${finalPanelMessage}` : '');
-      }
-      if (asyncError && !finalPanelMessage.includes("后台")) {
-        finalPanelMessage += `\n(后台${action === "启用" ? "同步" : "清理"}时遇到问题)`;
-      }
-      try {
-        await this.ShowSettingsPanel(e, finalPanelMessage.trim());
-      } catch (panelError) {
+    if (!statusMessageForPanel && saveWarning) {
+        statusMessageForPanel = saveWarning;
+    }
+
+    try {
+        await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
+    } catch (panelError) {
         logger.error(`${logPrefix} [启用禁用] 调用ShowSettingsPanel时发生顶层意外错误:`, panelError);
-      }
-    } else if (!configChanged && !saveWarning && !asyncError && !statusMessageForPanel) {
-      await this.ShowSettingsPanel(e, `${logPrefix} 图库已经是「${action}」状态了，无需更改。`);
     }
     return true;
   }
@@ -3526,11 +3517,16 @@ export class MiaoPluginMBT extends plugin {
         return e.reply(`${logPrefix} 只有主人才能进行封禁或解禁操作哦~`, true);
     }
 
-    // 在 ManageUserBans 函数内部，替换掉 if (msg === "#ban列表" || msg === "#咕咕牛封禁列表") { ... } 整个条件块
     if (msg === "#ban列表" || msg === "#咕咕牛封禁列表") {
       const activeBanCount = MiaoPluginMBT._activeBanSet.size;
       if (activeBanCount === 0) return e.reply("当前没有任何图片被封禁。", true);
-      await e.reply(`正在整理中，请稍后...`, true);
+      
+      const executionMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
+      let waitMessage = `正在整理 ${activeBanCount} 项封禁记录，请稍候...`;
+      if (executionMode === 'Serial') {
+        waitMessage = `正在整理 ${activeBanCount} 项封禁记录，当前为低负载模式，可能需要更长时间...`;
+      }
+      await e.reply(waitMessage, true);
 
       const purifiedBansDisplayData = []; 
       const userBansDisplayData = [];
@@ -3590,9 +3586,9 @@ export class MiaoPluginMBT extends plugin {
         })
       );
 
-      let manualBanListSent = false;
       const banListHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "banlist.html");
       const currentScaleStyle = MiaoPluginMBT.getScaleStyleValue();
+      let manualBanListSent = false;
 
       if (userBansDisplayData.length > 0) {
         try {
@@ -3602,7 +3598,11 @@ export class MiaoPluginMBT extends plugin {
             pageGotoParams: { waitUntil: "networkidle0" },
             screenshotOptions: { fullPage: true }, width: 640,
           }, this);
-          if (imageBuffer) { await e.reply(imageBuffer); manualBanListSent = true; if (purifiedBansDisplayData.length > 0) await common.sleep(1000); }
+          if (imageBuffer) { 
+              await e.reply(imageBuffer); 
+              manualBanListSent = true; 
+              if (purifiedBansDisplayData.length > 0) await common.sleep(1000); 
+          }
         } catch (renderError) { 
             this.logger.error(`${this.logPrefix} [封禁列表] 生成手动列表截图时出错:`, renderError); 
             await this.ReportError(e, "生成手动封禁列表", renderError);
@@ -3610,13 +3610,13 @@ export class MiaoPluginMBT extends plugin {
       }
 
       if (purifiedBansDisplayData.length > 0) {
-        const ITEMS_PER_PURIFIED_BATCH = 28;
-        const totalPurifiedBatches = Math.ceil(purifiedBansDisplayData.length / ITEMS_PER_PURIFIED_BATCH);
+        const BATCH_SIZE = executionMode === 'Serial' ? 20 : 28;
+        const totalPurifiedBatches = Math.ceil(purifiedBansDisplayData.length / BATCH_SIZE);
         const forwardMessageListPurified = [[`[自动屏蔽列表 (共 ${purifiedBansDisplayData.length} 项)]`]];
 
         for (let batchIndex = 1; batchIndex <= totalPurifiedBatches; batchIndex++) {
-          const startIndex = (batchIndex - 1) * ITEMS_PER_PURIFIED_BATCH;
-          const currentPurifiedBatch = purifiedBansDisplayData.slice(startIndex, startIndex + ITEMS_PER_PURIFIED_BATCH);
+          const startIndex = (batchIndex - 1) * BATCH_SIZE;
+          const currentPurifiedBatch = purifiedBansDisplayData.slice(startIndex, startIndex + BATCH_SIZE);
           try {
             const renderDataForPurifiedBatch = { pluginVersion: pluginVersionString, purifiedBans: currentPurifiedBatch, userBans: [], listType: "自动屏蔽", scaleStyleValue: currentScaleStyle, batchInfo: `(第 ${batchIndex} / ${totalPurifiedBatches} 批)` };
             const batchImageBuffer = await renderPageToImage(`banlist-auto-batch${batchIndex}`, {
@@ -3624,8 +3624,9 @@ export class MiaoPluginMBT extends plugin {
               pageGotoParams: { waitUntil: "networkidle0" },
               screenshotOptions: { fullPage: true }, width: 640,
             }, this);
-            if (batchImageBuffer) { forwardMessageListPurified.push(batchImageBuffer); }
-            else { 
+            if (batchImageBuffer) { 
+                forwardMessageListPurified.push(batchImageBuffer); 
+            } else { 
                 forwardMessageListPurified.push(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批渲染失败]`); 
                 this.logger.error(`${this.logPrefix} [封禁列表] 生成自动列表批次 ${batchIndex} 截图返回空。`);
             }
@@ -3648,10 +3649,9 @@ export class MiaoPluginMBT extends plugin {
           }
         }
       }
-      if (userBansDisplayData.length === 0 && purifiedBansDisplayData.length === 0 && !manualBanListSent) {
+      
+      if (userBansDisplayData.length === 0 && purifiedBansDisplayData.length === 0) {
         await e.reply("当前没有手动封禁，也没有被自动规则屏蔽的图片。", true);
-      } else if (userBansDisplayData.length > 0 && !manualBanListSent) {
-        // 错误已在上面报告
       }
       return true;
     }
@@ -3671,8 +3671,8 @@ export class MiaoPluginMBT extends plugin {
       
       const { mainName: rawMainName, imageNumber: imageNumber } = parsedId; 
 
-      const aliasResult = await MiaoPluginMBT.FindRoleAlias(rawMainName, logger); // 内部使用的 rawMainName 是上面解析的
-      const standardMainName = aliasResult.exists ? aliasResult.mainName : rawMainName; // 
+      const aliasResult = await MiaoPluginMBT.FindRoleAlias(rawMainName, logger);
+      const standardMainName = aliasResult.exists ? aliasResult.mainName : rawMainName;
 
       const expectedFilenameLower = `${standardMainName.toLowerCase()}gu${imageNumber}.webp`; 
       const imageData = MiaoPluginMBT._imgDataCache.find((img) => 
@@ -3692,7 +3692,7 @@ export class MiaoPluginMBT extends plugin {
         gameKeyForPluginCheck = "waves";
       }
 
-      if (gameKeyForPluginCheck) { // 只对 ZZZ/Waves 检查
+      if (gameKeyForPluginCheck) {
         const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck, logger); 
         if (!pluginIsInstalled) {
           return e.reply(`图库数据无记录: ${targetIdentifierRaw}。\n(插件 ${gameKeyForPluginCheck === "zzz" ? "ZZZ-Plugin" : "waves-plugin"} 未安装)`, true); 
@@ -3793,10 +3793,10 @@ export class MiaoPluginMBT extends plugin {
         gameKeyForPluginCheck = "waves";
       }
 
-      if (gameKeyForPluginCheck) { // 只对 ZZZ/Waves 检查
+      if (gameKeyForPluginCheck) { 
         const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck, logger);
         if (!pluginIsInstalled) {
-          return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true); //插件未安装视为未找到
+          return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true);
         }
       }
 
@@ -3805,119 +3805,140 @@ export class MiaoPluginMBT extends plugin {
         parseInt(b.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0")
       );
 
-      const ITEMS_PER_BATCH = 28;
       const totalItems = rawRoleImageData.length;
+      const executionMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
+      const ITEMS_PER_BATCH = 28;
       const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
 
-      if (totalItems > 0 && totalBatches > 1) {
-        await e.reply(`正在为『${standardMainName}』整理 ${totalItems} 张图片，共 ${totalBatches} 批，请稍候...`, true);
+      let waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片...`;
+      if (totalBatches > 1) {
+          waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片，共 ${totalBatches} 批，请稍候...`;
+          if (executionMode === 'Serial') {
+              waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片，共 ${totalBatches} 批，当前是低负载模式需要更长的时间...`;
+          }
       }
-      // 如果 totalItems === 0，前面的逻辑已经 return 了
+      await e.reply(waitMessage, true);
+      
+      const allBatchesForwardNodes = [];
+      if (totalBatches > 1) {
+          allBatchesForwardNodes.push(`『${standardMainName}』图库详情 (共 ${totalItems} 张)`);
+      }
 
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
         const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
         const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
         const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
-
+        
         const forwardListBatch = [];
-        if (batchNum === 1) {
-          forwardListBatch.push(`查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`);
-          if (totalItems > 0) {
-            forwardListBatch.push(`想导出图片？试试: #咕咕牛导出${standardMainName}1`);
+        const firstNodeText = batchNum === 1 
+          ? `查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)\n想导出图片？试试: #咕咕牛导出${standardMainName}1`
+          : `查看『${standardMainName}』(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`;
+        forwardListBatch.push(firstNodeText);
+
+        if (executionMode === 'Serial') {
+          //this.logger.info(`${this.logPrefix} [查看] 检测到低负载串行模式。`);
+          const intervalMs = MiaoPluginMBT.MBTConfig.Command_Interval_Ms ?? Default_Config.Command_Interval_Ms;
+          for (let i = 0; i < currentBatchData.length; i++) {
+            const item = currentBatchData[i];
+            const itemGlobalIndex = startIndex + i + 1;
+            const messageNode = [];
+            const relativePath = item.path.replace(/\\/g, "/");
+            const fileName = path.basename(relativePath);
+            const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
+            
+            if (absolutePath) {
+              try {
+                const imageBuffer = await fsPromises.readFile(absolutePath);
+                messageNode.push(segment.image(imageBuffer));
+                await common.sleep(intervalMs);
+              } catch(readErr) {
+                 messageNode.push(`[图片读取失败: ${fileName}]`);
+              }
+            } else {
+              messageNode.push(`[图片文件丢失: ${fileName}]`);
+            }
+            const textInfoLines = [];
+            textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
+            const tags = [];
+            if (item.attributes?.isRx18 === true) tags.push("R18");
+            if (item.attributes?.isPx18 === true) tags.push("P18");
+            if (item.attributes?.isAiImage === true) tags.push("Ai");
+            if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
+            if (tags.length > 0) textInfoLines.push(`Tag：${tags.join(" / ")}`);
+            let fileSizeFormatted = "";
+            if (absolutePath) { try { const stats = await fsPromises.stat(absolutePath); fileSizeFormatted = FormatBytes(stats.size); } catch (statErr) {} }
+            if (fileSizeFormatted) textInfoLines.push(`占用：${fileSizeFormatted}`);
+            const constraints = [];
+            const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
+            let isAutoPurifiedByRule = false;
+            const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
+            if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, currentPFL)) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && item.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && item.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && item.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
+            if (isUserBanned) constraints.push("❌封禁");
+            if (isAutoPurifiedByRule) constraints.push(`🌱净化`);
+            if (constraints.length > 0) textInfoLines.push(`约束:  ${constraints.join("     ")}`);
+            messageNode.push(textInfoLines.join("\n"));
+            forwardListBatch.push(messageNode);
           }
         } else {
-          forwardListBatch.push(`查看『${standardMainName}』(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`);
-        }
-
-        for (let i = 0; i < currentBatchData.length; i++) {
-          const item = currentBatchData[i]; 
-          const itemGlobalIndex = startIndex + i + 1;
-          const relativePath = item.path.replace(/\\/g, "/");
-          const fileName = path.basename(relativePath); 
-          const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath); 
-
-          const messageNode = []; 
-          if (absolutePath) {
-            try {
-              await fsPromises.access(absolutePath, fs.constants.R_OK);
-              messageNode.push(segment.image(`file://${absolutePath}`));
-            } catch (accessErr) {
-              messageNode.push(`[图片无法加载: ${fileName}]`);
-            }
-          } else {
-            messageNode.push(`[图片文件丢失: ${fileName}]`);
-          }
-
-          const textInfoLines = [];
-          textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
-
-          const tags = [];
-          if (item.attributes?.isAiImage === true) tags.push("Ai");
-          if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
-          if (tags.length > 0) {
-            textInfoLines.push(`Tag：${tags.join(", ")}`);
-          }
-
-          let fileSizeFormatted = "";
-          if (absolutePath) {
-            try {
-                const stats = await fsPromises.stat(absolutePath);
-                fileSizeFormatted = FormatBytes(stats.size);
-            } catch (statErr) { /* 静默处理 */ }
-          }
-          if (fileSizeFormatted) {
-            textInfoLines.push(`占用：${fileSizeFormatted}`);
-          }
-
-          const constraints = [];
-          const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
-
-          let isAutoPurifiedByRule = false;
-          const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
-          if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, currentPFL)) {
-              isAutoPurifiedByRule = true;
-          }
-          if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && item.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
-          if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && item.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
-          if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && item.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
-
-          if (isUserBanned) constraints.push("❌封禁");
-          if (isAutoPurifiedByRule) {
-            let pflLevelAppliedText = "";
-            if (item && currentPFL > Purify_Level.NONE) {
-                 if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, Purify_Level.PX18_PLUS) && currentPFL === Purify_Level.PX18_PLUS) {
-                    pflLevelAppliedText = `(Lv2)`;
-                 } else if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, Purify_Level.RX18_ONLY) && currentPFL >= Purify_Level.RX18_ONLY) {
-                    pflLevelAppliedText = `(Lv1)`;
-                 }
-            }
-            constraints.push(`🌱净化${pflLevelAppliedText}`);
-          }
-          if (constraints.length > 0) {
-            textInfoLines.push(`约束:  ${constraints.join("     ")}`); 
-          }
-
-          messageNode.push(textInfoLines.join("\n"));
-          forwardListBatch.push(messageNode);
-        }
-
-        const minExpectedNodes = batchNum === 1 ? (totalItems > 0 ? 2 : 1) : 1;
-        if (forwardListBatch.length > minExpectedNodes) {
-          try {
-            const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
-            if (forwardMsg) {
-              await e.reply(forwardMsg);
+          //this.logger.info(`${this.logPrefix} [查看]检测到高速并发处理模式。`);
+          for (let i = 0; i < currentBatchData.length; i++) {
+            const item = currentBatchData[i];
+            const itemGlobalIndex = startIndex + i + 1;
+            const relativePath = item.path.replace(/\\/g, "/");
+            const fileName = path.basename(relativePath);
+            const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
+            const messageNode = [];
+            if (absolutePath) {
+              try { await fsPromises.access(absolutePath, fs.constants.R_OK); messageNode.push(segment.image(`file://${absolutePath}`)); } 
+              catch (accessErr) { messageNode.push(`[图片无法加载: ${fileName}]`); }
             } else {
-              logger.error(`${logPrefix} [查看] common.makeForwardMsg 返回空 (批次 ${batchNum}) 用户 ${e.user_id}`);
-              await e.reply(`生成第 ${batchNum}/${totalBatches} 批图片列表失败了 (内部错误)。`, true);
+              messageNode.push(`[图片文件丢失: ${fileName}]`);
             }
-          } catch (sendError) {
-            logger.error(`${logPrefix} [查看] 发送第 ${batchNum}/${totalBatches} 批合并转发消息失败: 用户 ${e.user_id}`, sendError);
-            await e.reply(`发送第 ${batchNum}/${totalBatches} 批图片列表失败了，请检查后台日志。`, true);
+            const textInfoLines = [];
+            textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
+            const tags = [];
+            if (item.attributes?.isRx18 === true) tags.push("R18");
+            if (item.attributes?.isPx18 === true) tags.push("P18");
+            if (item.attributes?.isAiImage === true) tags.push("Ai");
+            if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
+            if (tags.length > 0) textInfoLines.push(`Tag：${tags.join(" / ")}`);
+            let fileSizeFormatted = "";
+            if (absolutePath) { try { const stats = await fsPromises.stat(absolutePath); fileSizeFormatted = FormatBytes(stats.size); } catch (statErr) {} }
+            if (fileSizeFormatted) textInfoLines.push(`占用：${fileSizeFormatted}`);
+            const constraints = [];
+            const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
+            let isAutoPurifiedByRule = false;
+            const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
+            if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, currentPFL)) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && item.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && item.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
+            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && item.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
+            if (isUserBanned) constraints.push("❌封禁");
+            if (isAutoPurifiedByRule) constraints.push(`🌱净化`);
+            if (constraints.length > 0) textInfoLines.push(`约束:  ${constraints.join("     ")}`);
+            messageNode.push(textInfoLines.join("\n"));
+            forwardListBatch.push(messageNode);
           }
-          if (batchNum < totalBatches && totalBatches > 1) await common.sleep(1800);
+        }
+
+        if (forwardListBatch.length > 1) {
+            const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
+            if (totalBatches > 1) {
+                allBatchesForwardNodes.push(forwardMsg);
+            } else {
+                await e.reply(forwardMsg);
+            }
         }
       }
+      
+      if (totalBatches > 1) {
+          const finalForwardMsg = await common.makeForwardMsg(e, allBatchesForwardNodes, `『${standardMainName}』图库详情`);
+          await e.reply(finalForwardMsg);
+      }
+
     } catch (error) {
       logger.error(`${logPrefix} [查看] 处理角色 '${roleNameInput}' 时发生错误: 用户 ${e.user_id}`, error);
       await this.ReportError(e, `查看角色 ${roleNameInput}`, error);
@@ -3934,8 +3955,7 @@ export class MiaoPluginMBT extends plugin {
 
     let standardMainName = "";
     const logger = this.logger; const logPrefix = this.logPrefix;
-    const BATCH_SIZE = 28;
-
+    
     try {
       const aliasResult = await MiaoPluginMBT.FindRoleAlias(roleNameInput, logger);
       standardMainName = aliasResult.mainName || roleNameInput;
@@ -3959,10 +3979,18 @@ export class MiaoPluginMBT extends plugin {
       if (allImageFiles.length === 0) { logger.warn(`${logPrefix} [可视化] 角色文件夹 ${roleFolderPath} 为空或不包含支持的图片格式。`); return e.reply(`『${standardMainName}』的文件夹里没有找到支持的图片文件哦。`); }
 
       allImageFiles.sort((a, b) => { const numA = parseInt(a.match(/(\d+)\.\w+$/)?.[1] || "0"); const numB = parseInt(b.match(/(\d+)\.\w+$/)?.[1] || "0"); if (numA === numB) return a.localeCompare(b); return numA - numB; });
-
+      
+      const executionMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
+      const BATCH_SIZE = executionMode === 'Serial' ? 12 : 28;
+      
       const totalImageCount = allImageFiles.length;
       const totalBatches = Math.ceil(totalImageCount / BATCH_SIZE);
-      await e.reply(`[${standardMainName} ] 有 ${totalImageCount} 张面板图\n分 ${totalBatches} 批发送, 请注意查收~`, true);
+      
+      let waitMessage = `[${standardMainName}] 有 ${totalImageCount} 张面板图\n分 ${totalBatches} 批发送, 请注意查收~`;
+      if(executionMode === 'Serial') {
+        waitMessage = `[${standardMainName}] 有 ${totalImageCount} 张面板图\n分 ${totalBatches} 批发送(低负载模式)发送可能会很慢~`;
+      }
+      await e.reply(waitMessage, true);
       await common.sleep(500);
 
       let sourceTplFilePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "visualize.html");
@@ -3974,6 +4002,11 @@ export class MiaoPluginMBT extends plugin {
           try { await fsPromises.access(sourceTplFilePath); }
           catch (pluginErr) { logger.error(`${logPrefix} [可视化] 主模板和备用模板均未找到: ${sourceTplFilePath}`, pluginErr); await e.reply("生成可视化图片失败：缺少必要的 visualize.html 模板文件。"); return true; }
         } else { logger.error(`${logPrefix} [可视化] 访问公共资源模板时出错: ${sourceTplFilePath}`, commonErr); await e.reply("生成可视化图片失败：访问模板文件时出错。"); return true; }
+      }
+      
+      const generatedMapImages = [];
+      if (totalBatches > 2) {
+          generatedMapImages.push(`『${standardMainName}』可视化图集 (共 ${totalBatches} 部分)`);
       }
 
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
@@ -3990,11 +4023,45 @@ export class MiaoPluginMBT extends plugin {
             screenshotOptions: { fullPage: true }, width: 800,
           }, this);
 
-          if (imageBuffer) { await e.reply(imageBuffer); }
-          else { logger.error(`${logPrefix} [可视化] 第 ${batchNum}/${totalBatches} 批截图生成失败或返回空。`); if (batchNum === 1 && totalBatches === 1) await e.reply(`生成预览图失败了，请查看控制台日志。`); }
-        } catch (batchProcessingError) { logger.error(`${logPrefix} [可视化] 处理第 ${batchNum}/${totalBatches} 批时发生错误:`, batchProcessingError); await e.reply(`处理第 ${batchNum}/${totalBatches} 批数据时出错，跳过此批次。`); }
-        finally { if (batchNum < totalBatches) await common.sleep(2500); }
+          if (imageBuffer) {
+            if (totalBatches <= 2) {
+                await e.reply(imageBuffer);
+            } else {
+                generatedMapImages.push(imageBuffer);
+            }
+          } else {
+            logger.error(`${logPrefix} [可视化] 第 ${batchNum}/${totalBatches} 批截图生成失败或返回空。`);
+            const failureMsg = `[❌ 第 ${batchNum}/${totalBatches} 部分渲染失败]`;
+            if (totalBatches <= 2) {
+                await e.reply(failureMsg, true);
+            } else {
+                generatedMapImages.push(failureMsg);
+            }
+          }
+        } catch (batchProcessingError) {
+            logger.error(`${logPrefix} [可视化] 处理第 ${batchNum}/${totalBatches} 批时发生错误:`, batchProcessingError);
+            const errorMsg = `处理第 ${batchNum}/${totalBatches} 批数据时出错，跳过此批次。`;
+            if (totalBatches <= 2) {
+                await e.reply(errorMsg, true);
+            } else {
+                generatedMapImages.push(errorMsg);
+            }
+        }
+        finally { 
+            if (batchNum < totalBatches) {
+                const sleepInterval = executionMode === 'Serial' 
+                    ? (MiaoPluginMBT.MBTConfig.Command_Interval_Ms ?? Default_Config.Command_Interval_Ms)
+                    : 2500;
+                await common.sleep(sleepInterval);
+            }
+        }
       }
+
+      if (totalBatches > 2 && generatedMapImages.length > 1) {
+          const forwardMsg = await common.makeForwardMsg(e, generatedMapImages, `『${standardMainName}』可视化图集`);
+          await e.reply(forwardMsg);
+      }
+
     } catch (error) { logger.error(`${logPrefix} [可视化] 处理角色 '${roleNameInput}' 时发生顶层错误:`, error); await this.ReportError(e, `可视化角色 ${roleNameInput}`, error); }
     return true;
   }
@@ -4147,7 +4214,7 @@ export class MiaoPluginMBT extends plugin {
             }, {
               repo: 3, success: true, nodeName: "本地", gitLog: "已存在"
             }],
-            duration: "12.3", pluginVersion: "4.9.6", scaleStyleValue: ""
+            duration: "12.3", pluginVersion: "4.9.7", scaleStyleValue: ""
           };
           const img = await renderPageToImage("dl-report-mixed", { htmlContent: DOWNLOAD_REPORT_HTML_TEMPLATE, data: reportData }, this);
           if (img) await e.reply(["模拟下载报告(混合结果):", img]); else await e.reply("模拟下载报告(混合结果)图片生成失败");
@@ -4224,6 +4291,14 @@ export class MiaoPluginMBT extends plugin {
       catch (err) { logger.error(`${logPrefix} [设置面板] 找不到模板文件: ${sourceHtmlPath}`, err); await e.reply("无法显示设置面板：缺少 settings_panel.html 模板文件。"); return true; }
 
       const config = MiaoPluginMBT.MBTConfig;
+      const isSerialMode = (config?.Execution_Mode ?? 'Batch') === 'Serial';
+      const intervalMs = config?.Command_Interval_Ms ?? Default_Config.Command_Interval_Ms;
+      
+      let modeDescription = '高速并发处理模式';
+      if (isSerialMode) {
+          modeDescription = `低负载串行处理模式`;
+      }
+
       const renderData = {
         pluginVersion: MiaoPluginMBT.GetVersionStatic(),
         tuKuStatus: { text: (config?.TuKuOP ?? Default_Config.defaultTuKuOp) ? "已启用" : "已禁用", class: (config?.TuKuOP ?? Default_Config.defaultTuKuOp) ? "value-enabled" : "value-disabled", },
@@ -4233,6 +4308,14 @@ export class MiaoPluginMBT extends plugin {
         layoutStatus: { text: (config?.layout ?? true) ? "已开启" : "已关闭", class: (config?.layout ?? true) ? "value-enabled" : "value-disabled", },
         PM18Status: { text: (config?.PM18 ?? false) ? "已开启" : "已关闭", class: (config?.PM18 ?? false) ? "value-enabled" : "value-disabled", },
         scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+        
+        isSerialMode: isSerialMode,
+        intervalMs: intervalMs,
+        executionMode: {
+          text: isSerialMode ? "已开启" : "已关闭",
+          class: isSerialMode ? 'value-enabled' : 'value-disabled',
+          description: modeDescription
+        }
       };
 
       const imageBuffer = await renderPageToImage("settings-panel", {
@@ -4270,35 +4353,114 @@ export class MiaoPluginMBT extends plugin {
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${this.logPrefix} 只有主人才能使用设置命令哦~`);
 
-    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18)([012]|开启|关闭)$/i);
-    if (!match || !match[1] || !match[2]) { this.logger.warn(`${this.logPrefix} [统一设置] 正则匹配异常? msg: ${e.msg}`); return false; }
+    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18|低负载|处理间隔)(开启|关闭|[0-9]+)$/i);
+    if (!match) return false;
 
-    const featureKeyRaw = match[1].toLowerCase();
+    const featureKey = match[1].toLowerCase();
     const valueRaw = match[2];
 
-    if (featureKeyRaw === "净化等级") {
-      const level = parseInt(valueRaw, 10);
-      if (isNaN(level) || ![0, 1, 2].includes(level)) return e.reply(`无效的净化等级值: ${valueRaw}，只能是 0, 1, 或 2。`, true);
-      await this.setPurificationLevelInternal(e, level);
-    } else {
-      if (!["开启", "关闭"].includes(valueRaw)) { if (!(featureKeyRaw === "pm18" && ["0", "1"].includes(valueRaw))) return e.reply(`无效的操作: ${valueRaw}，请使用 '开启' 或 '关闭'。`, true); }
-      const enable = valueRaw === "开启" || valueRaw === "1";
-      let configKey = "", featureName = "";
-      switch (featureKeyRaw) {
-        case "ai": configKey = "Ai"; featureName = "Ai 图"; break;
-        case "彩蛋": configKey = "EasterEgg"; featureName = "彩蛋图"; break;
-        case "横屏": configKey = "layout"; featureName = "横屏图"; break;
-        case "pm18": configKey = "PM18"; featureName = "PM18 功能"; break;
-        default: this.logger.error(`${this.logPrefix} [统一设置] 未知的 featureKeyRaw: ${featureKeyRaw}`); return false;
-      }
-      await this.handleSwitchCommand(e, configKey, featureName, enable);
+    switch (featureKey) {
+        case 'ai':
+        case '彩蛋':
+        case '横屏':
+        case 'pm18':
+            if (valueRaw !== '开启' && valueRaw !== '关闭') {
+                return e.reply(`无效操作: [${featureKey}] 只能用 '开启' 或 '关闭'。`, true);
+            }
+            const enable = valueRaw === '开启';
+            let configKey = "", featureName = "";
+            if (featureKey === 'ai') { configKey = "Ai"; featureName = "Ai 图"; }
+            else if (featureKey === '彩蛋') { configKey = "EasterEgg"; featureName = "彩蛋图"; }
+            else if (featureKey === '横屏') { configKey = "layout"; featureName = "横屏图"; }
+            else if (featureKey === 'pm18') { configKey = "PM18"; featureName = "PM18 功能"; }
+            await this.handleSwitchCommand(e, configKey, featureName, enable);
+            break;
+
+        case '净化等级':
+            const level = parseInt(valueRaw, 10);
+            if (isNaN(level) || ![0, 1, 2].includes(level)) {
+                return e.reply(`无效的净化等级: [${valueRaw}]，只能是 0, 1, 或 2。`, true);
+            }
+            await this.setPurificationLevelInternal(e, level);
+            break;
+
+        case '低负载':
+            if (valueRaw !== '开启' && valueRaw !== '关闭') {
+                return e.reply(`无效操作: [低负载] 只能用 '开启' 或 '关闭'。`, true);
+            }
+            const modeEnable = valueRaw === '开启';
+            const targetMode = modeEnable ? 'Serial' : 'Batch';
+            await this.setExecutionModeInternal(e, targetMode, '低负载模式', valueRaw);
+            break;
+
+        case '处理间隔':
+            const interval = parseInt(valueRaw, 10);
+            if (isNaN(interval) || interval < 100 || interval > 5000) {
+                return e.reply(`无效的间隔时间: [${valueRaw}ms]，请设置为 100 到 5000 之间的整数。`, true);
+            }
+            if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') !== 'Serial') {
+                return e.reply(`请先 "#咕咕牛设置低负载开启"，才能设置处理间隔。`, true);
+            }
+            await this.setCommandIntervalInternal(e, interval);
+            break;
     }
     return true;
   }
 
+  async setExecutionModeInternal(e, targetMode, featureName, action) {
+    const logger = this.logger;
+    const logPrefix = this.logPrefix;
+    let configChanged = false;
+    let saveWarning = "";
+    let statusMessageForPanel = "";
+
+    await MiaoPluginMBT.configMutex.runExclusive(async () => {
+        await MiaoPluginMBT.LoadTuKuConfig(true, logger);
+        const currentMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
+
+        if (currentMode === targetMode) {
+            statusMessageForPanel = `${logPrefix} ${featureName}已经是「${action}」状态了。`;
+            return;
+        }
+
+        MiaoPluginMBT.MBTConfig.Execution_Mode = targetMode;
+        configChanged = true;
+
+        const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, logger);
+        if (!saveSuccess) {
+            saveWarning = "⚠️ 但是配置保存失败了！设置可能不会持久生效。";
+            MiaoPluginMBT.MBTConfig.Execution_Mode = currentMode;
+            configChanged = false;
+            await this.ReportError(e, `设置${featureName}`, new Error("保存配置失败"), saveWarning);
+        }
+    });
+
+    if (configChanged && !saveWarning) {
+        statusMessageForPanel = `${logPrefix} ${featureName}已成功设为「${action}」。`;
+    }
+    
+    if (saveWarning && !statusMessageForPanel.includes(saveWarning)) {
+        statusMessageForPanel = saveWarning + (statusMessageForPanel ? `\n${statusMessageForPanel}` : '');
+    }
+    
+    await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
+  }
+  
+  async setCommandIntervalInternal(e, interval) {
+    await MiaoPluginMBT.configMutex.runExclusive(async () => {
+      await MiaoPluginMBT.LoadTuKuConfig(true, this.logger);
+      MiaoPluginMBT.MBTConfig.Command_Interval_Ms = interval;
+      const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, this.logger);
+      if (!saveSuccess) {
+          await this.ReportError(e, "设置发送间隔", new Error("保存配置失败"), "配置未能写入文件，设置不会持久生效。");
+      }
+    });
+    await this.ShowSettingsPanel(e, `${this.logPrefix} 低负载模式发送间隔已设为 ${interval}ms。`);
+  }
+
   async setPurificationLevelInternal(e, level) {
     const logger = this.logger; const logPrefix = this.logPrefix;
-    let configChanged = false; let saveWarning = ""; let asyncError = null;
+    let configChanged = false; let saveWarning = "";
     let statusMessageForPanel = "";
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
@@ -4356,7 +4518,7 @@ export class MiaoPluginMBT extends plugin {
 
   async handleSwitchCommand(e, configKey, featureName, enable) {
     const logger = this.logger; const logPrefix = this.logPrefix;
-    let configChanged = false; let saveWarning = ""; let asyncError = null;
+    let configChanged = false; let saveWarning = "";
     let statusMessageForPanel = "";
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
@@ -4624,5 +4786,5 @@ const GUGUNIU_RULES = [
   { reg: /^#咕咕牛测速$/i, fnc: "ManualTestProxies" },
   { reg: /^#执行咕咕牛更新$/i, fnc: "ManualRunUpdateTask", permission: "master" },
   { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: "ShowSettingsPanel" },
-  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18)([012]|开启|关闭)$/i, fnc: "HandleSettingsCommand", permission: "master" },
+  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18|低负载|处理间隔)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
 ];

@@ -42,6 +42,8 @@
             --item-label-easteregg-base: #8e24aa; 
             --item-label-ai-base: #e53935;        
             --item-label-pm18-base: #d81b60;      
+            --item-label-mode-base: #673ab7;
+            --item-label-interval-base: #2196f3;
 
             --grad-tuku-start: #64ffda; --grad-tuku-end: #00796b; --glow-tuku: #64ffda;
             --grad-pfl-start: #ffd54f; --grad-pfl-end: #ef6c00; --glow-pfl: #ffd54f;
@@ -49,6 +51,8 @@
             --grad-easteregg-start: #e1bee7; --grad-easteregg-end: #6a1b9a; --glow-easteregg: #e1bee7;
             --grad-ai-start: #ffccbc; --grad-ai-end: #bf360c; --glow-ai: #ffccbc;
             --grad-pm18-start: #f8bbd0; --grad-pm18-end: #ad1457; --glow-pm18: #f8bbd0;
+            --grad-mode-start: #d1c4e9; --grad-mode-end: #512da8; --glow-mode: var(--grad-mode-start);
+            --grad-interval-start: #bbdefb; --grad-interval-end: #1565c0; --glow-interval: var(--grad-interval-start);
 
             --value-enabled-color: #00af50; 
             --value-enabled-border: rgba(0, 175, 80, 0.4);
@@ -96,7 +100,6 @@
             background-size: var(--grid-cell-size) var(--grid-cell-size);
             pointer-events: none;
         }
-
         .panel {
             background-color: var(--panel-bg);
             backdrop-filter: blur(var(--panel-backdrop-blur));
@@ -138,12 +141,10 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
         .header { text-align: center; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--header-border-color); position: relative; z-index: 1;}
         .header h1 { font-size: 28px; color: var(--header-title-color); margin: 0 0 8px 0; font-weight: 700; font-family: 'Orbitron', sans-serif; text-shadow: var(--header-title-shadow); letter-spacing: 1.5px; position: relative; }
         .header h1::after { content: ''; position: absolute; bottom: -11px; left: 30%; width: 40%; height: 2px; background: var(--header-title-color); opacity: 0.8; box-shadow: 0 0 8px var(--header-title-color); }
         .header::after { content: 'SYSTEM INTERFACE'; position: absolute; bottom: -9px; left: 0; right: 0; font-size: 9px; color: var(--header-subtitle-color); letter-spacing: 2px; font-weight: 500; }
-
         .setting-item {
             background-color: var(--item-bg);
             border-radius: 8px;
@@ -158,7 +159,6 @@
             z-index: 1;
             overflow: hidden; 
         }
-        
         .setting-item::before {
             content: '';
             position: absolute;
@@ -172,15 +172,14 @@
             border-radius: 8px 0 0 8px; 
             opacity: 0.9; 
         }
-
         .item-tuku::before { --grad-start: var(--grad-tuku-start); --grad-end: var(--grad-tuku-end); --glow-color: var(--glow-tuku); }
         .item-pfl::before { --grad-start: var(--grad-pfl-start); --grad-end: var(--grad-pfl-end); --glow-color: var(--glow-pfl); }
         .item-layout::before { --grad-start: var(--grad-layout-start); --grad-end: var(--grad-layout-end); --glow-color: var(--glow-layout); }
         .item-easteregg::before { --grad-start: var(--grad-easteregg-start); --grad-end: var(--grad-easteregg-end); --glow-color: var(--glow-easteregg); }
         .item-ai::before { --grad-start: var(--grad-ai-start); --grad-end: var(--grad-ai-end); --glow-color: var(--glow-ai); }
         .item-pm18::before { --grad-start: var(--grad-pm18-start); --grad-end: var(--grad-pm18-end); --glow-color: var(--glow-pm18); }
-
-
+        .item-mode::before { --grad-start: var(--grad-mode-start); --grad-end: var(--grad-mode-end); --glow-color: var(--glow-mode); }
+        .item-interval::before { --grad-start: var(--grad-interval-start); --grad-end: var(--grad-interval-end); --glow-color: var(--glow-interval); }
         .item-left { 
             display: flex; 
             flex-direction: column; 
@@ -208,28 +207,27 @@
             font-size: 14px; 
             transform: translateY(-1px);
         }
-
         .value-description { font-size: 13px; color: var(--text-color-secondary); line-height: 1.5; padding-left: 24px; font-family: 'Rajdhani', sans-serif; font-weight: 500; }
         .item-right { text-align: right; flex-shrink: 0; min-width: 95px; position: relative; z-index: 1; }
-
         .setting-item .value { font-size: 14px; font-weight: 700; font-family: 'Orbitron', sans-serif; padding: 6px 12px; border-radius: 5px; background-color: var(--status-bg); display: inline-block; border: 1px solid var(--status-border); color: var(--status-color); text-shadow: 0 0 2px rgba(0,0,0,0.05);}
-
         .item-tuku { --item-color: var(--item-label-tuku-base); }
         .item-pfl { --item-color: var(--item-label-pfl-base); }
         .item-layout { --item-color: var(--item-label-layout-base); } 
         .item-easteregg { --item-color: var(--item-label-easteregg-base); }
         .item-ai { --item-color: var(--item-label-ai-base); }
         .item-pm18 { --item-color: var(--item-label-pm18-base); }
-
+        .item-mode { --item-color: var(--item-label-mode-base); }
+        .item-interval { --item-color: var(--item-label-interval-base); }
         .value-enabled { --status-color: var(--value-enabled-color); --status-border: var(--value-enabled-border); --status-bg: var(--value-enabled-bg); }
         .value-disabled { --status-color: var(--value-disabled-color); --status-border: var(--value-disabled-border); --status-bg: var(--value-disabled-bg); }
         .value-level-0 { --status-color: var(--value-level-0-color); --status-border: rgba(84, 110, 122, 0.3); --status-bg: rgba(207, 216, 220, 0.6); }
         .value-level-1 { --status-color: var(--value-level-1-color); --status-border: rgba(255, 143, 0, 0.3); --status-bg: rgba(255, 224, 178, 0.6); }
         .value-level-2 { --status-color: var(--value-level-2-color); --status-border: rgba(213, 0, 0, 0.3); --status-bg: rgba(255, 205, 210, 0.6); }
-        
+        .item-disabled .label, .item-disabled .value-description { color: #9e9e9e !important; text-shadow: none; }
+        .item-disabled .label::before { color: #9e9e9e !important; }
+        .item-disabled .value { filter: grayscale(80%); opacity: 0.7; }
         .footer { text-align: center; margin-top: 30px; font-size: 12px; color: var(--text-color-muted); padding-top: 18px; border-top: 1px solid var(--header-border-color); letter-spacing: 0.5px; font-family: 'Orbitron', sans-serif; position: relative; z-index: 1;}
         .footer::before { content: '◈'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 16px; color: var(--theme-primary-accent); opacity: 0.8;}
-
     </style>
 </head>
 <body style="{{scaleStyleValue}}">
@@ -282,10 +280,28 @@
                 <span class="value {{ layoutStatus.class }}">{{ layoutStatus.text }}</span>
             </div>
         </div>
+        <div class="setting-item item-mode">
+            <div class="item-left">
+                <span class="label">数据流I/O的处理模式</span>
+                <div class="value-description">当前是:[{{ executionMode.description }}]</div>
+            </div>
+            <div class="item-right">
+                <span class="value {{ executionMode.class }}">{{ executionMode.text }}</span>
+            </div>
+        </div>
+        <div class="setting-item item-interval {{ if !isSerialMode }}item-disabled{{ /if }}">
+            <div class="item-left">
+                <span class="label">数据流I/O的处理间隔延迟</span>
+                <div class="value-description">仅在低负载模式下生效</div>
+            </div>
+            <div class="item-right">
+                <span class="value value-level-0">{{ intervalMs }}ms</span>
+            </div>
+        </div>
         <div class="setting-item item-pm18"> 
             <div class="item-left">
                 <span class="label">PM18</span> 
-                <div class="value-description">管理三号仓库特殊面板图部署[默认不开启]</div>
+                <div class="value-description">管理四号仓库特殊面板图部署[默认不开启]</div>
             </div>
             <div class="item-right">
                 <span class="value {{ PM18Status.class }}">{{ PM18Status.text }}</span> 
