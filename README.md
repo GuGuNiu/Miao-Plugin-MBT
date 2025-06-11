@@ -2,23 +2,28 @@
   <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%">
 </p>
 
-# 简介
-&emsp;&emsp;咕咕牛的管理器已经有智能使用多维度的下载模式以及JSON作为索引数据源`(四号仓库不受JSON索引相关功能的约束)`，已支持角色别名模糊匹配。如果你没有安装 [绝区零/鸣潮] 插件，管理器会跳过它们并且会动态识别 [绝区零/鸣潮] 插件是否安装避免占用多余的空间，支持不启用图库只更新图库。
-
-# 注意
-本页面并非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
+## [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
+ - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
+ - ✅️原神 & ✅️星铁 & ✅️鸣潮 & ✅️绝区零
+  
+本页面非唯一仓库，当前是四仓库分流，建议用管理器安装，也可以访问以下仓库：
 
 [![一号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true)](../../../Miao-Plugin-MBT)
 [![二号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-2&show_owner=true)](../../../Miao-Plugin-MBT-2)  
 [![三号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-3&show_owner=true)](../../../Miao-Plugin-MBT-3)
 [![四号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true)](../../../Miao-Plugin-MBT-4)
 
+## ⁉️常见问题解决方案
 
+```
 
-假设有部分仓库下载失败，你依然可以 #下载咕咕牛 补全
+1. 如有部分仓库下载失败，你依然可以 #下载咕咕牛.
+2. Js有报错或出现问题，直接重新下载新的并重启机器人.
+3. 管理器出现蜜汁操作的时候说明是时序出问题了需要重启机器人了.
 
-Js有报错或出现问题，直接重新下载新的并重启机器人
+```
 
+---
 <p align="center">
   <img src="https://s2.loli.net/2025/06/09/ZbNwqARpt9uM1kG.webp" width="100%">
 </p>
@@ -26,11 +31,8 @@ Js有报错或出现问题，直接重新下载新的并重启机器人
 <p align="center">
  <<<<管理器的核心界面的截图>>>>
 </p>
-
-#### [Miao-Yunzai/TRSS-Yunzai]框架下支持的插件：
-> [!TIP]
-> - Miao-Plugin / ZZZ-Plugin / Waves-Plugin
-> - ✅️原神 & ✅️星铁 & ✅️鸣潮 & ✅️绝区零 
+   
+---
 
 ####  关于封禁 & 净化面板图
 > [!WARNING]
