@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import lodash from "lodash";
+import os from "node:os";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -19,6 +21,14 @@ const Purify_Level = {
   PX18_PLUS: 2,
   getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"),
 };
+const VALID_TAGS = {
+  "彩蛋": { key: "isEasterEgg", value: true },
+  "ai": { key: "isAiImage", value: true },
+  "横屏": { key: "layout", value: "fullscreen" },
+  "r18": { key: "isRx18", value: true },
+  "p18": { key: "isPx18", value: true },
+};
+
 
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
 
@@ -61,7 +71,30 @@ const Default_Config = {
   layout: true,
   PM18: false,
   Execution_Mode: 'Batch', // 默认执行模式: 'Batch' (高速并发处理), 'Serial' (低负载串行)
-  Command_Interval_Ms: 800, // 仅在串行模式下生效的发送间隔(毫秒)
+  Load_Level: 1, // 负载等级(1-3)，仅在Serial模式下生效
+  Use_Secondary_Forward: false,
+};
+
+// 负载防御等级
+const LOAD_LEVEL_CONFIG = {
+  1: { 
+    name: "标准",
+    description: "当前执行的是标准低负载策略(15秒CD, 阈值: CPU>90% 且 内存>85%)",
+    cd: 15,
+    thresholds: { cpu: 90, mem: 85, logic: 'AND' }
+  },
+  2: { 
+    name: "保守",
+    description: "当前执行的是强化防御策略(30秒CD, 阈值: CPU>85% 且 内存>80%)",
+    cd: 30,
+    thresholds: { cpu: 85, mem: 80, logic: 'AND' }
+  },
+  3: { 
+    name: "极致",
+    description: "当前执行的是最严格的防御策略(60秒CD, 阈值: CPU>75% 或 内存>75%)",
+    cd: 60,
+    thresholds: { cpu: 75, mem: 75, logic: 'OR' }
+  }
 };
 
 const ERROR_CODES = {
@@ -102,18 +135,18 @@ async function safeDelete(targetPath, maxAttempts = 3, delay = 1000, throwOnErro
             detailedError.path = targetPath;
             throw detailedError;
           }
-          return false; 
+          return false;
         }
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         //logger.error(`${Default_Config.logPrefix} [安全删除] ${targetPath} 遇到未处理异常:`, err);
         if (throwOnError) {
-            const detailedError = new Error(`删除 ${targetPath} 时遇到未处理异常: ${err.message}`);
-            detailedError.code = err.code || 'SAFE_DELETE_UNHANDLED';
-            detailedError.path = targetPath;
-            throw detailedError;
+          const detailedError = new Error(`删除 ${targetPath} 时遇到未处理异常: ${err.message}`);
+          detailedError.code = err.code || 'SAFE_DELETE_UNHANDLED';
+          detailedError.path = targetPath;
+          throw detailedError;
         }
-        return false; 
+        return false;
       }
     }
   }
@@ -253,6 +286,86 @@ function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onSt
       }
     });
   });
+}
+
+/**
+ * @description 超级熔断器：智能监控CPU和内存，在两者同时压力过大时主动暂停
+ */
+async function checkSystemHealth(e, logger) {
+  const logPrefix = Default_Config.logPrefix;
+
+  const level = MiaoPluginMBT.MBTConfig.Load_Level ?? 1;
+  const policy = LOAD_LEVEL_CONFIG[level] || LOAD_LEVEL_CONFIG[1];
+  const { cpu: cpuThreshold, mem: memThreshold, logic } = policy.thresholds;
+
+  try {
+      const totalMemory = os.totalmem();
+      const memThresholdBytes = totalMemory * (memThreshold / 100);
+      const currentRss = process.memoryUsage().rss;
+
+      const getCpuUsage = () => {
+          return new Promise(resolve => {
+              const startUsage = process.cpuUsage();
+              const startTime = process.hrtime.bigint();
+
+              setTimeout(() => {
+                  const endUsage = process.cpuUsage(startUsage);
+                  const endTime = process.hrtime.bigint();
+                  const elapsedTime = Number(endTime - startTime) * 1e-9; // 秒
+                  const totalCpuTime = (endUsage.user + endUsage.system) * 1e-6; // 秒
+                  const cpuPercentage = (totalCpuTime / elapsedTime) * 100;
+                  resolve(cpuPercentage);
+              }, 1000); // 测量1秒内的CPU使用率
+          });
+      };
+
+      const currentCpuUsage = await getCpuUsage();
+
+      let isOverloaded = false;
+      if (logic === 'OR') {
+        isOverloaded = currentRss > memThresholdBytes || currentCpuUsage > cpuThreshold;
+      } else { // 默认为 AND
+        isOverloaded = currentRss > memThresholdBytes && currentCpuUsage > cpuThreshold;
+      }
+
+      if (isOverloaded) {
+          const initialMemoryUsage = FormatBytes(currentRss);
+          const totalMemoryFormatted = FormatBytes(totalMemory);
+          const message = `${logPrefix} 检测到系统高负载！\nCPU: ${currentCpuUsage.toFixed(1)}%, 内存: ${initialMemoryUsage} / ${totalMemoryFormatted}\n为防止机器人崩溃，处理已暂停，将在负载恢复后自动继续...`;
+          
+          logger.warn(message.replace(/\n/g, ' '));
+          if (e && e.reply) {
+              await e.reply(message, true);
+          }
+          
+          let isHealthy = false;
+          while (!isHealthy) {
+              await common.sleep(3000);
+              if (global.gc) global.gc();
+              
+              const newRss = process.memoryUsage().rss;
+              const newCpu = await getCpuUsage();
+
+              let isRecovered = false;
+              if (logic === 'OR') {
+                isRecovered = newRss <= memThresholdBytes && newCpu <= cpuThreshold;
+              } else {
+                isRecovered = newRss <= memThresholdBytes || newCpu <= cpuThreshold;
+              }
+
+              if (isRecovered) {
+                  isHealthy = true;
+                  const recoveredMessage = `${logPrefix} 系统负载已恢复 (CPU: ${newCpu.toFixed(1)}%, 内存: ${FormatBytes(newRss)})，处理继续！`;
+                  logger.info(recoveredMessage);
+                  if (e && e.reply) {
+                      await e.reply(recoveredMessage, true);
+                  }
+              }
+          }
+      }
+  } catch (err) {
+      logger.error(`${logPrefix} [系统健康检查] 发生错误:`, err);
+  }
 }
 
 async function FolderSize(folderPath) {
@@ -504,10 +617,10 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, "..", "package.json");
       const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      return pkg.version || "4.9.7";
+      return pkg.version || "4.9.8";
     }
     catch {
-      return "4.9.7";
+      return "4.9.8";
     }
   }
 
@@ -664,7 +777,8 @@ export class MiaoPluginMBT extends plugin {
       PM18: parseBoolLike(configData.PM18, Default_Config.PM18),
       cronUpdate: configData.cronUpdate || Default_Config.cronUpdate,
       Execution_Mode: configData.Execution_Mode || Default_Config.Execution_Mode,
-      Command_Interval_Ms: configData.Command_Interval_Ms || Default_Config.Command_Interval_Ms,
+      Load_Level: configData.Load_Level ?? Default_Config.Load_Level,
+      Use_Secondary_Forward: configData.Use_Secondary_Forward ?? Default_Config.Use_Secondary_Forward,
     };
     if (![Purify_Level.NONE, Purify_Level.RX18_ONLY, Purify_Level.PX18_PLUS].includes(loadedConfig.PFL)) {
       logger.warn(`${logPrefix} [加载配置] 检测到无效的净化等级配置 (${loadedConfig.PFL})，已重置为默认值 (${Default_Config.defaultPfl})。`);
@@ -687,7 +801,8 @@ export class MiaoPluginMBT extends plugin {
         PM18: configData.PM18 ? 1 : 0,
         cronUpdate: configData.cronUpdate,
         Execution_Mode: configData.Execution_Mode,
-        Command_Interval_Ms: configData.Command_Interval_Ms,
+        Load_Level: configData.Load_Level,
+        Use_Secondary_Forward: configData.Use_Secondary_Forward,
       };
       const dirPath = path.dirname(configFilePath);
       try { await fsPromises.mkdir(dirPath, { recursive: true }); }
@@ -788,8 +903,46 @@ export class MiaoPluginMBT extends plugin {
     }
   }
 
-  static async IsGamePluginInstalled(gameKey, logger) {
-    const currentLogPrefix = Default_Config.logPrefix;
+  /**
+   * @description 插件的核心防御策略应用函数。
+   *              它会根据当前的执行模式和负载等级，决定是否对指令进行冷却和系统资源监控。
+   *              此函数是所有高负载指令的统一入口，确保了防御策略的一致性。
+   */
+  static async applyDefensePolicy(e, commandName) {
+    const logger = global.logger || console;
+    const logPrefix = Default_Config.logPrefix;
+
+    if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') !== 'Serial') {
+      return true; 
+    }
+    
+    const level = MiaoPluginMBT.MBTConfig.Load_Level ?? 1;
+    let policy = LOAD_LEVEL_CONFIG[level]; 
+    
+    if (!policy) { // 做一个保险，防止配置文件中等级错误导致程序崩溃。
+        logger.warn(`${logPrefix} 检测到无效的负载等级 (${level})，已临时采用等级1策略。`);
+        policy = LOAD_LEVEL_CONFIG[1];
+    }
+    await checkSystemHealth(e, logger); 
+    const cooldownDuration = policy.cd;
+    if (cooldownDuration > 0) {
+      const userId = e.user_id;
+      const redisKey = `Yz:GuGuNiu:${commandName}:${userId}`;
+      try {
+        const ttl = await redis.ttl(redisKey);
+        if (ttl && ttl > 0) {
+          e.reply(`该指令冷却中，剩余 ${ttl} 秒。`, true);
+          return false; // 返回false，通知调用方中断执行。
+        }
+        await redis.set(redisKey, '1', { EX: cooldownDuration });
+      } catch (redisError) {
+        logger.error(`${logPrefix} [CD:${commandName}] Redis 操作失败:`, redisError);
+      }
+    }
+  
+    return true;
+  }
+  static async IsGamePluginInstalled(gameKey) {
     let pluginPathToCheck = "";
     if (gameKey === "zzz") {
       pluginPathToCheck = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", "ZZZ-Plugin");
@@ -811,8 +964,7 @@ export class MiaoPluginMBT extends plugin {
     }
   }
 
- static async ManageGitExcludeRules(repositoryPath, rulesToAdd, rulesToRemove, logger) {
-    const currentLogPrefix = Default_Config.logPrefix;
+  static async ManageGitExcludeRules(repositoryPath, rulesToAdd, rulesToRemove, logger) {
     const excludeFilePath = path.join(repositoryPath, ".git", "info", "exclude");
 
     try {
@@ -861,46 +1013,44 @@ export class MiaoPluginMBT extends plugin {
           }
         });
       }
-      
+
       let excludeFileNowExists = false;
       try {
-          await fsPromises.access(excludeFilePath);
-          excludeFileNowExists = true;
+        await fsPromises.access(excludeFilePath);
+        excludeFileNowExists = true;
       } catch (accessError) {
-          if (accessError.code !== ERROR_CODES.NotFound) {
-              throw accessError; 
-          }
+        if (accessError.code !== ERROR_CODES.NotFound) {
+          throw accessError;
+        }
       }
 
-      if (rulesModified || (rulesSet.size > 0 && !excludeFileNowExists)) { 
-          const finalRulesContent = Array.from(rulesSet).join("\n") + (rulesSet.size > 0 ? "\n" : "");
-          await fsPromises.mkdir(path.dirname(excludeFilePath), { recursive: true });
-          await fsPromises.writeFile(excludeFilePath, finalRulesContent, "utf-8");
+      if (rulesModified || (rulesSet.size > 0 && !excludeFileNowExists)) {
+        const finalRulesContent = Array.from(rulesSet).join("\n") + (rulesSet.size > 0 ? "\n" : "");
+        await fsPromises.mkdir(path.dirname(excludeFilePath), { recursive: true });
+        await fsPromises.writeFile(excludeFilePath, finalRulesContent, "utf-8");
       }
       return true;
     } catch (error) {
       if (logger && typeof logger.error === 'function') {
         //logger.error(`${currentLogPrefix} 处理 ${repositoryPath} 失败: ${error.message}`);
       }
-      return false; 
+      return false;
     }
   }
 
   static async ManageOptionalGameContent(repositoryPath, gameKey, gameFolderName, logger) {
-    const currentLogPrefix = Default_Config.logPrefix;
-
     try {
       const pluginInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKey, logger);
       const fullGameFolderPath = path.join(repositoryPath, gameFolderName);
 
       if (!pluginInstalled) {
         try {
-          await fsPromises.access(fullGameFolderPath); 
+          await fsPromises.access(fullGameFolderPath);
           await safeDelete(fullGameFolderPath);
         } catch (deleteError) {
           if (deleteError.code !== ERROR_CODES.NotFound) {
             if (logger && typeof logger.warn === 'function') {
-               //logger.warn(`${currentLogPrefix} 删除 ${fullGameFolderPath} (游戏: ${gameKey}) 出错: ${deleteError.code}`);
+              //logger.warn(`${currentLogPrefix} 删除 ${fullGameFolderPath} (游戏: ${gameKey}) 出错: ${deleteError.code}`);
             }
           }
         }
@@ -917,25 +1067,25 @@ export class MiaoPluginMBT extends plugin {
     }
   }
 
-  static async GetRelevantRepoPathsForGame(gameKey, logger) { 
+  static async GetRelevantRepoPathsForGame(gameKey, logger) {
     const currentPaths = MiaoPluginMBT.paths;
-    const potentialRepoConfigs = []; 
+    const potentialRepoConfigs = [];
 
     if (gameKey === "zzz") {
-        if (currentPaths.LocalTuKuPath) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath, num: 1, name: "一号库" });
-        if (currentPaths.LocalTuKuPath2) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath2, num: 2, name: "二号库" });
-        if (currentPaths.LocalTuKuPath4) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath4, num: 4, name: "四号库" });
+      if (currentPaths.LocalTuKuPath) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath, num: 1, name: "一号库" });
+      if (currentPaths.LocalTuKuPath2) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath2, num: 2, name: "二号库" });
+      if (currentPaths.LocalTuKuPath4) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath4, num: 4, name: "四号库" });
     } else if (gameKey === "waves") {
-        if (currentPaths.LocalTuKuPath) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath, num: 1, name: "一号库" });
-        if (currentPaths.LocalTuKuPath3) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath3, num: 3, name: "三号库" });
-        if (currentPaths.LocalTuKuPath4) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath4, num: 4, name: "四号库" });
+      if (currentPaths.LocalTuKuPath) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath, num: 1, name: "一号库" });
+      if (currentPaths.LocalTuKuPath3) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath3, num: 3, name: "三号库" });
+      if (currentPaths.LocalTuKuPath4) potentialRepoConfigs.push({ path: currentPaths.LocalTuKuPath4, num: 4, name: "四号库" });
     }
 
     const downloadedRepoPaths = [];
     for (const repoConfig of potentialRepoConfigs) {
-        if (await MiaoPluginMBT.IsTuKuDownloaded(repoConfig.num)) {
-            downloadedRepoPaths.push(repoConfig.path);
-        }
+      if (await MiaoPluginMBT.IsTuKuDownloaded(repoConfig.num)) {
+        downloadedRepoPaths.push(repoConfig.path);
+      }
     }
     return downloadedRepoPaths;
   }
@@ -1514,39 +1664,62 @@ export class MiaoPluginMBT extends plugin {
     if (error?.message) Report.summary += `\n错误信息: ${error.message}`;
     if (error?.code) Report.summary += ` (Code: ${error.code})`;
     if (error?.signal) Report.summary += ` (Signal: ${error.signal})`;
-    const errorStringForSuggestions = `${error?.message || ""} ${error?.stderr || ""} ${String(error?.code) || ""} ${context || ""}`.toLowerCase();
 
-    const suggestionsMap = {
-      "could not resolve host": "网络问题: 是不是 DNS 解析不了主机？检查下网络和 DNS 设置。",
-      "connection timed out": "网络问题: 连接超时了，网不好或者对面服务器挂了？",
-      "connection refused": "网络问题: 对面服务器拒绝连接，端口对吗？防火墙开了？",
-      "ssl certificate problem": "网络问题: SSL 证书有问题，系统时间对不对？或者需要更新证书？",
-      "403 forbidden": "访问被拒 (403): 没权限访问这个地址哦。",
-      "404 not found": "资源未找到 (404): URL 写错了或者文件真的没了。",
-      "unable to access": "Git 访问失败: 检查网络、URL、代理设置对不，或者的手动测速查看问题",
-      "authentication failed": "Git 认证失败: 用户名密码或者 Token 不对吧？",
-      "permission denied": "权限问题: Yunzai 没权限读写文件或目录，检查下文件夹权限。",
-      "index file corrupt": "Git 仓库可能坏了: 试试清理 `.git/index` 文件？不行就得 #重置咕咕牛 了。",
-      "lock file|index.lock": "Git 正忙着呢: 等一下下，或者手动清理 `.git/index.lock` 文件（小心点！）",
-      "commit your changes or stash them": "Git 冲突: 本地文件改动了和远程对不上，试试 #更新咕咕牛 强制覆盖？",
-      "not a git repository": "Git: 这地方不是个 Git 仓库啊。",
-      "unrelated histories": "Git 历史冲突: 这个得 #重置咕咕牛 才能解决了。",
-      "not possible to fast-forward": "Git: 无法快进合并，#更新咕咕牛 强制覆盖试试。",
-      [ERROR_CODES.NotFound]: "文件系统: 找不到文件或目录，路径对吗？",
-      [ERROR_CODES.Access]: "文件系统: 没权限访问这个文件或目录。",
-      [ERROR_CODES.Busy]: "文件系统: 文件或目录正被占用，稍后再试试？",
-      [ERROR_CODES.NotEmpty]: "文件系统: 文件夹里还有东西，删不掉。",
-      [ERROR_CODES.ConnReset]: "网络: 连接突然断了。",
-      [ERROR_CODES.Timeout]: "操作超时了，等太久了...",
-      "json.parse": "数据问题: JSON 文件格式不对，检查下 `imagedata.json` 或 `banlist.json`。",
-      "yaml.parse": "配置问题: YAML 文件格式不对，检查下 `GalleryConfig.yaml`。",
-    };
     let matchedSuggestion = null;
-    if (error instanceof ReferenceError && error.message?.includes("is not defined")) matchedSuggestion = "代码出错了: 引用了不存在的变量或函数。如果没改过代码，可能是插件Bug，快去反馈！";
-    else { for (const keyword in suggestionsMap) { const keywordToTest = ERROR_CODES[keyword] || keyword; const escapedKeyword = String(keywordToTest).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); const regex = new RegExp(escapedKeyword, "i"); if (regex.test(errorStringForSuggestions)) { matchedSuggestion = suggestionsMap[keyword]; break; } } }
+    if (error?.code === ERROR_CODES.Timeout || String(error?.code).toUpperCase() === 'ETIMEDOUT') {
+      matchedSuggestion = "操作超时了，等太久了...";
+    }
+
+    // 如果没有通过错误码匹配到，再走原来的关键字匹配逻辑
+    if (!matchedSuggestion) {
+      const errorStringForSuggestions = `${error?.message || ""} ${error?.stderr || ""} ${String(error?.code) || ""} ${context || ""}`.toLowerCase();
+      const suggestionsMap = {
+        "could not resolve host": "网络问题: 是不是 DNS 解析不了主机？检查下网络和 DNS 设置。",
+        "connection timed out": "网络问题: 连接超时了，网不好或者对面服务器挂了？",
+        "connection refused": "网络问题: 对面服务器拒绝连接，端口对吗？防火墙开了？",
+        "ssl certificate problem": "网络问题: SSL 证书有问题，系统时间对不对？或者需要更新证书？",
+        "403 forbidden": "访问被拒 (403): 没权限访问这个地址哦。",
+        "404 not found": "资源未找到 (404): URL 写错了或者文件真的没了。",
+        "unable to access": "Git 访问失败: 检查网络、URL、代理设置对不，或者的手动测速查看问题",
+        "authentication failed": "Git 认证失败: 用户名密码或者 Token 不对吧？",
+        "permission denied": "权限问题: Yunzai 没权限读写文件或目录，检查下文件夹权限。",
+        "index file corrupt": "Git 仓库可能坏了: 试试清理 `.git/index` 文件？不行就得 #重置咕咕牛 了。",
+        "lock file|index.lock": "Git 正忙着呢: 等一下下，或者手动清理 `.git/index.lock` 文件（小心点！）",
+        "commit your changes or stash them": "Git 冲突: 本地文件改动了和远程对不上，试试 #更新咕咕牛 强制覆盖？",
+        "not a git repository": "Git: 这地方不是个 Git 仓库啊。",
+        "unrelated histories": "Git 历史冲突: 这个得 #重置咕咕牛 才能解决了。",
+        "not possible to fast-forward": "Git: 无法快进合并，#更新咕咕牛 强制覆盖试试。",
+        [ERROR_CODES.NotFound]: "文件系统: 找不到文件或目录，路径对吗？",
+        [ERROR_CODES.Access]: "文件系统: 没权限访问这个文件或目录。",
+        [ERROR_CODES.Busy]: "文件系统: 文件或目录正被占用，稍后再试试？",
+        [ERROR_CODES.NotEmpty]: "文件系统: 文件夹里还有东西，删不掉。",
+        [ERROR_CODES.ConnReset]: "网络: 连接突然断了。",
+        "json.parse": "数据问题: JSON 文件格式不对，检查下 `imagedata.json` 或 `banlist.json`。",
+        "yaml.parse": "配置问题: YAML 文件格式不对，检查下 `GalleryConfig.yaml`。",
+      };
+
+      if (error instanceof ReferenceError && error.message?.includes("is not defined")) {
+        matchedSuggestion = "代码出错了: 引用了不存在的变量或函数。如果没改过代码，可能是插件Bug，快去反馈！";
+      } else {
+        for (const keyword in suggestionsMap) {
+          const keywordToTest = ERROR_CODES[keyword] || keyword;
+          const escapedKeyword = String(keywordToTest).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const regex = new RegExp(escapedKeyword, "i");
+          if (regex.test(errorStringForSuggestions)) {
+            matchedSuggestion = suggestionsMap[keyword];
+            break;
+          }
+        }
+      }
+    }
+
     let finalSuggestionsArray = [];
-    if (matchedSuggestion) finalSuggestionsArray.push(`- ${matchedSuggestion}`);
-    else finalSuggestionsArray.push("- 暂时没有针对此错误的特定建议，请尝试以下通用排查方法。");
+    if (matchedSuggestion) {
+      finalSuggestionsArray.push(`- ${matchedSuggestion}`);
+    } else {
+      finalSuggestionsArray.push("- 暂时没有针对此错误的特定建议，请尝试以下通用排查方法。");
+    }
+
     finalSuggestionsArray.push("- 请检查您的网络连接是否通畅。", "- 请检查 Yunzai-Bot 目录及插件相关目录的文件/文件夹权限。", "- 请仔细查看控制台输出的详细错误日志，特别是本条错误上下的内容。", "- 尝试重启 Yunzai-Bot 程序。");
     if (operationName.toLowerCase().includes("下载") || operationName.toLowerCase().includes("更新")) { finalSuggestionsArray.push("- 确保您的设备上已正确安装 Git，并且 Git 的路径已添加到系统环境变量中。", "- 尝试执行 `#咕咕牛测速` 命令检查网络节点状况。"); }
     if (!operationName.toLowerCase().includes("重置")) { finalSuggestionsArray.push("- 如果问题持续存在，作为最终手段，您可以尝试执行 `#重置咕咕牛` 命令，然后重新 `#下载咕咕牛` (请注意：这将清除所有咕咕牛图库相关数据和配置)。"); }
@@ -1736,7 +1909,7 @@ export class MiaoPluginMBT extends plugin {
 
       let currentIntermediateDir = null;  //每次 source 循环开始时初始化 
       let intermediatePathForAttempt = null;  //每次 source 循环开始时初始化
- 
+
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const attemptTimestamp = Date.now();
         const attemptOuterRandomSuffix = crypto.randomBytes(4).toString("hex");
@@ -1935,18 +2108,18 @@ export class MiaoPluginMBT extends plugin {
 
     const gameKeysForPreUpdateManage = ["zzz", "waves"];
     for (const gameKeyToManage of gameKeysForPreUpdateManage) {
-        const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
-        if (!gameFolderToManage) {
-            continue;
-        }
-        
-        const isRepoRelevant = 
-            (gameKeyToManage === "zzz" && (RepoNum === 1 || RepoNum === 2 || RepoNum === 4)) ||
-            (gameKeyToManage === "waves" && (RepoNum === 1 || RepoNum === 3 || RepoNum === 4));
+      const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+      if (!gameFolderToManage) {
+        continue;
+      }
 
-        if (isRepoRelevant) {
-            await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger);
-        }
+      const isRepoRelevant =
+        (gameKeyToManage === "zzz" && (RepoNum === 1 || RepoNum === 2 || RepoNum === 4)) ||
+        (gameKeyToManage === "waves" && (RepoNum === 1 || RepoNum === 3 || RepoNum === 4));
+
+      if (isRepoRelevant) {
+        await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger);
+      }
     }
 
     await MiaoPluginMBT.gitMutex.acquire();
@@ -2273,116 +2446,116 @@ export class MiaoPluginMBT extends plugin {
   }
 
   static async SendMasterMsg(msg, e = null, delay = 0, logger = global.logger || console) {
-      const logPrefix = Default_Config.logPrefix;
-      let masterQQList = [];
+    const logPrefix = Default_Config.logPrefix;
+    let masterQQList = [];
 
-      async function getValidMasterListInternal() {
-          let mastersRaw = [];
+    async function getValidMasterListInternal() {
+      let mastersRaw = [];
 
-          if (typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady && typeof Bot.ready !== 'function')) {
-              let retries = 0; const maxRetries = 15; 
-              while ((typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady)) && retries < maxRetries) {
-                  if (typeof Bot !== "undefined" && ((typeof Bot.isReady === 'boolean' && Bot.isReady) || (Bot.master && Bot.master.length > 0) )) break;
-                  await common.sleep(300 + retries * 20); 
-                  retries++;
+      if (typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady && typeof Bot.ready !== 'function')) {
+        let retries = 0; const maxRetries = 15;
+        while ((typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady)) && retries < maxRetries) {
+          if (typeof Bot !== "undefined" && ((typeof Bot.isReady === 'boolean' && Bot.isReady) || (Bot.master && Bot.master.length > 0))) break;
+          await common.sleep(300 + retries * 20);
+          retries++;
+        }
+      } else if (typeof Bot !== "undefined" && typeof Bot.ready === 'function') {
+        try { await Bot.ready(); } catch (err) { /* 静默 */ }
+      }
+
+      if (typeof Bot === "undefined") {
+        //logger.error(`${logPrefix} [通知主人] 全局 Bot 对象在等待后仍未定义，无法获取主人。`);
+        return [];
+      }
+
+      if (typeof Bot.getConfig === 'function') {
+        try {
+          const configMaster = Bot.getConfig('masterQQ') || Bot.getConfig('master');
+          if (configMaster) {
+            mastersRaw.push(...(Array.isArray(configMaster) ? configMaster : [configMaster]));
+          }
+        } catch (err) { /* 静默 */ }
+      }
+
+      if (mastersRaw.length === 0 && Bot.master && Bot.master.length > 0) {
+        mastersRaw.push(...(Array.isArray(Bot.master) ? Bot.master : [Bot.master]));
+      }
+
+      if (mastersRaw.length === 0) {
+        try {
+          const configPath = path.join(MiaoPluginMBT.paths.YunzaiPath, 'config', 'config', 'other.yaml');
+          if (fs.existsSync(configPath)) {
+            const fileContent = fs.readFileSync(configPath, 'utf8');
+            let configData = null;
+            if (typeof yaml.parse === 'function') { configData = yaml.parse(fileContent); }
+            else if (typeof yaml.load === 'function') { configData = yaml.load(fileContent); }
+
+            if (configData) {
+              const confMasterQQ = configData.masterQQ;
+              const confMasterField = configData.master;
+
+              if (confMasterQQ && (Array.isArray(confMasterQQ) ? confMasterQQ.length > 0 : confMasterQQ)) {
+                mastersRaw.push(...(Array.isArray(confMasterQQ) ? confMasterQQ : [confMasterQQ]));
               }
-          } else if (typeof Bot !== "undefined" && typeof Bot.ready === 'function') {
-              try { await Bot.ready(); } catch (err) { /* 静默 */ }
-          }
-          
-          if (typeof Bot === "undefined") {
-              //logger.error(`${logPrefix} [通知主人] 全局 Bot 对象在等待后仍未定义，无法获取主人。`);
-              return []; 
-          }
-
-          if (typeof Bot.getConfig === 'function') {
-              try {
-                  const configMaster = Bot.getConfig('masterQQ') || Bot.getConfig('master');
-                  if (configMaster) {
-                      mastersRaw.push(...(Array.isArray(configMaster) ? configMaster : [configMaster]));
-                  }
-              } catch (err) { /* 静默 */ }
-          }
-
-          if (mastersRaw.length === 0 && Bot.master && Bot.master.length > 0) {
-              mastersRaw.push(...(Array.isArray(Bot.master) ? Bot.master : [Bot.master]));
-          }
-
-          if (mastersRaw.length === 0) {
-              try {
-                  const configPath = path.join(MiaoPluginMBT.paths.YunzaiPath, 'config', 'config', 'other.yaml');
-                  if (fs.existsSync(configPath)) {
-                      const fileContent = fs.readFileSync(configPath, 'utf8');
-                      let configData = null;
-                      if (typeof yaml.parse === 'function') { configData = yaml.parse(fileContent); } 
-                      else if (typeof yaml.load === 'function') { configData = yaml.load(fileContent); } 
-                      
-                      if (configData) {
-                          const confMasterQQ = configData.masterQQ;
-                          const confMasterField = configData.master; 
-                          
-                          if (confMasterQQ && (Array.isArray(confMasterQQ) ? confMasterQQ.length > 0 : confMasterQQ )) {
-                              mastersRaw.push(...(Array.isArray(confMasterQQ) ? confMasterQQ : [confMasterQQ]));
-                          }
-                          if (confMasterField) { 
-                              if(Array.isArray(confMasterField)) {
-                                  const extractedFromMasterField = confMasterField.map(item => {
-                                      if (typeof item === 'string' && item.includes(':')) {
-                                          return item.split(':')[1]; 
-                                      }
-                                      return item;
-                                  });
-                                  mastersRaw.push(...extractedFromMasterField);
-                              } else if (typeof confMasterField === 'string' || typeof confMasterField === 'number') {
-                                  mastersRaw.push(confMasterField);
-                              }
-                          }
-                      }
-                  }
-              } catch (err) {
-                  //logger.error(`${logPrefix} [通知主人] 兜底读取 other.yaml 失败:`, err.message);
+              if (confMasterField) {
+                if (Array.isArray(confMasterField)) {
+                  const extractedFromMasterField = confMasterField.map(item => {
+                    if (typeof item === 'string' && item.includes(':')) {
+                      return item.split(':')[1];
+                    }
+                    return item;
+                  });
+                  mastersRaw.push(...extractedFromMasterField);
+                } else if (typeof confMasterField === 'string' || typeof confMasterField === 'number') {
+                  mastersRaw.push(confMasterField);
+                }
               }
+            }
           }
-
-          const uniqueMasters = [...new Set(mastersRaw)];
-          return uniqueMasters.map(id => {
-              let strId = String(id).trim();
-              if (strId.toLowerCase().startsWith('z') && /^[zZ][1-9][0-9]{4,14}$/.test(strId)) {
-                  strId = strId.substring(1);
-              }
-              return strId;
-          }).filter(id => id && /^[1-9][0-9]{4,14}$/.test(id));
+        } catch (err) {
+          //logger.error(`${logPrefix} [通知主人] 兜底读取 other.yaml 失败:`, err.message);
+        }
       }
 
-      masterQQList = await getValidMasterListInternal();
+      const uniqueMasters = [...new Set(mastersRaw)];
+      return uniqueMasters.map(id => {
+        let strId = String(id).trim();
+        if (strId.toLowerCase().startsWith('z') && /^[zZ][1-9][0-9]{4,14}$/.test(strId)) {
+          strId = strId.substring(1);
+        }
+        return strId;
+      }).filter(id => id && /^[1-9][0-9]{4,14}$/.test(id));
+    }
 
-      if (!masterQQList || masterQQList.length === 0) {
-          //logger.warn(`${logPrefix} [通知主人] 最终未能获取到有效的主人QQ列表，无法发送消息。`);
-          return;
+    masterQQList = await getValidMasterListInternal();
+
+    if (!masterQQList || masterQQList.length === 0) {
+      //logger.warn(`${logPrefix} [通知主人] 最终未能获取到有效的主人QQ列表，无法发送消息。`);
+      return;
+    }
+
+    if (typeof Bot === "undefined" || typeof Bot.pickUser !== 'function') {
+      //logger.error(`${logPrefix} [通知主人] Bot 对象或 Bot.pickUser 方法无效，无法发送消息。`);
+      return;
+    }
+
+    if (delay > 0) {
+      await common.sleep(delay);
+    }
+
+    const firstMasterId = masterQQList[0]; // 只取第一个有效的主人QQ
+
+    try {
+      const user = Bot.pickUser(firstMasterId);
+      if (user && typeof user.sendMsg === 'function') {
+        await user.sendMsg(msg);
+        logger.info(`${logPrefix} [通知主人] 消息已尝试发送给主人 ${firstMasterId}。`);
+      } else {
+        //logger.warn(`${logPrefix} [通知主人] 未能为主人QQ ${firstMasterId} 获取到有效的用户对象或sendMsg方法。`);
       }
-
-      if (typeof Bot === "undefined" || typeof Bot.pickUser !== 'function') {
-          //logger.error(`${logPrefix} [通知主人] Bot 对象或 Bot.pickUser 方法无效，无法发送消息。`);
-          return;
-      }
-
-      if (delay > 0) {
-          await common.sleep(delay);
-      }
-
-      const firstMasterId = masterQQList[0]; // 只取第一个有效的主人QQ
-
-      try {
-          const user = Bot.pickUser(firstMasterId);
-          if (user && typeof user.sendMsg === 'function') {
-              await user.sendMsg(msg);
-              logger.info(`${logPrefix} [通知主人] 消息已尝试发送给主人 ${firstMasterId}。`);
-          } else {
-              //logger.warn(`${logPrefix} [通知主人] 未能为主人QQ ${firstMasterId} 获取到有效的用户对象或sendMsg方法。`);
-          }
-      } catch (sendError) {
-          //logger.error(`${logPrefix} [通知主人] 发送消息给主人 ${firstMasterId} 失败:`, sendError.message, sendError);
-      }
+    } catch (sendError) {
+      //logger.error(`${logPrefix} [通知主人] 发送消息给主人 ${firstMasterId} 失败:`, sendError.message, sendError);
+    }
   }
 
   // --- 实例方法 ---
@@ -2737,14 +2910,14 @@ export class MiaoPluginMBT extends plugin {
       //鸣潮-绝区零插件存在性
       const gameKeysForPostDownloadManage = ["zzz", "waves"];
       for (const gameKeyToManage of gameKeysForPostDownloadManage) {
-          const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
-          if (!gameFolderToManage) {
-              continue;
-          }
-          const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
-          for (const repoPath of relevantRepoPaths) {
-              await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
-          }
+        const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+        if (!gameFolderToManage) {
+          continue;
+        }
+        const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
+        for (const repoPath of relevantRepoPaths) {
+          await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
+        }
       }
 
       if (overallSuccess) {
@@ -2775,40 +2948,51 @@ export class MiaoPluginMBT extends plugin {
     const logPrefix = this.logPrefix;
 
     const Repo1Exists = await MiaoPluginMBT.IsTuKuDownloaded(1);
+    if (!Repo1Exists) {
+      if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库未下载", true);
+      return false;
+    }
+
     const Repo2UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass_Github_URL || Default_Config.Ass_Github_URL);
     let Repo2Exists = Repo2UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(2));
     const Repo3UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Ass2_Github_URL || Default_Config.Ass2_Github_URL);
     let Repo3Exists = Repo3UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(3));
     const Repo4UrlConfigured = !!(MiaoPluginMBT.MBTConfig?.Sexy_Github_URL || Default_Config.Sexy_Github_URL);
     let Repo4Exists = Repo4UrlConfigured && (await MiaoPluginMBT.IsTuKuDownloaded(4));
-
     let anyConfiguredRepoMissing = false;
-    if (!Repo1Exists) anyConfiguredRepoMissing = true;
     if (Repo2UrlConfigured && !Repo2Exists) anyConfiguredRepoMissing = true;
     if (Repo3UrlConfigured && !Repo3Exists) anyConfiguredRepoMissing = true;
     if (Repo4UrlConfigured && !Repo4Exists) anyConfiguredRepoMissing = true;
-
-    if (!Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库未下载", true);
-      return false;
-    }
-    if (anyConfiguredRepoMissing && Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
+    if (anyConfiguredRepoMissing && !isScheduled && e) {
+      await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先 `#下载咕咕牛` 补全。", true);
     }
 
     const startTime = Date.now();
     if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
-    //logger.info(`${logPrefix} [更新流程] 开始 @ ${new Date(startTime).toISOString()}`);
 
     const reportResults = [];
     let overallSuccess = true;
     let overallHasChanges = false;
+    const errorDetailsForForwardMsg = []; //  用于存放详细错误报告的数组
 
     const processRepoResult = async (repoNum, localPath, repoDisplayName, urlConfigKeyInMBT, urlConfigKeyInDefault, branchForUpdate, isCore = false) => {
       const repoUrlForUpdate = MiaoPluginMBT.MBTConfig?.[urlConfigKeyInMBT] || Default_Config[urlConfigKeyInDefault || urlConfigKeyInMBT];
       const result = await MiaoPluginMBT.UpdateSingleRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, repoUrlForUpdate, branchForUpdate, isScheduled, logger);
       overallSuccess &&= result.success;
       overallHasChanges ||= result.hasChanges;
+
+      //  如果更新失败，就准备详细的错误报告
+      if (!result.success && result.error) {
+        const formattedError = MiaoPluginMBT.FormatError(`更新${repoDisplayName}`, result.error, "", logPrefix);
+        let errorReportText = `--- ${repoDisplayName} 更新失败 ---\n`;
+        errorReportText += `${formattedError.summary}\n\n`;
+        errorReportText += `【🤔 可能原因与建议】\n${formattedError.suggestions}\n\n`;
+        if (result.error.stderr || result.error.stdout) {
+          errorReportText += `【ℹ️ 相关Git输出】\n${formattedError.contextInfo}`;
+        }
+        errorDetailsForForwardMsg.push(errorReportText);
+      }
+
       let statusText = "";
       if (result.success) {
         if (result.wasForceReset) statusText = "本地冲突 (强制同步)";
@@ -2820,60 +3004,39 @@ export class MiaoPluginMBT extends plugin {
 
     const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;
 
-    if (Repo1Exists) reportResults.push(await processRepoResult(1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true));
-    else { reportResults.push({ name: "一号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false }); overallSuccess = false; }
-
-    if (Repo2UrlConfigured) {
-      if (Repo2Exists) reportResults.push(await processRepoResult(2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch));
-      else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    } else reportResults.push({ name: "二号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-
-    if (Repo3UrlConfigured) {
-      if (Repo3Exists) reportResults.push(await processRepoResult(3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch));
-      else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    } else reportResults.push({ name: "三号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-
-    if (Repo4UrlConfigured) {
-      if (Repo4Exists) reportResults.push(await processRepoResult(4, MiaoPluginMBT.paths.LocalTuKuPath4, "四号仓库", "Sexy_Github_URL", "Sexy_Github_URL", branch));
-      else reportResults.push({ name: "四号仓库", statusText: "未下载", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-    } else reportResults.push({ name: "四号仓库", statusText: "未配置", statusClass: "status-skipped", error: null, log: null, wasForceReset: false });
-
-    //鸣潮-绝区零插件存在性
-    const gameKeysForPostUpdateManage = ["zzz", "waves"];
-    for (const gameKeyToManage of gameKeysForPostUpdateManage) {
-        const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
-        if (!gameFolderToManage) {
-            continue;
-        }
-        const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
-        for (const repoPath of relevantRepoPaths) {
-            await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
-        }
-    }
+    reportResults.push(await processRepoResult(1, MiaoPluginMBT.paths.LocalTuKuPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true));
+    if (Repo2UrlConfigured) { if (Repo2Exists) reportResults.push(await processRepoResult(2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch)); else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
+    if (Repo3UrlConfigured) { if (Repo3Exists) reportResults.push(await processRepoResult(3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch)); else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
+    if (Repo4UrlConfigured) { if (Repo4Exists) reportResults.push(await processRepoResult(4, MiaoPluginMBT.paths.LocalTuKuPath4, "四号仓库", "Sexy_Github_URL", "Sexy_Github_URL", branch)); else reportResults.push({ name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
 
     if (overallSuccess && overallHasChanges) {
       await MiaoPluginMBT.RunPostUpdateSetup(e, isScheduled, logger);
     }
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    const gameKeysForPostUpdateManage = ["zzz", "waves"];
+    for (const gameKeyToManage of gameKeysForPostUpdateManage) {
+      const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+      if (!gameFolderToManage) continue;
+      const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
+      for (const repoPath of relevantRepoPaths) {
+        await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
+      }
+    }
 
-    const coreRepoReport = reportResults.find(r => r.name === "一号仓库");
-    const subsidiaryRepoReports = reportResults.filter(r => r.name !== "一号仓库");
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
     const reportData = {
       pluginVersion: MiaoPluginMBT.GetVersionStatic(),
       duration,
       scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-      coreResult: coreRepoReport,
-      subsidiaryResults: subsidiaryRepoReports,
       results: reportResults,
       overallSuccess,
       overallHasChanges,
       isArray: Array.isArray
     };
+
     let imageBuffer = null;
     const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
-    let reportSent = false;
     try {
       await fsPromises.access(sourceHtmlPath);
       imageBuffer = await renderPageToImage("update-report", {
@@ -2885,28 +3048,34 @@ export class MiaoPluginMBT extends plugin {
 
     const shouldNotifyMaster = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
     if (imageBuffer) {
-      if (!isScheduled && e) { await e.reply(imageBuffer); reportSent = true; }
-      else if (shouldNotifyMaster) {
-        logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送图片报告...`);
+      if (!isScheduled && e) {
+        await e.reply(imageBuffer);
+        // 如果更新失败，并且有详细错误信息，就发送合并消息
+        if (!overallSuccess && errorDetailsForForwardMsg.length > 0) {
+          await common.sleep(500);
+          try {
+            const forwardMsg = await common.makeForwardMsg(e, errorDetailsForForwardMsg, "咕咕牛更新失败详情");
+            await e.reply(forwardMsg);
+          } catch (fwdError) {
+            logger.error(`${logPrefix} [更新报告] 发送详细错误合并消息失败:`, fwdError);
+            await e.reply("生成详细错误报告失败，请查看控制台日志。");
+          }
+        }
+      } else if (shouldNotifyMaster) {
+        logger.info(`${logPrefix} [定时更新] 检测到变更或错误，准备向主人发送报告...`);
         await MiaoPluginMBT.SendMasterMsg(imageBuffer, e, 0, logger);
-        reportSent = true;
-      } else if (isScheduled && !shouldNotifyMaster) {
-        logger.info(`${logPrefix} [定时更新] 未检测到变更且无错误，不发送通知。`);
-        reportSent = true;
+        if (!overallSuccess && errorDetailsForForwardMsg.length > 0) {
+          await MiaoPluginMBT.SendMasterMsg(await common.makeForwardMsg(e, errorDetailsForForwardMsg, "咕咕牛定时更新失败详情"), e, 1000, logger);
+        }
       }
-    }
-
-    if (!reportSent) {
-      logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空) 或不满足发送条件。`);
+    } else {
+      logger.error(`${logPrefix} [更新报告] Puppeteer 生成更新报告图片失败 (返回空)。`);
       let fallbackMsg = `${logPrefix} 更新检查完成。\n`;
       reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
-
       if (e && !isScheduled) await e.reply(fallbackMsg);
-      else if (shouldNotifyMaster) {
-        logger.warn(`${logPrefix} [定时更新] 图片生成失败，尝试向主人发送文本回退报告...`);
-        await MiaoPluginMBT.SendMasterMsg(fallbackMsg, e, 0, logger);
-      }
+      else if (shouldNotifyMaster) await MiaoPluginMBT.SendMasterMsg(fallbackMsg, e, 0, logger);
     }
+
     logger.info(`${logPrefix} 更新流程结束，耗时 ${duration} 秒。`);
     return overallHasChanges;
   }
@@ -2920,12 +3089,12 @@ export class MiaoPluginMBT extends plugin {
 
     const startMessage = "开始重置图库，请稍等...";
     await e.reply(startMessage, true);
-    
-    let mainDirsDeleteSuccess = true; 
-    let pluginDirsCleanSuccess = true; 
-    let tempDirsCleanSuccess = true; 
+
+    let mainDirsDeleteSuccess = true;
+    let pluginDirsCleanSuccess = true;
+    let tempDirsCleanSuccess = true;
     let firstError = null;
-    const errorOperations = []; 
+    const errorOperations = [];
 
     const pathsToDeleteDirectly = [
       MiaoPluginMBT.paths.LocalTuKuPath, MiaoPluginMBT.paths.LocalTuKuPath2,
@@ -2937,7 +3106,7 @@ export class MiaoPluginMBT extends plugin {
       try {
         await safeDelete(dirPath, 3, 1000, true); //  throwOnError 设置为 true
       } catch (err) {
-        mainDirsDeleteSuccess = false; 
+        mainDirsDeleteSuccess = false;
         const opName = `删除核心目录 ${path.basename(dirPath)}`;
         errorOperations.push(opName);
         if (!firstError) firstError = { operation: opName, error: err };
@@ -2955,12 +3124,12 @@ export class MiaoPluginMBT extends plugin {
             cleanupPromises.push(
               (async () => {
                 try {
-                    await safeDelete(dirToClean);
+                  await safeDelete(dirToClean);
                 } catch (err) { // 捕获safeDelete抛出的错误
-                    tempDirsCleanSuccess = false; 
-                    const opName = `清理临时目录 ${entry.name}`;
-                    errorOperations.push(opName);
-                    if (!firstError) firstError = { operation: opName, error: err };
+                  tempDirsCleanSuccess = false;
+                  const opName = `清理临时目录 ${entry.name}`;
+                  errorOperations.push(opName);
+                  if (!firstError) firstError = { operation: opName, error: err };
                 }
               })()
             );
@@ -2974,15 +3143,15 @@ export class MiaoPluginMBT extends plugin {
       errorOperations.push(opName);
       if (!firstError) firstError = { operation: opName, error: err };
     }
-    
+
     const targetPluginDirs = [MiaoPluginMBT.paths.target.miaoChar, MiaoPluginMBT.paths.target.zzzChar, MiaoPluginMBT.paths.target.wavesChar].filter(Boolean);
     for (const dirPath of targetPluginDirs) {
       if (!dirPath) continue;
-      try { 
-        await MiaoPluginMBT.CleanTargetCharacterDirs(dirPath, this.logger); 
+      try {
+        await MiaoPluginMBT.CleanTargetCharacterDirs(dirPath, this.logger);
       }
       catch (err) {
-        pluginDirsCleanSuccess = false; 
+        pluginDirsCleanSuccess = false;
         const opName = `清理插件资源 ${path.basename(dirPath)}`;
         errorOperations.push(opName);
         if (!firstError) firstError = { operation: opName, error: err };
@@ -2996,7 +3165,7 @@ export class MiaoPluginMBT extends plugin {
     });
 
     const overallSuccess = mainDirsDeleteSuccess && pluginDirsCleanSuccess && tempDirsCleanSuccess;
-    
+
     if (overallSuccess) {
       const successMessageBase = "重置完成！所有相关文件和缓存都清理干净啦。";
       await e.reply(successMessageBase, true);
@@ -3004,9 +3173,9 @@ export class MiaoPluginMBT extends plugin {
       if (firstError && firstError.error) { // 确保 firstError.error 存在
         let contextMessage = "";
         if (errorOperations.length > 1) {
-            contextMessage = `在执行以下多个操作时可能均存在问题: ${errorOperations.join(", ")}。以下是捕获到的第一个错误详情：`;
+          contextMessage = `在执行以下多个操作时可能均存在问题: ${errorOperations.join(", ")}。以下是捕获到的第一个错误详情：`;
         } else if (errorOperations.length === 1 && errorOperations[0] !== firstError.operation) {
-            contextMessage = `操作 ${errorOperations[0]} 可能也存在问题。以下是捕获到的第一个错误详情：`;
+          contextMessage = `操作 ${errorOperations[0]} 可能也存在问题。以下是捕获到的第一个错误详情：`;
         }
         // 现在传递给 ReportError 的 error 对象是 safeDelete 抛出的包含具体 code 的错误
         await this.ReportError(e, `重置咕咕牛 (${firstError.operation})`, firstError.error, contextMessage);
@@ -3049,7 +3218,7 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pluginVersionForStatus = MiaoPluginMBT.GetVersionStatic();
       const gameFoldersMapForStatus = { gs: "原神", sr: "星铁", zzz: "绝区零", waves: "鸣潮" };
-      
+
       const statsData = {
         meta: { roles: 0, images: 0, games: {} },
         scan: {
@@ -3068,7 +3237,7 @@ export class MiaoPluginMBT extends plugin {
 
       const currentConfig = MiaoPluginMBT.MBTConfig;
       const isSerialMode = (currentConfig?.Execution_Mode ?? 'Batch') === 'Serial';
-      
+
       const configDataForRender = {
         enabled: currentConfig?.TuKuOP ?? Default_Config.defaultTuKuOp,
         enabledText: (currentConfig?.TuKuOP ?? Default_Config.defaultTuKuOp) ? "已启用" : "已禁用",
@@ -3090,7 +3259,7 @@ export class MiaoPluginMBT extends plugin {
           class: isSerialMode ? 'config-value-enabled' : 'config-value-disabled'
         }
       };
-      
+
       const characterSetForStatus = new Set();
       if (Array.isArray(MiaoPluginMBT._imgDataCache) && MiaoPluginMBT._imgDataCache.length > 0) {
         statsData.meta.images = MiaoPluginMBT._imgDataCache.length;
@@ -3189,92 +3358,92 @@ export class MiaoPluginMBT extends plugin {
       });
       scanResultData.totalSize = scanResultData.totalFilesSize + scanResultData.totalGitSize;
       scanResultData.totalSizeFormatted = FormatBytes(scanResultData.totalSize);
-      
-      const renderDataForStatusPage = { 
-          pluginVersion: pluginVersionForStatus, 
-          stats: statsData, 
-          config: configDataForRender, 
-          repoCount: Object.values(statsData.repos || {}).filter(repo => repo?.exists).length, 
-          scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), 
-          isArray: Array.isArray 
+
+      const renderDataForStatusPage = {
+        pluginVersion: pluginVersionForStatus,
+        stats: statsData,
+        config: configDataForRender,
+        repoCount: Object.values(statsData.repos || {}).filter(repo => repo?.exists).length,
+        scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+        isArray: Array.isArray
       };
       const statusHtmlTemplatePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "status.html");
       try {
-          const statusImageBuffer = await renderPageToImage("status-report", {
-            tplFile: statusHtmlTemplatePath, data: renderDataForStatusPage, imgType: "png",
-            pageGotoParams: { waitUntil: "networkidle0" },
-            pageBoundingRect: { selector: ".container", padding: 0 }, width: 540,
-          }, this);
-          if (statusImageBuffer) await e.reply(statusImageBuffer);
+        const statusImageBuffer = await renderPageToImage("status-report", {
+          tplFile: statusHtmlTemplatePath, data: renderDataForStatusPage, imgType: "png",
+          pageGotoParams: { waitUntil: "networkidle0" },
+          pageBoundingRect: { selector: ".container", padding: 0 }, width: 540,
+        }, this);
+        if (statusImageBuffer) await e.reply(statusImageBuffer);
       } catch (statusRenderError) {
-          logger.error(`${currentLogPrefix} [检查状态] 生成状态报告图片时出错:`, statusRenderError);
+        logger.error(`${currentLogPrefix} [检查状态] 生成状态报告图片时出错:`, statusRenderError);
       }
 
       const generatedMapImages = [];
       const gameMapGenerationConfigs = [
-          { gameKeys: ["gs"], titleSuffix: "原神", width: 800, isOptionalPluginGame: false },
-          { gameKeys: ["sr"], titleSuffix: "星穹铁道", width: 800, isOptionalPluginGame: false },
-          { gameKeys: ["zzz"], titleSuffix: "绝区零", width: 800, isOptionalPluginGame: true, gameIdentifier: "zzz" },
-          { gameKeys: ["waves"], titleSuffix: "鸣潮", width: 800, isOptionalPluginGame: true, gameIdentifier: "waves" }
+        { gameKeys: ["gs"], titleSuffix: "原神", width: 800, isOptionalPluginGame: false },
+        { gameKeys: ["sr"], titleSuffix: "星穹铁道", width: 800, isOptionalPluginGame: false },
+        { gameKeys: ["zzz"], titleSuffix: "绝区零", width: 800, isOptionalPluginGame: true, gameIdentifier: "zzz" },
+        { gameKeys: ["waves"], titleSuffix: "鸣潮", width: 800, isOptionalPluginGame: true, gameIdentifier: "waves" }
       ];
 
       let validMapsToGenerateCount = 0;
       for (const mapCfg of gameMapGenerationConfigs) {
-          if (mapCfg.isOptionalPluginGame) {
-              const pluginIsInstalledForCfg = await MiaoPluginMBT.IsGamePluginInstalled(mapCfg.gameIdentifier, logger);
-              if (pluginIsInstalledForCfg) {
-                  validMapsToGenerateCount++;
-              }
-          } else {
-              validMapsToGenerateCount++;
+        if (mapCfg.isOptionalPluginGame) {
+          const pluginIsInstalledForCfg = await MiaoPluginMBT.IsGamePluginInstalled(mapCfg.gameIdentifier, logger);
+          if (pluginIsInstalledForCfg) {
+            validMapsToGenerateCount++;
           }
+        } else {
+          validMapsToGenerateCount++;
+        }
       }
-      
+
       let generatedCount = 0;
       for (const mapCfg of gameMapGenerationConfigs) {
-          if (mapCfg.isOptionalPluginGame) {
-              const pluginIsInstalledForRender = await MiaoPluginMBT.IsGamePluginInstalled(mapCfg.gameIdentifier, logger);
-              if (!pluginIsInstalledForRender) {
-                  continue; 
-              }
+        if (mapCfg.isOptionalPluginGame) {
+          const pluginIsInstalledForRender = await MiaoPluginMBT.IsGamePluginInstalled(mapCfg.gameIdentifier, logger);
+          if (!pluginIsInstalledForRender) {
+            continue;
           }
+        }
 
-          const imageBuffer = await this.generateSingleGameMapImageInternal(
-              e, 
-              mapCfg.gameKeys, 
-              mapCfg.titleSuffix, 
-              mapCfg.width,
-              logger,
-              mapCfg.isOptionalPluginGame ? mapCfg.gameIdentifier : null
-          );
-          if (imageBuffer) {
-              generatedMapImages.push(imageBuffer);
-              generatedCount++;
-              if (generatedCount < validMapsToGenerateCount && generatedMapImages.length > 0) {
-                   await common.sleep(300); 
-              }
+        const imageBuffer = await this.generateSingleGameMapImageInternal(
+          e,
+          mapCfg.gameKeys,
+          mapCfg.titleSuffix,
+          mapCfg.width,
+          logger,
+          mapCfg.isOptionalPluginGame ? mapCfg.gameIdentifier : null
+        );
+        if (imageBuffer) {
+          generatedMapImages.push(imageBuffer);
+          generatedCount++;
+          if (generatedCount < validMapsToGenerateCount && generatedMapImages.length > 0) {
+            await common.sleep(300);
           }
+        }
       }
 
       if (generatedMapImages.length > 0) {
-          if (generatedMapImages.length === 1) {
-              await e.reply(generatedMapImages[0]);
-          } else {
-              try {
-                  const forwardMsg = await common.makeForwardMsg(e, generatedMapImages, "咕咕牛图库地图总览");
-                  if (forwardMsg) {
-                      await e.reply(forwardMsg);
-                  } else {
-                      logger.error(`${currentLogPrefix} [图库地图] 创建合并消息失败 (返回空)，尝试分条发送...`);
-                      for (const singleMapImage of generatedMapImages) {
-                          await e.reply(singleMapImage);
-                          await common.sleep(500); 
-                      }
-                  }
-              } catch (forwardingError) {
-                  logger.error(`${currentLogPrefix} [图库地图] 发送合并消息失败:`, forwardingError);
+        if (generatedMapImages.length === 1) {
+          await e.reply(generatedMapImages[0]);
+        } else {
+          try {
+            const forwardMsg = await common.makeForwardMsg(e, generatedMapImages, "咕咕牛图库地图总览");
+            if (forwardMsg) {
+              await e.reply(forwardMsg);
+            } else {
+              logger.error(`${currentLogPrefix} [图库地图] 创建合并消息失败 (返回空)，尝试分条发送...`);
+              for (const singleMapImage of generatedMapImages) {
+                await e.reply(singleMapImage);
+                await common.sleep(500);
               }
+            }
+          } catch (forwardingError) {
+            logger.error(`${currentLogPrefix} [图库地图] 发送合并消息失败:`, forwardingError);
           }
+        }
       }
     } catch (error) {
       await this.ReportError(e, "检查咕咕牛状态或地图", error);
@@ -3285,59 +3454,59 @@ export class MiaoPluginMBT extends plugin {
   async generateSingleGameMapImageInternal(eventParam, gameKeysToShow, mapTitleSuffix, renderWidth, logger, optionalGameKeyIdentifier = null) {
     const localLogPrefix = this.logPrefix;
 
-    const gameDataForThisMap = {}; 
+    const gameDataForThisMap = {};
     const gameKeyMapping = {
       "gs-character": "gs", "sr-character": "sr",
       "zzz-character": "zzz", "waves-character": "waves"
     };
-    
+
     const gameDefinitions = {
-        gs: { name: "原神", key: "gs", characters: {}, order: 1, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-        sr: { name: "星穹铁道", key: "sr", characters: {}, order: 2, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-        zzz: { name: "绝区零", key: "zzz", characters: {}, order: 3, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-        waves: { name: "鸣潮", key: "waves", characters: {}, order: 4, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 }
+      gs: { name: "原神", key: "gs", characters: {}, order: 1, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+      sr: { name: "星穹铁道", key: "sr", characters: {}, order: 2, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+      zzz: { name: "绝区零", key: "zzz", characters: {}, order: 3, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+      waves: { name: "鸣潮", key: "waves", characters: {}, order: 4, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 }
     };
 
     gameKeysToShow.forEach(gameKey => {
-        if (gameDefinitions[gameKey]) {
-            gameDataForThisMap[gameKey] = JSON.parse(JSON.stringify(gameDefinitions[gameKey]));
-        }
+      if (gameDefinitions[gameKey]) {
+        gameDataForThisMap[gameKey] = JSON.parse(JSON.stringify(gameDefinitions[gameKey]));
+      }
     });
 
     if (!MiaoPluginMBT._imgDataCache || MiaoPluginMBT._imgDataCache.length === 0) {
-        return null;
+      return null;
     }
 
     const currentPluginConfig = MiaoPluginMBT.MBTConfig;
-    const purificationRulesActive = 
-        (currentPluginConfig?.PFL ?? Default_Config.defaultPfl) > Purify_Level.NONE ||
-        currentPluginConfig?.Ai === false ||
-        currentPluginConfig?.EasterEgg === false ||
-        currentPluginConfig?.layout === false;
+    const purificationRulesActive =
+      (currentPluginConfig?.PFL ?? Default_Config.defaultPfl) > Purify_Level.NONE ||
+      currentPluginConfig?.Ai === false ||
+      currentPluginConfig?.EasterEgg === false ||
+      currentPluginConfig?.layout === false;
 
     let applySpecialPurificationFilterForUninstalledPlugin = false;
     if (optionalGameKeyIdentifier && purificationRulesActive) {
-        const pluginForThisGameActuallyInstalled = await MiaoPluginMBT.IsGamePluginInstalled(optionalGameKeyIdentifier, logger);
-        if (!pluginForThisGameActuallyInstalled) {
-            applySpecialPurificationFilterForUninstalledPlugin = true;
-        }
+      const pluginForThisGameActuallyInstalled = await MiaoPluginMBT.IsGamePluginInstalled(optionalGameKeyIdentifier, logger);
+      if (!pluginForThisGameActuallyInstalled) {
+        applySpecialPurificationFilterForUninstalledPlugin = true;
+      }
     }
 
     for (const imageDataItem of MiaoPluginMBT._imgDataCache) {
       if (!imageDataItem.path || !imageDataItem.characterName || !imageDataItem.sourceGallery) continue;
-      
+
       const currentGameKey = gameKeyMapping[imageDataItem.sourceGallery];
       if (!currentGameKey || !gameDataForThisMap[currentGameKey] || !gameKeysToShow.includes(currentGameKey)) continue;
 
       if (applySpecialPurificationFilterForUninstalledPlugin && currentGameKey === optionalGameKeyIdentifier) {
-          let imageIsPurified = MiaoPluginMBT.CheckIfPurifiedByLevel(imageDataItem, currentPluginConfig.PFL);
-          if (!imageIsPurified && currentPluginConfig.Ai === false && imageDataItem.attributes?.isAiImage === true) imageIsPurified = true;
-          if (!imageIsPurified && currentPluginConfig.EasterEgg === false && imageDataItem.attributes?.isEasterEgg === true) imageIsPurified = true;
-          if (!imageIsPurified && currentPluginConfig.layout === false && imageDataItem.attributes?.layout === "fullscreen") imageIsPurified = true;
-          
-          if (imageIsPurified) {
-              continue; 
-          }
+        let imageIsPurified = MiaoPluginMBT.CheckIfPurifiedByLevel(imageDataItem, currentPluginConfig.PFL);
+        if (!imageIsPurified && currentPluginConfig.Ai === false && imageDataItem.attributes?.isAiImage === true) imageIsPurified = true;
+        if (!imageIsPurified && currentPluginConfig.EasterEgg === false && imageDataItem.attributes?.isEasterEgg === true) imageIsPurified = true;
+        if (!imageIsPurified && currentPluginConfig.layout === false && imageDataItem.attributes?.layout === "fullscreen") imageIsPurified = true;
+
+        if (imageIsPurified) {
+          continue;
+        }
       }
 
       const characterName = imageDataItem.characterName;
@@ -3361,88 +3530,88 @@ export class MiaoPluginMBT extends plugin {
 
     const gamesToRenderOnMap = [];
     for (const gameKey of gameKeysToShow) {
-        if (gameDataForThisMap[gameKey] && gameDataForThisMap[gameKey].totalImageCountInGame > 0) {
-            const gameEntry = {
-                name: gameDataForThisMap[gameKey].name,
-                key: gameDataForThisMap[gameKey].key,
-                hasFace: gameDataForThisMap[gameKey].hasFace,
-                totalImageCountDisplay: gameDataForThisMap[gameKey].totalImageCountInGame,
-                totalSizeFormattedDisplay: FormatBytes(gameDataForThisMap[gameKey].totalByteSizeInGame),
-                characters: []
-            };
-            const characterNamesSorted = Object.keys(gameDataForThisMap[gameKey].characters).sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
-            for (const charName of characterNamesSorted) {
-                const charData = gameDataForThisMap[gameKey].characters[charName];
-                if (charData.imageCount === 0) continue;
+      if (gameDataForThisMap[gameKey] && gameDataForThisMap[gameKey].totalImageCountInGame > 0) {
+        const gameEntry = {
+          name: gameDataForThisMap[gameKey].name,
+          key: gameDataForThisMap[gameKey].key,
+          hasFace: gameDataForThisMap[gameKey].hasFace,
+          totalImageCountDisplay: gameDataForThisMap[gameKey].totalImageCountInGame,
+          totalSizeFormattedDisplay: FormatBytes(gameDataForThisMap[gameKey].totalByteSizeInGame),
+          characters: []
+        };
+        const characterNamesSorted = Object.keys(gameDataForThisMap[gameKey].characters).sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
+        for (const charName of characterNamesSorted) {
+          const charData = gameDataForThisMap[gameKey].characters[charName];
+          if (charData.imageCount === 0) continue;
 
-                let characterFaceUrl = null;
-                if (gameDataForThisMap[gameKey].hasFace) {
-                    const aliasForFace = await MiaoPluginMBT.FindRoleAlias(charName, logger);
-                    const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charName;
-                    let faceImagePath = null;
-                    if (gameKey === "gs") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-                    else if (gameKey === "sr") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-                    
-                    if (faceImagePath) { try { await fsPromises.access(faceImagePath); characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { } }
-                }
-                gameEntry.characters.push({
-                    name: charData.name,
-                    imageCount: charData.imageCount,
-                    totalSizeFormatted: FormatBytes(charData.totalSize),
-                    faceUrl: characterFaceUrl
-                });
-            }
-            if (gameEntry.characters.length > 0) {
-                 gamesToRenderOnMap.push(gameEntry);
-            }
+          let characterFaceUrl = null;
+          if (gameDataForThisMap[gameKey].hasFace) {
+            const aliasForFace = await MiaoPluginMBT.FindRoleAlias(charName, logger);
+            const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charName;
+            let faceImagePath = null;
+            if (gameKey === "gs") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+            else if (gameKey === "sr") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+
+            if (faceImagePath) { try { await fsPromises.access(faceImagePath); characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { } }
+          }
+          gameEntry.characters.push({
+            name: charData.name,
+            imageCount: charData.imageCount,
+            totalSizeFormatted: FormatBytes(charData.totalSize),
+            faceUrl: characterFaceUrl
+          });
         }
+        if (gameEntry.characters.length > 0) {
+          gamesToRenderOnMap.push(gameEntry);
+        }
+      }
     }
 
     if (gamesToRenderOnMap.length === 0) {
-        return null;
+      return null;
     }
 
     try {
-        let galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "check_gallerymap.html");
-        try { await fsPromises.access(galleryMapTemplatePath); }
-        catch (commonPathError) {
-          if (commonPathError.code === ERROR_CODES.NotFound) {
-            const assumedPluginFolderName = "GuGuNiu-Plugin-MBT"; 
-            galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", assumedPluginFolderName, "resources", "GuGuNiu-Gallery", "html", "check_gallerymap.html");
-             try { await fsPromises.access(galleryMapTemplatePath); }
-             catch (pluginPathError) {
-                //logger.error(`${localLogPrefix} [图库地图-${mapTitleSuffix}] 模板文件在公共和插件路径 (${assumedPluginFolderName}) 均未找到。`);
-                throw pluginPathError;
-             }
-          } else { throw commonPathError; }
-        }
+      let galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "check_gallerymap.html");
+      try { await fsPromises.access(galleryMapTemplatePath); }
+      catch (commonPathError) {
+        if (commonPathError.code === ERROR_CODES.NotFound) {
+          const assumedPluginFolderName = "GuGuNiu-Plugin-MBT";
+          galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", assumedPluginFolderName, "resources", "GuGuNiu-Gallery", "html", "check_gallerymap.html");
+          try { await fsPromises.access(galleryMapTemplatePath); }
+          catch (pluginPathError) {
+            //logger.error(`${localLogPrefix} [图库地图-${mapTitleSuffix}] 模板文件在公共和插件路径 (${assumedPluginFolderName}) 均未找到。`);
+            throw pluginPathError;
+          }
+        } else { throw commonPathError; }
+      }
 
-        const imageBuffer = await renderPageToImage(
-            `gallery-map-${mapTitleSuffix.toLowerCase().replace(/\s+/g, '-')}`, 
-            {
-                tplFile: galleryMapTemplatePath,
-                data: {
-                    games: gamesToRenderOnMap,
-                    pluginVersion: MiaoPluginMBT.GetVersionStatic(),
-                    scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-                    isArray: Array.isArray,
-                    FormatBytes: FormatBytes 
-                },
-                imgType: "png",
-                pageGotoParams: { waitUntil: "networkidle0", timeout: 60000 },
-                screenshotOptions: { fullPage: true }, 
-                width: renderWidth 
-            }, 
-            this 
-        );
-        return imageBuffer;
+      const imageBuffer = await renderPageToImage(
+        `gallery-map-${mapTitleSuffix.toLowerCase().replace(/\s+/g, '-')}`,
+        {
+          tplFile: galleryMapTemplatePath,
+          data: {
+            games: gamesToRenderOnMap,
+            pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+            isArray: Array.isArray,
+            FormatBytes: FormatBytes
+          },
+          imgType: "png",
+          pageGotoParams: { waitUntil: "networkidle0", timeout: 60000 },
+          screenshotOptions: { fullPage: true },
+          width: renderWidth
+        },
+        this
+      );
+      return imageBuffer;
     } catch (mapRenderingError) {
-        if (eventParam) { 
-             await MiaoPluginMBT.ReportError(eventParam, `生成 ${mapTitleSuffix} 图库地图`, mapRenderingError, "", this);
-        } else {
-           //logger.error(`${localLogPrefix} [图库地图] 生成 ${mapTitleSuffix} 地图时出错 (无事件上下文): ${mapRenderingError.message}`);
-        }
-        return null;
+      if (eventParam) {
+        await MiaoPluginMBT.ReportError(eventParam, `生成 ${mapTitleSuffix} 图库地图`, mapRenderingError, "", this);
+      } else {
+        //logger.error(`${localLogPrefix} [图库地图] 生成 ${mapTitleSuffix} 地图时出错 (无事件上下文): ${mapRenderingError.message}`);
+      }
+      return null;
     }
   }
 
@@ -3478,30 +3647,30 @@ export class MiaoPluginMBT extends plugin {
     if (configChanged && !saveWarning) {
       statusMessageForPanel = `${logPrefix} 图库已成功设为「${action}」。`;
       setImmediate(async () => {
-          try {
-            if (enable) {
-              await MiaoPluginMBT.SyncCharacterFolders(logger);
-              await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
-            } else {
-              await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, logger);
-              await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, logger);
-              await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, logger);
-            }
-          } catch (error) {
-            logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
-            await this.ReportError(e, `${action}咕咕牛 (后台操作)`, error);
+        try {
+          if (enable) {
+            await MiaoPluginMBT.SyncCharacterFolders(logger);
+            await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
+          } else {
+            await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, logger);
+            await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, logger);
+            await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, logger);
           }
+        } catch (error) {
+          logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
+          await this.ReportError(e, `${action}咕咕牛 (后台操作)`, error);
+        }
       });
     }
 
     if (!statusMessageForPanel && saveWarning) {
-        statusMessageForPanel = saveWarning;
+      statusMessageForPanel = saveWarning;
     }
 
     try {
-        await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
+      await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
     } catch (panelError) {
-        logger.error(`${logPrefix} [启用禁用] 调用ShowSettingsPanel时发生顶层意外错误:`, panelError);
+      logger.error(`${logPrefix} [启用禁用] 调用ShowSettingsPanel时发生顶层意外错误:`, panelError);
     }
     return true;
   }
@@ -3518,12 +3687,15 @@ export class MiaoPluginMBT extends plugin {
     }
 
     if (msg === "#ban列表" || msg === "#咕咕牛封禁列表") {
+      const canContinue = await MiaoPluginMBT.applyDefensePolicy(e, 'ManageUserBans_List');
+      
+      if (!canContinue) return true;
+      
       const activeBanCount = MiaoPluginMBT._activeBanSet.size;
       if (activeBanCount === 0) return e.reply("当前没有任何图片被封禁。", true);
       
-      const executionMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
       let waitMessage = `正在整理 ${activeBanCount} 项封禁记录，请稍候...`;
-      if (executionMode === 'Serial') {
+      if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') === 'Serial') {
         waitMessage = `正在整理 ${activeBanCount} 项封禁记录，当前为低负载模式，可能需要更长时间...`;
       }
       await e.reply(waitMessage, true);
@@ -3542,54 +3714,56 @@ export class MiaoPluginMBT extends plugin {
           [MiaoPluginMBT.paths.sourceFolders.waves]: "waves"
       };
 
-      await Promise.all(
-        sortedActiveBansList.map(async (imageRelativePath) => {
-          const pathSegments = imageRelativePath.split('/');
-          let gameKeyForThisItem = null;
-          if (pathSegments.length > 0) {
-              gameKeyForThisItem = gameKeyFromSourceFolderValue[pathSegments[0]] || null;
-          }
+      for (const imageRelativePath of sortedActiveBansList) {
+        // ✨ --- 这里将 Promise.all 改为了 for...of 循环 --- ✨
+        // ✨ --- 这是为了让 applyDefensePolicy 能在循环中生效 --- ✨
+        // ✨ --- 否则 Promise.all 会一次性把所有任务都抛出去 --- ✨
+        await MiaoPluginMBT.applyDefensePolicy(e, 'ManageUserBans_List_Item'); // 对每个item进行检查
 
-          if (gameKeyForThisItem === "zzz" || gameKeyForThisItem === "waves") {
-              const pluginForThisItemInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForThisItem, logger); 
-              if (!pluginForThisItemInstalled) {
-                  return; 
-              }
-          }
+        const pathSegments = imageRelativePath.split('/');
+        let gameKeyForThisItem = null;
+        if (pathSegments.length > 0) {
+            gameKeyForThisItem = gameKeyFromSourceFolderValue[pathSegments[0]] || null;
+        }
 
-          const baseFileName = path.basename(imageRelativePath);
-          const fileNameWithoutExtension = baseFileName.replace(/\.webp$/i, "");
-          const absoluteImagePath = await MiaoPluginMBT.FindImageAbsolutePath(imageRelativePath);
-          const thumbnailFileUrl = absoluteImagePath ? `file://${absoluteImagePath.replace(/\\/g, "/")}` : ""; 
-          
-          if (MiaoPluginMBT._userBanSet.has(imageRelativePath)) {
-            userBansDisplayData.push({ fileNameNoExt: fileNameWithoutExtension, thumbnailPath: thumbnailFileUrl });
-          } else {
-            const imageDataEntry = MiaoPluginMBT._imgDataCache.find((img) => img.path?.replace(/\\/g, "/") === imageRelativePath);
-            const banReasons = [];
-            if (imageDataEntry && currentPFLSetting > Purify_Level.NONE && MiaoPluginMBT.CheckIfPurifiedByLevel(imageDataEntry, currentPFLSetting)) {
-                banReasons.push("净化");
+        if (gameKeyForThisItem === "zzz" || gameKeyForThisItem === "waves") {
+            const pluginForThisItemInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForThisItem, logger); 
+            if (!pluginForThisItemInstalled) {
+                continue; 
             }
-            if (imageDataEntry?.attributes) {
-              const attrs = imageDataEntry.attributes;
-              if (currentConfig?.Ai === false && attrs.isAiImage === true && !banReasons.includes("Ai")) banReasons.push("Ai");
-              if (currentConfig?.EasterEgg === false && attrs.isEasterEgg === true && !banReasons.includes("彩蛋")) banReasons.push("彩蛋");
-              if (currentConfig?.layout === false && attrs.layout === "fullscreen" && !banReasons.includes("横屏")) banReasons.push("横屏");
-            }
-            if (banReasons.length === 0 && imageDataEntry) { 
-                 banReasons.push("规则");
-            } else if (banReasons.length === 0 && !imageDataEntry) {
-                 banReasons.push("自动"); 
-            }
-            purifiedBansDisplayData.push({ fileNameNoExt: fileNameWithoutExtension, thumbnailPath: thumbnailFileUrl, reasons: banReasons });
+        }
+
+        const baseFileName = path.basename(imageRelativePath);
+        const fileNameWithoutExtension = baseFileName.replace(/\.webp$/i, "");
+        const absoluteImagePath = await MiaoPluginMBT.FindImageAbsolutePath(imageRelativePath);
+        const thumbnailFileUrl = absoluteImagePath ? `file://${absoluteImagePath.replace(/\\/g, "/")}` : ""; 
+        
+        if (MiaoPluginMBT._userBanSet.has(imageRelativePath)) {
+          userBansDisplayData.push({ fileNameNoExt: fileNameWithoutExtension, thumbnailPath: thumbnailFileUrl });
+        } else {
+          const imageDataEntry = MiaoPluginMBT._imgDataCache.find((img) => img.path?.replace(/\\/g, "/") === imageRelativePath);
+          const banReasons = [];
+          if (imageDataEntry && currentPFLSetting > Purify_Level.NONE && MiaoPluginMBT.CheckIfPurifiedByLevel(imageDataEntry, currentPFLSetting)) {
+              banReasons.push("净化");
           }
-        })
-      );
+          if (imageDataEntry?.attributes) {
+            const attrs = imageDataEntry.attributes;
+            if (currentConfig?.Ai === false && attrs.isAiImage === true && !banReasons.includes("Ai")) banReasons.push("Ai");
+            if (currentConfig?.EasterEgg === false && attrs.isEasterEgg === true && !banReasons.includes("彩蛋")) banReasons.push("彩蛋");
+            if (currentConfig?.layout === false && attrs.layout === "fullscreen" && !banReasons.includes("横屏")) banReasons.push("横屏");
+          }
+          if (banReasons.length === 0 && imageDataEntry) { 
+               banReasons.push("规则");
+          } else if (banReasons.length === 0 && !imageDataEntry) {
+               banReasons.push("自动"); 
+          }
+          purifiedBansDisplayData.push({ fileNameNoExt: fileNameWithoutExtension, thumbnailPath: thumbnailFileUrl, reasons: banReasons });
+        }
+      }
 
       const banListHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "banlist.html");
       const currentScaleStyle = MiaoPluginMBT.getScaleStyleValue();
-      let manualBanListSent = false;
-
+      
       if (userBansDisplayData.length > 0) {
         try {
           const renderDataForManual = { pluginVersion: pluginVersionString, purifiedBans: [], userBans: userBansDisplayData, listType: "手动封禁", scaleStyleValue: currentScaleStyle, batchInfo: "" };
@@ -3600,7 +3774,6 @@ export class MiaoPluginMBT extends plugin {
           }, this);
           if (imageBuffer) { 
               await e.reply(imageBuffer); 
-              manualBanListSent = true; 
               if (purifiedBansDisplayData.length > 0) await common.sleep(1000); 
           }
         } catch (renderError) { 
@@ -3610,11 +3783,12 @@ export class MiaoPluginMBT extends plugin {
       }
 
       if (purifiedBansDisplayData.length > 0) {
-        const BATCH_SIZE = executionMode === 'Serial' ? 20 : 28;
+        const BATCH_SIZE = 20;
         const totalPurifiedBatches = Math.ceil(purifiedBansDisplayData.length / BATCH_SIZE);
-        const forwardMessageListPurified = [[`[自动屏蔽列表 (共 ${purifiedBansDisplayData.length} 项)]`]];
-
+        
         for (let batchIndex = 1; batchIndex <= totalPurifiedBatches; batchIndex++) {
+          await MiaoPluginMBT.applyDefensePolicy(e, 'ManageUserBans_Batch'); // 每批次检查一次
+
           const startIndex = (batchIndex - 1) * BATCH_SIZE;
           const currentPurifiedBatch = purifiedBansDisplayData.slice(startIndex, startIndex + BATCH_SIZE);
           try {
@@ -3625,27 +3799,18 @@ export class MiaoPluginMBT extends plugin {
               screenshotOptions: { fullPage: true }, width: 640,
             }, this);
             if (batchImageBuffer) { 
-                forwardMessageListPurified.push(batchImageBuffer); 
+                await e.reply(batchImageBuffer);
             } else { 
-                forwardMessageListPurified.push(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批渲染失败]`); 
+                await e.reply(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批渲染失败]`, true); 
                 this.logger.error(`${this.logPrefix} [封禁列表] 生成自动列表批次 ${batchIndex} 截图返回空。`);
             }
           } catch (renderBatchError) { 
             this.logger.error(`${this.logPrefix} [封禁列表] 生成自动屏蔽列表第 ${batchIndex}/${totalPurifiedBatches} 批截图时出错:`, renderBatchError);
-            forwardMessageListPurified.push(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批处理出错]`);
+            await e.reply(`[❌ 第 ${batchIndex}/${totalPurifiedBatches} 批处理出错]`, true);
           }
-        }
-        if (forwardMessageListPurified.length > 1) {
-          try { 
-            const forwardMsg = await common.makeForwardMsg(e, forwardMessageListPurified, "自动屏蔽列表详情"); 
-            if (forwardMsg) await e.reply(forwardMsg); 
-            else { 
-                this.logger.error(`${this.logPrefix} [封禁列表] 创建自动屏蔽列表合并消息失败。`);
-                await e.reply("生成合并的自动屏蔽列表消息失败 (内部错误)。", true); 
-            }
-          } catch (sendForwardError) { 
-            this.logger.error(`${this.logPrefix} [封禁列表] 发送自动屏蔽列表合并消息失败:`, sendForwardError);
-            await e.reply("发送合并的自动屏蔽列表消息失败，请查看日志。", true); 
+
+          if (batchIndex < totalPurifiedBatches) {
+              await common.sleep(1000);
           }
         }
       }
@@ -3758,196 +3923,361 @@ export class MiaoPluginMBT extends plugin {
     }
   }
 
+  /**
+   * @description  #查看 命令，智能分发到不同处理逻辑
+   */
   async FindRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true;
     if (!(await MiaoPluginMBT.IsTuKuDownloaded(1))) {
       return e.reply("『咕咕牛』核心库还没下载呢！", true);
     }
 
+    const canContinue = await MiaoPluginMBT.applyDefensePolicy(e, 'FindRoleSplashes');
+    if (!canContinue) return true;
+
     const msgMatch = e.msg.match(/^#(?:查看|view)\s*(.+)$/i);
     if (!msgMatch?.[1]) {
-      return e.reply("想看哪个角色呀？格式：#查看 角色名", true);
+      return e.reply("想看哪个角色呀？格式：#查看 角色名/游戏名/标签 或 #查看 原神 火", true);
     }
-
-    const roleNameInput = msgMatch[1].trim();
+    
     const logger = this.logger;
     const logPrefix = this.logPrefix;
 
-    try {
-      const aliasResult = await MiaoPluginMBT.FindRoleAlias(roleNameInput, logger);
-      const standardMainName = aliasResult.exists ? aliasResult.mainName : roleNameInput; 
+    const parts = msgMatch[1].trim().split(/\s+/).filter(Boolean);
+    const inputName = parts[0];
+    const secondaryInput = parts[1] || null;
 
-      const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter((img) => 
-        img.characterName === standardMainName && img.path && typeof img.path === 'string'
-      );
+    const allForwardMessages = [];
 
-      if (rawRoleImageData.length === 0) {
-        return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true); 
+    const gameFolderMap = {
+      "原神": { folder: "gs-character", key: "gs" },
+      "星铁": { folder: "sr-character", key: "sr" },
+      "绝区零": { folder: "zzz-character", key: "zzz" },
+      "鸣潮": { folder: "waves-character", key: "waves" },
+    };
+    const gameNameKeys = Object.keys(gameFolderMap);
+    
+    const lowerInput = inputName.toLowerCase();
+    const tagInfo = VALID_TAGS[lowerInput];
+
+    if (tagInfo) {
+      // 逻辑分支1：处理标签查询
+      const tagName = inputName.toUpperCase();
+      const filteredImages = MiaoPluginMBT._imgDataCache.filter(img => {
+        return lodash.get(img, `attributes.${tagInfo.key}`) === tagInfo.value;
+      });
+
+      if (filteredImages.length === 0) {
+        return e.reply(`没有找到任何带【${tagName}】标签的图片哦。`, true);
       }
-
-      const sourceGallery = rawRoleImageData[0].sourceGallery;
-      let gameKeyForPluginCheck = null; 
-      if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.zzz) {
-        gameKeyForPluginCheck = "zzz";
-      } else if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.waves) {
-        gameKeyForPluginCheck = "waves";
-      }
-
-      if (gameKeyForPluginCheck) { 
-        const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck, logger);
-        if (!pluginIsInstalled) {
-          return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true);
-        }
-      }
-
-      rawRoleImageData.sort((a, b) =>
-        parseInt(a.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0") -
-        parseInt(b.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0")
-      );
-
-      const totalItems = rawRoleImageData.length;
-      const executionMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
+      
       const ITEMS_PER_BATCH = 28;
+      const totalItems = filteredImages.length;
       const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
 
-      let waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片...`;
+      let waitMessage = `收到！正在为您查找所有带【${tagName}】标签的图片，共 ${totalItems} 张...`;
       if (totalBatches > 1) {
-          waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片，共 ${totalBatches} 批，请稍候...`;
-          if (executionMode === 'Serial') {
-              waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片，共 ${totalBatches} 批，当前是低负载模式需要更长的时间...`;
-          }
+          waitMessage = `带【${tagName}】标签的图片过多 (共 ${totalItems} 张)，将分 ${totalBatches} 批发送，请稍候...`;
       }
       await e.reply(waitMessage, true);
       
-      const allBatchesForwardNodes = [];
-      if (totalBatches > 1) {
-          allBatchesForwardNodes.push(`『${standardMainName}』图库详情 (共 ${totalItems} 张)`);
-      }
-
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+        await checkSystemHealth(e, logger);
+
         const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
-        const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
-        const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
-        
+        const currentBatchData = filteredImages.slice(startIndex, startIndex + ITEMS_PER_BATCH);
+        const makeForwardMsgTitle = `【${tagName}】标签图库 (${batchNum}/${totalBatches})`;
         const forwardListBatch = [];
         const firstNodeText = batchNum === 1 
-          ? `查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)\n想导出图片？试试: #咕咕牛导出${standardMainName}1`
-          : `查看『${standardMainName}』(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`;
+          ? `查看【${tagName}】标签 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`
+          : `查看【${tagName}】标签(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`;
         forwardListBatch.push(firstNodeText);
 
-        if (executionMode === 'Serial') {
-          //this.logger.info(`${this.logPrefix} [查看] 检测到低负载串行模式。`);
-          const intervalMs = MiaoPluginMBT.MBTConfig.Command_Interval_Ms ?? Default_Config.Command_Interval_Ms;
-          for (let i = 0; i < currentBatchData.length; i++) {
-            const item = currentBatchData[i];
-            const itemGlobalIndex = startIndex + i + 1;
-            const messageNode = [];
-            const relativePath = item.path.replace(/\\/g, "/");
-            const fileName = path.basename(relativePath);
-            const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
-            
-            if (absolutePath) {
-              try {
-                const imageBuffer = await fsPromises.readFile(absolutePath);
-                messageNode.push(segment.image(imageBuffer));
-                await common.sleep(intervalMs);
-              } catch(readErr) {
-                 messageNode.push(`[图片读取失败: ${fileName}]`);
-              }
-            } else {
-              messageNode.push(`[图片文件丢失: ${fileName}]`);
-            }
-            const textInfoLines = [];
-            textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
-            const tags = [];
-            if (item.attributes?.isRx18 === true) tags.push("R18");
-            if (item.attributes?.isPx18 === true) tags.push("P18");
-            if (item.attributes?.isAiImage === true) tags.push("Ai");
-            if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
-            if (tags.length > 0) textInfoLines.push(`Tag：${tags.join(" / ")}`);
-            let fileSizeFormatted = "";
-            if (absolutePath) { try { const stats = await fsPromises.stat(absolutePath); fileSizeFormatted = FormatBytes(stats.size); } catch (statErr) {} }
-            if (fileSizeFormatted) textInfoLines.push(`占用：${fileSizeFormatted}`);
-            const constraints = [];
-            const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
-            let isAutoPurifiedByRule = false;
-            const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
-            if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, currentPFL)) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && item.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && item.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && item.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
-            if (isUserBanned) constraints.push("❌封禁");
-            if (isAutoPurifiedByRule) constraints.push(`🌱净化`);
-            if (constraints.length > 0) textInfoLines.push(`约束:  ${constraints.join("     ")}`);
-            messageNode.push(textInfoLines.join("\n"));
-            forwardListBatch.push(messageNode);
-          }
-        } else {
-          //this.logger.info(`${this.logPrefix} [查看]检测到高速并发处理模式。`);
-          for (let i = 0; i < currentBatchData.length; i++) {
-            const item = currentBatchData[i];
-            const itemGlobalIndex = startIndex + i + 1;
+        for (const item of currentBatchData) {
             const relativePath = item.path.replace(/\\/g, "/");
             const fileName = path.basename(relativePath);
             const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
             const messageNode = [];
             if (absolutePath) {
-              try { await fsPromises.access(absolutePath, fs.constants.R_OK); messageNode.push(segment.image(`file://${absolutePath}`)); } 
-              catch (accessErr) { messageNode.push(`[图片无法加载: ${fileName}]`); }
-            } else {
-              messageNode.push(`[图片文件丢失: ${fileName}]`);
-            }
-            const textInfoLines = [];
-            textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
-            const tags = [];
-            if (item.attributes?.isRx18 === true) tags.push("R18");
-            if (item.attributes?.isPx18 === true) tags.push("P18");
-            if (item.attributes?.isAiImage === true) tags.push("Ai");
-            if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
-            if (tags.length > 0) textInfoLines.push(`Tag：${tags.join(" / ")}`);
-            let fileSizeFormatted = "";
-            if (absolutePath) { try { const stats = await fsPromises.stat(absolutePath); fileSizeFormatted = FormatBytes(stats.size); } catch (statErr) {} }
-            if (fileSizeFormatted) textInfoLines.push(`占用：${fileSizeFormatted}`);
-            const constraints = [];
-            const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath);
-            let isAutoPurifiedByRule = false;
-            const currentPFL = MiaoPluginMBT.MBTConfig?.PFL ?? Default_Config.defaultPfl;
-            if (MiaoPluginMBT.CheckIfPurifiedByLevel(item, currentPFL)) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.Ai === false && item.attributes?.isAiImage === true) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.EasterEgg === false && item.attributes?.isEasterEgg === true) isAutoPurifiedByRule = true;
-            if (!isAutoPurifiedByRule && MiaoPluginMBT.MBTConfig?.layout === false && item.attributes?.layout === "fullscreen") isAutoPurifiedByRule = true;
-            if (isUserBanned) constraints.push("❌封禁");
-            if (isAutoPurifiedByRule) constraints.push(`🌱净化`);
-            if (constraints.length > 0) textInfoLines.push(`约束:  ${constraints.join("     ")}`);
-            messageNode.push(textInfoLines.join("\n"));
+                try { await fsPromises.access(absolutePath, fs.constants.R_OK); messageNode.push(segment.image(`file://${absolutePath}`)); } 
+                catch (accessErr) { messageNode.push(`[图片无法加载: ${fileName}]`); }
+            } else { messageNode.push(`[图片文件丢失: ${fileName}]`); }
+            messageNode.push(`${item.characterName} - ${fileName}`);
             forwardListBatch.push(messageNode);
-          }
         }
 
         if (forwardListBatch.length > 1) {
             const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
-            if (totalBatches > 1) {
-                allBatchesForwardNodes.push(forwardMsg);
-            } else {
-                await e.reply(forwardMsg);
-            }
+            allForwardMessages.push(forwardMsg);
         }
       }
+    
+    } else if (gameNameKeys.includes(inputName)) {
+      // 逻辑分支2：处理游戏名查询
+      const gameNameCN = inputName;
+      const gameInfo = gameFolderMap[gameNameCN];
       
-      if (totalBatches > 1) {
-          const finalForwardMsg = await common.makeForwardMsg(e, allBatchesForwardNodes, `『${standardMainName}』图库详情`);
-          await e.reply(finalForwardMsg);
+      const reposToScan = [
+        { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 },
+        { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
+        { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 },
+      ];
+      
+      const characterSet = new Set();
+      for (const repo of reposToScan) {
+          if (!(await MiaoPluginMBT.IsTuKuDownloaded(repo.num))) continue;
+          const gamePathInRepo = path.join(repo.path, gameInfo.folder);
+          try {
+              await fsPromises.access(gamePathInRepo);
+              const dirs = await fsPromises.readdir(gamePathInRepo, { withFileTypes: true });
+              for (const dir of dirs) { if (dir.isDirectory()) characterSet.add(dir.name); }
+          } catch (err) {
+              if (err.code !== 'ENOENT') logger.warn(`${logPrefix} [查看-游戏] 读取目录 ${gamePathInRepo} 失败:`, err);
+          }
       }
 
-    } catch (error) {
-      logger.error(`${logPrefix} [查看] 处理角色 '${roleNameInput}' 时发生错误: 用户 ${e.user_id}`, error);
-      await this.ReportError(e, `查看角色 ${roleNameInput}`, error);
+      const characterNames = Array.from(characterSet);
+      if (characterNames.length === 0) return e.reply(`在本地仓库中没有找到任何『${gameNameCN}』的角色。`, true);
+
+      if ((gameInfo.key === 'gs' || gameInfo.key === 'sr') && !secondaryInput) {
+        // 子逻辑2.1：原神/星铁，且只输入了游戏名 -> 发送元素列表
+        await e.reply(`『${gameNameCN}』的角色已按元素分类，请选择查看：`, true);
+        const elementMap = {
+          gs: { pyro: '火', hydro: '水', anemo: '风', electro: '雷', dendro: '草', cryo: '冰', geo: '岩' },
+          sr: { fire: '火', ice: '冰', wind: '风', elec: '雷', phy: '物理', quantum: '量子', imaginary: '虚数' }
+        };
+        const elementOrder = {
+          gs: ['火', '水', '风', '雷', '草', '冰', '岩'],
+          sr: ['物理', '火', '冰', '雷', '风', '量子', '虚数'],
+        };
+        const elementList = elementOrder[gameInfo.key].map(elem => `#查看${gameNameCN} ${elem}`).join('\n');
+        await e.reply(`- 点击下方指令或手动输入 -\n${elementList}`);
+
+      } else {
+        // 子逻辑2.2：处理所有其他情况
+        let targetChars = [];
+        let queryDescription = "";
+
+        if (gameInfo.key === 'gs' || gameInfo.key === 'sr') {
+            queryDescription = `『${gameNameCN}』【${secondaryInput}】属性`;
+            const elementMap = {
+              gs: { pyro: '火', hydro: '水', anemo: '风', electro: '雷', dendro: '草', cryo: '冰', geo: '岩' },
+              sr: { fire: '火', ice: '冰', wind: '风', elec: '雷', phy: '物理', quantum: '量子', imaginary: '虚数' }
+            };
+            for (const charName of characterNames) {
+                let element = '未知';
+                const metaPath = gameInfo.key === 'gs' ? MiaoPluginMBT.paths.target.miaoGsAliasDir : MiaoPluginMBT.paths.target.miaoSrAliasDir;
+                const dataFilePath = path.join(metaPath, charName, 'data.json');
+                try {
+                    const fileContent = await fsPromises.readFile(dataFilePath, 'utf-8');
+                    const jsonData = JSON.parse(fileContent);
+                    if (jsonData && jsonData.elem) {
+                        if (gameInfo.key === 'gs') element = elementMap.gs[jsonData.elem] || '未知';
+                        else if (gameInfo.key === 'sr') element = Object.values(elementMap.sr).includes(jsonData.elem) ? jsonData.elem : '未知';
+                    }
+                } catch (error) {
+                    if (error.code !== 'ENOENT') logger.warn(`${logPrefix} 读取角色 [${charName}] 的 data.json 时出错:`, error.message);
+                }
+                if (element === secondaryInput) {
+                    targetChars.push(charName);
+                }
+            }
+        } else {
+            queryDescription = `『${gameNameCN}』`;
+            targetChars = characterNames;
+        }
+
+        if (targetChars.length === 0) {
+            return e.reply(`没有找到 ${queryDescription} 的任何角色。`, true);
+        }
+
+        const sortedCharNames = targetChars.sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
+        
+        await e.reply(`收到！将发送 ${queryDescription} 的 ${sortedCharNames.length} 个角色图库...`, true);
+
+        for (const charName of sortedCharNames) {
+            await checkSystemHealth(e, logger);
+            
+            try {
+                const aliasResult = await MiaoPluginMBT.FindRoleAlias(charName, logger);
+                const standardMainName = aliasResult.exists ? aliasResult.mainName : charName; 
+                const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter((img) => img.characterName === standardMainName && img.path && typeof img.path === 'string');
+                
+                if (rawRoleImageData.length === 0) continue; 
+                
+                rawRoleImageData.sort((a, b) => parseInt(a.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0") - parseInt(b.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0"));
+                
+                const totalItems = rawRoleImageData.length;
+                const ITEMS_PER_BATCH = 28;
+                const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
+                
+                for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+                  await checkSystemHealth(e, logger);
+                  const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
+                  const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
+                  const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
+                  const forwardListBatch = [];
+                  const firstNodeText = batchNum === 1 
+                    ? `查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`
+                    : `查看『${standardMainName}』(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`;
+                  forwardListBatch.push(firstNodeText);
+                  
+                  for (let i = 0; i < currentBatchData.length; i++) {
+                      const item = currentBatchData[i];
+                      const itemGlobalIndex = startIndex + i + 1;
+                      const relativePath = item.path.replace(/\\/g, "/");
+                      const fileName = path.basename(relativePath);
+                      const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
+                      const messageNode = [];
+                      if (absolutePath) {
+                        try { await fsPromises.access(absolutePath, fs.constants.R_OK); messageNode.push(segment.image(`file://${absolutePath}`)); } 
+                        catch (accessErr) { messageNode.push(`[图片无法加载: ${fileName}]`); }
+                      } else { messageNode.push(`[图片文件丢失: ${fileName}]`); }
+                      const textInfoLines = [];
+                      textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
+                      const tags = [];
+                      if (item.attributes?.isRx18 === true) tags.push("R18"); if (item.attributes?.isPx18 === true) tags.push("P18"); if (item.attributes?.isAiImage === true) tags.push("Ai"); if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
+                      if (tags.length > 0) textInfoLines.push(`Tag：${tags.join(" / ")}`);
+                      let fileSizeFormatted = "";
+                      if (absolutePath) { try { const stats = await fsPromises.stat(absolutePath); fileSizeFormatted = FormatBytes(stats.size); } catch (statErr) {} }
+                      if (fileSizeFormatted) textInfoLines.push(`占用：${fileSizeFormatted}`);
+                      const constraints = [];
+                      const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath); const isPurified = await MiaoPluginMBT.CheckIfPurified(relativePath, logger);
+                      if (isUserBanned) constraints.push("❌封禁"); if (isPurified && !isUserBanned) constraints.push(`🌱净化`);
+                      if (constraints.length > 0) textInfoLines.push(`约束:  ${constraints.join("     ")}`);
+                      messageNode.push(textInfoLines.join("\n"));
+                      forwardListBatch.push(messageNode);
+                  }
+
+                  if (forwardListBatch.length > 1) {
+                      const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
+                      allForwardMessages.push(forwardMsg);
+                  }
+                }
+            } catch (error) {
+                logger.error(`${logPrefix} [查看-游戏-角色] 处理角色 '${charName}' 时发生错误:`, error);
+            }
+            await common.sleep(2000);
+        }
+      }
+
+    } else {
+      // 逻辑分支3：处理单个角色名
+      const roleNameInput = inputName;
+      try {
+        const aliasResult = await MiaoPluginMBT.FindRoleAlias(roleNameInput, logger);
+        const standardMainName = aliasResult.exists ? aliasResult.mainName : roleNameInput; 
+        const rawRoleImageData = MiaoPluginMBT._imgDataCache.filter((img) => img.characterName === standardMainName && img.path && typeof img.path === 'string');
+        if (rawRoleImageData.length === 0) { return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true); }
+        
+        const sourceGallery = rawRoleImageData[0].sourceGallery;
+        let gameKeyForPluginCheck = null; 
+        if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.zzz) gameKeyForPluginCheck = "zzz";
+        else if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.waves) gameKeyForPluginCheck = "waves";
+        if (gameKeyForPluginCheck) { 
+          const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck);
+          if (!pluginIsInstalled) return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true);
+        }
+        
+        rawRoleImageData.sort((a, b) => parseInt(a.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0") - parseInt(b.path.match(/Gu(\d+)\.webp$/i)?.[1] || "0"));
+        
+        const totalItems = rawRoleImageData.length;
+        const ITEMS_PER_BATCH = 28;
+        const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
+        
+        let waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片...`;
+        if (totalBatches > 1) {
+            waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片，将分 ${totalBatches} 批发送，请稍候...`;
+          if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') === 'Serial') {
+            waitMessage += `\n(当前为低负载模式，批间会进行系统健康检查)`;
+          }
+        }
+    
+        await e.reply(waitMessage, true);
+        
+        for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+          await checkSystemHealth(e, logger);
+
+          const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
+          const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
+          const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
+          
+          const forwardListBatch = [];
+          const firstNodeText = batchNum === 1 
+            ? `查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)\n想导出图片？试试: #咕咕牛导出${standardMainName}1`
+            : `查看『${standardMainName}』(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`;
+          forwardListBatch.push(firstNodeText);
+          
+          for (let i = 0; i < currentBatchData.length; i++) {
+              const item = currentBatchData[i];
+              const itemGlobalIndex = startIndex + i + 1;
+              const relativePath = item.path.replace(/\\/g, "/");
+              const fileName = path.basename(relativePath);
+              const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
+              const messageNode = [];
+              if (absolutePath) {
+                try { await fsPromises.access(absolutePath, fs.constants.R_OK); messageNode.push(segment.image(`file://${absolutePath}`)); } 
+                catch (accessErr) { messageNode.push(`[图片无法加载: ${fileName}]`); }
+              } else { messageNode.push(`[图片文件丢失: ${fileName}]`); }
+              const textInfoLines = [];
+              textInfoLines.push(`${itemGlobalIndex}. ${fileName}`);
+              const tags = [];
+              if (item.attributes?.isRx18 === true) tags.push("R18"); if (item.attributes?.isPx18 === true) tags.push("P18"); if (item.attributes?.isAiImage === true) tags.push("Ai"); if (item.attributes?.isEasterEgg === true) tags.push("彩蛋");
+              if (tags.length > 0) textInfoLines.push(`Tag：${tags.join(" / ")}`);
+              let fileSizeFormatted = "";
+              if (absolutePath) { try { const stats = await fsPromises.stat(absolutePath); fileSizeFormatted = FormatBytes(stats.size); } catch (statErr) {} }
+              if (fileSizeFormatted) textInfoLines.push(`占用：${fileSizeFormatted}`);
+              const constraints = [];
+              const isUserBanned = MiaoPluginMBT._userBanSet.has(relativePath); const isPurified = await MiaoPluginMBT.CheckIfPurified(relativePath, logger);
+              if (isUserBanned) constraints.push("❌封禁"); if (isPurified && !isUserBanned) constraints.push(`🌱净化`);
+              if (constraints.length > 0) textInfoLines.push(`约束:  ${constraints.join("     ")}`);
+              messageNode.push(textInfoLines.join("\n"));
+              forwardListBatch.push(messageNode);
+          }
+
+          if (forwardListBatch.length > 1) {
+              const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
+              allForwardMessages.push(forwardMsg);
+          }
+        }
+      } catch (error) {
+        logger.error(`${logPrefix} [查看] 处理角色 '${roleNameInput}' 时发生错误: 用户 ${e.user_id}`, error);
+        await this.ReportError(e, `查看角色 ${roleNameInput}`, error);
+      }
     }
+    
+    if (allForwardMessages.length > 0) {
+      if (MiaoPluginMBT.MBTConfig.Use_Advanced_Forward) {
+        try {
+          if (allForwardMessages.length === 1) {
+            await e.reply(allForwardMessages[0]);
+          } else {
+            const finalForwardMsg = await common.makeForwardMsg(e, allForwardMessages, `咕咕牛图库 - ${inputName} (高级合并)`);
+            await e.reply(finalForwardMsg);
+          }
+        } catch (fwdError) {
+          logger.error(`${logPrefix} [高级合并] 创建或发送失败:`, fwdError);
+          await e.reply("创建高级合并消息失败了，可能是内容太多了，已为你自动回退到分批发送模式...");
+          for (const msg of allForwardMessages) {
+            await e.reply(msg);
+            await common.sleep(1000);
+          }
+        }
+      } else {
+        for (const msg of allForwardMessages) {
+          await e.reply(msg);
+          await common.sleep(1000);
+        }
+      }
+    }
+
     return true;
   }
 
   async VisualizeRoleSplashes(e) {
     if (!(await this.CheckInit(e))) return true;
+    const canContinue = await MiaoPluginMBT.applyDefensePolicy(e, 'VisualizeRoleSplashes');
+    if (!canContinue) return true;
 
     const match = e.msg.match(/^#可视化\s*(.+)$/i);
     if (!match?.[1]) return e.reply("想可视化哪个角色呀？格式：#可视化角色名", true);
@@ -3980,16 +4310,19 @@ export class MiaoPluginMBT extends plugin {
 
       allImageFiles.sort((a, b) => { const numA = parseInt(a.match(/(\d+)\.\w+$/)?.[1] || "0"); const numB = parseInt(b.match(/(\d+)\.\w+$/)?.[1] || "0"); if (numA === numB) return a.localeCompare(b); return numA - numB; });
       
-      const executionMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
-      const BATCH_SIZE = executionMode === 'Serial' ? 12 : 28;
+      const BATCH_SIZE = 28;
       
       const totalImageCount = allImageFiles.length;
       const totalBatches = Math.ceil(totalImageCount / BATCH_SIZE);
       
-      let waitMessage = `[${standardMainName}] 有 ${totalImageCount} 张面板图\n分 ${totalBatches} 批发送, 请注意查收~`;
-      if(executionMode === 'Serial') {
-        waitMessage = `[${standardMainName}] 有 ${totalImageCount} 张面板图\n分 ${totalBatches} 批发送(低负载模式)发送可能会很慢~`;
+      let waitMessage = `[${standardMainName}] 有 ${totalImageCount} 张面板图，正在生成可视化预览...`;
+      if(totalBatches > 1) {
+        waitMessage = `[${standardMainName}] 的图片过多 (共 ${totalImageCount} 张)，将分 ${totalBatches} 批生成预览，请注意查收...`;
+        if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') === 'Serial') {
+          waitMessage += `\n(当前为低负载模式，生成速度会较慢)`;
+        }
       }
+
       await e.reply(waitMessage, true);
       await common.sleep(500);
 
@@ -4004,16 +4337,13 @@ export class MiaoPluginMBT extends plugin {
         } else { logger.error(`${logPrefix} [可视化] 访问公共资源模板时出错: ${sourceTplFilePath}`, commonErr); await e.reply("生成可视化图片失败：访问模板文件时出错。"); return true; }
       }
       
-      const generatedMapImages = [];
-      if (totalBatches > 2) {
-          generatedMapImages.push(`『${standardMainName}』可视化图集 (共 ${totalBatches} 部分)`);
-      }
-
       for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+        await MiaoPluginMBT.applyDefensePolicy(e, 'VisualizeRoleSplashes_Batch');
+        
         try {
           const startIndex = (batchNum - 1) * BATCH_SIZE;
           const currentBatchFiles = allImageFiles.slice(startIndex, startIndex + BATCH_SIZE);
-          //logger.info(`${logPrefix} [可视化] 正在生成第 ${batchNum}/${totalBatches} 批 (${currentBatchFiles.length} 张图片)...`);  //调式日志
+          
           const imagesDataForRender = currentBatchFiles.map((fileName, index) => ({ fileName: fileName.replace(/\.\w+$/, ""), filePath: `file://${path.join(roleFolderPath, fileName).replace(/\\/g, "/")}`, originalIndex: startIndex + index, isGu: /gu/i.test(fileName) }));
           const renderData = { pluginVersion: MiaoPluginMBT.GetVersionStatic(), characterName: standardMainName, imageCount: totalImageCount, images: imagesDataForRender, batchNum, totalBatches, batchStartIndex: startIndex, scaleStyleValue: MiaoPluginMBT.getScaleStyleValue() };
 
@@ -4024,42 +4354,19 @@ export class MiaoPluginMBT extends plugin {
           }, this);
 
           if (imageBuffer) {
-            if (totalBatches <= 2) {
-                await e.reply(imageBuffer);
-            } else {
-                generatedMapImages.push(imageBuffer);
-            }
+            await e.reply(imageBuffer);
           } else {
             logger.error(`${logPrefix} [可视化] 第 ${batchNum}/${totalBatches} 批截图生成失败或返回空。`);
-            const failureMsg = `[❌ 第 ${batchNum}/${totalBatches} 部分渲染失败]`;
-            if (totalBatches <= 2) {
-                await e.reply(failureMsg, true);
-            } else {
-                generatedMapImages.push(failureMsg);
-            }
+            await e.reply(`[❌ 第 ${batchNum}/${totalBatches} 部分渲染失败]`, true);
           }
         } catch (batchProcessingError) {
             logger.error(`${logPrefix} [可视化] 处理第 ${batchNum}/${totalBatches} 批时发生错误:`, batchProcessingError);
-            const errorMsg = `处理第 ${batchNum}/${totalBatches} 批数据时出错，跳过此批次。`;
-            if (totalBatches <= 2) {
-                await e.reply(errorMsg, true);
-            } else {
-                generatedMapImages.push(errorMsg);
-            }
+            await e.reply(`处理第 ${batchNum}/${totalBatches} 批数据时出错，跳过此批次。`, true);
         }
-        finally { 
-            if (batchNum < totalBatches) {
-                const sleepInterval = executionMode === 'Serial' 
-                    ? (MiaoPluginMBT.MBTConfig.Command_Interval_Ms ?? Default_Config.Command_Interval_Ms)
-                    : 2500;
-                await common.sleep(sleepInterval);
-            }
+        
+        if (batchNum < totalBatches) {
+            await common.sleep(1000);
         }
-      }
-
-      if (totalBatches > 2 && generatedMapImages.length > 1) {
-          const forwardMsg = await common.makeForwardMsg(e, generatedMapImages, `『${standardMainName}』可视化图集`);
-          await e.reply(forwardMsg);
       }
 
     } catch (error) { logger.error(`${logPrefix} [可视化] 处理角色 '${roleNameInput}' 时发生顶层错误:`, error); await this.ReportError(e, `可视化角色 ${roleNameInput}`, error); }
@@ -4183,9 +4490,14 @@ export class MiaoPluginMBT extends plugin {
     }
 
     await e.reply(`${this.logPrefix} 正在尝试触发: [${itemToTrigger.id}] ${itemToTrigger.name}...`, true);
+
     let mockError = new Error(`模拟错误 (${itemToTrigger.type}): ${itemToTrigger.description}`);
 
     try {
+      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
+      try { await fsPromises.access(sourceHtmlPath); }
+      catch (err) { return e.reply(`生成报告失败：缺少模板文件 ${sourceHtmlPath}`, true); }
+
       switch (itemToTrigger.type) {
         case "THROW_GIT_AUTH_FAIL": mockError.message = "模拟Git认证失败"; mockError.code = 128; mockError.stderr = "fatal: Authentication failed for 'https://example.com'"; throw mockError;
         case "THROW_NET_TIMEOUT": mockError.code = ERROR_CODES.Timeout; mockError.message = "模拟网络请求超时"; throw mockError;
@@ -4198,40 +4510,59 @@ export class MiaoPluginMBT extends plugin {
         case "THROW_PM18_PROCESS_ERROR": mockError.message = "模拟PM18处理失败"; throw mockError;
         case "THROW_GENERAL_ERROR": throw new Error("一个意想不到的通用错误发生了！救命啊！");
 
-        case "SIMULATE_REPORT_DL_FINAL_MIXED_RESULT": {
+        case "SIMULATE_REPORT_UP_FINAL_CORE_TIMEOUT": {
+          const simulatedError = new Error("Command timed out after 120000ms: git pull origin main --ff-only --progress");
+          simulatedError.code = 'ETIMEDOUT';
+
           const reportData = {
-            coreRepoResult: {
-              success: true,
-              nodeName: "Moeyy",
-              gitLog: "最新提交: xxx"
-            },
-            subsidiaryResults: [{
-              repo: 2,
-              success: false,
-              nodeName: "Ghfast",
-              error: { message: "超时了" },
-              gitLog: null
-            }, {
-              repo: 3, success: true, nodeName: "本地", gitLog: "已存在"
-            }],
-            duration: "12.3", pluginVersion: "4.9.7", scaleStyleValue: ""
+            pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+            duration: "154.9",
+            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+            results: [
+              { name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", error: null, log: [{ displayParts: [{ type: 'text', content: '太多了就不打字了嘿嘿' }], date: '06-10 12:04', hash: '31a062a' }], wasForceReset: false },
+              { name: "二号仓库", statusText: "更新失败", statusClass: "status-fail", error: simulatedError, log: null, wasForceReset: false },
+              { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", error: null, log: [{ displayParts: [{ type: 'character', name: '黑天鹅' }] }], wasForceReset: false },
+              { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", error: null, log: [{ displayParts: [{ type: 'character', name: '风萤' }] }], wasForceReset: false },
+            ],
+            overallSuccess: false,
+            overallHasChanges: true,
+            isArray: Array.isArray
           };
-          const img = await renderPageToImage("dl-report-mixed", { htmlContent: DOWNLOAD_REPORT_HTML_TEMPLATE, data: reportData }, this);
-          if (img) await e.reply(["模拟下载报告(混合结果):", img]); else await e.reply("模拟下载报告(混合结果)图片生成失败");
+
+          const imageBuffer = await renderPageToImage("update-report-timeout-sim", {
+            tplFile: sourceHtmlPath, data: reportData, imgType: "png",
+            pageGotoParams: { waitUntil: "networkidle0" },
+            pageBoundingRect: { selector: ".container", padding: 0 }, width: 560,
+          }, this);
+
+          if (imageBuffer) {
+            await e.reply(["这是模拟的'更新失败(超时)'报告:", imageBuffer]);
+
+            const errorDetailsForForwardMsg = [];
+            const formattedError = MiaoPluginMBT.FormatError(`更新二号仓库`, simulatedError, "", this.logPrefix);
+            let errorReportText = `--- 二号仓库 更新失败 ---\n`;
+            errorReportText += `${formattedError.summary}\n\n`;
+            errorReportText += `【🤔 可能原因与建议】\n${formattedError.suggestions}\n\n`;
+            errorDetailsForForwardMsg.push(errorReportText);
+
+            if (errorDetailsForForwardMsg.length > 0) {
+              await common.sleep(500);
+              try {
+                const forwardMsg = await common.makeForwardMsg(e, errorDetailsForForwardMsg, "咕咕牛更新失败详情 (模拟)");
+                await e.reply(forwardMsg);
+              } catch (fwdError) {
+                this.logger.error(`${this.logPrefix} [错误触发器] 模拟发送详细错误合并消息失败:`, fwdError);
+                await e.reply("模拟生成详细错误报告失败了...");
+              }
+            }
+
+          } else {
+            await e.reply("模拟报告图片生成失败了...", true);
+          }
           return true;
         }
-        // 更多报告模拟case...
 
-        case "SIMULATE_LOGIC_RENDER_BLANK_IMAGE":
-          this.logger.error("模拟截图返回空值...");
-          await e.reply("模拟：截图返回了空图片，功能可能失败。", true);
-          return true;
-        case "SIMULATE_LOGIC_CONFIG_RECOVER_NOTIFY":
-          this.logger.warn("模拟：配置文件损坏，已从备份恢复并通知主人。");
-          await MiaoPluginMBT.SendMasterMsg("模拟：您的咕咕牛配置文件已从备份恢复。", e, 0, this.logger);
-          return true;
-
-        // 旧关键字兼容
+        // 兼容旧关键字
         case "git": mockError.message = "兼容旧关键字：模拟Git失败"; mockError.code = 128; mockError.stderr = "fatal: Old keyword git error"; throw mockError;
         case "fs": mockError = new Error("兼容旧关键字：模拟FS路径未找到"); mockError.code = ERROR_CODES.NotFound; await fsPromises.access("/old/fs/trigger"); break;
         default: throw new Error(`未处理的触发类型: ${itemToTrigger.type}`);
@@ -4288,33 +4619,41 @@ export class MiaoPluginMBT extends plugin {
 
     try {
       try { await fsPromises.access(sourceHtmlPath); }
-      catch (err) { logger.error(`${logPrefix} [设置面板] 找不到模板文件: ${sourceHtmlPath}`, err); await e.reply("无法显示设置面板：缺少 settings_panel.html 模板文件。"); return true; }
+      catch (err) {
+        logger.error(`${logPrefix} [设置面板] 找不到模板文件: ${sourceHtmlPath}`, err);
+        await e.reply("无法显示设置面板：缺少 settings_panel.html 模板文件。");
+        return true;
+      }
 
       const config = MiaoPluginMBT.MBTConfig;
       const isSerialMode = (config?.Execution_Mode ?? 'Batch') === 'Serial';
-      const intervalMs = config?.Command_Interval_Ms ?? Default_Config.Command_Interval_Ms;
-      
-      let modeDescription = '高速并发处理模式';
-      if (isSerialMode) {
-          modeDescription = `低负载串行处理模式`;
-      }
+      const currentLoadLevel = config?.Load_Level ?? 1;
+      const levelInfo = LOAD_LEVEL_CONFIG[currentLoadLevel] || LOAD_LEVEL_CONFIG[1];
 
       const renderData = {
         pluginVersion: MiaoPluginMBT.GetVersionStatic(),
+        scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+        
         tuKuStatus: { text: (config?.TuKuOP ?? Default_Config.defaultTuKuOp) ? "已启用" : "已禁用", class: (config?.TuKuOP ?? Default_Config.defaultTuKuOp) ? "value-enabled" : "value-disabled", },
         pflStatus: { level: (config?.PFL ?? Default_Config.defaultPfl), description: Purify_Level.getDescription(config?.PFL ?? Default_Config.defaultPfl), class: `value-level-${config?.PFL ?? Default_Config.defaultPfl}`, },
         aiStatus: { text: (config?.Ai ?? true) ? "已开启" : "已关闭", class: (config?.Ai ?? true) ? "value-enabled" : "value-disabled", },
         easterEggStatus: { text: (config?.EasterEgg ?? true) ? "已开启" : "已关闭", class: (config?.EasterEgg ?? true) ? "value-enabled" : "value-disabled", },
         layoutStatus: { text: (config?.layout ?? true) ? "已开启" : "已关闭", class: (config?.layout ?? true) ? "value-enabled" : "value-disabled", },
         PM18Status: { text: (config?.PM18 ?? false) ? "已开启" : "已关闭", class: (config?.PM18 ?? false) ? "value-enabled" : "value-disabled", },
-        scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
         
-        isSerialMode: isSerialMode,
-        intervalMs: intervalMs,
         executionMode: {
           text: isSerialMode ? "已开启" : "已关闭",
           class: isSerialMode ? 'value-enabled' : 'value-disabled',
-          description: modeDescription
+        },
+        loadLevel: {
+          containerClass: isSerialMode ? '' : 'item-disabled',
+          description: isSerialMode ? levelInfo.description : '仅在低负载模式下生效',
+          valueClass: `value-level-${currentLoadLevel}`,
+          levelName: `LV.${currentLoadLevel} ${levelInfo.name}`
+        },
+        advancedForward: {
+          text: (config?.Use_Advanced_Forward ?? false) ? "已开启" : "已关闭",
+          class: (config?.Use_Advanced_Forward ?? false) ? "value-enabled" : "value-disabled",
         }
       };
 
@@ -4325,24 +4664,23 @@ export class MiaoPluginMBT extends plugin {
       }, this);
 
       if (imageBuffer) {
-        await e.reply(imageBuffer);
         if (statusMessageForLogAndFallback) {
-          //logger.info(`${logPrefix} [设置面板状态日志] ${statusMessageForLogAndFallback}`);  //调式日志
+          logger.info(`${logPrefix} [设置面板状态日志] ${statusMessageForLogAndFallback}`);
         }
+        await e.reply(imageBuffer);
       } else {
-        //logger.error(`${logPrefix} [设置面板] Puppeteer 未能成功生成图片 (返回空)。`);  //调式日志
-        // let fallbackMsg = "生成设置面板图片失败，请查看日志。";
-        // if (statusMessageForLogAndFallback) { 
-        //     fallbackMsg = `${statusMessageForLogAndFallback}\n但设置面板图片生成失败，请查看日志。`;
-        // }
-        // await e.reply(fallbackMsg, true);
-        //调式日志
+        logger.error(`${logPrefix} [设置面板] Puppeteer 未能成功生成图片 (返回空)。`);
+        let fallbackMsg = "哎呀，设置面板图片生成失败了...";
+        if (statusMessageForLogAndFallback) { 
+            fallbackMsg = `${statusMessageForLogAndFallback}\n但设置面板图片生成失败了，请检查日志。`;
+        }
+        await e.reply(fallbackMsg, true);
       }
     } catch (error) {
-      logger.error(`${logPrefix} [设置面板] 生成或发送面板时发生错误:`, error);
+      logger.error(`${logPrefix} [设置面板] 生成或发送面板时发生严重错误:`, error);
       let errorReportMsg = "显示设置面板时发生内部错误。";
       if (statusMessageForLogAndFallback) {
-        errorReportMsg = `${statusMessageForLogAndFallback}\n且显示设置面板时发生内部错误。`;
+        errorReportMsg = `${statusMessageForLogAndFallback}\n并且在尝试生成设置面板时发生了内部错误。`;
       }
       await this.ReportError(e, "显示设置面板", error, errorReportMsg);
     }
@@ -4353,56 +4691,60 @@ export class MiaoPluginMBT extends plugin {
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${this.logPrefix} 只有主人才能使用设置命令哦~`);
 
-    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18|低负载|处理间隔)(开启|关闭|[0-9]+)$/i);
+    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18|低负载|负载等级|高级合并)(开启|关闭|[0-9]+)$/i);
     if (!match) return false;
 
     const featureKey = match[1].toLowerCase();
     const valueRaw = match[2];
 
     switch (featureKey) {
-        case 'ai':
-        case '彩蛋':
-        case '横屏':
-        case 'pm18':
-            if (valueRaw !== '开启' && valueRaw !== '关闭') {
-                return e.reply(`无效操作: [${featureKey}] 只能用 '开启' 或 '关闭'。`, true);
-            }
-            const enable = valueRaw === '开启';
-            let configKey = "", featureName = "";
-            if (featureKey === 'ai') { configKey = "Ai"; featureName = "Ai 图"; }
-            else if (featureKey === '彩蛋') { configKey = "EasterEgg"; featureName = "彩蛋图"; }
-            else if (featureKey === '横屏') { configKey = "layout"; featureName = "横屏图"; }
-            else if (featureKey === 'pm18') { configKey = "PM18"; featureName = "PM18 功能"; }
-            await this.handleSwitchCommand(e, configKey, featureName, enable);
-            break;
+      case 'ai':
+      case '彩蛋':
+      case '横屏':
+      case 'pm18':
+        if (valueRaw !== '开启' && valueRaw !== '关闭') {
+          return e.reply(`无效操作: [${featureKey}] 只能用 '开启' 或 '关闭'。`, true);
+        }
+        const enable = valueRaw === '开启';
+        let configKey = "", featureName = "";
+        if (featureKey === 'ai') { configKey = "Ai"; featureName = "Ai 图"; }
+        else if (featureKey === '彩蛋') { configKey = "EasterEgg"; featureName = "彩蛋图"; }
+        else if (featureKey === '横屏') { configKey = "layout"; featureName = "横屏图"; }
+        else if (featureKey === 'pm18') { configKey = "PM18"; featureName = "PM18 功能"; }
+        await this.handleSwitchCommand(e, configKey, featureName, enable);
+        break;
 
-        case '净化等级':
-            const level = parseInt(valueRaw, 10);
-            if (isNaN(level) || ![0, 1, 2].includes(level)) {
-                return e.reply(`无效的净化等级: [${valueRaw}]，只能是 0, 1, 或 2。`, true);
-            }
-            await this.setPurificationLevelInternal(e, level);
-            break;
+      case '净化等级':
+        const level = parseInt(valueRaw, 10);
+        if (isNaN(level) || ![0, 1, 2].includes(level)) {
+          return e.reply(`无效的净化等级: [${valueRaw}]，只能是 0, 1, 或 2。`, true);
+        }
+        await this.setPurificationLevelInternal(e, level);
+        break;
 
-        case '低负载':
-            if (valueRaw !== '开启' && valueRaw !== '关闭') {
-                return e.reply(`无效操作: [低负载] 只能用 '开启' 或 '关闭'。`, true);
-            }
-            const modeEnable = valueRaw === '开启';
-            const targetMode = modeEnable ? 'Serial' : 'Batch';
-            await this.setExecutionModeInternal(e, targetMode, '低负载模式', valueRaw);
-            break;
+      case '低负载':
+        if (valueRaw !== '开启' && valueRaw !== '关闭') {
+          return e.reply(`无效操作: [低负载] 只能用 '开启' 或 '关闭'。`, true);
+        }
+        const modeEnable = valueRaw === '开启';
+        const targetMode = modeEnable ? 'Serial' : 'Batch';
+        await this.setExecutionModeInternal(e, targetMode, '低负载模式', valueRaw);
+        break;
 
-        case '处理间隔':
-            const interval = parseInt(valueRaw, 10);
-            if (isNaN(interval) || interval < 100 || interval > 5000) {
-                return e.reply(`无效的间隔时间: [${valueRaw}ms]，请设置为 100 到 5000 之间的整数。`, true);
-            }
-            if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') !== 'Serial') {
-                return e.reply(`请先 "#咕咕牛设置低负载开启"，才能设置处理间隔。`, true);
-            }
-            await this.setCommandIntervalInternal(e, interval);
-            break;
+      case '负载等级':
+        const loadLevel = parseInt(valueRaw, 10);
+        if (isNaN(loadLevel) || ![1, 2, 3].includes(loadLevel)) {
+          return e.reply(`无效的负载等级: [${valueRaw}]，只能是 1, 2, 或 3。`, true);
+        }
+        await this.setLoadLevelInternal(e, loadLevel);
+        break;
+
+      case '高级合并':
+        if (valueRaw !== '开启' && valueRaw !== '关闭') {
+          return e.reply(`无效操作: [高级合并] 只能用 '开启' 或 '关闭'。`, true);
+        }
+        await this.handleSwitchCommand(e, 'Use_Secondary_Forward', '高级合并模式', valueRaw === '开启');
+        break;
     }
     return true;
   }
@@ -4415,47 +4757,47 @@ export class MiaoPluginMBT extends plugin {
     let statusMessageForPanel = "";
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
-        await MiaoPluginMBT.LoadTuKuConfig(true, logger);
-        const currentMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
+      await MiaoPluginMBT.LoadTuKuConfig(true, logger);
+      const currentMode = MiaoPluginMBT.MBTConfig.Execution_Mode ?? Default_Config.Execution_Mode;
 
-        if (currentMode === targetMode) {
-            statusMessageForPanel = `${logPrefix} ${featureName}已经是「${action}」状态了。`;
-            return;
-        }
+      if (currentMode === targetMode) {
+        statusMessageForPanel = `${logPrefix} ${featureName}已经是「${action}」状态了。`;
+        return;
+      }
 
-        MiaoPluginMBT.MBTConfig.Execution_Mode = targetMode;
-        configChanged = true;
+      MiaoPluginMBT.MBTConfig.Execution_Mode = targetMode;
+      configChanged = true;
 
-        const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, logger);
-        if (!saveSuccess) {
-            saveWarning = "⚠️ 但是配置保存失败了！设置可能不会持久生效。";
-            MiaoPluginMBT.MBTConfig.Execution_Mode = currentMode;
-            configChanged = false;
-            await this.ReportError(e, `设置${featureName}`, new Error("保存配置失败"), saveWarning);
-        }
+      const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, logger);
+      if (!saveSuccess) {
+        saveWarning = "⚠️ 但是配置保存失败了！设置可能不会持久生效。";
+        MiaoPluginMBT.MBTConfig.Execution_Mode = currentMode;
+        configChanged = false;
+        await this.ReportError(e, `设置${featureName}`, new Error("保存配置失败"), saveWarning);
+      }
     });
 
     if (configChanged && !saveWarning) {
-        statusMessageForPanel = `${logPrefix} ${featureName}已成功设为「${action}」。`;
+      statusMessageForPanel = `${logPrefix} ${featureName}已成功设为「${action}」。`;
     }
-    
+
     if (saveWarning && !statusMessageForPanel.includes(saveWarning)) {
-        statusMessageForPanel = saveWarning + (statusMessageForPanel ? `\n${statusMessageForPanel}` : '');
+      statusMessageForPanel = saveWarning + (statusMessageForPanel ? `\n${statusMessageForPanel}` : '');
     }
-    
+
     await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
   }
-  
-  async setCommandIntervalInternal(e, interval) {
+
+  async setLoadLevelInternal(e, level) {
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
       await MiaoPluginMBT.LoadTuKuConfig(true, this.logger);
-      MiaoPluginMBT.MBTConfig.Command_Interval_Ms = interval;
+      MiaoPluginMBT.MBTConfig.Load_Level = level;
       const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, this.logger);
       if (!saveSuccess) {
-          await this.ReportError(e, "设置发送间隔", new Error("保存配置失败"), "配置未能写入文件，设置不会持久生效。");
+        await this.ReportError(e, "设置负载等级", new Error("保存配置失败"));
       }
     });
-    await this.ShowSettingsPanel(e, `${this.logPrefix} 低负载模式发送间隔已设为 ${interval}ms。`);
+    await this.ShowSettingsPanel(e, `${this.logPrefix} 负载等级已设为 ${level} 级。`);
   }
 
   async setPurificationLevelInternal(e, level) {
@@ -4605,6 +4947,7 @@ const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 33, name: "报告: 更新完成-核心失败,附属成功", category: "核心图片报告模拟", description: "生成并发送一张模拟的“更新完成报告”：核心库更新失败，附属库更新成功。", type: "SIMULATE_REPORT_UP_FINAL_CORE_FAIL_ASSIST_OK", },
   { id: 34, name: "报告: 更新完成-全部失败", category: "核心图片报告模拟", description: "生成并发送一张模拟的“更新完成报告”：所有仓库均更新失败。", type: "SIMULATE_REPORT_UP_FINAL_ALL_FAIL" },
   { id: 35, name: "报告: 更新完成-全部有变(常规)", category: "核心图片报告模拟", description: "生成并发送一张模拟的“更新完成报告”：所有配置的仓库均有新的常规更新。", type: "SIMULATE_REPORT_UP_FINAL_ALL_CHANGED_NORMAL", },
+  { id: 36, name: "报告: 更新完成-核心失败(超时),附属OK", category: "核心图片报告模拟", description: "生成并发送一张模拟的“更新完成报告”：核心库因超时更新失败，附属库正常。", type: "SIMULATE_REPORT_UP_FINAL_CORE_TIMEOUT", },
 
   // --- 其他业务逻辑状态 (ID 50+) ---
   { id: 50, name: "逻辑: 截图过程返回空值", category: "业务逻辑状态", description: "模拟任何截图操作后，Puppeteer 未抛错但返回了 null/undefined (可能是空白图)。预期：插件记录错误，可能回复用户生成失败。", type: "SIMULATE_LOGIC_RENDER_BLANK_IMAGE", },
@@ -4786,5 +5129,5 @@ const GUGUNIU_RULES = [
   { reg: /^#咕咕牛测速$/i, fnc: "ManualTestProxies" },
   { reg: /^#执行咕咕牛更新$/i, fnc: "ManualRunUpdateTask", permission: "master" },
   { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: "ShowSettingsPanel" },
-  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18|低负载|处理间隔)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
+  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|pm18|低负载|负载等级|高级合并)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
 ];

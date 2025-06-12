@@ -43,7 +43,7 @@
             --item-label-ai-base: #e53935;        
             --item-label-pm18-base: #d81b60;      
             --item-label-mode-base: #673ab7;
-            --item-label-interval-base: #2196f3;
+            --item-label-merge-base: #4caf50; 
 
             --grad-tuku-start: #64ffda; --grad-tuku-end: #00796b; --glow-tuku: #64ffda;
             --grad-pfl-start: #ffd54f; --grad-pfl-end: #ef6c00; --glow-pfl: #ffd54f;
@@ -52,7 +52,7 @@
             --grad-ai-start: #ffccbc; --grad-ai-end: #bf360c; --glow-ai: #ffccbc;
             --grad-pm18-start: #f8bbd0; --grad-pm18-end: #ad1457; --glow-pm18: #f8bbd0;
             --grad-mode-start: #d1c4e9; --grad-mode-end: #512da8; --glow-mode: var(--grad-mode-start);
-            --grad-interval-start: #bbdefb; --grad-interval-end: #1565c0; --glow-interval: var(--grad-interval-start);
+            --grad-merge-start: #c8e6c9; --grad-merge-end: #2e7d32; --glow-merge: var(--grad-merge-start); 
 
             --value-enabled-color: #00af50; 
             --value-enabled-border: rgba(0, 175, 80, 0.4);
@@ -63,8 +63,9 @@
             --value-disabled-bg: rgba(250, 220, 220, 0.8);
             
             --value-level-0-color: #546e7a; 
-            --value-level-1-color: var(--item-label-pfl-base);
-            --value-level-2-color: var(--value-disabled-color);
+            --value-level-1-color: #0d47a1;
+            --value-level-2-color: var(--item-label-pfl-base);
+            --value-level-3-color: var(--value-disabled-color);
 
             --grid-line-color: rgba(0, 188, 212, 0.08); 
             --grid-cell-size: 28px; 
@@ -179,7 +180,9 @@
         .item-ai::before { --grad-start: var(--grad-ai-start); --grad-end: var(--grad-ai-end); --glow-color: var(--glow-ai); }
         .item-pm18::before { --grad-start: var(--grad-pm18-start); --grad-end: var(--grad-pm18-end); --glow-color: var(--glow-pm18); }
         .item-mode::before { --grad-start: var(--grad-mode-start); --grad-end: var(--grad-mode-end); --glow-color: var(--glow-mode); }
-        .item-interval::before { --grad-start: var(--grad-interval-start); --grad-end: var(--grad-interval-end); --glow-color: var(--glow-interval); }
+        .item-merge::before { --grad-start: var(--grad-merge-start); --grad-end: var(--grad-merge-end); --glow-color: var(--glow-merge); } 
+        .item-defense::before { --grad-start: var(--grad-mode-start); --grad-end: var(--grad-mode-end); --glow-color: var(--glow-mode); }
+
         .item-left { 
             display: flex; 
             flex-direction: column; 
@@ -208,7 +211,7 @@
             transform: translateY(-1px);
         }
         .value-description { font-size: 13px; color: var(--text-color-secondary); line-height: 1.5; padding-left: 24px; font-family: 'Rajdhani', sans-serif; font-weight: 500; }
-        .command-example { /* ✨ 新增的样式 ✨ */
+        .command-example {
             font-size: 12px;
             color: var(--text-color-muted);
             padding-left: 24px;
@@ -225,12 +228,15 @@
         .item-ai { --item-color: var(--item-label-ai-base); }
         .item-pm18 { --item-color: var(--item-label-pm18-base); }
         .item-mode { --item-color: var(--item-label-mode-base); }
-        .item-interval { --item-color: var(--item-label-interval-base); }
+        .item-merge { --item-color: var(--item-label-merge-base); } 
+        .item-defense { --item-color: var(--item-label-mode-base); } 
+
         .value-enabled { --status-color: var(--value-enabled-color); --status-border: var(--value-enabled-border); --status-bg: var(--value-enabled-bg); }
         .value-disabled { --status-color: var(--value-disabled-color); --status-border: var(--value-disabled-border); --status-bg: var(--value-disabled-bg); }
         .value-level-0 { --status-color: var(--value-level-0-color); --status-border: rgba(84, 110, 122, 0.3); --status-bg: rgba(207, 216, 220, 0.6); }
-        .value-level-1 { --status-color: var(--value-level-1-color); --status-border: rgba(255, 143, 0, 0.3); --status-bg: rgba(255, 224, 178, 0.6); }
-        .value-level-2 { --status-color: var(--value-level-2-color); --status-border: rgba(213, 0, 0, 0.3); --status-bg: rgba(255, 205, 210, 0.6); }
+        .value-level-1 { --status-color: var(--value-level-1-color); --status-border: rgba(13, 71, 161, 0.3); --status-bg: rgba(187, 222, 251, 0.6); }
+        .value-level-2 { --status-color: var(--value-level-2-color); --status-border: rgba(255, 143, 0, 0.3); --status-bg: rgba(255, 224, 178, 0.6); }
+        .value-level-3 { --status-color: var(--value-level-3-color); --status-border: rgba(213, 0, 0, 0.3); --status-bg: rgba(255, 205, 210, 0.6); }
         .item-disabled .label, .item-disabled .value-description, .item-disabled .command-example { color: #9e9e9e !important; text-shadow: none; }
         .item-disabled .label::before { color: #9e9e9e !important; }
         .item-disabled .value { filter: grayscale(80%); opacity: 0.7; }
@@ -243,6 +249,7 @@
         <div class="header">
             <h1>咕咕牛设置面板</h1>
         </div>
+
         <div class="setting-item item-tuku">
             <div class="item-left">
                 <span class="label">图库状态</span>
@@ -293,26 +300,39 @@
                 <span class="value {{ layoutStatus.class }}">{{ layoutStatus.text }}</span>
             </div>
         </div>
+        <div class="setting-item item-merge">
+            <div class="item-left">
+                <span class="label">高级合并</span>
+                <div class="value-description">[#查看]内容二级嵌套.仅支持:PC端</div>
+                <div class="command-example">#咕咕牛设置高级合并[开启/关闭]</div>
+            </div>
+            <div class="item-right">
+                <span class="value {{ advancedForward.class }}">{{ advancedForward.text }}</span>
+            </div>
+        </div>
+
         <div class="setting-item item-mode">
             <div class="item-left">
-                <span class="label">低负载数据流的处理模式</span>
-                <div class="value-description">当前是:[{{ executionMode.description }}]</div>
+                <span class="label">数据流低负载模式</span>
+                <div class="value-description">开启后执行串行处理数据并激活均衡负载</div>
                 <div class="command-example">#咕咕牛设置低负载[开启/关闭]</div>
             </div>
             <div class="item-right">
                 <span class="value {{ executionMode.class }}">{{ executionMode.text }}</span>
             </div>
         </div>
-        <div class="setting-item item-interval {{ if !isSerialMode }}item-disabled{{ /if }}">
+        
+        <div class="setting-item item-defense {{ loadLevel.containerClass }}">
             <div class="item-left">
-                <span class="label">低负载数据流的处理间隔延迟</span>
-                <div class="value-description">仅在低负载模式下生效</div>
-                <div class="command-example">#咕咕牛设置处理间隔[毫秒数]</div>
+                <span class="label">负载模式的策略等级</span>
+                <div class="value-description">{{ loadLevel.description }}</div>
+                <div class="command-example">#咕咕牛设置负载等级[1/2/3]</div>
             </div>
             <div class="item-right">
-                <span class="value value-level-0">{{ intervalMs }}ms</span>
+                <span class="value {{ loadLevel.valueClass }}">{{ loadLevel.levelName }}</span>
             </div>
         </div>
+        
         <div class="setting-item item-pm18"> 
             <div class="item-left">
                 <span class="label">PM18</span> 
@@ -323,6 +343,7 @@
                 <span class="value {{ PM18Status.class }}">{{ PM18Status.text }}</span> 
             </div>
         </div>
+
         <div class="footer"> Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
     </div>
 </body>
