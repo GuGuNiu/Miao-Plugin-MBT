@@ -5,121 +5,396 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛更新报告</title>
     <style>
-      :root {
-        --theme-primary-color: #673ab7;
-        --theme-secondary-color: #7e57c2;
-        --theme-light-purple: #b39ddb;
-        --theme-lighter-purple: #d1c4e9;
-        --theme-accent-color: #9575cd;
+        :root {
+            --theme-primary-color: #673ab7;
+            --theme-secondary-color: #7e57c2;
+            --theme-light-purple: #b39ddb;
+            --theme-lighter-purple: #d1c4e9;
+            --theme-accent-color: #9575cd;
 
-        --theme-bg-start: #ede7f6;
-        --theme-bg-end: #f3e5f5;  
-        
-        --text-color-base: #373a3c;
-        --text-color-muted: #55595c;
-        --text-color-subtle: #818a91;
-        --text-color-error: #e53935;
+            --theme-bg-start: #ede7f6;
+            --theme-bg-end: #f3e5f5;
 
-        --container-glow-border-color: var(--theme-accent-color);
-        --container-glow-color-intense: rgba(103, 58, 183, 0.35);
-        --container-glow-color-soft: rgba(126, 87, 194, 0.25);
-        --container-glow-blur-near: 12px;
-        --container-glow-spread-near: 4px;
-        --container-glow-blur-far: 28px;
-        --container-glow-spread-far: 10px;
-        --base-shadow-color-container: rgba(0, 0, 0, 0.05);
+            --text-color-base: #373a3c;
+            --text-color-muted: #55595c;
+            --text-color-subtle: #818a91;
+            --text-color-error: #e53935;
 
-        --block-bg-start: #f9f8fc;
-        --block-bg-end: #ffffff;
-        --block-border-color: var(--theme-lighter-purple);
-        --block-shadow-color: rgba(103, 58, 183, 0.1);
+            --container-glow-border-color: var(--theme-accent-color);
+            --container-glow-color-intense: rgba(103, 58, 183, 0.35);
+            --container-glow-color-soft: rgba(126, 87, 194, 0.25);
+            --container-glow-blur-near: 12px;
+            --container-glow-spread-near: 4px;
+            --container-glow-blur-far: 28px;
+            --container-glow-spread-far: 10px;
+            --base-shadow-color-container: rgba(0, 0, 0, 0.05);
 
-        --h1-color: var(--theme-primary-color);
-        --h1-border-color: var(--theme-light-purple);
-        --h1-text-shadow: 0 1px 2px rgba(103, 58, 183, 0.2);
-        
-        --h2-color: var(--theme-secondary-color);
-        --h2-border-color: var(--theme-accent-color);
+            --block-bg-start: #f9f8fc;
+            --block-bg-end: #ffffff;
+            --block-border-color: var(--theme-lighter-purple);
+            --block-shadow-color: rgba(103, 58, 183, 0.1);
 
-        --status-ok-color: #4caf50;
-        --status-fail-color: var(--text-color-error);
-        --status-no-change-color: var(--theme-accent-color);
-        --status-skipped-color: #9e9e9e;
-        --status-force-synced-color: #d32f2f;
+            --h1-color: var(--theme-primary-color);
+            --h1-border-color: var(--theme-light-purple);
+            --h1-text-shadow: 0 1px 2px rgba(103, 58, 183, 0.2);
 
-        --error-details-bg: rgba(229, 57, 53, 0.05);
-        --error-details-text: var(--status-fail-color);
-        --error-details-border: var(--status-fail-color);
-        --error-details-strong: #b71c1c;
-        
-        --log-title-color: var(--text-color-muted);
-        --log-text-color: var(--text-color-base); 
-        --commit-entry-border: var(--theme-lighter-purple);
+            --h2-color: var(--theme-secondary-color);
+            --h2-border-color: var(--theme-accent-color);
 
-        --summary-default-bg-start: var(--block-bg-start);
-        --summary-default-bg-end: var(--theme-bg-start);
-        --summary-default-border: var(--theme-primary-color);
-        --summary-default-text: var(--text-color-base);
+            --status-ok-color: #4caf50;
+            --status-fail-color: var(--text-color-error);
+            --status-no-change-color: var(--theme-accent-color);
+            --status-skipped-color: #9e9e9e;
+            --status-force-synced-color: #d32f2f;
 
-        --summary-no-changes-bg: var(--theme-lighter-purple);
-        --summary-no-changes-border: var(--theme-secondary-color);
-        --summary-no-changes-text: var(--text-color-muted);
+            --error-details-bg: rgba(229, 57, 53, 0.05);
+            --error-details-text: var(--status-fail-color);
+            --error-details-border: var(--status-fail-color);
+            --error-details-strong: #b71c1c;
 
-        --summary-has-errors-bg: rgba(229, 57, 53, 0.08);
-        --summary-has-errors-border: var(--status-fail-color);
-        --summary-has-errors-text: var(--status-fail-color);
-        
-        --base-font-size: 14px; 
-        --font-family-main: 'CuteFont', sans-serif; 
-        --font-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-      }
+            --log-title-color: var(--text-color-muted);
+            --log-text-color: var(--text-color-base);
+            --commit-entry-border: var(--theme-lighter-purple);
 
-      body { font-family: var(--font-family-main); max-width: 520px; margin: 30px auto; padding: 20px; background: linear-gradient(145deg, var(--theme-bg-start) 0%, var(--theme-bg-end) 100%); color: var(--text-color-base); font-size: var(--base-font-size); line-height: 1.6; box-sizing: border-box; position: relative; overflow-x: hidden; }
-      .container { background: rgba(255, 255, 255, 0.96); border-radius: 20px; padding: 30px; border: 1px solid var(--container-glow-border-color); box-shadow: 0 1px 4px var(--base-shadow-color-container), 0 0 var(--container-glow-blur-near) var(--container-glow-spread-near) var(--container-glow-color-intense), 0 0 var(--container-glow-blur-far) var(--container-glow-spread-far) var(--container-glow-color-soft); position: relative; z-index: 1; }
-      .container::before { content: '✨'; position: absolute; top: 20px; left: 20px; font-size: 28px; opacity: 0.7; }
-      .container::after { content: '🔮'; position: absolute; bottom: 20px; right: 20px; font-size: 28px; opacity: 0.7; transform: rotate(-12deg); }
-      h1 { text-align: center; color: var(--h1-color); margin: 0 0 25px; padding-bottom: 12px; border-bottom: 2px solid var(--h1-border-color); font-size: 26px; font-weight: bold; text-shadow: var(--h1-text-shadow); position: relative; }
-      .update-details-block { margin-bottom: 20px; padding: 18px; border-radius: 14px; background: linear-gradient(to bottom, var(--block-bg-start), var(--block-bg-end)); border: 1px solid var(--block-border-color); box-shadow: 0 2px 8px var(--block-shadow-color); }
-      h2 { color: var(--h2-color); margin: 0 0 12px; border-left: 4px solid var(--h2-border-color); padding-left: 10px; font-size: 18px; font-weight: bold; display: flex; align-items: center; }
-      h2 .icon { margin-right: 6px; vertical-align: -3px; font-size: 17px; }
-      ul { list-style: none; padding-left: 0px; margin-top: 5px; margin-bottom: 0; }
-      li { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--theme-lighter-purple); min-height: 18px; }
-      li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
-      .repo-status-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-      .label { color: var(--text-color-muted); margin-right: 8px; white-space: nowrap; font-size: 0.95em; font-weight: normal; }
-      .value { font-weight: bold; }
-      .status-ok { color: var(--status-ok-color); }
-      .status-fail { color: var(--status-fail-color); }
-      .status-no-change { color: var(--status-no-change-color); }
-      .status-skipped { color: var(--status-skipped-color); }
-      .status-force-synced { color: var(--status-force-synced-color); font-weight: bold; }
-      .error-details { font-family: var(--font-monospace); font-size: 12px; white-space: pre-wrap; word-break: break-all; color: var(--error-details-text); margin-top: 6px; padding: 10px; background-color: var(--error-details-bg); border-radius: 6px; border-left: 3px solid var(--error-details-border); }
-      .error-details strong { color: var(--error-details-strong); }
-      
-      .log-details { margin-top: 6px; }
-      .log-details h3 { color: var(--text-color-muted); margin-bottom: 4px; font-size: var(--base-font-size); font-weight: 500; }
-      .log-content-container { border: 1px solid var(--commit-entry-border); border-radius: 5px; background-color: #fff; padding: 2px 5px; font-family: var(--font-family-main); font-size: var(--base-font-size); color: var(--text-color-base); }
-      .commit-entry { padding: 2px 0; border-bottom: 1px dashed var(--commit-entry-border); line-height: 1.7; }
-      .commit-entry:last-child { border-bottom: none; }
-      .commit-meta { font-size: inherit; color: inherit; font-weight: normal; white-space: nowrap; display: inline-block; vertical-align: middle; margin-right: 5px; }
-      .commit-message-wrapper { display: inline; font-size: inherit; color: inherit; font-weight: normal; line-height: inherit; }
-      .text-part { display: inline; vertical-align: middle; line-height: inherit; font-weight: normal; }
-      .character-mention { display: inline-flex; align-items: center; vertical-align: middle; padding: 0px 4px; line-height: 1.3; border-radius: 3px; font-weight: normal; height: 1.4em; box-sizing: border-box; }
-      .character-mention.game-gs { background-color: #e9f5fe; border: 1px solid #cce7fa; }
-      .character-mention.game-sr { background-color: rgba(109, 109, 109, 0.85); border: 1px solid #4a4a4a; }
-      .character-mention.no-image .character-face-placeholder, .character-face { width: 1.1em; height: 1.1em; border-radius: 50%; margin-right: 3px; object-fit: cover; background-color: #fff; display: inline-block; }
-      .character-mention.game-gs .character-face, .character-mention.game-gs.no-image .character-face-placeholder { border: 1px solid #019de6; }
-      .character-mention.game-sr .character-face, .character-mention.game-sr.no-image .character-face-placeholder { border: 1px solid #e2c20e; }
-      .character-name { font-size: inherit; line-height: 1; white-space: nowrap; color: var(--text-color-base); font-weight: normal; }
-      .game-gs .character-name { color: #1e88e5; }
-      .game-sr .character-name { color: #f0f0f0; } 
-      
-      .summary-section { margin-top: 25px; padding: 18px; background: linear-gradient(to bottom, var(--summary-default-bg-start), var(--summary-default-bg-end)); border-radius: 14px; text-align: center; font-size: 16px; font-weight: 500; color: var(--summary-default-text); border: 1px solid var(--summary-default-border); box-shadow: 0 2px 8px var(--block-shadow-color); }
-      .summary-section.no-changes { background: var(--summary-no-changes-bg); border-color: var(--summary-no-changes-border); color: var(--summary-no-changes-text); }
-      .summary-section.has-errors { background: var(--summary-has-errors-bg); border-color: var(--summary-has-errors-border); color: var(--summary-has-errors-text); }
-      .footer { text-align: center; margin-top: 30px; font-size: 0.8em; color: var(--text-color-subtle); border-top: 1px solid var(--theme-lighter-purple); padding-top: 15px; }
+            --summary-default-bg-start: var(--block-bg-start);
+            --summary-default-bg-end: var(--theme-bg-start);
+            --summary-default-border: var(--theme-primary-color);
+            --summary-default-text: var(--text-color-base);
+
+            --summary-no-changes-bg: var(--theme-lighter-purple);
+            --summary-no-changes-border: var(--theme-secondary-color);
+            --summary-no-changes-text: var(--text-color-muted);
+
+            --summary-has-errors-bg: rgba(229, 57, 53, 0.08);
+            --summary-has-errors-border: var(--status-fail-color);
+            --summary-has-errors-text: var(--status-fail-color);
+
+            --base-font-size: 14px;
+            --font-family-main: 'CuteFont', sans-serif;
+            --font-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        }
+
+        body {
+            font-family: var(--font-family-main);
+            max-width: 520px;
+            margin: 30px auto;
+            padding: 20px;
+            background: linear-gradient(145deg, var(--theme-bg-start) 0%, var(--theme-bg-end) 100%);
+            color: var(--text-color-base);
+            font-size: var(--base-font-size);
+            line-height: 1.6;
+            box-sizing: border-box;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--container-glow-border-color);
+            box-shadow: 0 1px 4px var(--base-shadow-color-container), 0 0 var(--container-glow-blur-near) var(--container-glow-spread-near) var(--container-glow-color-intense), 0 0 var(--container-glow-blur-far) var(--container-glow-spread-far) var(--container-glow-color-soft);
+            position: relative;
+            z-index: 1;
+        }
+
+        .container::before {
+            content: '✨';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 28px;
+            opacity: 0.7;
+        }
+
+        .container::after {
+            content: '🔮';
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 28px;
+            opacity: 0.7;
+            transform: rotate(-12deg);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--h1-color);
+            margin: 0 0 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--h1-border-color);
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: var(--h1-text-shadow);
+            position: relative;
+        }
+
+        .update-details-block {
+            margin-bottom: 20px;
+            padding: 18px;
+            border-radius: 14px;
+            background: linear-gradient(to bottom, var(--block-bg-start), var(--block-bg-end));
+            border: 1px solid var(--block-border-color);
+            box-shadow: 0 2px 8px var(--block-shadow-color);
+        }
+
+        h2 {
+            color: var(--h2-color);
+            margin: 0 0 12px;
+            border-left: 4px solid var(--h2-border-color);
+            padding-left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        h2 .icon {
+            margin-right: 6px;
+            vertical-align: -3px;
+            font-size: 17px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0px;
+            margin-top: 5px;
+            margin-bottom: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--theme-lighter-purple);
+            min-height: 18px;
+        }
+
+        li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .repo-status-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .label {
+            color: var(--text-color-muted);
+            margin-right: 8px;
+            white-space: nowrap;
+            font-size: 0.95em;
+            font-weight: normal;
+        }
+
+        .value {
+            font-weight: bold;
+        }
+
+        .status-ok {
+            color: var(--status-ok-color);
+        }
+
+        .status-fail {
+            color: var(--status-fail-color);
+        }
+
+        .status-no-change {
+            color: var(--status-no-change-color);
+        }
+
+        .status-skipped {
+            color: var(--status-skipped-color);
+        }
+
+        .status-force-synced {
+            color: var(--status-force-synced-color);
+            font-weight: bold;
+        }
+
+        .error-details {
+            font-family: var(--font-monospace);
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--error-details-text);
+            margin-top: 6px;
+            padding: 10px;
+            background-color: var(--error-details-bg);
+            border-radius: 6px;
+            border-left: 3px solid var(--error-details-border);
+        }
+
+        .error-details strong {
+            color: var(--error-details-strong);
+        }
+
+        .log-details {
+            margin-top: 6px;
+        }
+
+        .log-details h3 {
+            color: var(--text-color-muted);
+            margin-bottom: 4px;
+            font-size: var(--base-font-size);
+            font-weight: 500;
+        }
+
+        .log-content-container {
+            border: 1px solid var(--commit-entry-border);
+            border-radius: 5px;
+            background-color: #fff;
+            padding: 2px 5px;
+            font-family: var(--font-family-main);
+            font-size: var(--base-font-size);
+            color: var(--text-color-base);
+        }
+
+        .commit-entry {
+            padding: 2px 0;
+            border-bottom: 1px dashed var(--commit-entry-border);
+            line-height: 1.7;
+        }
+
+        .commit-entry:last-child {
+            border-bottom: none;
+        }
+
+        .commit-meta {
+            font-size: inherit;
+            color: inherit;
+            font-weight: normal;
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .commit-message-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+
+            row-gap: 4px;
+            column-gap: 6px;
+        }
+
+        .text-part {
+            white-space: nowrap;/
+        }
+
+        .character-mention {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            padding: 0px 1px;
+            line-height: 1.3;
+            border-radius: 3px;
+            font-weight: normal;
+            height: 1.4em;
+            box-sizing: border-box;
+        }
+
+        .character-mention.game-gs {
+            background-color: #e9f5fe;
+            border: 1px solid #cce7fa;
+        }
+
+        .character-mention.game-sr {
+            background-color: rgba(109, 109, 109, 0.85);
+            border: 1px solid #4a4a4a;
+        }
+
+        .character-mention.game-zzz {
+            background-color: #fce4ec; 
+            border: 1px solid #f8bbd0;   
+        }
+
+        .character-mention.no-image .character-face-placeholder,
+        .character-face {
+            width: 1.1em;
+            height: 1.1em;
+            border-radius: 50%;
+            margin-right: 3px;
+            object-fit: cover;
+            background-color: #fff;
+            display: inline-block;
+        }
+
+        .character-mention.game-gs .character-face,
+        .character-mention.game-gs.no-image .character-face-placeholder {
+            border: 1px solid #019de6;
+        }
+
+        .character-mention.game-sr .character-face,
+        .character-mention.game-sr.no-image .character-face-placeholder {
+            border: 1px solid #e2c20e;
+        }
+
+        .character-mention.game-zzz .character-face,
+        .character-mention.game-zzz.no-image .character-face-placeholder {
+            border: 1px solid #e91e63;
+        }
+
+        .character-name {
+            font-size: inherit;
+            line-height: 1;
+            white-space: nowrap;
+            color: var(--text-color-base);
+            font-weight: normal;
+        }
+
+        .game-gs .character-name {
+            color: #1e88e5;
+        }
+
+        .game-sr .character-name {
+            color: #f0f0f0;
+        }
+
+        .game-zzz .character-name {
+            color: #c2185b;
+        }        
+
+        .summary-section {
+            margin-top: 25px;
+            padding: 18px;
+            background: linear-gradient(to bottom, var(--summary-default-bg-start), var(--summary-default-bg-end));
+            border-radius: 14px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--summary-default-text);
+            border: 1px solid var(--summary-default-border);
+            box-shadow: 0 2px 8px var(--block-shadow-color);
+        }
+
+        .summary-section.no-changes {
+            background: var(--summary-no-changes-bg);
+            border-color: var(--summary-no-changes-border);
+            color: var(--summary-no-changes-text);
+        }
+
+        .summary-section.has-errors {
+            background: var(--summary-has-errors-bg);
+            border-color: var(--summary-has-errors-border);
+            color: var(--summary-has-errors-text);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: var(--text-color-subtle);
+            border-top: 1px solid var(--theme-lighter-purple);
+            padding-top: 15px;
+        }
     </style>
 </head>
+
 <body style="{{scaleStyleValue}}">
     <div class="container">
         <h1>咕咕牛的更新报告</h1>
@@ -127,75 +402,78 @@
             <h2><span class="icon">🔄</span>更新详情</h2>
             <ul>
                 {{ each results repoResult }}
-                    <li>
-                        <div class="repo-status-line">
-                            <span class="label">{{ repoResult.name }}:</span>
-                            <span class="value {{ repoResult.statusClass }} {{ if repoResult.statusText === '本地冲突 (强制同步)' }}status-force-synced{{ /if }}">
-                                {{ repoResult.statusText }}
-                            </span>
-                        </div>
-                        {{ if repoResult.error }}
-                            <div class="error-details"><strong>错误:</strong>{{ repoResult.error.message ? ' ' + repoResult.error.message.split('\n')[0] : ' 未知错误详情' }}{{ if repoResult.error.code }} (Code: {{ repoResult.error.code }}){{/if}}</div>
-                        {{ /if }}
+                <li>
+                    <div class="repo-status-line">
+                        <span class="label">{{ repoResult.name }}:</span>
+                        <span
+                            class="value {{ repoResult.statusClass }} {{ if repoResult.statusText === '本地冲突 (强制同步)' }}status-force-synced{{ /if }}">
+                            {{ repoResult.statusText }}
+                        </span>
+                    </div>
+                    {{ if repoResult.error }}
+                    <div class="error-details"><strong>错误:</strong>{{ repoResult.error.message ? ' ' +
+                        repoResult.error.message.split('\n')[0] : ' 未知错误详情' }}{{ if repoResult.error.code }} (Code: {{
+                        repoResult.error.code }}){{/if}}</div>
+                    {{ /if }}
 
-                        {{ if isArray(repoResult.log) && repoResult.log.length > 0 }}
-                            <div class="log-details"> 
-                                <h3> 
-                                    {{ if repoResult.error && repoResult.log.length === 1 && repoResult.log[0].hash === 'N/A' }}
-                                        错误导致无法获取有效日志
-                                    {{ else if repoResult.error }}
-                                        相关日志 (可能包含线索):
-                                    {{ else }}
-                                        最新提交记录 (近{{repoResult.log.filter(c => c.hash !== 'N/A').length}}条):
+                    {{ if isArray(repoResult.log) && repoResult.log.length > 0 }}
+                    <div class="log-details">
+                        <h3>
+                            {{ if repoResult.error && repoResult.log.length === 1 && repoResult.log[0].hash === 'N/A' }}
+                            错误导致无法获取有效日志
+                            {{ else if repoResult.error }}
+                            相关日志 (可能包含线索):
+                            {{ else }}
+                            最新提交记录 (近{{repoResult.log.filter(c => c.hash !== 'N/A').length}}条):
+                            {{ /if }}
+                        </h3>
+                        <div class="log-content-container">
+                            {{ each repoResult.log commit }}
+                            <div class="commit-entry">
+                                <div class="commit-message-wrapper">
+                                    <span class="commit-meta">
+                                        {{ commit.date }} : [{{ commit.hash }}]
+                                    </span>
+                                    {{ each commit.displayParts part }}
+                                    {{ if part.type === 'text' }}
+                                    <span class="text-part">{{@ part.content }}</span>
+                                    {{ else if part.type === 'character' }}
+                                    <span
+                                        class="character-mention game-{{ part.game }} {{ if !part.imageUrl }}no-image{{ /if }}">
+                                        {{ if part.imageUrl }}
+                                        <img src="{{ part.imageUrl }}" alt="{{ part.name }}" class="character-face">
+                                        {{ /if }}
+                                        <span class="character-name">{{ part.name }}</span>
+                                    </span>
                                     {{ /if }}
-                                </h3>
-                                <div class="log-content-container">
-                                    {{ each repoResult.log commit }}
-                                        <div class="commit-entry">
-                                        <div class="commit-meta">
-                                            {{ commit.date }} : [{{ commit.hash }}]
-                                        </div>
-                                            <div class="commit-message-wrapper">
-                                                {{ each commit.displayParts part }}
-                                                    {{ if part.type === 'text' }}
-                                                        <span class="text-part">{{@ part.content }}</span>
-                                                    {{ else if part.type === 'character' }}
-                                                        <span class="character-mention game-{{ part.game }} {{ if !part.imageUrl }}no-image{{ /if }}">
-                                                            {{ if part.imageUrl }}
-                                                                <img src="{{ part.imageUrl }}" alt="{{ part.name }}" class="character-face">
-                                                            {{ else }}
-                                                                <span class="character-face-placeholder"></span>
-                                                            {{ /if }}
-                                                            <span class="character-name">{{ part.name }}</span>
-                                                        </span>
-                                                    {{ /if }}
-                                                {{ /each }}
-                                            </div>
-                                        </div>
                                     {{ /each }}
                                 </div>
                             </div>
-                        {{ else if !repoResult.error }}
-                             <div class="log-details">
-                                <h3>最新提交记录:</h3>
-                                <div class="log-content-container"> 
-                                   <div class="commit-entry">
-                                       <div class="commit-message-wrapper">(无提交记录或图库已是最新)</div>
-                                   </div>
-                                </div>
+                            {{ /each }}
+                        </div>
+                    </div>
+                    {{ else if !repoResult.error }}
+                    <div class="log-details">
+                        <h3>最新提交记录:</h3>
+                        <div class="log-content-container">
+                            <div class="commit-entry">
+                                <div class="commit-message-wrapper">(无提交记录或图库已是最新)</div>
                             </div>
-                        {{ /if }}
-                    </li>
+                        </div>
+                    </div>
+                    {{ /if }}
+                </li>
                 {{ /each }}
             </ul>
         </div>
-        <div class="summary-section {{ if !overallHasChanges && overallSuccess }}no-changes{{ else if !overallSuccess }}has-errors{{ /if }}">
+        <div
+            class="summary-section {{ if !overallHasChanges && overallSuccess }}no-changes{{ else if !overallSuccess }}has-errors{{ /if }}">
             {{ if overallSuccess }}
-                {{ if overallHasChanges }}🎉 所有仓库更新检查完成，部分仓库有更新！
-                {{ else }}👍 所有仓库更新检查完成，均已是最新版本！
-                {{ /if }}
+            {{ if overallHasChanges }}🎉 所有仓库更新检查完成，部分仓库有更新！
+            {{ else }}👍 所有仓库更新检查完成，均已是最新版本！
+            {{ /if }}
             {{ else }}
-                💔 更新过程中遇到问题，请检查日志！
+            💔 更新过程中遇到问题，请检查日志！
             {{ /if }}
         </div>
         <div class="footer">
@@ -203,4 +481,5 @@
         </div>
     </div>
 </body>
+
 </html>

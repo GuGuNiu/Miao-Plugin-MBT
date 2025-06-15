@@ -65,7 +65,7 @@ const Default_Config = {
   logPrefix: "『咕咕牛🐂』",
   gitLogFormat: "%cd [%h] %s",
   gitLogDateFormat: "format:%m-%d %H:%M",
-  renderScale: 300,
+  renderScale: 300,  //渲染精度
   Ai: true,
   EasterEgg: true,
   layout: true,
@@ -364,7 +364,7 @@ async function checkSystemHealth(e, logger) {
           }
       }
   } catch (err) {
-      logger.error(`${logPrefix} [系统健康检查] 发生错误:`, err);
+      logger.error(`${logPrefix} [系统负载检查] 发生错误:`, err);
   }
 }
 
@@ -554,6 +554,7 @@ export class MiaoPluginMBT extends plugin {
   static _userBanSet = new Set();
   static _activeBanSet = new Set();
   static _aliasData = null;
+  static _zzzAvatarMap = null;
   static oldFileDeletionScheduled = false;
   static isInitializing = false;
 
@@ -585,10 +586,16 @@ export class MiaoPluginMBT extends plugin {
       zzzChar: path.join(YunzaiPath, "plugins", "ZZZ-Plugin", "resources", "images", "panel"),
       wavesChar: path.join(YunzaiPath, "plugins", "waves-plugin", "resources", "rolePic"),
       exampleJs: path.join(YunzaiPath, "plugins", "example"),
+
       miaoGsAliasDir: path.join(YunzaiPath, "plugins", "miao-plugin", "resources", "meta-gs", "character"),
       miaoSrAliasDir: path.join(YunzaiPath, "plugins", "miao-plugin", "resources", "meta-sr", "character"),
+
       zzzAliasDir: path.join(YunzaiPath, "plugins", "ZZZ-Plugin", "defset"),
+      zzzDataDir: path.join(YunzaiPath, "plugins", "ZZZ-Plugin", "resources", "data", "hakush", "data", "character"),
+      zzzFaceDir: path.join(YunzaiPath, "plugins", "ZZZ-Plugin", "resources", "images", "role_circle"),
+
       wavesAliasDir: path.join(YunzaiPath, "plugins", "waves-plugin", "resources", "Alias"),
+      
     },
     sourceFolders: { gs: "gs-character", sr: "sr-character", zzz: "zzz-character", waves: "waves-character", gallery: "GuGuNiu-Gallery", },
     filesToSyncToCommonRes: [
@@ -617,10 +624,10 @@ export class MiaoPluginMBT extends plugin {
     try {
       const pkgPath = path.resolve(__dirname, "..", "package.json");
       const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      return pkg.version || "4.9.8";
+      return pkg.version || "4.9.9";
     }
     catch {
-      return "4.9.8";
+      return "4.9.9";
     }
   }
 
@@ -2028,76 +2035,23 @@ export class MiaoPluginMBT extends plugin {
     return { success: false, nodeName: "所有源失败", error: finalErrorToReport };
   }
 
-  static calculateStringSimilarity(str1, str2) {
-    if (!str1 || !str2) return 0;
-    if (str1 === str2) return 1.0;
-
-    const s1 = String(str1);
-    const s2 = String(str2);
-    const len1 = s1.length;
-    const len2 = s2.length;
-
-    if (len1 === 0 || len2 === 0) return 0;
-
-    const levenshteinScore = (() => {
-      const d = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
-      for (let i = 0; i <= len1; i += 1) d[0][i] = i;
-      for (let j = 0; j <= len2; j += 1) d[j][0] = j;
-      for (let j = 1; j <= len2; j += 1) {
-        for (let i = 1; i <= len1; i += 1) {
-          const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-          d[j][i] = Math.min(d[j - 1][i] + 1, d[j][i - 1] + 1, d[j - 1][i - 1] + cost);
-        }
-      }
-      const distance = d[len2][len1];
-      return 1.0 - (distance / Math.max(len1, len2));
-    })();
-
-    const lcsRatio = (() => {
-      const dp = Array(len1 + 1).fill(0).map(() => Array(len2 + 1).fill(0));
-      for (let i = 1; i <= len1; i++) {
-        for (let j = 1; j <= len2; j++) {
-          if (s1[i - 1] === s2[j - 1]) {
-            dp[i][j] = dp[i - 1][j - 1] + 1;
-          } else {
-            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-          }
-        }
-      }
-      return dp[len1][len2] / Math.max(len1, len2);
-    })();
-
-    const jaccardScore = (() => {
-      const set1 = new Set(s1.split(''));
-      const set2 = new Set(s2.split(''));
-      const intersection = new Set([...set1].filter(char => set2.has(char)));
-      const union = new Set([...set1, ...set2]);
-      return union.size === 0 ? 0 : intersection.size / union.size;
-    })();
-
-    let score = (levenshteinScore * 0.5) + (lcsRatio * 0.35) + (jaccardScore * 0.15);
-
-    if (s1.startsWith(s2) || s2.startsWith(s1)) {
-      score += 0.1;
-    } else if (len1 > 0 && len2 > 0 && s1[0] === s2[0]) {
-      score += 0.05;
-    }
-
-    const lengthDiff = Math.abs(len1 - len2);
-    if (lengthDiff === 1 && Math.max(len1, len2) > 2) {
-      score *= 0.9;
-    } else if (lengthDiff >= 2 && Math.max(len1, len2) > 3) {
-      score *= (1 - (lengthDiff * 0.15));
-      score = Math.max(0, score);
-    }
-
-    if (len1 < len2 && len1 <= 2 && (len2 - len1) >= 2 && lcsRatio < 0.5) {
-      score *= 0.6;
-    }
-
-    return Math.max(0, Math.min(1, score));
-  }
-
+  /**
+   * @description 对单个Git仓库执行更新操作，并解析最新的提交记录用于生成报告。
+   *              此函数是插件更新流程的核心，它处理了Git的拉取、冲突解决、日志解析，
+   *              并内置了强大的模糊角色名识别与修正、以及智能排版算法。
+   * @param {number} RepoNum - 仓库编号，用于日志和管理。
+   * @param {string} localPath - 本地仓库的绝对路径。
+   * @param {string} RepoName - 用于在日志中显示的仓库名称。
+   * @param {string} RepoUrl - 仓库的远程Git地址。
+   * @param {string} branch - 要更新的分支名称。
+   * @param {boolean} isScheduled - 标识本次更新是否由定时任务触发。
+   * @returns {Promise<object>} 返回一个包含更新结果的对象。
+   * @returns {boolean} .success - 更新是否成功。
+   * @returns {boolean} .hasChanges - 是否有新的提交。
+   * @returns {Array|null} .log - 解析后的最新提交记录数组，或在失败时为null。
+   * @returns {Error|null} .error - 如果更新失败，则包含错误对象。
+   * @returns {boolean} .wasForceReset - 是否执行了强制重置。
+   */
   static async UpdateSingleRepo(e, RepoNum, localPath, RepoName, RepoUrl, branch, isScheduled, logger) {
     const logPrefix = Default_Config.logPrefix;
     let success = false;
@@ -2106,17 +2060,99 @@ export class MiaoPluginMBT extends plugin {
     let pullError = null;
     let wasForceReset = false;
 
+    // 内部辅助函数：计算字符串相似度
+    function calculateStringSimilarity(str1, str2) {
+      if (!str1 || !str2) return 0;
+      const s1 = String(str1).toLowerCase();
+      const s2 = String(str2).toLowerCase();
+      if (s1 === s2) return 1.0;
+      if (s2.includes(s1)) {
+        if (s2.startsWith(s1)) return 1.0;
+        return 0.95;
+      }
+      const len1 = s1.length;
+      const len2 = s2.length;
+      if (len1 === 0 || len2 === 0) return 0;
+
+      const levenshteinScore = (() => {
+        const d = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
+        for (let i = 0; i <= len1; i += 1) d[0][i] = i;
+        for (let j = 0; j <= len2; j += 1) d[j][0] = j;
+        for (let j = 1; j <= len2; j += 1) {
+          for (let i = 1; i <= len1; i += 1) {
+            const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+            d[j][i] = Math.min(d[j - 1][i] + 1, d[j][i - 1] + 1, d[j - 1][i - 1] + cost);
+          }
+        }
+        return 1.0 - (d[len2][len1] / Math.max(len1, len2));
+      })();
+
+      const jaroWinklerScore = (() => {
+        if (len1 === 0 || len2 === 0) return 0;
+        let m = 0;
+        const range = Math.max(0, Math.floor(Math.max(len1, len2) / 2) - 1);
+        const s1_matches = new Array(len1).fill(false);
+        const s2_matches = new Array(len2).fill(false);
+        for (let i = 0; i < len1; i++) {
+          const start = Math.max(0, i - range);
+          const end = Math.min(i + range + 1, len2);
+          for (let j = start; j < end; j++) {
+            if (!s2_matches[j] && s1[i] === s2[j]) {
+              s1_matches[i] = true;
+              s2_matches[j] = true;
+              m++;
+              break;
+            }
+          }
+        }
+        if (m === 0) return 0;
+        let k = 0, t = 0;
+        for (let i = 0; i < len1; i++) {
+          if (s1_matches[i]) {
+            while (!s2_matches[k]) k++;
+            if (s1[i] !== s2[k]) t++;
+            k++;
+          }
+        }
+        const jaro = ((m / len1) + (m / len2) + ((m - Math.floor(t / 2)) / m)) / 3;
+        const p = 0.1;
+        let l = 0;
+        while (l < 4 && s1[l] === s2[l]) l++;
+        return jaro + l * p * (1 - jaro);
+      })();
+
+      const ngramScore = ((n = 2) => {
+        const getNgrams = (str, size) => {
+          const ngrams = new Set();
+          if (str.length < size) { ngrams.add(str); return ngrams; }
+          for (let i = 0; i <= str.length - size; i++) { ngrams.add(str.substring(i, i + size)); }
+          return ngrams;
+        }
+        const ngrams1 = getNgrams(s1, n);
+        const ngrams2 = getNgrams(s2, n);
+        if (ngrams1.size === 0 || ngrams2.size === 0) return 0;
+        const intersection = new Set([...ngrams1].filter(x => ngrams2.has(x)));
+        return intersection.size / Math.max(ngrams1.size, ngrams2.size);
+      })();
+      
+      let finalScore = (levenshteinScore * 0.3) + (jaroWinklerScore * 0.4) + (ngramScore * 0.3);
+
+      if (len1 > 1 && s2.startsWith(s1[0])) { finalScore += 0.08; }
+      if (len1 > 1 && s2.endsWith(s1[len1 - 1])) { finalScore += 0.05; }
+      const lengthRatio = Math.min(len1, len2) / Math.max(len1, len2);
+      finalScore *= Math.sqrt(lengthRatio);
+      return Math.min(1.0, finalScore);
+    }
+
     const gameKeysForPreUpdateManage = ["zzz", "waves"];
     for (const gameKeyToManage of gameKeysForPreUpdateManage) {
       const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
       if (!gameFolderToManage) {
         continue;
       }
-
       const isRepoRelevant =
         (gameKeyToManage === "zzz" && (RepoNum === 1 || RepoNum === 2 || RepoNum === 4)) ||
         (gameKeyToManage === "waves" && (RepoNum === 1 || RepoNum === 3 || RepoNum === 4));
-
       if (isRepoRelevant) {
         await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger);
       }
@@ -2136,14 +2172,7 @@ export class MiaoPluginMBT extends plugin {
       let pullOutput = "";
 
       try {
-        const pullResult = await ExecuteCommand(
-          "git",
-          ["pull", "origin", branch, "--ff-only", "--progress"],
-          { cwd: localPath },
-          Default_Config.gitPullTimeout,
-          (stderrChunk) => { },
-          undefined
-        );
+        const pullResult = await ExecuteCommand("git", ["pull", "origin", branch, "--ff-only", "--progress"], { cwd: localPath }, Default_Config.gitPullTimeout);
         pullOutput = (pullResult.stdout || "") + (pullResult.stderr || "");
         success = true;
       } catch (err) {
@@ -2199,27 +2228,14 @@ export class MiaoPluginMBT extends plugin {
         const logLines = rawLogString.split('\n').filter(line => line.trim() !== '');
         if (logLines.length > 0) {
           latestLog = await Promise.all(logLines.map(async (line) => {
-            const commitData = {
-              hash: 'N/A',
-              date: 'N/A',
-              originalMessageLine: line,
-              originalMessage: line,
-              displayParts: []
-            };
-
+            const commitData = { hash: 'N/A', date: 'N/A', originalMessageLine: line, originalMessage: line, displayParts: [] };
             let currentLineContent = line;
 
             const dateMatch = currentLineContent.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
-            if (dateMatch) {
-              commitData.date = dateMatch[1];
-              currentLineContent = currentLineContent.substring(dateMatch[0].length);
-            }
+            if (dateMatch) { commitData.date = dateMatch[1]; currentLineContent = currentLineContent.substring(dateMatch[0].length); }
 
             const hashMatch = currentLineContent.match(/^\[([a-f0-9]{6,40})\]\s+/);
-            if (hashMatch) {
-              commitData.hash = hashMatch[1].substring(0, 7);
-              currentLineContent = currentLineContent.substring(hashMatch[0].length);
-            }
+            if (hashMatch) { commitData.hash = hashMatch[1].substring(0, 7); currentLineContent = currentLineContent.substring(hashMatch[0].length); }
 
             commitData.originalMessage = currentLineContent;
             let RmessageToProcess = currentLineContent;
@@ -2227,6 +2243,7 @@ export class MiaoPluginMBT extends plugin {
             const gamePrefixes = [
               { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs", processChars: true },
               { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr", processChars: true },
+              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz", processChars: true },
             ];
 
             let currentSearchStartIndex = 0;
@@ -2246,75 +2263,94 @@ export class MiaoPluginMBT extends plugin {
 
                   const matchedPrefixStr = prefixMatchFull[0];
                   let contentAfterPrefix = remainingSearchText.substring(matchedPrefixStr.length).trim();
-                  let nextPrefixSearchStartInContent = contentAfterPrefix.length;
-
-
-                  if (entry.processChars && (entry.gameType === "gs" || entry.gameType === "sr") && contentAfterPrefix) {
-                    let charactersProcessedLength = 0;
-                    const nameSegments = contentAfterPrefix.split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
-
-                    let tempContentForNextIteration = contentAfterPrefix;
+                  
+                  let nextPrefixIndex = -1;
+                  for (const nextEntry of gamePrefixes) {
+                      const nextMatch = contentAfterPrefix.match(nextEntry.prefixPattern);
+                      if (nextMatch && (nextPrefixIndex === -1 || nextMatch.index < nextPrefixIndex)) {
+                          nextPrefixIndex = nextMatch.index;
+                      }
+                  }
+                  
+                  const currentSegmentToProcess = nextPrefixIndex === -1 ? contentAfterPrefix : contentAfterPrefix.substring(0, nextPrefixIndex);
+                  
+                  if (entry.processChars && currentSegmentToProcess) {
+                    const nameSegments = currentSegmentToProcess.split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
 
                     for (const rawNameSegment of nameSegments) {
                       if (!rawNameSegment) continue;
-
-                      let segmentPartOfKnownGamePrefix = false;
-                      for (const nextEntry of gamePrefixes) {
-                        if (rawNameSegment.match(nextEntry.prefixPattern)) {
-                          segmentPartOfKnownGamePrefix = true;
-                          break;
-                        }
-                      }
-                      if (segmentPartOfKnownGamePrefix && nameSegments.indexOf(rawNameSegment) > 0) {
-                        tempContentForNextIteration = contentAfterPrefix.substring(0, contentAfterPrefix.indexOf(rawNameSegment));
-                        nextPrefixSearchStartInContent = tempContentForNextIteration.length;
-                        break;
-                      }
-
-
-                      let finalNameToDisplay = rawNameSegment;
+                      let displayName = rawNameSegment;
                       let aliasResult = await MiaoPluginMBT.FindRoleAlias(rawNameSegment, logger);
-
-                      if (!aliasResult.exists && rawNameSegment.length > 1 && MiaoPluginMBT._aliasData && MiaoPluginMBT._aliasData.combined) {
+                      if (aliasResult.exists) {
+                        displayName = aliasResult.mainName;
+                      } else if (rawNameSegment.length > 1 && MiaoPluginMBT._aliasData?.combined) {
                         const allKnownNames = Object.keys(MiaoPluginMBT._aliasData.combined);
                         let bestMatch = null;
-                        let highestScore = -Infinity;
-
+                        let highestScore = 0;
                         for (const knownName of allKnownNames) {
-                          const currentScore = MiaoPluginMBT.calculateStringSimilarity(rawNameSegment, knownName);
-
+                          const currentScore = calculateStringSimilarity(rawNameSegment, knownName);
                           if (currentScore > highestScore) {
                             highestScore = currentScore;
                             bestMatch = knownName;
-                          } else if (currentScore === highestScore && bestMatch) {
-                            if (Math.abs(knownName.length - rawNameSegment.length) < Math.abs(bestMatch.length - rawNameSegment.length)) {
-                              bestMatch = knownName;
-                            }
                           }
                         }
-                        if (bestMatch && highestScore >= 0.65) {
-                          finalNameToDisplay = bestMatch;
-                          aliasResult = await MiaoPluginMBT.FindRoleAlias(finalNameToDisplay, logger);
+                        if (bestMatch && highestScore >= 0.7) {
+                          displayName = bestMatch;
+                          aliasResult = await MiaoPluginMBT.FindRoleAlias(displayName, logger);
                         }
                       }
-
-                      const standardNameForPath = aliasResult.exists ? aliasResult.mainName : finalNameToDisplay;
-                      let imagePath = null;
-                      if (entry.gameType === "gs") imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                      else if (entry.gameType === "sr") imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-
+                      
+                      const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
                       let faceImageUrl = null;
-                      if (imagePath) { try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { } }
-                      commitData.displayParts.push({ type: 'character', name: finalNameToDisplay, game: entry.gameType, imageUrl: faceImageUrl });
-                      charactersProcessedLength += rawNameSegment.length + (nameSegments.indexOf(rawNameSegment) < nameSegments.length - 1 ? 1 : 0);
+
+                      if (entry.gameType === "gs") {
+                        const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                        try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                      } else if (entry.gameType === "sr") {
+                        const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                        try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                      } else if (entry.gameType === "zzz") {
+                        try {
+                          const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+                          let found = false;
+                          for (const file of files) {
+                            if (file.endsWith('.json')) {
+                              const filePath = path.join(MiaoPluginMBT.paths.target.zzzDataDir, file);
+                              try {
+                                const content = await fsPromises.readFile(filePath, 'utf-8');
+                                const data = JSON.parse(content);
+                                if (data.Name === displayName || data.CodeName === displayName) {
+                                  if (data.Icon) {
+                                    const iconMatch = data.Icon.match(/\d+$/);
+                                    if (iconMatch) {
+                                      const iconId = iconMatch[0];
+                                      const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconId}.png`);
+                                      try {
+                                        await fsPromises.access(zzzFacePath);
+                                        faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
+                                      } catch (faceErr) { /* 头像文件不存在 */ }
+                                    }
+                                  }
+                                  found = true;
+                                  break;
+                                }
+                              } catch (parseErr) {
+                                //logger.warn(`${logPrefix} [ZZZ头像] 解析JSON失败: ${filePath}`, parseErr.message);
+                              }
+                            }
+                          }
+                        } catch (readDirErr) {
+                          //logger.warn(`${logPrefix} [ZZZ头像] 读取角色数据目录失败:`, MiaoPluginMBT.paths.target.zzzDataDir, readDirErr.message);
+                        }
+                      }
+                      
+                      commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl });
                     }
-                    RmessageToProcess = contentAfterPrefix.substring(Math.min(charactersProcessedLength, contentAfterPrefix.length));
-
                   } else {
-                    commitData.displayParts.push({ type: 'text', content: matchedPrefixStr + contentAfterPrefix });
-                    RmessageToProcess = "";
+                    commitData.displayParts.push({ type: 'text', content: matchedPrefixStr + currentSegmentToProcess });
                   }
-
+                  
+                  RmessageToProcess = nextPrefixIndex === -1 ? "" : contentAfterPrefix.substring(nextPrefixIndex);
                   currentSearchStartIndex = 0;
                   foundAndProcessedThisIteration = true;
                   break;
@@ -2332,6 +2368,7 @@ export class MiaoPluginMBT extends plugin {
             if (commitData.displayParts.length === 0 && currentLineContent) {
               commitData.displayParts.push({ type: 'text', content: currentLineContent });
             }
+            
             return commitData;
           }));
         } else {
@@ -3463,7 +3500,7 @@ export class MiaoPluginMBT extends plugin {
     const gameDefinitions = {
       gs: { name: "原神", key: "gs", characters: {}, order: 1, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
       sr: { name: "星穹铁道", key: "sr", characters: {}, order: 2, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
-      zzz: { name: "绝区零", key: "zzz", characters: {}, order: 3, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 },
+      zzz: { name: "绝区零", key: "zzz", characters: {}, order: 3, hasFace: true, totalImageCountInGame: 0, totalByteSizeInGame: 0 }, 
       waves: { name: "鸣潮", key: "waves", characters: {}, order: 4, hasFace: false, totalImageCountInGame: 0, totalByteSizeInGame: 0 }
     };
 
@@ -3546,13 +3583,34 @@ export class MiaoPluginMBT extends plugin {
 
           let characterFaceUrl = null;
           if (gameDataForThisMap[gameKey].hasFace) {
-            const aliasForFace = await MiaoPluginMBT.FindRoleAlias(charName, logger);
-            const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charName;
-            let faceImagePath = null;
-            if (gameKey === "gs") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-            else if (gameKey === "sr") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-
-            if (faceImagePath) { try { await fsPromises.access(faceImagePath); characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { } }
+            if (gameKey === "gs" || gameKey === "sr") {
+              const aliasForFace = await MiaoPluginMBT.FindRoleAlias(charName, logger);
+              const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charName;
+              let faceImagePath = null;
+              if (gameKey === "gs") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+              else if (gameKey === "sr") faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+              if (faceImagePath) { try { await fsPromises.access(faceImagePath); characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { } }
+            } else if (gameKey === "zzz") {
+              try {
+                const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+                for (const file of files) {
+                  if (file.endsWith('.json')) {
+                    const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
+                    if (data.Name === charName || data.CodeName === charName) {
+                      const iconMatch = data.Icon?.match(/\d+$/);
+                      if (iconMatch) {
+                        const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
+                        try {
+                           await fsPromises.access(zzzFacePath);
+                           characterFaceUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
+                        } catch (faceErr) {}
+                      }
+                      break;
+                    }
+                  }
+                }
+              } catch (err) { /* 获取失败就算了 */ }
+            }
           }
           gameEntry.characters.push({
             name: charData.name,
@@ -3580,7 +3638,6 @@ export class MiaoPluginMBT extends plugin {
           galleryMapTemplatePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "plugins", assumedPluginFolderName, "resources", "GuGuNiu-Gallery", "html", "check_gallerymap.html");
           try { await fsPromises.access(galleryMapTemplatePath); }
           catch (pluginPathError) {
-            //logger.error(`${localLogPrefix} [图库地图-${mapTitleSuffix}] 模板文件在公共和插件路径 (${assumedPluginFolderName}) 均未找到。`);
             throw pluginPathError;
           }
         } else { throw commonPathError; }
@@ -4040,7 +4097,6 @@ export class MiaoPluginMBT extends plugin {
       if (characterNames.length === 0) return e.reply(`在本地仓库中没有找到任何『${gameNameCN}』的角色。`, true);
 
       if ((gameInfo.key === 'gs' || gameInfo.key === 'sr') && !secondaryInput) {
-        // 子逻辑2.1：原神/星铁，且只输入了游戏名 -> 发送元素列表
         await e.reply(`『${gameNameCN}』的角色已按元素分类，请选择查看：`, true);
         const elementMap = {
           gs: { pyro: '火', hydro: '水', anemo: '风', electro: '雷', dendro: '草', cryo: '冰', geo: '岩' },
@@ -4054,7 +4110,6 @@ export class MiaoPluginMBT extends plugin {
         await e.reply(`- 点击下方指令或手动输入 -\n${elementList}`);
 
       } else {
-        // 子逻辑2.2：处理所有其他情况
         let targetChars = [];
         let queryDescription = "";
 
@@ -4115,7 +4170,36 @@ export class MiaoPluginMBT extends plugin {
                   await checkSystemHealth(e, logger);
                   const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
                   const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
-                  const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
+                  
+                  const firstItem = currentBatchData[0];
+                  let titleFaceUrl = null;
+                  if (firstItem) {
+                      const sourceGallery = firstItem.sourceGallery;
+                      let gameKey = sourceGallery ? sourceGallery.split('-')[0] : null;
+                      if (gameKey === 'zzz') {
+                          try {
+                              const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+                              for (const file of files) {
+                                  if (file.endsWith('.json')) {
+                                      const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
+                                      if (data.Name === standardMainName || data.CodeName === standardMainName) {
+                                          const iconMatch = data.Icon?.match(/\d+$/);
+                                          if (iconMatch) {
+                                              const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
+                                              await fsPromises.access(zzzFacePath);
+                                              titleFaceUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
+                                          }
+                                          break;
+                                      }
+                                  }
+                              }
+                          } catch (err) { /* 获取失败就算了 */ }
+                      }
+                  }
+                  const makeForwardMsgTitle = titleFaceUrl
+                    ? [segment.image(titleFaceUrl), ` [${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`]
+                    : `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
+
                   const forwardListBatch = [];
                   const firstNodeText = batchNum === 1 
                     ? `查看『${standardMainName}』 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`
@@ -4171,11 +4255,10 @@ export class MiaoPluginMBT extends plugin {
         if (rawRoleImageData.length === 0) { return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true); }
         
         const sourceGallery = rawRoleImageData[0].sourceGallery;
-        let gameKeyForPluginCheck = null; 
-        if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.zzz) gameKeyForPluginCheck = "zzz";
-        else if (sourceGallery === MiaoPluginMBT.paths.sourceFolders.waves) gameKeyForPluginCheck = "waves";
-        if (gameKeyForPluginCheck) { 
-          const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKeyForPluginCheck);
+        let gameKey = sourceGallery ? sourceGallery.split('-')[0] : null;
+
+        if (gameKey === "zzz" || gameKey === "waves") { 
+          const pluginIsInstalled = await MiaoPluginMBT.IsGamePluginInstalled(gameKey);
           if (!pluginIsInstalled) return e.reply(`图库数据中没有找到『${roleNameInput}』的图片信息。`, true);
         }
         
@@ -4189,7 +4272,7 @@ export class MiaoPluginMBT extends plugin {
         if (totalBatches > 1) {
             waitMessage = `正在为『${standardMainName}』整理 ${totalItems} 张图片，将分 ${totalBatches} 批发送，请稍候...`;
           if ((MiaoPluginMBT.MBTConfig.Execution_Mode ?? 'Batch') === 'Serial') {
-            waitMessage += `\n(当前为低负载模式，批间会进行系统健康检查)`;
+            waitMessage += `\n(当前为低负载模式，批间会进行系统负载检查)`;
           }
         }
     
@@ -4200,7 +4283,31 @@ export class MiaoPluginMBT extends plugin {
 
           const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
           const currentBatchData = rawRoleImageData.slice(startIndex, startIndex + ITEMS_PER_BATCH);
-          const makeForwardMsgTitle = `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
+          
+          let titleFaceUrl = null;
+          if(gameKey === 'zzz') {
+            try {
+              const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+              for (const file of files) {
+                if (file.endsWith('.json')) {
+                  const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
+                  if (data.Name === standardMainName || data.CodeName === standardMainName) {
+                    const iconMatch = data.Icon?.match(/\d+$/);
+                    if (iconMatch) {
+                      const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
+                      await fsPromises.access(zzzFacePath);
+                      titleFaceUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
+                    }
+                    break;
+                  }
+                }
+              }
+            } catch (err) { /* 获取失败就算了 */ }
+          }
+          
+          const makeForwardMsgTitle = titleFaceUrl
+            ? [segment.image(titleFaceUrl), ` [${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`]
+            : `[${standardMainName}] 图库详情 (${batchNum}/${totalBatches})`;
           
           const forwardListBatch = [];
           const firstNodeText = batchNum === 1 

@@ -16,28 +16,25 @@
 
             --game-gs-primary: #5c9ded; 
             --game-gs-secondary: #72c6f0; 
-            --gs-bg-wrapper: #eef7ff; 
-            --gs-border-wrapper: #cce3f5;
+            --gs-bg-wrapper: #f5f9fe; 
+            --gs-border-wrapper: #a7c3eb;
 
             --game-sr-primary: #7d8597; 
             --game-sr-secondary: #f8c88c; 
             --sr-bg-wrapper: #f0f2f5;
-            --sr-border-wrapper: #d8dde3;
+            --sr-border-wrapper: #9d9d9d;
 
-            --game-zzz-primary: #ff7f7f; 
-            --game-zzz-secondary: #f08282; 
-            --zzz-bg-block: #fff0f0; 
-            --zzz-border-block: #ffc1c1; 
+            --game-zzz-primary: #e91e63;
+            --game-zzz-secondary: #f48fb1; 
+            --zzz-bg-wrapper: #fdf5f7;  
+            --zzz-border-wrapper: #f48fb1; 
             
             --game-waves-primary: #ffc107; 
             --game-waves-secondary: #7cc9ba; 
-            --waves-bg-block: #fff9e6; 
-            --waves-border-block: #ffe9a8; 
+            --waves-bg-wrapper: #fff9e6; 
+            --waves-border-wrapper: #ffe9a8; 
 
-            --theme-primary-color: #673ab7; 
-            --theme-light-purple: #b39ddb;
             --text-color-muted: #55595c; 
-            --text-color-subtle: #818a91; 
 
             --character-item-inner-bg: #f9fafb; 
             --character-item-inner-border: #e8eaf0; 
@@ -48,8 +45,6 @@
         @font-face {
             font-family: 'CuteFont';
             src: local('Yuanti SC'), local('YouYuan'), local('Microsoft YaHei UI Rounded'), local('Arial Rounded MT Bold'), local('Microsoft YaHei UI'), local('PingFang SC'), sans-serif;
-            font-weight: normal;
-            font-style: normal;
         }
         body {
             font-family: var(--map-font-family);
@@ -69,40 +64,12 @@
             max-width: 1050px; 
             margin-left: auto;
             margin-right: auto;
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
         }
-        .map-container.theme-gs { background-color: var(--gs-bg-wrapper); border-color: var(--gs-border-wrapper);border: 9px #a7c3eb double;}
-        .map-container.theme-sr { background-color: var(--sr-bg-wrapper); border-color: var(--sr-border-wrapper);border: 6px #9d9d9d double; }
-        .map-container.theme-zzz { background-color: var(--zzz-bg-block); border-color: var(--zzz-border-block); }
-        .map-container.theme-waves { background-color: var(--waves-bg-block); border-color: var(--waves-border-block); }
-        .map-container.theme-default {}
-        .map-container.theme-dual-other {}
+        .map-container.theme-gs { background-color: var(--gs-bg-wrapper); border: 6px double var(--gs-border-wrapper); }
+        .map-container.theme-sr { background-color: var(--sr-bg-wrapper); border: 6px double var(--sr-border-wrapper); }
+        .map-container.theme-zzz { background-color: var(--zzz-bg-wrapper); border: 6px double var(--zzz-border-wrapper); }
+        .map-container.theme-waves { background-color: var(--waves-bg-wrapper); border: 6px double var(--waves-border-wrapper); }
         
-        .game-content-block {
-            margin-bottom: 0px; 
-        }
-        .game-content-block:last-child {
-            margin-bottom: 0;
-        }
-        .map-container.theme-default .game-content-block.game-zzz,
-        .map-container.theme-dual-other .game-content-block.game-zzz {
-             background-color: var(--zzz-bg-block);
-             border: 6px double var(--zzz-border-block);
-             padding: 15px;
-             border-radius: 8px;
-             margin: 0; 
-        }
-        .map-container.theme-default .game-content-block.game-waves,
-        .map-container.theme-dual-other .game-content-block.game-waves {
-             background-color: var(--waves-bg-block);
-             border: 6px double var(--waves-border-block);
-             padding: 15px;
-             border-radius: 8px;
-             margin: 0;
-        }
-
         .game-header { 
             display: flex; 
             justify-content: space-between;
@@ -112,24 +79,14 @@
             border-bottom: 1px solid var(--map-card-border);
         }
         .game-title {
-            font-size: 20px;
+            font-size: 40px;
             font-weight: 600;
-            font-family: var(--map-font-family);
         }
-        .map-container.theme-gs .game-title { color: var(--game-gs-primary); font-size: 40px; } 
-        .map-container.theme-sr .game-title { color: var(--game-sr-primary); font-size: 40px; } 
-        .map-container.theme-zzz .game-title { color: var(--game-zzz-primary); font-size: 20px; } 
-        .map-container.theme-waves .game-title { color: var(--game-waves-primary); font-size: 20px; } 
-        .map-container.theme-default .game-header[data-gamekey="gs"] .game-title,
-        .map-container.theme-dual-other .game-header[data-gamekey="gs"] .game-title { color: var(--game-gs-primary); font-size: 40px;}
-        .map-container.theme-default .game-header[data-gamekey="sr"] .game-title,
-        .map-container.theme-dual-other .game-header[data-gamekey="sr"] .game-title { color: var(--game-sr-primary); font-size: 40px;}
-        .map-container.theme-default .game-header[data-gamekey="zzz"] .game-title,
-        .map-container.theme-dual-other .game-header[data-gamekey="zzz"] .game-title { color: var(--game-zzz-primary); font-size: 20px;}
-        .map-container.theme-default .game-header[data-gamekey="waves"] .game-title,
-        .map-container.theme-dual-other .game-header[data-gamekey="waves"] .game-title { color: var(--game-waves-primary); font-size: 20px;}
-
-
+        .map-container.theme-gs .game-title { color: var(--game-gs-primary); } 
+        .map-container.theme-sr .game-title { color: var(--game-sr-primary); } 
+        .map-container.theme-zzz .game-title { color: var(--game-zzz-primary); } 
+        .map-container.theme-waves .game-title { color: var(--game-waves-primary); } 
+        
         .game-summary-stats { 
             font-size: 13px; 
             color: var(--text-color-muted);
@@ -145,15 +102,6 @@
             list-style: none;
             margin: 20px 0 0 0; 
         }
-        .map-container.theme-zzz .character-list,
-        .map-container.theme-waves .character-list,
-        .map-container.theme-dual-other .game-content-block.game-zzz .character-list,
-        .map-container.theme-dual-other .game-content-block.game-waves .character-list,
-        .map-container.theme-default .game-content-block.game-zzz .character-list,
-        .map-container.theme-default .game-content-block.game-waves .character-list {
-            grid-template-columns: repeat(4, 1fr); 
-        }
-
 
         .character-item {
             display: flex;
@@ -164,25 +112,10 @@
             padding: 10px 6px;
             border-radius: 6px;
             border: 1px solid var(--character-item-inner-border); 
-            transition: box-shadow 0.2s ease-out, transform 0.15s ease-out;
             box-shadow: 0 1px 2px rgba(0,0,0,0.03); 
             min-width: 0; 
         }
-        .character-item:hover {
-            box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
-            transform: translateY(-1px);
-        }
         
-        .map-container.theme-gs .character-item:hover { border-color: var(--game-gs-primary); }
-        .map-container.theme-sr .character-item:hover { border-color: var(--game-sr-primary); }
-        .map-container.theme-zzz .character-item:hover,
-        .map-container.theme-default .game-content-block.game-zzz .character-item:hover,
-        .map-container.theme-dual-other .game-content-block.game-zzz .character-item:hover { border-color: var(--game-zzz-primary); }
-        .map-container.theme-waves .character-item:hover,
-        .map-container.theme-default .game-content-block.game-waves .character-item:hover,
-        .map-container.theme-dual-other .game-content-block.game-waves .character-item:hover { border-color: var(--game-waves-primary); }
-
-
         .character-face-wrapper { 
             width: 50px; 
             height: 50px;
@@ -198,13 +131,8 @@
         }
         .map-container.theme-gs .character-face-wrapper { border-color: var(--game-gs-secondary); }
         .map-container.theme-sr .character-face-wrapper { border-color: var(--game-sr-secondary); }
-        .map-container.theme-zzz .character-face-wrapper,
-        .map-container.theme-default .game-content-block.game-zzz .character-face-wrapper,
-        .map-container.theme-dual-other .game-content-block.game-zzz .character-face-wrapper { border-color: var(--game-zzz-secondary); }
-        .map-container.theme-waves .character-face-wrapper,
-        .map-container.theme-default .game-content-block.game-waves .character-face-wrapper,
-        .map-container.theme-dual-other .game-content-block.game-waves .character-face-wrapper { border-color: var(--game-waves-secondary); }
-
+        .map-container.theme-zzz .character-face-wrapper { border-color: var(--game-zzz-secondary); }
+        .map-container.theme-waves .character-face-wrapper { border-color: var(--game-waves-secondary); }
 
         .character-face {
             width: 100%;
@@ -238,19 +166,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .game-content-block.game-zzz .character-item .character-info,
-        .game-content-block.game-waves .character-item .character-info {
-            margin-top: auto; 
-            margin-bottom: auto; 
-            padding: 5px 0; 
-            width: 100%; 
-        }
-        .game-content-block.game-zzz .character-item,
-        .game-content-block.game-waves .character-item {
-             min-height: 60px; 
-             justify-content: center; 
-        }
-
+        
         .footer { 
             text-align: center; 
             margin-top: 30px; 
@@ -266,8 +182,7 @@
         @media (max-width: 660px) {
             .character-list { grid-template-columns: repeat(3, 1fr) !important; }
             .character-face-wrapper { width: 46px; height: 46px; }
-            .map-container.theme-gs .game-title, .map-container.theme-sr .game-title,
-            .game-header[data-gamekey="gs"] .game-title, .game-header[data-gamekey="sr"] .game-title { font-size: 30px; }
+            .game-title { font-size: 30px; }
         }
         @media (max-width: 520px) {
             body { padding: 10px; }
@@ -277,9 +192,7 @@
             .character-face-wrapper { width: 40px; height: 40px; margin-bottom: 5px;}
             .character-info .name { font-size: 12px; -webkit-line-clamp: 1; }
             .character-info .stats { font-size: 10px; }
-            .game-title { font-size: 17px; }
-            .map-container.theme-gs .game-title, .map-container.theme-sr .game-title,
-            .game-header[data-gamekey="gs"] .game-title, .game-header[data-gamekey="sr"] .game-title { font-size: 24px; }
+            .game-title { font-size: 24px; }
         }
     </style>
 </head>
@@ -293,15 +206,13 @@
             theme-zzz
         {{else if games.length === 1 && games[0].key === 'waves'}}
             theme-waves
-        {{else if games.length > 1 && games.every(g => g.key === 'zzz' || g.key === 'waves')}}
-            theme-dual-other
         {{else}}
             theme-default
         {{/if}}
     ">
         
         {{ each games game }}
-            <div class="game-content-block game-{{game.key}}" data-gamekey="{{game.key}}">
+            <div class="game-content-block">
                 <div class="game-header">
                     <h2 class="game-title">{{ game.name }}</h2>
                      <span class="game-summary-stats">
@@ -311,17 +222,14 @@
                 {{ if game.characters && game.characters.length > 0 }}
                     <ul class="character-list">
                         {{ each game.characters character }}
-                            <li class="character-item" data-game-noface="{{!game.hasFace}}">
-                                {{ if game.hasFace }}
+                            <li class="character-item">
                                 <div class="character-face-wrapper">
-                                {{ if character.faceUrl }}
-                                    <img src="{{ character.faceUrl }}" alt="{{ character.name }}" class="character-face">
-                                {{ else }}
-                                     <span class="character-face-placeholder" style="font-size:10px; color: var(--placeholder-face-text);">无图</span>
-                                {{ /if }}
+                                    {{ if character.faceUrl }}
+                                        <img src="{{ character.faceUrl }}" alt="{{ character.name }}" class="character-face">
+                                    {{ else }}
+                                    {{ /if }}
                                 </div>
-                                {{ /if }}
-                                <div class="character-info" {{ if !game.hasFace }}style="margin-top: auto; margin-bottom: auto; padding: 5px 0;"{{ /if }}> 
+                                <div class="character-info"> 
                                     <span class="name">{{ character.name }}</span>
                                     <span class="stats">{{ character.imageCount }}张 | {{ character.totalSizeFormatted }}</span>
                                 </div>
