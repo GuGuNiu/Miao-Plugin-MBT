@@ -6080,7 +6080,7 @@
         "sourceGallery": "zzz-character"
     },
     {
-        "storagebox": "Miao-Plugin-MBT",
+        "storagebox": "Miao-Plugin-MBT-2",
         "gid": "1165390602",
         "characterName": "可琳",
         "path": "zzz-character/可琳/可琳Gu1.webp",
@@ -6096,7 +6096,7 @@
             "md5": "6598ee195be73595bd9b8f0eaeecbe61",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-23T07:12:34.789Z",
+        "timestamp": "2025-06-16T04:58:05.239Z",
         "sourceGallery": "zzz-character"
     },
     {
@@ -30258,5 +30258,405 @@
         },
         "timestamp": "2025-06-07T05:57:13.068Z",
         "sourceGallery": "waves-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "3658362125",
+        "characterName": "神里绫华",
+        "path": "gs-character/神里绫华/神里绫华Gu30.webp",
+        "attributes": {
+            "filename": "神里绫华Gu30.webp",
+            "parentFolder": "神里绫华",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "893e524f840aaaf7b98ce498443ec3ee",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:00.317Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "2099744342",
+        "characterName": "神里绫华",
+        "path": "gs-character/神里绫华/神里绫华Gu31.webp",
+        "attributes": {
+            "filename": "神里绫华Gu31.webp",
+            "parentFolder": "神里绫华",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "5d78dbdea10ca1ae0c3b629607757e25",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:06.069Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "3771744636",
+        "characterName": "神里绫华",
+        "path": "gs-character/神里绫华/神里绫华Gu32.webp",
+        "attributes": {
+            "filename": "神里绫华Gu32.webp",
+            "parentFolder": "神里绫华",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8565961df312e8df6ce6b943b0e5f958",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:09.054Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6778245693",
+        "characterName": "申鹤",
+        "path": "gs-character/申鹤/申鹤Gu18.webp",
+        "attributes": {
+            "filename": "申鹤Gu18.webp",
+            "parentFolder": "申鹤",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "aba099e72494b3de370c98101aac5864",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:13.029Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4923109231",
+        "characterName": "申鹤",
+        "path": "gs-character/申鹤/申鹤Gu19.webp",
+        "attributes": {
+            "filename": "申鹤Gu19.webp",
+            "parentFolder": "申鹤",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "42462f7957e727d1d138b5cccefde056",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:16.103Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "2243997763",
+        "characterName": "克洛琳德",
+        "path": "gs-character/克洛琳德/克洛琳德Gu11.webp",
+        "attributes": {
+            "filename": "克洛琳德Gu11.webp",
+            "parentFolder": "克洛琳德",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "549d432f8c504fcf5c0ac15ff9ccb6f6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:19.637Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "5731328829",
+        "characterName": "克洛琳德",
+        "path": "gs-character/克洛琳德/克洛琳德Gu12.webp",
+        "attributes": {
+            "filename": "克洛琳德Gu12.webp",
+            "parentFolder": "克洛琳德",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "27988a23b607a95fd166cab68d80e2fb",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:23.037Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1548524043",
+        "characterName": "梦见月瑞希",
+        "path": "gs-character/梦见月瑞希/梦见月瑞希Gu9.webp",
+        "attributes": {
+            "filename": "梦见月瑞希Gu9.webp",
+            "parentFolder": "梦见月瑞希",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "154814e234bef4ea05f5c0025f73a02e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:29.717Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2923013352",
+        "characterName": "梦见月瑞希",
+        "path": "gs-character/梦见月瑞希/梦见月瑞希Gu10.webp",
+        "attributes": {
+            "filename": "梦见月瑞希Gu10.webp",
+            "parentFolder": "梦见月瑞希",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fcb56cd463f09d1dc74db987bdc3b5d6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:33.253Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "5291125013",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu8.webp",
+        "attributes": {
+            "filename": "大黑塔Gu8.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0c81bd03844db0823a1df810d7511a11",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:56:57.350Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "4842537039",
+        "characterName": "大黑塔",
+        "path": "sr-character/大黑塔/大黑塔Gu9.webp",
+        "attributes": {
+            "filename": "大黑塔Gu9.webp",
+            "parentFolder": "大黑塔",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "c70e52b73223964ac9941f10bd194b8b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:01.517Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "6063038808",
+        "characterName": "恰斯卡",
+        "path": "gs-character/恰斯卡/恰斯卡Gu5.webp",
+        "attributes": {
+            "filename": "恰斯卡Gu5.webp",
+            "parentFolder": "恰斯卡",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "16c7893b40527adf1c7760cc5df3fc8e",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:07.150Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9951423025",
+        "characterName": "恰斯卡",
+        "path": "gs-character/恰斯卡/恰斯卡Gu6.webp",
+        "attributes": {
+            "filename": "恰斯卡Gu6.webp",
+            "parentFolder": "恰斯卡",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "4c8fe4e7124e2a64be5cdf70530e7ad7",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:10.471Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2590598625",
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu47.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu47.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "3a9219a5129b880e1dc684489c3619fd",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:16.982Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6782962190",
+        "characterName": "纳西妲",
+        "path": "gs-character/纳西妲/纳西妲Gu30.webp",
+        "attributes": {
+            "filename": "纳西妲Gu30.webp",
+            "parentFolder": "纳西妲",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": true,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "3bdb12f8e6adac1856483ed5baf5f872",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:22.845Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-3",
+        "gid": "5314947570",
+        "characterName": "托帕&账账",
+        "path": "sr-character/托帕&账账/托帕&账账Gu19.webp",
+        "attributes": {
+            "filename": "托帕&账账Gu19.webp",
+            "parentFolder": "托帕&账账",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f13a57f25a4ebd23173c2b50f98c0a35",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:27.830Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4615164519",
+        "characterName": "希格雯",
+        "path": "gs-character/希格雯/希格雯Gu13.webp",
+        "attributes": {
+            "filename": "希格雯Gu13.webp",
+            "parentFolder": "希格雯",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bcc78e6c50c66dcb740f96dd2a4514b6",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:32.726Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "2737414556",
+        "characterName": "千织",
+        "path": "gs-character/千织/千织Gu10.webp",
+        "attributes": {
+            "filename": "千织Gu10.webp",
+            "parentFolder": "千织",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bbfa742628311f883ac125d89d1475df",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:37.654Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "6619606243",
+        "characterName": "八重神子",
+        "path": "gs-character/八重神子/八重神子Gu9.webp",
+        "attributes": {
+            "filename": "八重神子Gu9.webp",
+            "parentFolder": "八重神子",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "bcc881b832ca05b53050010f0a62e24b",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:43.374Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8521100752",
+        "characterName": "橘福福",
+        "path": "zzz-character/橘福福/橘福福Gu1.webp",
+        "attributes": {
+            "filename": "橘福福Gu1.webp",
+            "parentFolder": "橘福福",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0e773b2b0cf98288e28b0377219fa7cc",
+            "Downloaded_From": "none"
+        },
+        "timestamp": "2025-06-16T04:57:48.727Z",
+        "sourceGallery": "zzz-character"
     }
 ]
