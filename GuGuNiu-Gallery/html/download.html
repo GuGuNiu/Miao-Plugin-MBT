@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>咕咕牛下载报告</title>
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap"
+		rel="stylesheet">
+	<style>
+		:root {
+			--panel-bg: rgba(26, 32, 44, 0.75);
+			--panel-border: rgba(0, 246, 255, 0.2);
+			--text-primary: #e0e5f0;
+			--text-secondary: #a0b0c0;
+			--text-light: #ffffff;
+			--accent-color: #00f6ff;
+			--secondary-accent-color: #ff00f2;
+			--header-bg: rgba(10, 15, 25, 0.8);
+			--progress-bar-bg: rgba(0, 0, 0, 0.3);
+			--success-bg: rgba(29, 64, 53, 0.85);
+			--success-border: #1dfc9c;
+			--success-text: #adffde;
+			--fail-bg: rgba(69, 21, 38, 0.85);
+			--fail-border: #ff4d6d;
+			--fail-text: #ffb3c1;
+			--local-bg: rgba(25, 47, 85, 0.85);
+			--local-border: #4dabf7;
+			--local-text: #d0ebff;
+			--na-bg: rgba(52, 58, 64, 0.85);
+			--na-border: #868e96;
+			--na-text: #adb5bd;
+			--alert-bg: rgba(85, 46, 0, 0.85);
+			--alert-border: #ff8a00;
+			--alert-text: #ffc078;
+		}
+		
+		* {
+			box-sizing: border-box;
+		}
+		
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+		}
+		
+		body {
+			font-family: 'Noto Sans SC', sans-serif;
+			background-color: #1a202c;
+			color: var(--text-primary);
+			padding: 20px;
+			width: 640px;
+			margin: 0 auto;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			position: relative;
+		}
+		
+		.background-layer {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-image: url('https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/img/bg/Download/downloadbg.png');
+			background-size: cover;
+			background-position: center center;
+			background-repeat: no-repeat;
+			z-index: -1;
+		}
+		
+		.wrapper {
+			position: relative;
+			background-color: var(--panel-bg);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			border: 1px solid var(--panel-border);
+			border-radius: 18px;
+			padding: 25px 30px;
+			box-shadow: 0 0 40px rgba(0, 246, 255, 0.2), inset 0 0 20px rgba(100, 220, 255, 0.1);
+			clip-path: polygon(30px 0, calc(100% - 30px) 0, 100% 30px, 100% calc(100% - 30px), calc(100% - 30px) 100%, 30px 100%, 0 calc(100% - 30px), 0 30px);
+		}
+		
+		.hud-panel {
+			padding-right: 45px;
+		}
+		
+		.hud-header {
+			padding-bottom: 15px;
+			margin-bottom: 15px;
+		}
+		
+		.rating-bar {
+			background-color: var(--accent-color);
+			color: #0a0a0a;
+			padding: 4px 12px;
+			border-radius: 20px;
+			display: inline-flex;
+			align-items: center;
+			font-size: 14px;
+			font-weight: 700;
+			margin-bottom: 12px;
+			box-shadow: 0 0 15px var(--accent-color);
+			text-shadow: 0 0 2px var(--accent-color);
+		}
+		
+		.rating-bar .stars {
+			font-size: 16px;
+			margin-right: 8px;
+			letter-spacing: 2px;
+		}
+		
+		.title {
+			font-size: 24px;
+			font-weight: 700;
+			margin: 0 0 10px 0;
+			color: var(--text-light);
+			text-shadow: 0 0 8px var(--accent-color);
+		}
+		
+		.title span {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 14px;
+			color: var(--text-secondary);
+			margin-left: 8px;
+		}
+		
+		.progress-container {
+			display: flex;
+			align-items: center;
+			gap: 15px;
+		}
+		
+		.progress-bar {
+			flex-grow: 1;
+			height: 10px;
+			background-color: var(--progress-bar-bg);
+			border-radius: 5px;
+			overflow: hidden;
+			box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+		}
+		
+		.progress-bar-fill {
+			height: 100%;
+			background: linear-gradient(90deg, var(--secondary-accent-color), var(--accent-color));
+			border-radius: 5px;
+			box-shadow: 0 0 8px var(--accent-color);
+		}
+		
+		.progress-text {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 14px;
+			font-weight: 700;
+			color: var(--accent-color);
+			text-shadow: 0 0 5px var(--accent-color);
+		}
+		
+		.hud-content .section-header {
+			background-color: var(--header-bg);
+			color: var(--text-light);
+			font-family: 'Orbitron', sans-serif;
+			font-weight: 500;
+			padding: 8px 15px;
+			margin: 20px 0 15px 0;
+			clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 100%, 0 100%);
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border: 1px solid rgba(100, 220, 255, 0.2);
+		}
+		
+		.section-header .stripes {
+			width: 40px;
+			height: 100%;
+			background: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0, 246, 255, 0.2) 4px, rgba(0, 246, 255, 0.2) 6px);
+		}
+		
+		.repo-status-list {
+			display: flex;
+			flex-direction: column;
+			gap: 15px;
+		}
+		
+		.repo-status-item {
+			display: flex;
+			align-items: stretch;
+			border-radius: 8px;
+			border: 1px solid;
+			box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+		}
+		
+		.repo-status-item.status-ok {
+			background-color: var(--success-bg);
+			border-color: var(--success-border);
+			box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba(29, 252, 156, 0.3);
+		}
+		
+		.repo-status-item.status-fail {
+			background-color: var(--fail-bg);
+			border-color: var(--fail-border);
+			box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 77, 109, 0.3);
+		}
+		
+		.repo-status-item.status-local {
+			background-color: var(--local-bg);
+			border-color: var(--local-border);
+			box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba(77, 171, 247, 0.3);
+		}
+		
+		.repo-status-item.status-na {
+			background-color: var(--na-bg);
+			border-color: var(--na-border);
+		}
+		
+		.repo-icon-container {
+			flex-shrink: 0;
+			width: 70px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			color: var(--text-light);
+			background-color: var(--na-text);
+			clip-path: polygon(0 0, 100% 0, 75% 100%, 0 100%);
+			border-radius: 8px 0 0 8px;
+		}
+		
+		.status-ok .repo-icon-container {
+			background-color: var(--success-border);
+			text-shadow: 0 0 8px var(--text-light);
+		}
+		
+		.status-fail .repo-icon-container {
+			background-color: var(--fail-border);
+			text-shadow: 0 0 8px var(--text-light);
+		}
+		
+		.status-local .repo-icon-container {
+			background-color: var(--local-border);
+			text-shadow: 0 0 8px var(--text-light);
+		}
+		
+		.repo-number {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 36px;
+			font-weight: 700;
+		}
+		
+		.repo-info {
+			flex-grow: 1;
+			padding: 12px 15px;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
+		
+		.repo-name {
+			font-size: 16px;
+			font-weight: 700;
+			color: var(--text-primary);
+		}
+		
+		.repo-node {
+			font-size: 13px;
+			color: var(--text-secondary);
+			margin-top: 2px;
+		}
+		
+		.repo-status-text {
+			flex-shrink: 0;
+			padding: 0 20px;
+			display: flex;
+			align-items: center;
+			font-weight: 700;
+			font-size: 15px;
+			color: var(--na-text);
+		}
+		
+		.status-ok .repo-status-text {
+			color: var(--success-text);
+			text-shadow: 0 0 5px var(--success-border);
+		}
+		
+		.status-fail .repo-status-text {
+			color: var(--fail-text);
+			text-shadow: 0 0 5px var(--fail-border);
+		}
+		
+		.status-local .repo-status-text {
+			color: var(--local-text);
+			text-shadow: 0 0 5px var(--local-border);
+		}
+		
+		.action-tip-module {
+			margin-top: 20px;
+			padding: 2px;
+			background: linear-gradient(135deg, var(--alert-border), #ff5400);
+			border-radius: 8px;
+			clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+			box-shadow: 0 0 20px rgba(255, 138, 0, 0.5);
+		}
+		
+		.action-tip-inner {
+			background-color: var(--alert-bg);
+			padding: 15px 20px;
+			border-radius: 6px;
+			clip-path: inherit;
+			display: flex;
+			align-items: center;
+			gap: 15px;
+			position: relative;
+		}
+		
+		.tip-icon {
+			font-size: 28px;
+			color: #ff8a00;
+			text-shadow: 0 0 10px rgba(255, 138, 0, 0.5);
+		}
+		
+		.tip-text {
+			flex-grow: 1;
+			font-size: 14px;
+			color: var(--alert-text);
+			font-weight: 500;
+		}
+		
+		.tip-text .command {
+			font-family: 'Orbitron', monospace;
+			background-color: rgba(255, 138, 0, 0.3);
+			color: #ffc078;
+			padding: 3px 8px;
+			border-radius: 4px;
+			font-weight: 700;
+			margin: 0 4px;
+			box-shadow: 0 0 8px rgba(255, 138, 0, 0.5);
+		}
+		
+		.side-bracket {
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+			right: 0px;
+			height: 60%;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			gap: 10px;
+		}
+		
+		.bracket-tab {
+			background: linear-gradient(180deg, #495057, var(--header-bg));
+			color: var(--text-light);
+			font-family: 'Orbitron', sans-serif;
+			writing-mode: vertical-rl;
+			text-orientation: mixed;
+			padding: 15px 8px;
+			border-radius: 8px 0 0 8px;
+			font-size: 14px;
+			letter-spacing: 2px;
+			box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+		}
+		
+		.footer {
+			text-align: center;
+			margin-top: 20px;
+			padding-top: 15px;
+			border-top: 1px solid var(--panel-border);
+			font-size: 13px;
+			color: var(--text-primary);
+			font-family: 'Orbitron', sans-serif;
+		}
+		
+		.footer .duration {
+			margin-left: 10px;
+			color: var(--text-secondary);
+		}
+	</style>
+</head>
+
+<body style="{{scaleStyleValue}}">
+	<div class="background-layer"></div>
+	<div class="wrapper">
+		<div class="hud-panel">
+			<header class="hud-header">
+				<div class="rating-bar">
+					<span class="stars">{{'★'.repeat(successCount)}}{{'☆'.repeat(totalConfigured-successCount)}}</span> {{ successCount }}/{{ totalConfigured }} 成功
+				</div>
+				<h1 class="title">咕咕牛的下载报告 <span>/IDOWNLOADI/</span></h1>
+				<div class="progress-container">
+					<div class="progress-bar">
+						<div class="progress-bar-fill" style="width: {{ successRate }}%;"></div>
+					</div>
+					<div class="progress-text">{{ successRateRounded }}%</div>
+				</div>
+			</header>
+
+			<main class="hud-content">
+				<div class="section-header">
+					<span>SYSTEM LOG</span>
+					<div class="stripes"></div>
+				</div>
+				<div class="repo-status-list">
+					<% const repoLabels = ['一号仓库 (核心)', '二号仓库 (原神)', '三号仓库 (星铁)', '四号仓库 (鸣潮&绝区零)']; %>
+					{{ each results result index }}
+					<div class="repo-status-item {{ result.statusClass }}">
+						<div class="repo-icon-container">
+							<span class="repo-number">{{ index + 1 }}</span>
+						</div>
+						<div class="repo-info">
+							<div class="repo-name">{{ repoLabels[index] }}</div>
+							<div class="repo-node">节点: {{ result.nodeName }}</div>
+						</div>
+						<div class="repo-status-text">{{ result.text }}</div>
+					</div>
+					{{ /each }}
+				</div>
+
+				{{ if !overallSuccess }}
+				<div class="action-tip-module">
+					<div class="action-tip-inner">
+						<div class="tip-icon">🎯</div>
+						<div class="tip-text">
+							你可以再次执行 <span class="command">#下载咕咕牛</span> 尝试补全
+						</div>
+					</div>
+				</div>
+				{{ /if }}
+			</main>
+
+			<footer class="footer">
+				Miao-Plugin-MBT v{{ pluginVersion }} <span class="duration">[耗时: {{ duration }}s]</span>
+			</footer>
+		</div>
+
+		<div class="side-bracket">
+			<div class="bracket-tab">STATUS</div>
+			<div class="bracket-tab">INFO</div>
+		</div>
+	</div>
+</body>
+
+</html>
