@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛查看助手</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --container-border: #333333;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #adb5bd;
+            --accent-color: #00acc1;
+
+            --success-color: #28a745;
+            --fail-color: #dc3545;
+            --na-color: #78909c;
+            --default-color: #3f51b5;
+
+            --soft-shadow: rgba(0, 0, 0, 0.08);
+            --header-bg: #333333;
+            --header-title-color: #ffffff;
+            --header-subtitle-color: rgba(255, 255, 255, 0.6);
+            --header-underline-color: #1395ff;
+            --header-border-line: rgba(255, 255, 255, 0.1);
+
+            --section-bg-card: rgba(255, 255, 255, 0.95);
+            --section-border-card: #e0e0e0;
+            --section-shadow-card: rgba(0, 0, 0, 0.05);
+            --accent-glow: rgba(0, 0, 0, 0.4);
+            --panel-backdrop-blur: 5px;
+
+            --gs-tag-bg: #cfe2ff;
+            --gs-tag-text: #0a58ca;
+            --sr-tag-bg: #e9ecef;
+            --sr-tag-text: #495057;
+            --zzz-tag-bg: #fce4ec;
+            --zzz-tag-text: #ad1457;
+            --waves-tag-bg: #fffde7;
+            --waves-tag-text: #fc9d05;
+            --misc-tag-bg: #e1bee7;
+            --misc-tag-text: #7b1fa2;
+
+            --popular-char-bg: #e6f7ff;
+            --popular-char-text: #007bff;
+            --popular-char-border: #99d2f7;
+            --popular-char-shadow: rgba(0, 123, 255, 0.08);
+
+            --games-section-bg: #fff0e0;
+            --games-section-title: #ff9838;
+            --games-section-deco: #ff7b00;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+            color: var(--text-primary);
+            padding: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            width: 620px;
+            margin: 20px auto;
+            position: relative;
+            z-index: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container-shadow-wrapper {
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 16px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            border: 1px solid var(--container-border);
+            width: 100%;
+            margin: 0 auto;
+            box-shadow: 0 0 15px 5px var(--accent-glow);
+            padding: 0;
+            box-sizing: border-box;
+            z-index: 1;
+            overflow: hidden;
+            backdrop-filter: blur(var(--panel-backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--panel-backdrop-blur));
+            background-image:
+                repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px),
+                repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px);
+            background-size: 20px 20px;
+        }
+
+        .container::before,
+        .container::after,
+        body::before,
+        body::after {
+            display: none;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding: 25px 30px 15px 30px;
+            background-color: var(--header-bg);
+            position: relative;
+            z-index: 1;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-shadow: inset 0 -1px 0 var(--header-border-line);
+            background-image:
+                radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
+                linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
+            background-size: 100% 100%, 50% 100%;
+            background-position: center, center;
+            background-repeat: no-repeat, repeat-x;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        .header h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 26px;
+            color: var(--header-title-color);
+            margin: 0;
+            letter-spacing: 0.5px;
+            position: relative;
+            display: flex;
+            align-items: baseline;
+            padding-bottom: 4px;
+            flex-grow: 1; 
+        }
+
+        .header h1 span {
+            font-family: 'Orbitron', monospace;
+            color: var(--header-subtitle-color);
+            font-size: 16px;
+            margin-left: 10px;
+            font-weight: 500;
+            letter-spacing: 0.25px;
+        }
+
+        .header h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 30%;
+            height: 3px;
+            background-color: var(--header-underline-color);
+            border-radius: 1px;
+            box-shadow: 0 0 4px var(--header-underline-color);
+        }
+
+        .header-image-container {
+            width: 50px;
+            height: 50px;
+            overflow: hidden;
+            flex-shrink: 0;
+            margin-left: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-cute-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .intro {
+            text-align: center;
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin: 20px 30px 30px 30px;
+            padding: 0;
+        }
+
+        .intro code {
+            font-family: 'Consolas', 'Menlo', monospace;
+            background-color: var(--section-border-card);
+            padding: 3px 7px;
+            border-radius: 4px;
+            color: var(--default-color);
+            font-size: 14px;
+        }
+
+        .main-content {
+            padding: 0 30px;
+        }
+
+        .section {
+            margin-bottom: 22px;
+            padding: 20px;
+            border-radius: 12px;
+            background-color: var(--section-bg-card);
+            border: 1px solid var(--section-border-card);
+            box-shadow: 0 4px 15px var(--section-shadow-card);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--section-border-card);
+        }
+
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .title-deco {
+            flex-shrink: 0;
+            width: 7px;
+            height: 20px;
+            border-radius: 3px;
+            background-color: var(--deco-color);
+            margin-right: 12px;
+            box-shadow: 0 0 6px var(--deco-color);
+        }
+
+        h2 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            margin: 0;
+            padding: 0;
+            line-height: 20px;
+            color: var(--title-color);
+        }
+
+        .popular-characters .title-wrapper {
+            --title-color: #3f51b5;
+            --deco-color: #5c6bc0;
+        }
+
+        .gs .title-wrapper {
+            --title-color: #0d6efd;
+            --deco-color: #4dabf7;
+        }
+
+        .sr .title-wrapper {
+            --title-color: #495057;
+            --deco-color: #adb5bd;
+        }
+
+        .games-section .title-wrapper {
+            --title-color: var(--games-section-title);
+            --deco-color: var(--games-section-deco);
+        }
+
+        .tags .title-wrapper {
+            --title-color: #8e24aa;
+            --deco-color: #ab47bc;
+        }
+
+        .example-text {
+            font-size: 13px;
+            font-family: 'Consolas', 'Menlo', monospace;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .item {
+            padding: 6px 14px;
+            font-size: 14px;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 500;
+            border-radius: 6px;
+            white-space: nowrap;
+            background-color: var(--tag-bg);
+            color: var(--tag-text);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.1s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .popular-char-tag {
+            background-color: var(--popular-char-bg);
+            color: var(--popular-char-text);
+            border: 1px solid var(--popular-char-border);
+            box-shadow: 0 1px 4px var(--popular-char-shadow);
+        }
+
+        .gs .item {
+            background-color: var(--gs-tag-bg);
+            color: var(--gs-tag-text);
+        }
+
+        .sr .item {
+            background-color: var(--sr-tag-bg);
+            color: var(--sr-tag-text);
+        }
+
+        .zzz-tag {
+            background-color: var(--zzz-tag-bg);
+            color: var(--zzz-tag-text);
+        }
+
+        .waves-tag {
+            background-color: var(--waves-tag-bg);
+            color: var(--waves-tag-text);
+        }
+
+        .tags .item {
+            background-color: var(--misc-tag-bg);
+            color: var(--misc-tag-text);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px 0px 15px 0px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 0.25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body style="{{scaleStyleValue}}">
+    <div class="container-shadow-wrapper">
+        <div class="container">
+            <header class="header">
+                <h1>咕咕牛的查看助手<span>/ISEARCHI/</span></h1>
+                <div class="header-image-container">
+                    {{ if headerImage }}
+                    <img src="{{ headerImage }}" class="header-cute-image">
+                    {{ /if }}
+                </div>
+            </header>
+            
+            <main class="main-content">
+                <div class="section popular-characters">
+                    <div class="section-header">
+                        <div class="title-wrapper">
+                            <div class="title-deco"></div>
+                            <h2>热门角色</h2>
+                        </div>
+                        <span class="example-text">#咕咕牛查看芙宁娜/芙芙/水神</span>
+                    </div>
+                    <div class="item-list">
+                        <span class="item popular-char-tag">芙宁娜</span>
+                        <span class="item popular-char-tag">玛薇卡</span>
+                        <span class="item popular-char-tag">遐蝶</span>
+                        <span class="item popular-char-tag">橘福福</span>
+                        <span class="item popular-char-tag">卡提希娅</span>
+                    </div>
+                </div>
+
+                {{ if gameData.gs }}
+                <div class="section gs">
+                    <div class="section-header">
+                        <div class="title-wrapper">
+                            <div class="title-deco"></div>
+                            <h2>{{ gameData.gs.name }}</h2>
+                        </div>
+                        <span class="example-text">#咕咕牛查看原神 <元素></span>
+                    </div>
+                    <div class="item-list">
+                        {{ each gameData.gs.elements element }}
+                        <span class="item">{{ element }}</span>
+                        {{ /each }}
+                    </div>
+                </div>
+                {{ /if }}
+
+                {{ if gameData.sr }}
+                <div class="section sr">
+                    <div class="section-header">
+                        <div class="title-wrapper">
+                            <div class="title-deco"></div>
+                            <h2>{{ gameData.sr.name }}</h2>
+                        </div>
+                        <span class="example-text">#咕咕牛查看星铁 <元素></span>
+                    </div>
+                    <div class="item-list">
+                        {{ each gameData.sr.elements element }}
+                        <span class="item">{{ element }}</span>
+                        {{ /each }}
+                    </div>
+                </div>
+                {{ /if }}
+
+                <div class="section games-section">
+                    <div class="section-header">
+                        <div class="title-wrapper">
+                            <div class="title-deco"></div>
+                            <h2>更多游戏</h2>
+                        </div>
+                        <span class="example-text">#咕咕牛查看<游戏名></span>
+                    </div>
+                    <div class="item-list">
+                        {{ if gameData.zzz }}<span class="item zzz-tag">绝区零</span>{{ /if }}
+                        {{ if gameData.waves }}<span class="item waves-tag">鸣潮</span>{{ /if }}
+                    </div>
+                </div>
+
+                <div class="section tags">
+                    <div class="section-header">
+                        <div class="title-wrapper">
+                            <div class="title-deco"></div>
+                            <h2>标签</h2>
+                        </div>
+                        <span class="example-text">#咕咕牛查看<标签名></span>
+                    </div>
+                    <div class="item-list">
+                        {{ each tags tagName }}
+                        <span class="item misc-tag">{{ tagName }}</span>
+                        {{ /each }}
+                    </div>
+                </div>
+            </main>
+
+            <footer class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</footer>
+        </div>
+    </div>
+</body>
+
+</html>

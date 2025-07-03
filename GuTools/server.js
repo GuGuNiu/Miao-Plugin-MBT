@@ -59,6 +59,7 @@ const REPO_NAMES = [
   "Miao-Plugin-MBT",
   "Miao-Plugin-MBT-2",
   "Miao-Plugin-MBT-3",
+  "Miao-Plugin-MBT-4",
 ];
 const REPO_ROOTS = REPO_NAMES.map((name) => ({
   name: name,

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>咕咕牛下载进度</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg-color: #212428;
+			--container-bg: #212428;
+			--item-bg: #2d3039;
+			--text-primary: #ffffff;
+			--text-secondary: #a7a9ad;
+			--accent-color: #43d8b8;
+			--accent-glow: rgba(67, 216, 184, 0.2);
+			--success-color: #3cb371;
+			--success-glow: rgba(60, 179, 113, 0.3);
+			--progress-color-from: #43d8b8;
+			--progress-color-to: #00aaff;
+			--progress-glow-color: rgba(67, 216, 184, 0.4);
+		}
+		
+		* {
+			box-sizing: border-box;
+		}
+		
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+		}
+		
+		body {
+			font-family: 'Noto Sans SC', sans-serif;
+			background-color: var(--bg-color);
+			color: var(--text-primary);
+			padding: 10px;
+			width: 560px;
+			margin: 20px auto;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+		}
+		
+		.container-shadow-wrapper {
+			position: relative;
+			z-index: 2;
+			filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+			animation: fadeIn 0.6s ease-out;
+		}
+		
+		.container {
+			background-color: var(--container-bg);
+			border-radius: 16px;
+			border: 1px solid var(--accent-color);
+			box-shadow: 0 0 15px 15px var(--accent-glow);
+			padding: 30px 40px;
+			overflow: hidden;
+			text-align: center;
+			position: relative;
+			background-image: repeating-linear-gradient(45deg, rgba(167, 169, 173, 0.05) 0, rgba(167, 169, 173, 0.05) 1px, transparent 1px, transparent 20px);
+			background-size: 20px 20px;
+			transition: border-color 0.4s, box-shadow 0.4s;
+		}
+		
+		.container.status-complete {
+			--accent-color: var(--success-color);
+			--accent-glow: var(--success-glow);
+			--progress-color-from: #3cb371;
+			--progress-color-to: #57d9a3;
+			--progress-glow-color: rgba(60, 179, 113, 0.5);
+		}
+		
+		.header {
+			margin-bottom: 25px;
+		}
+		
+		.title {
+			font-size: 28px;
+			font-weight: 700;
+			color: var(--text-primary);
+			margin: 0 0 5px 0;
+			letter-spacing: 1px;
+		}
+		
+		.subtitle {
+			font-size: 16px;
+			color: var(--text-secondary);
+			margin: 0;
+		}
+		
+		.node-info {
+			font-size: 14px;
+			color: var(--text-secondary);
+			margin-bottom: 25px;
+			background-color: var(--item-bg);
+			padding: 8px 15px;
+			border-radius: 6px;
+			display: inline-block;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+		
+		.node-info strong {
+			font-family: 'Orbitron', sans-serif;
+			color: var(--accent-color);
+			transition: color 0.4s;
+		}
+		
+		.progress-area {
+			position: relative;
+			margin-bottom: 25px;
+		}
+		
+		.progress-bar-container {
+			height: 24px;
+			background-color: var(--item-bg);
+			border-radius: 6px;
+			overflow: hidden;
+			box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+		
+		.progress-bar-fill {
+			height: 100%;
+			border-radius: 5px;
+			background: linear-gradient(90deg, var(--progress-color-from), var(--progress-color-to));
+			box-shadow: 0 0 12px var(--progress-glow-color);
+			transition: width 0.4s ease-out, background 0.4s, box-shadow 0.4s;
+			position: relative;
+			overflow: hidden;
+		}
+		
+		.progress-bar-fill::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-image: repeating-linear-gradient( -45deg, transparent, transparent 4px, rgba(255, 255, 255, 0.1) 4px, rgba(255, 255, 255, 0.1) 6px);
+		}
+		
+		.progress-percentage {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 48px;
+			font-weight: 700;
+			color: #fff;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			line-height: 1;
+			text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+			mix-blend-mode: overlay;
+			opacity: 0.7;
+		}
+		
+		.status-message {
+			font-size: 18px;
+			font-weight: 500;
+			color: var(--text-primary);
+			height: 27px;
+		}
+		
+		.footer {
+			margin-top: 25px;
+			padding-top: 15px;
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			font-size: 13px;
+			font-family: 'Orbitron', monospace;
+			color: var(--text-secondary);
+		}
+	</style>
+</head>
+
+<body style="{{scaleStyleValue}}">
+	<div class="container-shadow-wrapper">
+		<div class="container {{ statusClass || '' }}">
+			<header class="header">
+				<h1 class="title">{{ title }}</h1>
+				<p class="subtitle">{{ subtitle }}</p>
+			</header>
+
+			<div class="node-info">当前节点: <strong>{{ nodeName }}</strong></div>
+
+			<div class="progress-area">
+				<div class="progress-bar-container">
+					<div class="progress-bar-fill" style="width: {{ progress }}%;"></div>
+				</div>
+				<div class="progress-percentage">{{ progress }}%</div>
+			</div>
+
+			<div class="status-message">{{ statusMessage }}</div>
+
+			<footer class="footer">
+				Miao-Plugin-MBT v{{ pluginVersion }}
+			</footer>
+		</div>
+	</div>
+</body>
+
+</html>

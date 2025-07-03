@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>咕咕牛 - 错误报告</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg-color: #f8f9fa;
+			--container-bg: #ffffff;
+			--card-base-bg: #ffffff;
+			--header-bg: linear-gradient(135deg, #e74c3c, #c0392b);
+			--text-primary: #212529;
+			--text-secondary: #6c757d;
+			--text-highlight: #dc3545;
+			--border-color-subtle: #e9ecef;
+			--shadow-subtle: rgba(0, 0, 0, 0.04);
+			--ai-bg-color: #f8f9fa;
+			--ai-header-bg: #2c3e50;
+			--ai-text-color: #34495e;
+			--code-bg: #f0f0f0;
+			--inline-code-color: #c82333;
+			--error-summary-bg: #fff6f6;
+			--error-summary-border: #f5c6cb;
+		}
+		
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+		
+		body {
+			font-family: 'Noto Sans SC', sans-serif;
+			background-color: var(--bg-color);
+			color: var(--text-primary);
+			padding: 25px;
+			max-width: 850px;
+			margin: 25px auto;
+			font-size: 16px;
+			line-height: 1.7;
+		}
+		
+		.container {
+			background-color: var(--container-bg);
+			border: 2px solid var(--text-highlight);
+			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 0 0 20px 3px rgba(220, 53, 69, 0.2);
+			border-radius: 12px;
+			overflow: hidden;
+		}
+		
+		.header {
+			background: var(--header-bg);
+			padding: 30px 35px;
+			color: #fff;
+			text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+		}
+		
+		.header h1 {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 28px;
+			margin-bottom: 8px;
+		}
+		
+		.main-content {
+			padding: 25px;
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+		}
+		
+		.section {
+			background: var(--card-base-bg);
+			border: 1px solid var(--border-color-subtle);
+			border-radius: 8px;
+			padding: 20px 25px;
+			box-shadow: 0 2px 8px var(--shadow-subtle);
+			position: relative;
+			overflow: hidden;
+		}
+		
+		.section::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 3px;
+			background: linear-gradient(90deg, var(--text-highlight) 0%, rgba(255, 107, 107, 0) 100%);
+			opacity: 0.7;
+		}
+		
+		.section h2 {
+			font-size: 20px;
+			color: var(--text-primary);
+			margin-bottom: 15px;
+			padding-bottom: 8px;
+			position: relative;
+		}
+		
+		.section h2::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 60px;
+			height: 2px;
+			background: var(--text-highlight);
+			border-radius: 1px;
+			opacity: 0.8;
+		}
+		
+		.section.error-summary {
+			background-color: var(--error-summary-bg);
+			border-color: var(--error-summary-border);
+		}
+		
+		.section.ai-solution {
+			background: var(--ai-bg-color);
+			border: 1px solid #d6dbe1;
+			padding: 0;
+			box-shadow: 0 4px 15px rgba(44, 62, 80, 0.08);
+		}
+		
+		.section.ai-solution::before {
+			display: none;
+		}
+		
+		.ai-header {
+			background-color: var(--ai-header-bg);
+			color: #fff;
+			padding: 15px 25px;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			border-radius: 8px 8px 0 0;
+		}
+		
+		.ai-header svg {
+			width: 28px;
+			height: 28px;
+			flex-shrink: 0;
+		}
+		
+		.ai-header h2 {
+			font-size: 20px;
+			color: #fff;
+			margin: 0;
+			padding: 0;
+		}
+		
+		.ai-header h2::after {
+			display: none;
+		}
+		
+		.ai-content {
+			padding: 20px 25px;
+		}
+		
+		.ai-content-inner {
+			font-family: 'Noto Sans SC', sans-serif;
+			font-size: 1em;
+			line-height: 1.8;
+			color: var(--ai-text-color);
+			margin: 0;
+			/* [关键修改] 使用 pre-line 来保留换行符并智能换行 */
+			white-space: pre-line;
+			overflow-wrap: break-word;
+		}
+		
+		.ai-content-inner strong {
+			font-weight: 600;
+			color: #2c3e50;
+		}
+		
+		.error-message-content {
+			overflow-wrap: break-word;
+		}
+		
+		.error-message-content .code {
+			font-family: monospace;
+			background-color: #f1f1f1;
+			padding: 3px 8px;
+			border-radius: 4px;
+			color: var(--inline-code-color);
+			font-size: 0.9em;
+		}
+		
+		.suggestions-list {
+			list-style-type: disc;
+			padding-left: 20px;
+			color: var(--text-secondary);
+			line-height: 1.8;
+		}
+		
+		.suggestions-list li {
+			margin-bottom: 8px;
+		}
+		
+		.details-code {
+			background: var(--code-bg);
+			border: 1px solid rgba(0, 0, 0, 0.1);
+			border-radius: 6px;
+			padding: 12px 15px;
+			max-height: 250px;
+			overflow-y: auto;
+			white-space: pre-wrap;
+			overflow-wrap: break-word;
+			font-family: 'SF Mono', 'Consolas', monospace;
+			font-size: 14px;
+			color: #343a40;
+		}
+		
+		footer {
+			text-align: center;
+			padding: 0px 0px 20px 0px;
+			font-size: 14px;
+			color: var(--text-secondary);
+			font-family: 'Orbitron', monospace;
+		}
+	</style>
+</head>
+
+<body style="{{scaleStyleValue}}">
+	<div class="container">
+		<header class="header">
+			<h1>操作失败: {{ operationName }}</h1>
+			<p>咕咕牛在执行任务时遇到了一个问题。</p>
+		</header>
+		<main class="main-content">
+			<div class="section error-summary">
+				<h2>错误摘要</h2>
+				<div class="error-message-content">
+					{{ errorMessage }} <span class="code">({{ errorCode }})</span>
+				</div>
+			</div>
+
+			<div class="section ai-solution">
+				<div class="ai-header">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff">
+						<path d="M19.5 10c.17 0 .33.01.5.02C19.99 7.12 17.76 4.62 15 4.07V2h-2v2.07C10.24 4.62 8.01 7.12 8 10.01c.17-.01.33-.02.5-.02H12v2H9.5c-.5 0-1 .01-1.5.02C8.01 15.38 10.24 18 13 18.07V22h2v-3.93c2.76-.55 4.99-3.05 5-5.94-.17.01-.33.02-.5.02H15v-2h4.5zM4.5 10H7v2H4.5c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4c0 .17-.01.33-.02.5C8.01 7.12 5.76 4.62 3 4.07V2H1v2.07C3.76 4.62 5.99 7.12 6 10.01c-.17-.01-.33-.02-.5-.02z"
+						/>
+					</svg>
+					<h2>云露智能体-错误分析&解决方案</h2>
+				</div>
+				<div class="ai-content">
+					<div class="ai-content-inner">{{@ aiSolutionText }}</div>
+				</div>
+			</div>
+
+			{{ if suggestions && suggestions.length > 0 }}
+			<div class="section">
+				<h2>常用解决方案</h2>
+				<ul class="suggestions-list">
+					{{ each suggestions item }}
+					<li>{{@ item }}</li>
+					{{ /each }}
+				</ul>
+			</div>
+			{{ /if }} {{ if contextInfo && contextInfo.trim() !== '（无额外上下文信息）' }}
+			<div class="section">
+				<h2>执行上下文</h2>
+				<div class="details-code">{{ contextInfo }}</div>
+			</div>
+			{{ /if }} {{ if stackTrace && stackTrace.trim() !== '（调用栈信息丢失，大概是飞升了）' }}
+			<div class="section">
+				<h2>技术细节 - 调用栈</h2>
+				<div class="details-code">{{ stackTrace }}</div>
+			</div>
+			{{ /if }}
+
+		</main>
+		<footer class="footer">Miao-Plugin-MBT v{{ pluginVersion }} - Error Report</footer>
+	</div>
+</body>
+
+</html>
