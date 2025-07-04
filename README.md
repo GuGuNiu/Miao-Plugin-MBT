@@ -1,174 +1,173 @@
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%" alt="咕咕牛图库 Banner"/>
+    <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="800" alt="咕咕牛图库 Banner"/>
   </a>
 </p>
 
 <p align="center">
-    <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/graphs/contributors"><img src="https://img.shields.io/github/contributors/GuGuNiu/Miao-Plugin-MBT?color=orange" alt="Contributors"></a>
-    <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?color=yellow" alt="Stars"></a>
-    <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Yunzai--Bot-✓-blue.svg" alt="Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-✓-green.svg" alt="Trss-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
 </p>
 
-## 项目介绍
+# 前言
 
-- **完美支持 `Miao-Plugin` / `ZZZ-Plugin` / `Waves-Plugin` 插件**
-- **提供：✅️ 原神 & ✅️ 崩坏：星穹铁道 & ✅️ 鸣潮 & ✅️ 绝区零**
-- **高度可控**：提供净化等级、图库开关、AI/彩蛋/横屏图过滤等多种设置项。
-- **智能管理**：内置强大的图库管理器，支持更新、配置、查看状态，并拥有AI错误诊断能力。
-- **原图拦截**：独创**Sleeper Agent**模式，智能拦截 `#原图` 指令，使用安全包装发送，有效规避风控。
-- **模糊匹配**：支持各个游戏的角色主名和别名的模糊匹配,无需输入完整名字。
+**咕咕牛图库 (GuGuNiu Gallery)** 是为 `Yunzai-Bot` 设计的高性能、高可控的面板图库扩展插件。提供了海量的游戏角色图片资源，更内置了一套强大的智能管理系统，旨在为提供稳定、流畅且安全的图库体验。所有功能逻辑代码都素互相交叉，代码内配置了10把不同的互斥锁和大量异步逻辑和分散到处都素的错误处理器以及大量的静态属性，如果有问题最好是提交Issues而不是尝试修改，除非你真的准备好面对草莓塔了~
 
-##  危险面板图专项设定——净化等级
+插件已经做到了95%的场景无人值守的自主运维，”操作自动化”、“流程自动化”和“智能自动化”三个层面基本是无需人工介入干预。
+
+## ✨ 核心功能
+
+- **跨插件无缝支持**: 完美兼容 `Miao-Plugin`、`ZZZ-Plugin` 及 `waves-plugin`，自动同步并替换面板图。
+- **丰富的游戏覆盖**: 提供 **原神、崩坏：星穹铁道、绝区零、鸣潮** 的高质量图库资源。
+- **高度可定制化**: 内置净化等级、AI/彩蛋/横屏图过滤、渲染精度调节等多种配置项，满足不同需求。
+- **智能管理系统**:
+  - **AI 错误诊断**: 插件出错时，自动生成包含**原因分析**和**解决方案**的图文报告。
+  - **智能节点切换**: 下载/更新时自动探测网络，选择最优线路，并在失败时自动切换。
+  - **系统负载保护**: 独有的三级负载防御系统，保障低配设备稳定运行。
+- **模糊匹配与索引**: 支持角色名与别名的模糊匹配，并采用高性能内存索引，实现秒级响应。
+
+---
+
+## 🛠️ 功能详解
+
+### 🛡️ 净化等级与内容过滤
 
 > [!WARNING]
-> 咕咕牛提供了面板图净化功能，协助你避免账户封禁风险。
+> 为了应对潜在的平台风控，咕咕牛提供了一套强大的内容净化系统。强烈建议您根据自身需求配置。
 
 使用指令 `#咕咕牛设置净化等级 <等级>` 来调整，等级定义如下：
 
-| 等级 | 效果 | 详细说明 |
-|:---:|:---|:---|
-| **0** | **无过滤** | 显示所有图片。 |
-| **1** | **常规净化** | 过滤 R18 内容，但保留部分低风险的暗示性图片。 |
-| **2** | **最高净化** | 过滤所有被标记的敏感内容。 |
+| 等级 | 效果       | 详细说明                                         |
+|:----:|:-----------|:-------------------------------------------------|
+| **0**  | **无过滤**   | 显示所有图片，风险自负。                         |
+| **1**  | **常规净化** | 过滤 R18 内容，但保留部分低风险的暗示性图片 (Px18)。 |
+| **2**  | **最高净化** | 过滤所有被标记为 R18 和 Px18 的敏感内容。           |
 
--   **P18 定义**: 角色非主观展示身体，无露点，存在低度挑逗或暗示性动作。
--   **R18 定义**: 明显主观展示身体，存在关键部位的刻意裸露或露点，具有高度挑逗或暗示性。
--   **凡事总有例外，部分图片主观判断因人而异可能会让你觉得不适合展示。**
+-   **Px18**: 指轻微性暗示或低度挑逗性图片，无关键部位裸露。
+-   **Rx18**: 指存在关键部位刻意裸露或具有高度挑逗性的图片。
+-   AI生成图指：由ai制作的图片
+-   彩蛋图指：由咕咕牛图库内置的自控彩蛋非各个插件的彩蛋逻辑
+-   横屏图指：全屏铺满的面板图
 
-## 🛡️ 负载防御
+支持你的个性化需求多维度的图片管理如 **#咕咕牛封禁/解禁xx**<br>
+此外还可以通过 `#咕咕牛设置` 指令对 **AI生成图、彩蛋图、横屏图** 进行独立开关。
+
+### ⚙️ 负载防御系统
 
 > [!NOTE]
-> 为保障在低配置设备上高强度使用资源的稳定性，内置了一套智能的负载管理防御系统。
+> 为保障在低性能设备或高强度使用场景下的稳定性，插件内置了智能负载管理系统。
 
-管理器提供两种运行模式：**高速模式** (默认) 和 **低负载模式**。
-如果你在使用过程中出现了卡死，那么强烈建议开启低负载并且选择最佳的防御策略。
+管理器提供两种运行模式，可通过 `#咕咕牛设置低负载 [开启|关闭]` 切换：
 
--   **高速模式**: 并发处理任务，响应速度最快，适合性能较好的设备。
+-   **高速模式 (默认)**: 并发处理任务，响应最快，适合性能较好的设备。
 -   **低负载模式**: 串行处理任务，牺牲部分速度以换取极致的稳定性。
 
-在**低负载模式**下，你可以进一步设置**负载等级**来调整防御策略的严格程度。
+在**低负载模式**下，您还可以通过 `#咕咕牛设置负载等级 [1-3]` 调整防御策略的严格程度：
 
-| 等级 | 名称 | 效果 | 配置 |
-|:---:|:---|:---|:---|
-| **1** | **标准** | 默认等级，提供适度的指令冷却和资源监控。 |(15秒CD, 阈值: CPU>90% 且 内存>85%)|
-| **2** | **保守** | 更敏感的冷却时间和资源监控。 |(30秒CD, 阈值: CPU>85% 且 内存>80%)|
-| **3** | **极致** | 最严格、最大限度防止机器人卡顿或崩溃。 |(60秒CD, 阈值: CPU>75% 或 内存>75%)|
+| 等级 | 名称 | 效果                                           |
+|:----:|:-----|:-----------------------------------------------|
+| **1**  | **标准** | 提供适度的指令冷却和资源监控。                 |
+| **2**  | **保守** | 更长的冷却时间和更敏感的资源监控。             |
+| **3**  | **极致** | 最严格的策略，最大限度防止机器人卡顿或崩溃。   |
 
--   **切换模式**: `#咕咕牛设置低负载[开启/关闭]`
--   **调整等级**: `#咕咕牛设置负载等级[1/2/3]` (仅在低负载模式开启时生效)
-
-## 🕵️ 原图拦截 
+### 🕵️ 原图拦截
 
 > [!TIP]
-> 开启后，插件会静默拦截 `#原图` 指令，如果识别到图片来自咕咕牛图库，将以更安全的“合并转发”形式发送，有效避免因发送原图导致的风控问题。
+> 开启后，插件会静默拦截 `#原图` 指令。若识别到图片来自咕咕牛图库，将以更安全的“合并转发”形式发送，有效规避风控。
+- **开关指令**: `#咕咕牛设置原图拦截 [开启|关闭]`
 
-- **开关指令**: `#咕咕牛设置原图拦截[开启/关闭]`
-- **默认状态**: 开启。
-
-## 📩 高级合并消息
+### 📩 高级合并消息
 
 > [!NOTE]
-> 在发送多张图片或多条信息时（如 `#咕咕牛查看 标签`），此功能可以将所有内容打包成一个可层层展开的“高级”合并消息。
+> 在发送大量图片或信息时（如 `#咕咕牛查看` 标签），此功能可将所有内容打包成一个可层层展开的“高级”合并消息，使消息列表更整洁。
 
-- **开关指令**: `#咕咕牛设置高级合并[开启/关闭]`
-- **兼容性注意**:
-  - 在 **手机端** 可能无法正常展开内层消息。
-  - 在 **Lagrange** 等框架上**很可能会失效**，建议关闭。
-  - 在 **NapCat** 等框架上通常可以正常工作。
+- **开关指令**: `#咕咕牛设置高级合并 [开启|关闭]`
+- **兼容性提示**: 此功能在 **手机端** 或 **Lagrange** 等框架上可能无法正常展开，建议根据使用环境决定是否开启。
+
+---
 
 ## 🤔 常见问题 (Q&A)
 
 -   **Q: 部分仓库下载失败怎么办？**
-    -   **A:** 不用担心，管理器支持断点续传。你可以再次发送 `#下载咕咕牛` 即可继续未完成的下载。
+    -   **A:** 管理器支持断点续传。只需再次发送 `#下载咕咕牛`，即可继续未完成的下载任务。
 
--   **Q: 插件报错或运行不正常怎么办？**
-    -   **A:** 可能是文件损坏或版本过旧。请先尝试重新执行安装指令覆盖旧文件，然后重启机器人。
+-   **Q: 插件报错或运行不正常？**
+    -   **A:** 首先尝试执行 `#更新咕咕牛` 指令覆盖文件，然后**重启机器人**。90% 的问题都可以通过此方法解决。若问题依旧，请携带由 AI 生成的错误报告图前往 Issues 反馈。
 
--   **Q: 管理器出现奇怪的问题，指令没反应？**
-    -   **A:** 这通常是临时的时序错乱导致，**重启机器人** 即可解决绝大部分问题。
+-   **Q: 为什么我的机器人没有 ZZZ-Plugin 或 waves-plugin，但也能下载绝区零和鸣潮的图？**
+    -   **A:** 咕咕牛图库独立于这些插件，即使没有安装它们，图库资源也会被下载。但只有在安装了对应插件后，这些图片才会被实际应用到面板上。
 
-## 界面一览
+---
+
+## 🎨 界面一览
 
 <p align="center">
-  <i>咕咕牛图库管理器的核心界面截图</i>
+  <i>咕咕牛图库管理器 v5.0 核心界面预览</i>
   <br><br>
   <img src="https://s2.loli.net/2025/07/01/Lt7Aw6gSGv4ZeCD.webp" width="100%">
 </p>
 
 ---
 
-## 管理器的安装
+## ⚠️ 使用须知
 
-在你的机器人项目 **根目录** 下，打开终端并执行以下任一指令即可安装管理器：
+-   本项目基于 `MIT` 协议开源，仅供学习交流使用，**严禁用于任何商业用途**。
+-   图库资源均收集自公开网络，版权归原作者所有。如内容涉及侵权，请立即联系作者删除。
 
-**✅ 推荐源 (使用 Jsdelivr CDN)**
-<br>
-  
+## 🚀 快速上手
+
+### 1. 安装管理器
+
+在机器人项目**根目录**下，打开终端并执行以下任一指令：
+
+**✅ 主源 (Jsdelivr CDN)**
 ```bash
 curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js"
 ```
 
-<br>
-
-**☑️ 备用源 (使用 Moeyy-GitHub Raw)**
-<br>
-  
+**☑️ 备用源 (GitHub Raw 代理)**
 ```bash
 curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://github.moeyy.xyz/https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js"
 ```
-
 > [!TIP]
->  安装成功并重启机器人后，发送 `#下载咕咕牛` 指令，即可开始下载并自动应用！
+> 安装成功后，请**重启机器人**以加载插件。
 
-##  使用指南
+### 2. 下载图库资源
 
-发送 `#咕咕牛帮助` 查看所有可用指令和功能说明。
+机器人启动后，私聊或在群内发送以下指令，即可开始下载图库：
+```
+#下载咕咕牛
+```
+管理器将自动测速并下载所有仓库。下载完成后，图库将自动启用。
 
-<details> <summary><strong>👉 点击展开/折叠帮助图</strong></summary>
-<div align="center">
-  <br>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://s2.loli.net/2025/05/05/zirbKvjTAByl3HS.webp" 
-         alt="帮助图" 
-         width="100%" 
-         style="display: block; border-radius: 8px;">
-  </a>
-</div>
-</details>
+### 3. 查看帮助
 
-## ⚠️ 使用须知
+发送 `#咕咕牛帮助` 获取完整的指令列表和功能说明。
 
-❗ **本项目仅供学习交流使用，严禁用于任何商业用途。**
-
-❗ **如图库内容涉及侵权，请立即联系作者进行删除。**
-
-## 📦 四仓分流说明
-
-为提升下载速度和稳定性，咕咕牛将图库资源分散在四个不同的 GitHub 仓库中。
-
-[![一号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true)](../../../Miao-Plugin-MBT)
-[![二号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-2&show_owner=true)](../../../Miao-Plugin-MBT-2)  
-[![三号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-3&show_owner=true)](../../../Miao-Plugin-MBT-3)
-[![四号仓库](https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true)](../../../Miao-Plugin-MBT-4)
-
+---
 
 ## 💐 特别鸣谢
 
 感谢以下平台为本图库提供丰富的图片资源：
+[Pixiv](https://www.pixiv.net/) · [Arca.live](https://arca.live) · [小红书](https://www.xiaohongshu.com/explore) · [NGA](https://nga.178.com/) · [X (Twitter)](https://x.com)
 
--   [Pixiv](https://www.pixiv.net/)
--   [Arca.live (韩国阿卡社区)](https://arca.live)
--   [小红书](https://www.xiaohongshu.com/explore)
--   [NGA (艾泽拉斯国家地理论坛)](https://nga.178.com/)
--   [X (原推特)](https://x.com)
+## 📦 仓库分流
+
+为提升下载速度和稳定性，咕咕牛将图库资源分散在四个不同的 GitHub 仓库中。
+
+<p align="center">
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true&theme=transparent" alt="Repo 1"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-2"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-2&show_owner=true&theme=transparent" alt="Repo 2"></a>
+  <br>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-3"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-3&show_owner=true&theme=transparent" alt="Repo 3"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-4"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true&theme=transparent" alt="Repo 4"></a>
+</p>
 
 ---
-
-<div align="left"> 
+<p align="left">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
     <img src="https://profile-counter.glitch.me/Miao-Plugin-MBT/count.svg" alt="Visitor Count">
   </a>
-</div>
-
----
+</p>
