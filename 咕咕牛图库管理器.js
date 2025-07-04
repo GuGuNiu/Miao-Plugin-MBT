@@ -2981,7 +2981,7 @@ class MiaoPluginMBT extends plugin {
       if (!isScheduled && e) await MiaoPluginMBT.ReportError(e, "更新后设置", error, "", logger);
       else if (isScheduled) { const Report = MiaoPluginMBT.FormatError("更新后设置(定时)", error, "", logPrefix); logger.error(`${Default_Config.logPrefix}--- 定时更新后设置失败 ----\n${Report.summary}\n${Report.suggestions}\n---`); }
     }
-    MiaoPluginMBT._startConfigWatcher(logger);
+    //MiaoPluginMBT._startConfigWatcher(logger);
   }
 
   static async TestProxies(baseRawUrl = RAW_URL_Repo1, logger = global.logger || console) {
@@ -3035,7 +3035,7 @@ class MiaoPluginMBT extends plugin {
     const results = await Promise.all(testPromises);
     return results;
   }
-  
+
   static async applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger = global.logger || console) {
     const logPrefix = Default_Config.logPrefix;
 
@@ -3056,20 +3056,20 @@ class MiaoPluginMBT extends plugin {
         logger.error(`${logPrefix}CRITICAL: Git探测和HTTP测速均全部失败，无法确定任何可用节点！`);
         return [];
       }
-      
+
       //logger.warn(`${logPrefix}备用下载顺序 (仅HTTP): ${fallbackNodes.map(n => n.name).join(' -> ')}`);
       return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
     }
 
     const finalNodeList = allHttpTestResults.map(node => {
-        const gitResult = gitEliteNodesMap.get(node.name) || { success: false, duration: Infinity };
-        const isGitPreferred = gitResult.success;
-        return {
-            ...node,
-            gitResult,
-            protocol: isGitPreferred ? 'GIT' : 'HTTP',
-            latency: isGitPreferred ? gitResult.duration : node.speed
-        }
+      const gitResult = gitEliteNodesMap.get(node.name) || { success: false, duration: Infinity };
+      const isGitPreferred = gitResult.success;
+      return {
+        ...node,
+        gitResult,
+        protocol: isGitPreferred ? 'GIT' : 'HTTP',
+        latency: isGitPreferred ? gitResult.duration : node.speed
+      }
     });
 
     finalNodeList.sort((a, b) => {
@@ -3087,15 +3087,15 @@ class MiaoPluginMBT extends plugin {
     const nodesToTry = finalNodeList.filter(n => n.gitResult.success);
 
     if (nodesToTry.length === 0) {
-        //logger.warn(`${logPrefix}虽然有Git探测成功，但排序后无可用节点，强制启用HTTP备用策略。`);
-        const fallbackNodes = allHttpTestResults
-            .filter(r => r.speed !== Infinity)
-            .sort((a, b) => a.speed - b.speed);
-        if (fallbackNodes.length > 0) {
-            return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
-        }
+      //logger.warn(`${logPrefix}虽然有Git探测成功，但排序后无可用节点，强制启用HTTP备用策略。`);
+      const fallbackNodes = allHttpTestResults
+        .filter(r => r.speed !== Infinity)
+        .sort((a, b) => a.speed - b.speed);
+      if (fallbackNodes.length > 0) {
+        return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
+      }
     }
-    
+
     //logger.info(`${logPrefix}最终下载顺序: ${nodesToTry.map(n => n.name).join(' -> ')}`);
     return nodesToTry;
   }
@@ -5841,7 +5841,7 @@ class MiaoPluginMBT extends plugin {
 
     return true;
   }
-  
+
   async TriggerError(e) {
     if (!e.isMaster) return e.reply("仅限主人测试。", true);
     const match = e.msg.match(/#咕咕牛触发(?:\s*([a-zA-Z0-9_-]+))?/i);
