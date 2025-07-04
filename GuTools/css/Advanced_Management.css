@@ -1,7 +1,3 @@
-/* ================================= */
-/* == 高级管理 (#advancedManagementPane) == */
-/* ================================= */
-
 #advancedManagementPane {
     padding: 20px;
     background-color: #fdf2f2;
@@ -12,26 +8,21 @@
     flex-direction: column;
 }
 
-/* 功能区域容器 */
 .adv-mgmt-content {
     display: flex;
     flex-direction: column;
     gap: 30px;
-    /* 填充父 flex 容器的剩余空间 */
     flex-grow: 1;
-    /* 允许内容区域独立滚动 */
     overflow-y: auto;
     padding: 5px;
 }
 
-/* 功能分区 */
 .adv-mgmt-section {
     padding: 25px;
     background-color: #ffffff;
     border-radius: 16px;
     border: 1px solid #fee2e2;
     box-shadow: 0 5px 15px rgba(200, 0, 0, 0.08);
-    /* 防止分区在 flex 布局中被压缩 */
     flex-shrink: 0;
 }
 
@@ -41,7 +32,6 @@
     box-shadow: 0 5px 15px rgba(220, 38, 38, 0.15);
 }
 
-/* 分区标题 */
 .section-title {
     font-size: 1.5em;
     font-weight: 700;
@@ -57,14 +47,12 @@
     border-bottom-color: #f87171;
 }
 
-/* 工具卡片网格布局 */
 .tool-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
 }
 
-/* 单个工具卡片 */
 .tool-card {
     background-color: #fef9c3;
     padding: 20px;
@@ -92,7 +80,6 @@
     box-shadow: 5px 5px 0px #ff6b81;
 }
 
-/* 卡片内标题 */
 .tool-card h4 {
     font-size: 1.2em;
     font-weight: 700;
@@ -107,12 +94,10 @@
     border-bottom-color: #f9a8d4;
 }
 
-/* 卡片内描述 */
 .tool-description {
     font-size: 0.9em;
     color: #a16207;
     margin: 0 0 15px 0;
-    /* 描述文本填充卡片内剩余垂直空间 */
     flex-grow: 1;
     line-height: 1.5;
 }
@@ -121,7 +106,6 @@
     color: #9d174d;
 }
 
-/* 卡片内按钮 */
 .tool-card .tool-button-adv {
     padding: 8px 16px;
     font-size: 0.9em;
@@ -151,7 +135,6 @@
 
 .tool-card .tool-button-adv:disabled,
 .tool-card .tool-button-adv.disabled {
-    /* TODO: 审视下方 !important 标记的必要性 */
     background-color: #f1f3f5 !important;
     color: #adb5bd !important;
     border-color: #e9ecef !important;
@@ -197,7 +180,6 @@
     box-shadow: 3px 3px 0px #fbbf24;
 }
 
-/* 卡片内输出区域 */
 .tool-card .tool-output {
     margin-top: 15px;
     border-top: 1px dashed #fde68a;
@@ -230,7 +212,6 @@
     padding: 10px;
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 0.85em;
-    /* 允许用户垂直调整文本区域大小 */
     resize: vertical;
     box-sizing: border-box;
 }

@@ -1,483 +1,645 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛更新报告</title>
+    <title>咕咕牛的更新报告</title>
     <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron-Medium';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'AaJiJiaHei';
+            font-style: normal;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/AaJiJiaHei-2.woff2') format('woff2');
+        }
+
         :root {
-            --theme-primary-color: #673ab7;
-            --theme-secondary-color: #7e57c2;
-            --theme-light-purple: #b39ddb;
-            --theme-lighter-purple: #d1c4e9;
-            --theme-accent-color: #9575cd;
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --container-border: #dddddd;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #adb5bd;
+            --accent-color: #333333;
+            --card-1-color: #20c997;
+            --card-2-color: #1395ff;
+            --card-3-color: #5a5a5a;
+            --card-4-color: #ff9838;
+            --card-text-color: #ffffff;
+            --log-bg: #fdfdff;
+            --log-border: #f1f3f5;
+            --success-color: #28a745;
+            --fail-color: #dc3545;
+            --force-sync-color: #e67e22;
+            --no-change-color: #6c757d;
+            --accent-glow: rgba(0, 0, 0, 0.4);
+        }
 
-            --theme-bg-start: #ede7f6;
-            --theme-bg-end: #f3e5f5;
+        * {
+            box-sizing: border-box;
+        }
 
-            --text-color-base: #373a3c;
-            --text-color-muted: #55595c;
-            --text-color-subtle: #818a91;
-            --text-color-error: #e53935;
-
-            --container-glow-border-color: var(--theme-accent-color);
-            --container-glow-color-intense: rgba(103, 58, 183, 0.35);
-            --container-glow-color-soft: rgba(126, 87, 194, 0.25);
-            --container-glow-blur-near: 12px;
-            --container-glow-spread-near: 4px;
-            --container-glow-blur-far: 28px;
-            --container-glow-spread-far: 10px;
-            --base-shadow-color-container: rgba(0, 0, 0, 0.05);
-
-            --block-bg-start: #f9f8fc;
-            --block-bg-end: #ffffff;
-            --block-border-color: var(--theme-lighter-purple);
-            --block-shadow-color: rgba(103, 58, 183, 0.1);
-
-            --h1-color: var(--theme-primary-color);
-            --h1-border-color: var(--theme-light-purple);
-            --h1-text-shadow: 0 1px 2px rgba(103, 58, 183, 0.2);
-
-            --h2-color: var(--theme-secondary-color);
-            --h2-border-color: var(--theme-accent-color);
-
-            --status-ok-color: #4caf50;
-            --status-fail-color: var(--text-color-error);
-            --status-no-change-color: var(--theme-accent-color);
-            --status-skipped-color: #9e9e9e;
-            --status-force-synced-color: #d32f2f;
-
-            --error-details-bg: rgba(229, 57, 53, 0.05);
-            --error-details-text: var(--status-fail-color);
-            --error-details-border: var(--status-fail-color);
-            --error-details-strong: #b71c1c;
-
-            --log-title-color: var(--text-color-muted);
-            --log-text-color: var(--text-color-base);
-            --commit-entry-border: var(--theme-lighter-purple);
-
-            --summary-default-bg-start: var(--block-bg-start);
-            --summary-default-bg-end: var(--theme-bg-start);
-            --summary-default-border: var(--theme-primary-color);
-            --summary-default-text: var(--text-color-base);
-
-            --summary-no-changes-bg: var(--theme-lighter-purple);
-            --summary-no-changes-border: var(--theme-secondary-color);
-            --summary-no-changes-text: var(--text-color-muted);
-
-            --summary-has-errors-bg: rgba(229, 57, 53, 0.08);
-            --summary-has-errors-border: var(--status-fail-color);
-            --summary-has-errors-text: var(--status-fail-color);
-
-            --base-font-size: 14px;
-            --font-family-main: 'CuteFont', sans-serif;
-            --font-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        html,
+        body {
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            font-family: var(--font-family-main);
-            max-width: 520px;
-            margin: 30px auto;
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                linear-gradient(90deg, rgba(0, 0, 0, 0.013) 1px, transparent 1px),
+                linear-gradient(rgba(0, 0, 0, 0.013) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-primary);
             padding: 20px;
-            background: linear-gradient(145deg, var(--theme-bg-start) 0%, var(--theme-bg-end) 100%);
-            color: var(--text-color-base);
-            font-size: var(--base-font-size);
-            line-height: 1.6;
-            box-sizing: border-box;
+        }
+
+        .container-shadow-wrapper {
             position: relative;
-            overflow-x: hidden;
+            z-index: 2;
+            filter: drop-shadow(0 10px 20px rgba(108, 117, 125, 0.2));
+        }
+
+        .wrapper {
+            width: 760px;
+            margin: 0 auto;
+            position: relative;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.96);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid var(--container-glow-border-color);
-            box-shadow: 0 1px 4px var(--base-shadow-color-container), 0 0 var(--container-glow-blur-near) var(--container-glow-spread-near) var(--container-glow-color-intense), 0 0 var(--container-glow-blur-far) var(--container-glow-spread-far) var(--container-glow-color-soft);
             position: relative;
-            z-index: 1;
+            background-color: var(--container-bg);
+            border: 1px solid var(--container-border);
+            border-radius: 18px;
+            padding: 25px 30px;
+            clip-path: polygon(
+                40px 0,
+                calc(100% - 40px) 0,
+                100% 40px,
+                100% calc(100% - 40px),
+                calc(100% - 40px) 100%,
+                40px 100%,
+                0 calc(100% - 40px),
+                0 40px
+            );
+            -webkit-backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
         }
 
-        .container::before {
-            content: '✨';
+        .glow-border {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 28px;
-            opacity: 0.7;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 22px;
+            box-shadow: 0 0 15px 5px var(--accent-glow);
+            z-index: -1;
+            overflow: visible;
         }
 
-        .container::after {
-            content: '🔮';
+        .glow-border .glow-clip-inner {
+            width: 100%;
+            height: 100%;
+            background: var(--container-bg);
+            border: 3px solid var(--accent-color);
+            border-radius: 22px;
+            clip-path: polygon(
+                40px 0,
+                calc(100% - 40px) 0,
+                100% 40px,
+                100% calc(100% - 40px),
+                calc(100% - 40px) 100%,
+                40px 100%,
+                0 calc(100% - 40px),
+                0 40px
+            );
+        }
+
+        .trapezoid-deco {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 28px;
-            opacity: 0.7;
-            transform: rotate(-12deg);
+            z-index: 0;
+            background-color: var(--accent-color);
+            box-shadow: 0 5px 20px -5px var(--accent-glow);
         }
 
-        h1 {
-            text-align: center;
-            color: var(--h1-color);
-            margin: 0 0 25px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--h1-border-color);
-            font-size: 26px;
-            font-weight: bold;
-            text-shadow: var(--h1-text-shadow);
-            position: relative;
+        .trapezoid-deco::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: inherit;
+            opacity: 0.5;
+            transform: translate(5px, 5px);
+            filter: blur(3px);
+            z-index: -1;
         }
 
-        .update-details-block {
-            margin-bottom: 20px;
-            padding: 18px;
-            border-radius: 14px;
-            background: linear-gradient(to bottom, var(--block-bg-start), var(--block-bg-end));
-            border: 1px solid var(--block-border-color);
-            box-shadow: 0 2px 8px var(--block-shadow-color);
+        .trapezoid-deco.top-left {
+            width: 80px;
+            height: 80px;
+            top: -10px;
+            left: -10px;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
         }
 
-        h2 {
-            color: var(--h2-color);
-            margin: 0 0 12px;
-            border-left: 4px solid var(--h2-border-color);
-            padding-left: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
+        .trapezoid-deco.top-right {
+            width: 80px;
+            height: 80px;
+            top: -10px;
+            right: -10px;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
         }
 
-        h2 .icon {
-            margin-right: 6px;
-            vertical-align: -3px;
-            font-size: 17px;
+        .trapezoid-deco.bottom-right {
+            width: 80px;
+            height: 80px;
+            bottom: -10px;
+            right: -10px;
+            clip-path: polygon(100% 100%, 0 100%, 100% 0);
         }
 
-        ul {
-            list-style: none;
-            padding-left: 0px;
-            margin-top: 5px;
-            margin-bottom: 0;
+        .trapezoid-deco.bottom-left {
+            width: 80px;
+            height: 80px;
+            bottom: -10px;
+            left: -10px;
+            clip-path: polygon(0 100%, 100% 100%, 0 0);
         }
 
-        li {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--theme-lighter-purple);
-            min-height: 18px;
-        }
-
-        li:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .repo-status-line {
+        .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
+            align-items: baseline;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--container-border);
         }
 
-        .label {
-            color: var(--text-color-muted);
-            margin-right: 8px;
-            white-space: nowrap;
-            font-size: 0.95em;
-            font-weight: normal;
+        .title {
+            display: inline-block;
+            position: relative;
+            font-family: 'Noto Sans SC';
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-title);
+            padding-bottom: 8px;
         }
 
-        .value {
-            font-weight: bold;
+        .title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40%;
+            height: 3px;
+            background-color: var(--card-2-color);
+            border-radius: 2px;
         }
 
-        .status-ok {
-            color: var(--status-ok-color);
-        }
-
-        .status-fail {
-            color: var(--status-fail-color);
-        }
-
-        .status-no-change {
-            color: var(--status-no-change-color);
-        }
-
-        .status-skipped {
-            color: var(--status-skipped-color);
-        }
-
-        .status-force-synced {
-            color: var(--status-force-synced-color);
-            font-weight: bold;
-        }
-
-        .error-details {
-            font-family: var(--font-monospace);
-            font-size: 12px;
-            white-space: pre-wrap;
-            word-break: break-all;
-            color: var(--error-details-text);
-            margin-top: 6px;
-            padding: 10px;
-            background-color: var(--error-details-bg);
-            border-radius: 6px;
-            border-left: 3px solid var(--error-details-border);
-        }
-
-        .error-details strong {
-            color: var(--error-details-strong);
-        }
-
-        .log-details {
-            margin-top: 6px;
-        }
-
-        .log-details h3 {
-            color: var(--text-color-muted);
-            margin-bottom: 4px;
-            font-size: var(--base-font-size);
+        .title span {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-left: 10px;
             font-weight: 500;
         }
 
+        .report-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .repo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .repo-item {
+            display: flex;
+            gap: 0;
+            align-items: stretch;
+            background-color: rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 2px solid var(--container-border);
+            position: relative;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .repo-item::before {
+            content: '';
+            position: absolute;
+            background: var(--repo-color, #ccc);
+            filter: blur(3px);
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+
+        .repo-item-1 {
+            --repo-color: var(--card-1-color);
+        }
+
+        .repo-item-2 {
+            --repo-color: var(--card-2-color);
+        }
+
+        .repo-item-3 {
+            --repo-color: var(--card-3-color);
+        }
+
+        .repo-item-4 {
+            --repo-color: var(--card-4-color);
+        }
+
+        .repo-item.status-fail {
+            border-color: var(--fail-color);
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.15);
+        }
+
+        .repo-item.status-force-synced {
+            border-color: var(--force-sync-color);
+            box-shadow: 0 4px 20px rgba(253, 126, 20, 0.2);
+        }
+
+        .repo-card {
+            flex: 0 0 180px;
+            padding: 20px 15px;
+            color: var(--card-text-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            background: var(--repo-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .card-content {
+            z-index: 1;
+        }
+
+        .card-number {
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 17px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .card-subtitle {
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .card-status {
+            margin-top: 20px;
+            display: inline-block;
+            width: 85%;
+            padding: 9px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.25);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .repo-item-4 .repo-card {
+            color: #ffffff;
+        }
+
+        .log-section {
+            flex-grow: 1;
+            padding: 15px 20px;
+        }
+
+        .log-section .special-status-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 150px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 50px;
+            letter-spacing: 40px;
+            font-weight: 1000;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+
+        .log-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .log-status {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+
+        .status-fail {
+            color: var(--fail-color);
+            font-weight: 700;
+        }
+
+        .status-force-synced {
+            color: var(--force-sync-color);
+            font-weight: 700;
+        }
+
         .log-content-container {
-            border: 1px solid var(--commit-entry-border);
-            border-radius: 5px;
-            background-color: #fff;
-            padding: 2px 5px;
-            font-family: var(--font-family-main);
-            font-size: var(--base-font-size);
-            color: var(--text-color-base);
+            font-size: 13px;
         }
 
         .commit-entry {
-            padding: 2px 0;
-            border-bottom: 1px dashed var(--commit-entry-border);
-            line-height: 1.7;
-        }
-
-        .commit-entry:last-child {
-            border-bottom: none;
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
         }
 
         .commit-meta {
-            font-size: inherit;
-            color: inherit;
-            font-weight: normal;
-            white-space: nowrap;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 5px;
+            color: #757575;
+            font-family: 'Noto Sans SC', sans-serif;
+            flex-shrink: 0;
+            margin-right: 12px;
+            font-size: 14px;
+            font-weight: 0 !important;
         }
 
         .commit-message-wrapper {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-
-            row-gap: 4px;
-            column-gap: 6px;
+            gap: 4px 8px;
+            line-height: 1.6;
         }
 
         .text-part {
-            white-space: nowrap;/
+            white-space: normal;
         }
 
         .character-mention {
             display: inline-flex;
             align-items: center;
-            vertical-align: middle;
-            padding: 0px 1px;
-            line-height: 1.3;
-            border-radius: 3px;
-            font-weight: normal;
-            height: 1.4em;
-            box-sizing: border-box;
+            padding: 2px 3px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            background-color: #f1f3f5;
         }
 
-        .character-mention.game-gs {
-            background-color: #e9f5fe;
-            border: 1px solid #cce7fa;
-        }
-
-        .character-mention.game-sr {
-            background-color: rgba(109, 109, 109, 0.85);
-            border: 1px solid #4a4a4a;
-        }
-
-        .character-mention.game-zzz {
-            background-color: #fce4ec; 
-            border: 1px solid #f8bbd0;   
-        }
-
-        .character-mention.no-image .character-face-placeholder,
         .character-face {
-            width: 1.1em;
-            height: 1.1em;
+            width: 1.2em;
+            height: 1.2em;
             border-radius: 50%;
-            margin-right: 3px;
-            object-fit: cover;
-            background-color: #fff;
-            display: inline-block;
-        }
-
-        .character-mention.game-gs .character-face,
-        .character-mention.game-gs.no-image .character-face-placeholder {
-            border: 1px solid #019de6;
-        }
-
-        .character-mention.game-sr .character-face,
-        .character-mention.game-sr.no-image .character-face-placeholder {
-            border: 1px solid #e2c20e;
-        }
-
-        .character-mention.game-zzz .character-face,
-        .character-mention.game-zzz.no-image .character-face-placeholder {
-            border: 1px solid #e91e63;
+            margin-right: 5px;
         }
 
         .character-name {
-            font-size: inherit;
-            line-height: 1;
-            white-space: nowrap;
-            color: var(--text-color-base);
-            font-weight: normal;
+            font-size: 1em;
+            color: var(--text-primary);
         }
 
-        .game-gs .character-name {
-            color: #1e88e5;
-        }
-
-        .game-sr .character-name {
-            color: #f0f0f0;
-        }
-
-        .game-zzz .character-name {
-            color: #c2185b;
-        }        
-
-        .summary-section {
-            margin-top: 25px;
-            padding: 18px;
-            background: linear-gradient(to bottom, var(--summary-default-bg-start), var(--summary-default-bg-end));
-            border-radius: 14px;
+        .summary-bar {
+            margin: 30px 0 20px 0;
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 18px 25px;
             text-align: center;
             font-size: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            box-shadow: 0 6px 20px -5px var(--status-shadow, #ccc);
+        }
+
+        .summary-bar.has-errors {
+            border-color: var(--fail-color);
+            background: #fff5f5;
+            color: var(--fail-color);
+            --status-shadow: rgba(220, 53, 69, 0.2);
+        }
+
+        .summary-bar.no-changes {
+            border-color: var(--no-change-color);
+            background: #f8f9fa;
+            color: var(--no-change-color);
+            --status-shadow: rgba(108, 117, 125, 0.2);
+        }
+
+        .summary-bar.success {
+            border-color: var(--success-color);
+            background: #e6f9f0;
+            color: var(--success-color);
+            --status-shadow: rgba(40, 167, 69, 0.25);
+        }
+
+        .summary-bar .icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .summary-bar .duration {
+            color: var(--text-secondary);
+            margin-left: 12px;
+            font-size: 14px;
+            font-family: 'Orbitron-Medium', sans-serif;
             font-weight: 500;
-            color: var(--summary-default-text);
-            border: 1px solid var(--summary-default-border);
-            box-shadow: 0 2px 8px var(--block-shadow-color);
-        }
-
-        .summary-section.no-changes {
-            background: var(--summary-no-changes-bg);
-            border-color: var(--summary-no-changes-border);
-            color: var(--summary-no-changes-text);
-        }
-
-        .summary-section.has-errors {
-            background: var(--summary-has-errors-bg);
-            border-color: var(--summary-has-errors-border);
-            color: var(--summary-has-errors-text);
         }
 
         .footer {
             text-align: center;
-            margin-top: 30px;
-            font-size: 0.8em;
-            color: var(--text-color-subtle);
-            border-top: 1px solid var(--theme-lighter-purple);
-            padding-top: 15px;
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding-top: 18px;
+            letter-spacing: 0.5px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            text-shadow: 0 0 1px rgba(90, 114, 138, 0.1);
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
 
 <body style="{{scaleStyleValue}}">
-    <div class="container">
-        <h1>咕咕牛的更新报告</h1>
-        <div class="update-details-block">
-            <h2><span class="icon">🔄</span>更新详情</h2>
-            <ul>
-                {{ each results repoResult }}
-                <li>
-                    <div class="repo-status-line">
-                        <span class="label">{{ repoResult.name }}:</span>
-                        <span
-                            class="value {{ repoResult.statusClass }} {{ if repoResult.statusText === '本地冲突 (强制同步)' }}status-force-synced{{ /if }}">
-                            {{ repoResult.statusText }}
-                        </span>
-                    </div>
-                    {{ if repoResult.error }}
-                    <div class="error-details"><strong>错误:</strong>{{ repoResult.error.message ? ' ' +
-                        repoResult.error.message.split('\n')[0] : ' 未知错误详情' }}{{ if repoResult.error.code }} (Code: {{
-                        repoResult.error.code }}){{/if}}</div>
-                    {{ /if }}
+    <div class="wrapper">
+        <div class="glow-border">
+            <div class="glow-clip-inner"></div>
+        </div>
+        <div class="trapezoid-deco top-left"></div>
+        <div class="trapezoid-deco top-right"></div>
+        <div class="trapezoid-deco bottom-left"></div>
+        <div class="trapezoid-deco bottom-right"></div>
+        <div class="container-shadow-wrapper">
+            <div class="container">
+                <header class="header">
+                    <h1 class="title">咕咕牛图库的更新报告 <span>/IREPOPORTI/</span></h1>
+                    <div class="report-time">{{ reportTime }}</div>
+                </header>
 
-                    {{ if isArray(repoResult.log) && repoResult.log.length > 0 }}
-                    <div class="log-details">
-                        <h3>
-                            {{ if repoResult.error && repoResult.log.length === 1 && repoResult.log[0].hash === 'N/A' }}
-                            错误导致无法获取有效日志
-                            {{ else if repoResult.error }}
-                            相关日志 (可能包含线索):
-                            {{ else }}
-                            最新提交记录 (近{{repoResult.log.filter(c => c.hash !== 'N/A').length}}条):
-                            {{ /if }}
-                        </h3>
-                        <div class="log-content-container">
-                            {{ each repoResult.log commit }}
-                            <div class="commit-entry">
-                                <div class="commit-message-wrapper">
-                                    <span class="commit-meta">
-                                        {{ commit.date }} : [{{ commit.hash }}]
-                                    </span>
-                                    {{ each commit.displayParts part }}
-                                    {{ if part.type === 'text' }}
-                                    <span class="text-part">{{@ part.content }}</span>
-                                    {{ else if part.type === 'character' }}
-                                    <span
-                                        class="character-mention game-{{ part.game }} {{ if !part.imageUrl }}no-image{{ /if }}">
-                                        {{ if part.imageUrl }}
-                                        <img src="{{ part.imageUrl }}" alt="{{ part.name }}" class="character-face">
-                                        {{ /if }}
-                                        <span class="character-name">{{ part.name }}</span>
-                                    </span>
-                                    {{ /if }}
-                                    {{ /each }}
+                <main class="repo-list">
+                    {{ each results repoResult index }}
+                    <div class="repo-item repo-item-{{index + 1}} {{ repoResult.statusClass }}">
+                        <div class="repo-card">
+                            <div class="bubble" style="width: 80px; height: 80px; top: 15%; left: 55%;"></div>
+                            <div class="bubble" style="width: 40px; height: 40px; top: 60%; left: 10%;"></div>
+                            <div class="card-content">
+                                <div class="card-number">{{ index + 1 }}</div>
+                                <div class="card-title">{{ repoResult.name }}</div>
+                                <div class="card-subtitle">
+                                    {{ if index === 0 }}MAIN REPO{{ else if index === 1 }}GENSHIN{{ else if index === 2
+                                    }}Star Rail{{ else if index === 3 }}WAVES & ZZZ{{ /if }}
                                 </div>
                             </div>
-                            {{ /each }}
-                        </div>
-                    </div>
-                    {{ else if !repoResult.error }}
-                    <div class="log-details">
-                        <h3>最新提交记录:</h3>
-                        <div class="log-content-container">
-                            <div class="commit-entry">
-                                <div class="commit-message-wrapper">(无提交记录或图库已是最新)</div>
+                            <div class="card-footer">
+                                <span class="card-status">
+                                    {{if index === 0}}
+                                    主 资 源
+                                    {{else if index === 1}}
+                                    原 神
+                                    {{else if index === 2}}
+                                    崩坏：星穹铁道
+                                    {{else if index === 3}}
+                                    鸣潮 & 绝区零
+                                    {{/if}}
+                                </span>
                             </div>
                         </div>
+
+                        <div class="log-section">
+                            {{ if repoResult.statusText === '未配置' || repoResult.statusText === '未下载' }}
+                            <div class="special-status-display">
+                                {{ repoResult.statusText }}
+                            </div>
+                            {{ else }}
+                            <div class="log-header">
+                                <div class="log-title">最新提交记录</div>
+                                <span class="log-status value {{ repoResult.statusClass }}">{{ repoResult.statusText
+                                    }}</span>
+                            </div>
+                            <div class="log-content-container">
+                                {{ if isArray(repoResult.log) && repoResult.log.length > 0 && repoResult.log[0].hash !==
+                                'N/A' }}
+                                {{ each repoResult.log commit }}
+                                <div class="commit-entry">
+                                    <span class="commit-meta">{{ commit.date }}</span>
+                                    <div class="commit-message-wrapper">
+                                        {{ each commit.displayParts part }}
+                                        {{ if part.type === 'text' }}
+                                        <span class="text-part">{{@ part.content }}</span>
+                                        {{ else if part.type === 'character' }}
+                                        <span class="character-mention">
+                                            {{ if part.imageUrl }}
+                                            <img src="{{ part.imageUrl }}" alt="{{ part.name }}" class="character-face">
+                                            {{ /if }}
+                                            <span class="character-name">{{ part.name }}</span>
+                                        </span>
+                                        {{ /if }}
+                                        {{ /each }}
+                                    </div>
+                                </div>
+                                {{ /each }}
+                                {{ else }}
+                                <div class="commit-entry">(无有效提交记录)</div>
+                                {{ /if }}
+                            </div>
+                            {{ /if }}
+                        </div>
                     </div>
+                    {{ /each }}
+                </main>
+
+                <footer class="summary-bar
+                {{ if !overallSuccess }}has-errors
+                {{ else if !overallHasChanges }}no-changes
+                {{ else }}success
+                {{ /if }}">
+                    <span class="icon">
+                        {{ if !overallSuccess }}💔
+                        {{ else if !overallHasChanges }}⭐
+                        {{ else }}🎉
+                        {{ /if }}
+                    </span>
+                    {{ if overallSuccess }}
+                    {{ if overallHasChanges }}所有仓库更新检查完成，部分仓库有更新！
+                    {{ else }}所有仓库更新检查完成，均已是最新版本！
                     {{ /if }}
-                </li>
-                {{ /each }}
-            </ul>
-        </div>
-        <div
-            class="summary-section {{ if !overallHasChanges && overallSuccess }}no-changes{{ else if !overallSuccess }}has-errors{{ /if }}">
-            {{ if overallSuccess }}
-            {{ if overallHasChanges }}🎉 所有仓库更新检查完成，部分仓库有更新！
-            {{ else }}👍 所有仓库更新检查完成，均已是最新版本！
-            {{ /if }}
-            {{ else }}
-            💔 更新过程中遇到问题，请检查日志！
-            {{ /if }}
-        </div>
-        <div class="footer">
-            总耗时: {{ duration }}s | Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛
+                    {{ else }}
+                    更新过程中遇到问题，请检查日志！
+                    {{ /if }}
+                    <span class="duration">[耗时: {{ duration }} s]</span>
+                </footer>
+                <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</div>
+            </div>
         </div>
     </div>
 </body>
