@@ -1,297 +1,372 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>角色图片可视化 - {{ characterName }} (第 {{ batchNum }}/{{ totalBatches }}批)</title>
+    <title>角色图片可视化 - {{ characterName }}</title>
     <style>
         :root {
-            --theme-primary-color: #03a9f4;
-            --theme-secondary-color: #29b6f6;
-            --theme-light-blue: #81d4fa;
-            --theme-lighter-blue: #b3e5fc;
-            --theme-accent-blue: #00b0ff;
-            --theme-bg-start: #e1f5fe;
-            --theme-bg-end: #ffffff;
-            --theme-shadow-color: rgba(3, 169, 244, 0.12);
-            --theme-shadow-strong-color: rgba(3, 169, 244, 0.2);
-            --text-color-dark: #212529;
-            --text-color-light: #495057;
-            --text-color-subtle: #6c757d;
-            --highlight-gu-text-color: #01579B;
-            --highlight-gu-bg-color: rgba(179, 229, 252, 0.5);
-            --error-bg-color: rgba(255, 235, 238, 0.9);
-            --error-text-color: #c62828;
-            --error-border-color: #ef5350;
-            --item-hover-border-color: var(--theme-accent-blue);
-            --item-hover-shadow-color: rgba(0, 176, 255, 0.45); 
-            --card-border-radius: 16px;
-            --card-border-color: var(--theme-lighter-blue);
-            --card-inner-shadow: inset 0 0 0 1px rgba(255,255,255,0.5),
-                                 inset 0 1px 3px rgba(0,123,255,0.1);
-            --card-outer-shadow: 0 4px 12px var(--theme-shadow-color);
-            --container-glow-main: var(--theme-accent-blue);
-            --container-glow-border-color: var(--theme-primary-color);
-            --container-glow-color-intense: rgba(0, 176, 255, 0.3);
-            --container-glow-color-soft: rgba(3, 169, 244, 0.2);
-            --container-glow-blur-near: 10px;
-            --container-glow-spread-near: 3px;
-            --container-glow-blur-far: 22px;
-            --container-glow-spread-far: 6px;
-            --base-shadow-color-container: rgba(0, 0, 0, 0.05);
+            /* 新的、更柔和的蓝色主题 */
+            --bg-color: #f4f7fc;
+            --container-bg: #ffffff;
+            --container-border: #4285f4;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --header-bg: #4285f4;
+            --header-title-color: #ffffff;
+            --header-underline-color: #a3c4f7;
+            --header-stat-color: #d2e3fc;
+            --tag-bg: rgba(255, 255, 255, 0.15);
+            --tag-char-color: #ffffff;
+            --digit-bg: rgba(0, 0, 0, 0.2);
+            --digit-color: #ffffff;
+            --item-bg: #eaf1fe;
+            --item-border: #d2e3fc;
+            --item-shadow: rgba(66, 133, 244, 0.1);
+            --error-text-color: #c5221f;
+            --error-bg-color: #fce8e6;
+
+            /* -- Gu卡片专属的金色主题 -- */
+            --gu-item-bg: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+            --gu-item-border: #ffc107;
+            --gu-item-shadow: rgba(255, 193, 7, 0.3);
+            --gu-label-bg: linear-gradient(45deg, #e69100, #ffb300);
+            --filename-gu-color: #8c5c00;
         }
 
         @font-face {
-            font-family: 'CuteFont';
-            src: local('Yuanti SC'), local('YouYuan'), local('Microsoft YaHei UI Rounded'), local('Arial Rounded MT Bold'), local('Microsoft YaHei UI'), local('PingFang SC'), sans-serif;
-            font-weight: normal;
+            font-family: 'Orbitron';
             font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'CuteFont', sans-serif;
-            max-width: 800px;
-            margin: 30px auto;
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            margin: 0;
             padding: 20px;
-            background-color: var(--theme-bg-end);
-            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='10' x2='20' y2='10' stroke-opacity='0.15' stroke='%2303a9f4' stroke-width='0.7'%/%3E%3Cline x1='10' y1='0' x2='10' y2='20' stroke-opacity='0.15' stroke='%2303a9f4' stroke-width='0.7'/%3E%3C/svg%3E"),
-                              linear-gradient(145deg, var(--theme-bg-start) 0%, var(--theme-bg-end) 80%);
-            background-repeat: repeat, no-repeat;
-            background-position: center, center;
-            color: var(--text-color-dark);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             font-size: 14px;
             line-height: 1.6;
-            box-sizing: border-box;
-            position: relative;
-            overflow-x: hidden;
+            width: 1000px;
+            margin: 20px auto;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.96);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid var(--container-glow-border-color);
-            box-shadow:
-                0 2px 6px var(--base-shadow-color-container),
-                0 0 var(--container-glow-blur-near) var(--container-glow-spread-near) var(--container-glow-color-intense),
-                0 0 var(--container-glow-blur-far) var(--container-glow-spread-far) var(--container-glow-color-soft);
-            position: relative;
-            z-index: 1;
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            border: 2px solid var(--container-border);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.15);
+            padding: 0;
+            overflow: hidden;
         }
 
-        .container::before { content: '☀️'; position: absolute; top: 20px; left: 20px; font-size: 28px; opacity: 0.8; }
-        .container::after { content: '☁️'; position: absolute; bottom: 20px; right: 20px; font-size: 28px; opacity: 0.8; transform: rotate(-8deg) scaleX(-1); }
-
-        h1 {
-            text-align: center;
-            color: var(--theme-primary-color);
-            margin: 0 0 25px;
-            font-size: 26px;
-            font-weight: bold;
-            text-shadow: 0 1px 3px var(--theme-shadow-strong-color);
-            position: relative;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 40px 30px;
+            background-color: var(--header-bg);
+            background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08) 10px, transparent 10px, transparent 20px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
         }
 
-        .sub-title {
-            color: var(--theme-secondary-color);
-            margin: 0 0 15px;
-            padding-left: 10px;
-            font-size: 18px;
-            font-weight: bold;
+        .header-content-left {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-bottom: 30px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--theme-light-blue);
+            gap: 15px;
         }
 
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px;
-            padding: 0;
-            list-style: none;
-            grid-auto-rows: minmax(190px, auto);
+        .main-title {
+            position: relative;
+            padding-bottom: 8px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--header-title-color);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        .image-item {
-            background: linear-gradient(to bottom, #f8fcff, #ffffff);
-            border-radius: var(--card-border-radius);
-            padding: 12px;
-            border: 1px solid var(--card-border-color);
-            box-shadow: var(--card-inner-shadow), var(--card-outer-shadow);
-            transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        .main-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50%;
+            height: 2px;
+            background-color: var(--header-underline-color);
+            border-radius: 1px;
+        }
+
+        .list-type-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--tag-bg);
+            color: var(--tag-char-color);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: 'Noto Sans SC', sans-serif;
+            /* **核心修改** */
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-stats-area {
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            align-items: flex-end;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--header-stat-color);
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+        }
+
+        .digit-container {
+            display: flex;
+            gap: 3px;
+        }
+
+        .digit {
+            background-color: var(--digit-bg);
+            color: var(--digit-color);
+            padding: 4px 7px;
+            border-radius: 4px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4em;
+            font-weight: 700;
+            line-height: 1;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
+
+        .pagination-info {
+            color: var(--header-stat-color);
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 500;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+            background-color: rgba(0, 0, 0, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .pagination-info .page-number {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 20px 30px;
+        }
+
+        .ban-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 10px 0;
+            list-style: none;
+        }
+
+        .ban-item {
+            background-color: var(--item-bg);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid var(--item-border);
+            box-shadow: 0 2px 4px var(--item-shadow);
+            display: flex;
+            flex-direction: column;
+            text-align: center;
             position: relative;
         }
 
-        .image-item:hover {
-            transform: translateY(-4px) scale(1.02);
-            border-color: var(--item-hover-border-color);
-            box-shadow: var(--card-inner-shadow),
-                        0 0 15px 5px var(--item-hover-shadow-color);
+        .ban-item.is-gu {
+            background: var(--gu-item-bg);
+            border: 2px solid var(--gu-item-border);
+            box-shadow: 0 5px 15px var(--gu-item-shadow);
+            padding: 9px;
         }
 
-        .image-container {
-            position: relative;
+        .ban-item img {
+            display: block;
             width: 100%;
             height: 120px;
-            background-color: white;
+            object-fit: contain;
             border-radius: 6px;
-            margin: 0 auto 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+
+        .ban-item .error-placeholder {
+            width: 100%;
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8),
-                        0 1px 3px rgba(0,0,0,0.05);
+            background-color: var(--error-bg-color);
+            color: var(--error-text-color);
+            font-size: 12px;
+            border-radius: 6px;
+            margin: 0 auto 10px;
+            padding: 10px;
+            text-align: center;
+            border: 1px dashed var(--error-text-color);
         }
 
-        .image-container img {
-            display: block;
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            flex-shrink: 0;
+        .filename-area {
+            margin-top: auto;
+            padding-top: 5px;
+        }
+
+        .ban-item .filename {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            word-break: break-all;
+            line-height: 1.3;
+            font-weight: 500;
         }
 
         .gu-label {
             position: absolute;
             top: 0;
             right: 0;
-            background-color: var(--theme-primary-color);
+            background: var(--gu-label-bg);
             color: white;
-            padding: 4px 8px;
-            border-radius: 0 6px 0 6px;
-            font-size: 0.75em;
-            font-weight: 600;
-            line-height: 1;
+            padding: 4px 10px;
+            border-radius: 0 6px 0 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             z-index: 2;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .image-item .filename {
+        .is-gu .filename {
+            color: var(--filename-gu-color);
+            font-weight: 700;
+        }
+
+        .empty-list {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 20px;
             font-size: 0.95em;
-            color: var(--text-color-light);
-            word-break: break-all;
-            line-height: 1.3;
-            margin-top: auto;
-            padding-top: 5px;
-            flex-shrink: 0;
-            text-align: center;
-        }
-
-        .filename.highlight-gu {
-            color: var(--highlight-gu-text-color);
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background-color: var(--highlight-gu-bg-color);
-            display: inline-block;
-        }
-
-        .image-item .error-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(240, 248, 255, 0.7);
-            color: var(--error-text-color);
-            font-size: 12px;
-            border-radius: 6px;
-            border: 1px dashed var(--error-border-color);
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
-            text-align: center;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 10px;
+            border: 1px dashed #bbdefb;
         }
 
         .footer {
             text-align: center;
             margin-top: 30px;
-            font-size: 0.8em;
-            color: var(--text-color-subtle);
-            border-top: 1px solid var(--theme-lighter-blue);
-            padding-top: 15px;
-        }
-
-        @media (max-width: 860px) {
-          body { margin: 15px; padding: 15px; }
-          .container { padding: 20px; }
-        }
-
-        @media (max-width: 480px) {
-          body { margin: 10px; padding: 10px; }
-          .container { padding: 15px; border-radius: 16px; }
-          .container::before, .container::after { font-size: 24px; top: 15px; bottom: 15px; left: 15px; right: 15px; }
-          h1 { font-size: 22px; margin-bottom: 20px; }
-          .sub-title { font-size: 16px; margin-bottom: 20px; padding-bottom: 10px; }
-          .image-grid {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            grid-auto-rows: minmax(170px, auto);
-          }
-          .image-item { padding: 10px; border-radius: 12px; }
-          .image-container {
-            height: 100px;
-            margin-bottom: 8px;
-          }
-          .image-item .filename { font-size: 0.9em; }
-          .footer { margin-top: 25px; padding-top: 10px; }
-        }
-
-        .image-grid > .error-placeholder {
-            grid-column: 1 / -1;
             padding: 20px;
-            min-height: 100px;
-            background-color: var(--error-bg-color);
-            color: var(--error-text-color);
-            font-size: 13px;
-            border-radius: 8px;
-            border: 1px dashed var(--error-border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 0.25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            background-color: #eaf1fe;
+            border-top: 1px solid #d2e3fc;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                width: 100%;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-stats-area {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .ban-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
-<body style="{{scaleStyleValue}}">
-    <div class="container">
-        <h1>{{ characterName }}面板图列表的图形化显示</h1>
-        <div class="sub-title">共 {{ imageCount }} 张 | 当前第 {{ batchNum }}/{{ totalBatches }} 批</div>
 
-        <div class="image-grid">
-            {{ if images && images.length > 0 }}
-                {{ each images item index }}
-                <div class="image-item">
-                    <div class="image-container">
-                        <img
-                            src="{{ item.filePath }}"
-                            alt="{{ item.fileName }}"
-                            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);"
-                        />
-                        {{ if item.isGu }}<span class="gu-label">GU</span>{{ /if }}
+<body style="{{ scaleStyleValue }}">
+    <div class="container">
+        <div class="header">
+            <div class="header-content-left">
+                <div class="main-title">面板图可视化</div>
+                <div class="list-type-tag">{{ characterName }}</div>
+            </div>
+            <div class="header-stats-area">
+                <div class="stat-item">
+                    <span>总数</span>
+                    <div class="digit-container">
+                        {{ each totalCountDigits digit }}
+                        <div class="digit">{{ digit }}</div>
+                        {{ /each }}
                     </div>
-                    <div class="filename {{if item.isGu}}highlight-gu{{/if}}">
-                        {{ item.originalIndex + 1 }}. {{ item.fileName }}
+                </div>
+                {{ if totalBatches > 1 }}
+                <div class="pagination-info">
+                    PAGE <span class="page-number">{{ batchNum }}</span> / {{ totalBatches }}
+                </div>
+                {{ /if }}
+            </div>
+        </div>
+        <div class="main-content">
+            {{ if images && images.length > 0 }}
+            <div class="ban-grid">
+                {{ each images item index }}
+                <div class="ban-item {{ if item.isGu }}is-gu{{ /if }}">
+                    {{ if item.isGu }}<span class="gu-label">GU</span>{{ /if }}
+                    <img src="{{ item.filePath }}" alt="{{ item.fileName }}"
+                        onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);" />
+                    <div class="filename-area">
+                        <div class="filename">
+                            {{ item.originalIndex + 1 }}. {{ item.fileName }}
+                        </div>
                     </div>
                 </div>
                 {{ /each }}
+            </div>
             {{ else }}
-                <div class="error-placeholder">
-                    未能加载当前批次的图片信息。
-                </div>
+            <p class="empty-list">当前页面无内容</p>
             {{ /if }}
         </div>
-        <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
+        <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</div>
     </div>
 </body>
+
 </html>

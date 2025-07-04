@@ -1,248 +1,747 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛图库地图</title>
     <style>
-        :root {
-            --map-font-family: 'CuteFont', 'Noto Sans SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            --body-bg-color: #f8f9fa;
-            --map-text-color: #373a3c; 
-            
-            --map-card-bg: #ffffff; 
-            --map-card-border: #e1e4e8; 
-            --map-card-shadow: rgba(149, 157, 165, 0.15); 
-
-            --game-gs-primary: #5c9ded; 
-            --game-gs-secondary: #72c6f0; 
-            --gs-bg-wrapper: #f5f9fe; 
-            --gs-border-wrapper: #a7c3eb;
-
-            --game-sr-primary: #7d8597; 
-            --game-sr-secondary: #f8c88c; 
-            --sr-bg-wrapper: #f0f2f5;
-            --sr-border-wrapper: #9d9d9d;
-
-            --game-zzz-primary: #e91e63;
-            --game-zzz-secondary: #f48fb1; 
-            --zzz-bg-wrapper: #fdf5f7;  
-            --zzz-border-wrapper: #f48fb1; 
-            
-            --game-waves-primary: #ffc107; 
-            --game-waves-secondary: #7cc9ba; 
-            --waves-bg-wrapper: #fff9e6; 
-            --waves-border-wrapper: #ffe9a8; 
-
-            --text-color-muted: #55595c; 
-
-            --character-item-inner-bg: #f9fafb; 
-            --character-item-inner-border: #e8eaf0; 
-            --placeholder-face-bg: #eef2f5; 
-            --placeholder-face-text: #888; 
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
         }
 
         @font-face {
-            font-family: 'CuteFont';
-            src: local('Yuanti SC'), local('YouYuan'), local('Microsoft YaHei UI Rounded'), local('Arial Rounded MT Bold'), local('Microsoft YaHei UI'), local('PingFang SC'), sans-serif;
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
         }
+
+        :root {
+            --theme-light-bg: #f4f7f9;
+            --theme-light-container-bg: #ffffff;
+            --theme-light-container-border: #e0e6ed;
+            --theme-light-item-bg: #ffffff;
+            --theme-light-item-border: #e8eef3;
+            --theme-light-text-primary: #34495e;
+            --theme-light-text-secondary: #5f7a93;
+            --theme-light-text-muted: #95a5a6;
+            --theme-gs-face-border: #a8c5e0;
+            --theme-waves-face-border: #b4d1f2;
+
+            --theme-sr-bg: #0d0f1a;
+            --theme-sr-container-border: #3a3c5a;
+            --theme-sr-header-bg: linear-gradient(145deg, rgba(23, 26, 43, 0.8) 0%, rgba(10, 12, 28, 0.9) 100%);
+            --theme-sr-header-subtitle: #d4d8e8;
+            --theme-sr-text-primary: #e0e6f1;
+            --theme-sr-text-secondary: #8a99c0;
+            --theme-sr-text-muted: #e0e6f1;
+            --theme-sr-element-group-bg: #161821;
+            --theme-sr-item-bg: #1f222e;
+            --theme-sr-item-border: #cccccc;
+
+            --theme-zzz-bg: #202128;
+            --theme-zzz-header-bg: linear-gradient(135deg, #2a2a2a 0%, #000000 100%);
+            --theme-zzz-header-subtitle: #e9e4d5;
+            --theme-zzz-text-primary: #f0f0f0;
+            --theme-zzz-text-secondary: #c5c0a3;
+            --theme-zzz-item-bg: #373844;
+            --theme-zzz-item-border: #505055;
+            --theme-zzz-face-border: #bdae71;
+            --theme-zzz-group-header-bg: #3d3e4a;
+            --theme-zzz-group-wrapper-bg: #2c2d37;
+
+            --sr-grad-fire: linear-gradient(to right, #f3553a, #9a0038);
+            --sr-grad-ice: linear-gradient(to right, #46c5f5, #0064ff);
+            --sr-grad-wind: linear-gradient(to right, #50d5b4, #007e2e);
+            --sr-grad-elec: linear-gradient(to right, #a567f1, #17006e);
+            --sr-grad-phy: linear-gradient(to right, #443838, #306d9a);
+            --sr-grad-quantum: linear-gradient(to right, #6953e5, #1b1540);
+            --sr-grad-imaginary: linear-gradient(to right, #f2d453, #8a0606);
+            --sr-grad-unknown: linear-gradient(to right, #666, #303030);
+
+            --waves-grad-rerong: linear-gradient(135deg, #ff4d4d, #540000);
+            --waves-grad-lengning: linear-gradient(135deg, #00c6ff, #001b82);
+            --waves-grad-daodian: linear-gradient(135deg, #9c27b0, #ff8400);
+            --waves-grad-qidong: linear-gradient(135deg, #00acc1, #0056b2);
+            --waves-grad-yanshe: linear-gradient(135deg, #ffc107, #ff0000);
+            --waves-grad-yanmie: linear-gradient(135deg, #616161, #9e9e9e);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
         body {
-            font-family: var(--map-font-family);
             margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
             padding: 20px;
-            background-color: var(--body-bg-color); 
-            color: var(--map-text-color);
             font-size: 14px;
             line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
+        .theme-gs,
+        .theme-waves {
+            background-color: var(--theme-light-bg);
+        }
+
+        .theme-sr {
+            background-color: var(--theme-sr-bg);
+        }
+
+        .theme-zzz {
+            background-color: var(--theme-zzz-bg);
+        }
+
         .map-container {
-            background-color: var(--map-card-bg);
-            border-radius: 10px;
-            box-shadow: 0 4px 15px var(--map-card-shadow);
-            padding: 20px 25px;
-            border: 1px solid var(--map-card-border);
-            max-width: 1050px; 
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            padding: 0;
         }
-        .map-container.theme-gs { background-color: var(--gs-bg-wrapper); border: 6px double var(--gs-border-wrapper); }
-        .map-container.theme-sr { background-color: var(--sr-bg-wrapper); border: 6px double var(--sr-border-wrapper); }
-        .map-container.theme-zzz { background-color: var(--zzz-bg-wrapper); border: 6px double var(--zzz-border-wrapper); }
-        .map-container.theme-waves { background-color: var(--waves-bg-wrapper); border: 6px double var(--waves-border-wrapper); }
-        
-        .game-header { 
-            display: flex; 
+
+        .theme-gs.map-container {
+            border: 1px solid #257db3;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: var(--theme-light-container-bg);
+            color: var(--theme-light-text-primary);
+        }
+
+        .theme-sr .map-container {
+            border: 1px solid var(--theme-sr-container-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            background-color: transparent;
+            color: var(--theme-sr-text-primary);
+            position: relative;
+        }
+
+        .theme-zzz .map-container {
+            border: 1px solid transparent;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            background-color: var(--theme-zzz-group-wrapper-bg);
+            color: var(--theme-zzz-text-primary);
+            max-width: 1000px;
+        }
+
+        .theme-waves {
+            border: 1px solid black;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            max-width: 1000px;
+        }
+
+        .game-header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding: 20px 30px;
+            position: relative;
+            z-index: 1;
+            display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--map-card-border);
+            align-items: center;
+            min-height: 120px;
+            overflow: hidden;
+            background-repeat: no-repeat;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
         }
-        .game-title {
-            font-size: 40px;
-            font-weight: 600;
+
+        .theme-gs .game-header {
+            background-image: url('{{gsHeaderBgUrl}}');
+            background-position: center top;
+            background-size: 120%;
+            background-color: transparent;
+            box-shadow: none;
         }
-        .map-container.theme-gs .game-title { color: var(--game-gs-primary); } 
-        .map-container.theme-sr .game-title { color: var(--game-sr-primary); } 
-        .map-container.theme-zzz .game-title { color: var(--game-zzz-primary); } 
-        .map-container.theme-waves .game-title { color: var(--game-waves-primary); } 
-        
-        .game-summary-stats { 
-            font-size: 13px; 
-            color: var(--text-color-muted);
-            font-weight: 500; 
+
+        .theme-sr .game-header {
+            background: var(--theme-sr-header-bg);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .theme-zzz .game-header {
+            background: var(--theme-zzz-header-bg);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .theme-waves .game-header {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .game-logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .game-logo[alt="原神 Logo"] {
+            height: 180px;
+            max-width: 280px;
+            margin-bottom: -1px;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+        }
+
+        .game-logo[alt="原神 Logo"]::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+            z-index: 1;
+        }
+
+        .game-logo[alt="星铁 Logo"] {
+            height: 200px;
+            max-width: 350px;
+            margin-bottom: -1px;
+            filter: drop-shadow(0 2px 8px rgba(189, 147, 249, 0.4));
+        }
+
+        .game-logo[alt="绝区零 Logo"] {
+            height: 120px;
+            max-width: 260px;
+            margin-left: 20px;
+        }
+
+        .game-logo[alt="鸣潮 Logo"] {
+            height: 100px;
+            margin-left: 20PX;
+        }
+
+        .game-summary-stats {
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
             white-space: nowrap;
+        }
+
+        .theme-gs .game-summary-stats {
+            color: #FFFFFF;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+            font-size: 28px;
+        }
+
+        .theme-sr .game-summary-stats,
+        .theme-zzz .game-summary-stats {
+            color: var(--theme-sr-header-subtitle);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            font-size: 22px;
+        }
+
+        .theme-waves .game-summary-stats {
+            color: var(--theme-light-text-secondary);
+            text-shadow: none;
+            font-size: 22px;
+        }
+
+        .game-content-block {
+            padding: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .elements-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .element-group-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .elements-grid>.element-group-wrapper {
+            margin-bottom: 0;
+        }
+
+        .element-group-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
+        .theme-gs .element-group-wrapper {
+            padding: 15px;
+            background-color: var(--theme-light-container-bg);
+            border: 1px solid var(--theme-light-container-border);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-sr .element-group-wrapper {
+            background-color: var(--theme-sr-element-group-bg);
+            border: 1px solid var(--theme-sr-item-border);
+            padding: 0;
+        }
+
+        .theme-zzz .element-group-wrapper {
+            background-color: var(--theme-zzz-item-bg);
+            border: 1px solid var(--theme-zzz-item-border);
+            padding: 0;
+        }
+
+        .theme-waves .element-group-wrapper {
+            padding: 0;
+            background-color: var(--theme-light-container-bg);
+            border: 1px solid var(--theme-light-container-border);
+            border-radius: 12px;
+        }
+
+        .element-banner-container,
+        .sr-element-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            color: #fff;
+            position: relative;
+        }
+
+        .theme-gs .element-banner-container {
+            width: calc(100% + 30px);
+            margin: -15px -15px 15px -15px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            height: 70px;
+            background-size: 120%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: transparent;
+        }
+
+        .theme-gs .element-banner-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+            z-index: 1;
+        }
+
+        .theme-gs .element-banner-container.pyro::before {
+            background-image: linear-gradient(to right, rgba(239, 99, 79, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.hydro::before {
+            background-image: linear-gradient(to right, rgba(71, 145, 255, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.anemo::before {
+            background-image: linear-gradient(to right, rgba(77, 208, 225, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.electro::before {
+            background-image: linear-gradient(to right, rgba(172, 92, 196, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.dendro::before {
+            background-image: linear-gradient(to right, rgba(142, 194, 69, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.cryo::before {
+            background-image: linear-gradient(to right, rgba(129, 212, 250, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.geo::before {
+            background-image: linear-gradient(to right, rgba(255, 193, 7, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.unknown::before {
+            background-image: linear-gradient(to right, rgba(100, 100, 100, 0.7) 0%, transparent 100%);
+        }
+
+        .theme-gs .element-banner-container.cryo:not([style*="background-image"]) {
+            background-image: url('{{guguniu_res_path}}html/img/ElementHeaderBg/genshin_cryo_flower.webp'),
+            linear-gradient(to right, #B2EBF2 0%, #4DD0E1 100%);
+            background-size: 60% auto, cover;
+            background-position: right center, center;
+            background-repeat: no-repeat, no-repeat;
+        }
+
+        .theme-gs .element-banner-container.unknown:not([style*="background-image"]) {
+            background-image: linear-gradient(to right, #333333 0%, #666666 100%);
+        }
+
+        .element-banner-container .element-name-label,
+        .element-banner-container .element-stats-label {
+            position: relative;
+            z-index: 2;
+        }
+
+        .element-name-label,
+        .sr-element-header .element-name-label {
+            font-size: 1.8em;
+            font-weight: 700;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .element-stats-label,
+        .sr-element-header .element-stats-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 1em;
+            font-weight: 500;
+            opacity: 0.85;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .sr-element-header {
+            height: 70px;
+            margin-bottom: 0;
+            border-radius: 0;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            padding: 12px 25px;
+        }
+
+        .sr-element-header.fire {
+            background: var(--sr-grad-fire);
+        }
+
+        .sr-element-header.ice {
+            background: var(--sr-grad-ice);
+        }
+
+        .sr-element-header.wind {
+            background: var(--sr-grad-wind);
+        }
+
+        .sr-element-header.elec {
+            background: var(--sr-grad-elec);
+        }
+
+        .sr-element-header.phy {
+            background: var(--sr-grad-phy);
+        }
+
+        .sr-element-header.quantum {
+            background: var(--sr-grad-quantum);
+        }
+
+        .sr-element-header.imaginary {
+            background: var(--sr-grad-imaginary);
+        }
+
+        .sr-element-header.unknown {
+            background: var(--sr-grad-unknown);
+        }
+
+        .theme-zzz .element-banner-container {
+            background: var(--theme-zzz-group-header-bg);
+            height: 50px;
+            border-radius: 0;
+            margin-bottom: 0;
+        }
+
+        .theme-zzz .element-banner-container .element-name-label {
+            font-size: 2em;
+            text-shadow: none;
+        }
+
+        .theme-zzz .element-banner-container .element-stats-label {
+            color: var(--theme-zzz-text-secondary);
+            font-size: 1em;
+            text-shadow: none;
+        }
+
+        .theme-waves .element-banner-container {
+            height: 70px;
+            border-radius: 0;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            margin-bottom: 0;
+        }
+
+        .theme-waves .element-banner-container.rerong {
+            background: var(--waves-grad-rerong);
+        }
+
+        .theme-waves .element-banner-container.lengning {
+            background: var(--waves-grad-lengning);
+        }
+
+        .theme-waves .element-banner-container.daodian {
+            background: var(--waves-grad-daodian);
+        }
+
+        .theme-waves .element-banner-container.qidong {
+            background: var(--waves-grad-qidong);
+        }
+
+        .theme-waves .element-banner-container.yanshe {
+            background: var(--waves-grad-yanshe);
+        }
+
+        .theme-waves .element-banner-container.yanmie {
+            background: var(--waves-grad-yanmie);
         }
 
         .character-list {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); 
-            gap: 15px 12px; 
-            padding-left: 0;
+            gap: 15px;
+            padding: 0;
             list-style: none;
-            margin: 20px 0 0 0; 
+            margin: 0;
+        }
+
+        .theme-gs .character-list {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .theme-sr .character-list {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .theme-zzz .character-list {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            padding: 20px;
+        }
+
+        .theme-waves .character-list {
+            padding: 20px;
+            grid-template-columns: repeat(5, 1fr);
         }
 
         .character-item {
             display: flex;
-            flex-direction: column; 
-            align-items: center; 
+            flex-direction: column;
+            align-items: center;
             text-align: center;
-            background-color: var(--character-item-inner-bg); 
-            padding: 10px 6px;
-            border-radius: 6px;
-            border: 1px solid var(--character-item-inner-border); 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03); 
-            min-width: 0; 
+            padding: 12px 8px;
+            border-radius: 12px;
+            min-width: 0;
         }
-        
-        .character-face-wrapper { 
-            width: 50px; 
-            height: 50px;
+
+        .theme-gs .character-item,
+        .theme-waves .character-item {
+            background-color: var(--theme-light-item-bg);
+            border: 1px solid var(--theme-light-item-border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .theme-sr .character-item {
+            background-color: var(--theme-sr-item-bg);
+            border: 1px solid var(--theme-sr-item-border);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .theme-zzz .character-item {
+            background-color: var(--theme-zzz-item-bg);
+            border: 1px solid var(--theme-zzz-item-border);
+            border-radius: 8px;
+        }
+
+        .character-face-wrapper {
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; 
-            background-color: var(--placeholder-face-bg); 
-            border: 2px solid transparent; 
+            overflow: hidden;
+            background-color: #f0f4f8;
+            border: 2px solid #fff;
             flex-shrink: 0;
         }
-        .map-container.theme-gs .character-face-wrapper { border-color: var(--game-gs-secondary); }
-        .map-container.theme-sr .character-face-wrapper { border-color: var(--game-sr-secondary); }
-        .map-container.theme-zzz .character-face-wrapper { border-color: var(--game-zzz-secondary); }
-        .map-container.theme-waves .character-face-wrapper { border-color: var(--game-waves-secondary); }
+
+        .theme-gs .character-face-wrapper {
+            box-shadow: 0 0 0 2px var(--theme-gs-face-border), 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-sr .character-face-wrapper {
+            box-shadow: none;
+            border-width: 2px;
+            border-style: solid;
+            background-color: var(--theme-sr-item-bg);
+            border-color: var(--theme-sr-item-border);
+        }
+
+        .theme-zzz .character-face-wrapper {
+            background-color: #111;
+            box-shadow: 0 0 0 2px var(--theme-zzz-face-border), 0 3px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .theme-waves .character-face-wrapper {
+            box-shadow: 0 0 0 2px var(--theme-waves-face-border), 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
 
         .character-face {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .character-info { 
-             width: 100%; 
-        }
+
         .character-info .name {
-            font-weight: 500; 
-            color: var(--map-text-color); 
+            font-weight: 500;
             display: block;
-            margin-bottom: 3px;
-            font-size: 13px; 
-            word-break: break-all; 
-            line-height: 1.25;
-            white-space: normal; 
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical;
-            min-height: calc(13px * 1.25 * 1); 
-        }
-        .character-info .stats {
-            font-size: 11px;
-            color: var(--text-color-muted);
-            line-height: 1.25;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .footer { 
-            text-align: center; 
-            margin-top: 30px; 
-            font-size: 12px; 
-            color: var(--text-color-subtle); 
-            padding-top:15px; 
-            border-top: 1px solid var(--map-card-border);
+            margin-bottom: 4px;
+            font-size: 15px;
+            line-height: 1.3;
+            min-height: 20px;
         }
 
-        @media (max-width: 820px) { 
-            .character-list { grid-template-columns: repeat(4, 1fr) !important; } 
+        .theme-gs .character-info .name,
+        .theme-waves .character-info .name {
+            color: var(--theme-light-text-primary);
         }
-        @media (max-width: 660px) {
-            .character-list { grid-template-columns: repeat(3, 1fr) !important; }
-            .character-face-wrapper { width: 46px; height: 46px; }
-            .game-title { font-size: 30px; }
+
+        .theme-sr .character-info .name,
+        .theme-zzz .character-info .name {
+            color: var(--theme-sr-text-primary);
         }
-        @media (max-width: 520px) {
-            body { padding: 10px; }
-            .map-container { padding: 15px; max-width: 100%;} 
-            .character-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important; gap: 10px 8px;} 
-            .character-item { padding: 8px 5px; }
-            .character-face-wrapper { width: 40px; height: 40px; margin-bottom: 5px;}
-            .character-info .name { font-size: 12px; -webkit-line-clamp: 1; }
-            .character-info .stats { font-size: 10px; }
-            .game-title { font-size: 24px; }
+
+        .character-info .stats {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        .theme-gs .character-info .stats,
+        .theme-waves .character-info .stats {
+            color: var(--theme-light-text-secondary);
+        }
+
+        .theme-sr .character-info .stats {
+            color: var(--theme-sr-text-secondary);
+        }
+
+        .theme-zzz .character-info .stats {
+            color: var(--theme-zzz-text-secondary);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 0px;
+            font-size: 14px;
+            letter-spacing: 0.25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+        }
+
+        .theme-gs .footer,
+        .theme-sr .footer {
+            color: var(--theme-light-text-muted);
+            padding: 10px 0px 35px 0 !important;
+            font-size: 24px !important;
+        }
+
+        .theme-sr .footer {
+            color: #ffffff !important;
+        }
+
+        .theme-waves .footer {
+            color: black;
+            padding: 0 0 25px 0 !important;
+            font-size: 18px !important;
+        }
+
+        .theme-zzz .footer {
+            color: var(--theme-zzz-text-primary);
+            padding: 0px 0 25px 0 !important;
+            font-size: 18px !important;
         }
     </style>
 </head>
-<body style="{{scaleStyleValue}}">
-    <div class="map-container 
-        {{if games.length === 1 && games[0].key === 'gs'}}
-            theme-gs
-        {{else if games.length === 1 && games[0].key === 'sr'}}
-            theme-sr
-        {{else if games.length === 1 && games[0].key === 'zzz'}}
-            theme-zzz
-        {{else if games.length === 1 && games[0].key === 'waves'}}
-            theme-waves
-        {{else}}
-            theme-default
-        {{/if}}
-    ">
-        
-        {{ each games game }}
-            <div class="game-content-block">
-                <div class="game-header">
-                    <h2 class="game-title">{{ game.name }}</h2>
-                     <span class="game-summary-stats">
-                        共 {{ game.totalImageCountDisplay }} 张 | 总占用: {{ game.totalSizeFormattedDisplay }}
-                    </span>
-                </div>
-                {{ if game.characters && game.characters.length > 0 }}
+
+<body style="width: {{currentRenderWidth}}px; {{scaleStyleValue}}">
+    {{ each games game }}
+    <div class="map-container theme-{{game.key}}">
+        <div class="game-header">
+            <img class="game-logo"
+                src="{{ guguniu_res_path }}html/img/MapBgLogo/{{ game.key }}.{{ if game.key === 'zzz' }}svg{{ else }}png{{ /if }}"
+                alt="{{ game.name }} Logo">
+            <span class="game-summary-stats">共 {{ game.totalImageCountDisplay }} | 总占用: {{
+                game.totalSizeFormattedDisplay }}</span>
+        </div>
+        <div class="game-content-block">
+            <div class="{{if game.key === 'gs' || game.key === 'sr'}}elements-grid{{/if}}">
+
+                {{ if game.hasElementGrouping && game.elements && game.elements.length > 0 }}
+                {{ each game.elements elementGroup }}
+                <div class="element-group-wrapper">
+                    {{ if game.key === 'sr' }}
+                    <div class="sr-element-header {{ elementGroup.key }}">
+                        <span class="element-name-label">{{ elementGroup.name }}元素</span>
+                        <span class="element-stats-label">共 {{ elementGroup.totalImageCountInElement }}张 | {{
+                            elementGroup.totalByteSizeInElementDisplay }}</span>
+                    </div>
+                    {{ else }}
+                    <div class="element-banner-container {{ elementGroup.key }}" {{ if game.key==='gs' &&
+                        elementGroup.bannerUrl }}style="background-image: url('{{ elementGroup.bannerUrl }}');" {{ /if
+                        }}>
+                        <span class="element-name-label">{{ elementGroup.name }}{{ if game.key === 'gs' }}元素{{ else if
+                            game.key === 'waves'}}属性{{/if}}</span>
+                        <span class="element-stats-label">共 {{ elementGroup.totalImageCountInElement }}张 | {{
+                            elementGroup.totalByteSizeInElementDisplay }}</span>
+                    </div>
+                    {{ /if }}
+
                     <ul class="character-list">
-                        {{ each game.characters character }}
-                            <li class="character-item">
-                                <div class="character-face-wrapper">
-                                    {{ if character.faceUrl }}
-                                        <img src="{{ character.faceUrl }}" alt="{{ character.name }}" class="character-face">
-                                    {{ else }}
-                                    {{ /if }}
-                                </div>
-                                <div class="character-info"> 
-                                    <span class="name">{{ character.name }}</span>
-                                    <span class="stats">{{ character.imageCount }}张 | {{ character.totalSizeFormatted }}</span>
-                                </div>
-                            </li>
+                        {{ each elementGroup.characters character }}
+                        <li class="character-item">
+                            <div class="character-face-wrapper"><img src="{{ character.faceUrl }}"
+                                    alt="{{ character.name }}" class="character-face"></div>
+                            <div class="character-info">
+                                <span class="name">{{ character.name }}</span>
+                                <span class="stats">{{ character.imageCount }}张 | <span class="size">{{
+                                        character.totalSizeFormatted }}</span></span>
+                            </div>
+                        </li>
                         {{ /each }}
                     </ul>
-                {{ else }}
-                    <p style="padding-left:10px; color: var(--text-color-muted);">暂无该游戏的角色数据。</p>
+                </div>
+                {{ /each }}
+
+                {{ else if game.characters && game.characters.length > 0 }}
+                <ul class="character-list">
+                    {{ each game.characters character }}
+                    <li class="character-item">
+                        <div class="character-face-wrapper">
+                            <img src="{{ character.faceUrl }}" alt="{{ character.name }}" class="character-face">
+                        </div>
+                        <div class="character-info">
+                            <span class="name">{{ character.name }}</span>
+                            <span class="stats">{{ character.imageCount }}张 | <span class="size">{{
+                                    character.totalSizeFormatted }}</span></span>
+                        </div>
+                    </li>
+                    {{ /each }}
+                </ul>
                 {{ /if }}
             </div>
-        {{ /each }}
-        
-        <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
+        </div>
+        <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</div>
+        {{ if game.key === 'sr' }}<div class="stars"></div>{{ /if }}
     </div>
+    {{ /each }}
 </body>
+
 </html>

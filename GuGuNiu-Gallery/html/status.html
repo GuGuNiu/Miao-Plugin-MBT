@@ -1,517 +1,1229 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛状态</title>
-    <style>
-      :root {
-        --theme-primary-color: #673ab7; 
-        --theme-secondary-color: #7e57c2; 
-        --theme-light-purple: #b39ddb;
-        --theme-lighter-purple: #d1c4e9;
-        --theme-accent-color: #9575cd;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>咕咕牛状态</title>
+  <style>
+    @font-face {
+      font-family: 'Orbitron';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+    }
 
-        --theme-bg-start: #ede7f6;
-        --theme-bg-end: #f3e5f5;  
-        
-        --text-color-base: #373a3c;
-        --text-color-muted: #55595c;
-        --text-color-subtle: #818a91;
+    @font-face {
+      font-family: 'Orbitron';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+    }
 
-        --container-glow-border-color: var(--theme-accent-color);
-        --container-glow-color-intense: rgba(103, 58, 183, 0.35);
-        --container-glow-color-soft: rgba(126, 87, 194, 0.25);
-        --container-glow-blur-near: 12px;
-        --container-glow-spread-near: 4px;
-        --container-glow-blur-far: 28px;
-        --container-glow-spread-far: 10px;
-        --base-shadow-color-container: rgba(0, 0, 0, 0.05);
+    @font-face {
+      font-family: 'Rajdhani';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+    }
 
-        --block-bg-start: #f9f8fc;
-        --block-bg-end: #ffffff;
-        --block-border-color: var(--theme-lighter-purple);
-        --block-shadow-color: rgba(103, 58, 183, 0.1);
+    @font-face {
+      font-family: 'Noto Sans SC';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+    }
 
-        --h1-color: var(--theme-primary-color);
-        --h1-border-color: var(--theme-light-purple);
-        --h1-text-shadow: 0 1px 2px rgba(103, 58, 183, 0.2);
-        
-        --h2-color: var(--theme-secondary-color);
-        --h2-border-color: var(--theme-accent-color); 
+    :root {
+      --bg-color: #f8f9fa;
+      --container-bg: #ffffff;
+      --container-border: #333333;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-muted: #adb5bd;
+      --accent-color: #00acc1;
+      --success-color: #28a745;
+      --fail-color: #dc3545;
+      --na-color: #78909c;
+      --default-color: #3f51b5;
+      --soft-shadow: rgba(0, 0, 0, 0.08);
+      --header-bg: #333333;
+      --header-title-color: #ffffff;
+      --header-subtitle-color: rgba(255, 255, 255, 0.6);
+      --header-underline-color: #1395ff;
+      --header-border-line: rgba(255, 255, 255, 0.1);
+      --section-bg-card: rgba(255, 255, 255, 0.95);
+      --section-border-card: #e0e0e0;
+      --section-shadow-card: rgba(0, 0, 0, 0.05);
+      --accent-glow: rgba(0, 0, 0, 0.4);
+      --panel-backdrop-blur: 5px;
+      --block-meta-border: #ff4081;
+      --block-meta-shadow: rgba(255, 64, 129, 0.15);
+      --block-meta-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="rgba(255, 105, 180, 0.1)" stroke-width="0.5"/></svg>');
+      --block-scan-border: #00acc1;
+      --block-scan-shadow: rgba(0, 172, 193, 0.15);
+      --block-scan-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="3" fill="rgba(0, 230, 118, 0.15)"/><polyline points="15,45 30,30 45,45" stroke="rgba(0, 172, 230, 0.1)" stroke-width="0.5" fill="none"/></svg>');
+      --block-storage-border: #9c27b0;
+      --block-storage-shadow: rgba(156, 39, 176, 0.15);
+      --block-storage-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect x="10" y="10" width="20" height="20" fill="none" stroke="rgba(156, 39, 176, 0.1)" stroke-width="0.5"/></svg>');
+      --block-config-border: #ff9800;
+      --block-config-shadow: rgba(255, 152, 0, 0.15);
+      --block-config-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><path d="M25,5 L45,25 L25,45 L5,25 Z" fill="none" stroke="rgba(255, 152, 0, 0.1)" stroke-width="0.5"/><circle cx="25" cy="25" r="3" fill="rgba(255, 152, 0, 0.15)"/></svg>');
+      --system-overview-bg: linear-gradient(135deg, #eaf6ff 0%, #cee6ff 100%);
+      --system-overview-border: #99ccff;
+      --system-overview-shadow: rgba(153, 204, 255, 0.4);
+      --disk-used-color: #42A5F5;
+      --disk-free-color: #E0E0E0;
+      --robot-plugin-color: #00BCD4;
+      --robot-other-color: #FFEB3B;
+      --chart-text-color: #3f608d;
+      --chart-total-label-color: #01579b;
+      --chart-total-value-color: #004d40;
+      --value-ok-color: #00c853;
+      --value-error-color: #dc3545;
+      --value-local-color: #0288d1;
+      --value-na-color: #78909c;
+      --status-item-bg: rgba(255, 255, 255, 0.8);
+      --status-item-border: rgba(0, 0, 0, 0.1);
+      --status-item-shadow: rgba(0, 0, 0, 0.03);
+      --status-item-text: var(--text-primary);
+      --config-bg-soft: linear-gradient(135deg, rgba(255, 248, 220, 0.7) 0%, rgba(255, 255, 230, 0.8) 100%);
+      --config-bg-strong: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      --plugin-robot-bar-color: #00BCD4;
+      --highlight-color: #C71585;
+    }
 
-        --status-ok-color: #4caf50;
-        --status-fail-color: #e53935;
-        --status-no-change-color: var(--theme-accent-color);
-        --status-skipped-color: #9e9e9e;
-        --status-force-synced-color: #d32f2f;
+    * {
+      box-sizing: border-box;
+    }
 
-        --error-details-bg: rgba(103, 58, 183, 0.05);
-        --error-details-text: var(--status-fail-color);
-        --error-details-border: var(--status-fail-color);
-        --error-details-strong: #b71c1c;
-        --error-details-pre-bg: #fce4ec;
-        --error-details-pre-border: #f8bbd0;
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
-        --log-bg: #f5f5f5;
-        --log-border: #eeeeee;
-        --log-text: #424242;
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+      color: var(--text-primary);
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      width: 650px;
+      margin: 20px auto;
+      position: relative;
+      z-index: 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-        --summary-default-bg-start: var(--block-bg-start);
-        --summary-default-bg-end: var(--theme-bg-start);
-        --summary-default-border: var(--theme-primary-color);
-        --summary-default-text: var(--text-color-base);
+    .container-shadow-wrapper {
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+      padding: 0;
+      box-sizing: border-box;
+      border-radius: 16px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
-        --summary-no-changes-bg: var(--theme-lighter-purple);
-        --summary-no-changes-border: var(--theme-secondary-color);
-        --summary-no-changes-text: var(--text-color-muted);
+    .container {
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      border: 1px solid var(--container-border);
+      width: 100%;
+      margin: 0 auto;
+      box-shadow: 0 0 15px 5px var(--accent-glow);
+      padding: 0;
+      box-sizing: border-box;
+      z-index: 1;
+      overflow: hidden;
+      backdrop-filter: blur(var(--panel-backdrop-blur));
+      -webkit-backdrop-filter: blur(var(--panel-backdrop-blur));
+      background-image:
+        repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px);
+      background-size: 20px 20px;
+    }
 
-        --summary-has-errors-bg: rgba(229, 57, 53, 0.08);
-        --summary-has-errors-border: var(--status-fail-color);
-        --summary-has-errors-text: var(--status-fail-color);
-        
-        --error-summary-bg: rgba(103, 58, 183, 0.03);
-        --error-summary-border: var(--status-fail-color);
-        --error-summary-h2-color: var(--status-fail-color);
-        --error-summary-li-border: var(--theme-lighter-purple);
-      }
+    .container::before,
+    .container::after,
+    body::before,
+    body::after {
+      display: none;
+    }
 
-      @font-face {
-        font-family: 'CuteFont';
-        src: local('Yuanti SC'), 
-             local('YouYuan'), 
-             local('Microsoft YaHei UI Rounded'), 
-             local('Arial Rounded MT Bold'),
-             local('Microsoft YaHei UI'),
-             local('PingFang SC'), 
-             sans-serif;
-        font-weight: normal;
-        font-style: normal;
-      }
-      body {
-        font-family: 'CuteFont', sans-serif;
-        width: 650px; 
-        margin: 20px auto;
-        padding: 30px;
-        background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
-        color: #333;
-        font-size: 14px;
-        line-height: 1.6;
-        box-sizing: border-box;
-        position: relative;
-        overflow: hidden;
-      }
-      .container {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 16px;
-        padding: 25px;
-        box-shadow: 0 0 20px rgba(0, 172, 230, 0.2);
-        border: 1px solid #b3e0ff;
-        position: relative;
-        overflow: hidden;
-      }
-      .container::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><line x1="0" y1="60" x2="120" y2="60" stroke="rgba(0, 172, 230, 0.15)" stroke-width="0.5"/><line x1="60" y1="0" x2="60" y2="120" stroke="rgba(255, 105, 180, 0.15)" stroke-width="0.5"/></svg>') repeat;
-        opacity: 0.1;
-        transform: rotate(45deg);
-        z-index: -1;
-      }
-      h1 {
-        text-align: center;
-        color: #00acc1;
-        margin: 0 0 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #4fc3f7;
-        font-size: 26px;
-        font-weight: bold;
-        text-shadow: 0 0 5px rgba(0, 172, 230, 0.3);
-        position: relative;
-      }
-      .stats-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        margin-bottom: 20px;
-      }
-      .stats-block {
-        flex: 1;
-        min-width: 0;
-        background: linear-gradient(to bottom, #f5faff, #ffffff);
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid #b3e0ff;
-        box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
-        position: relative;
-        overflow: hidden;
-      }
-      .stats-block::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="rgba(0, 172, 230, 0.2)" stroke-width="0.5"/></svg>') repeat;
-        opacity: 0.15;
-        z-index: -1;
-      }
-      h2 {
-        color: #0288d1;
-        margin: 0 0 10px;
-        border-left: 4px solid #ff4081;
-        padding-left: 10px;
-        font-size: 18px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-      }
-      h2 .icon {
-        margin-right: 6px;
-        font-size: 18px;
-        color: #ff4081;
-        text-shadow: 0 0 3px rgba(255, 105, 180, 0.2);
-      }
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 8px 0 0;
-      }
-      li {
-        margin-bottom: 8px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #e0f0ff;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        min-height: 20px;
-      }
-      li:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
-      .label {
-        color: #555;
-        margin-right: 10px;
-        white-space: nowrap;
-        font-size: 0.95em;
-      }
-      .value {
-        font-weight: bold;
-        color: #0277bd;
-        text-align: right;
-        font-size: 0.9em;
-      }
-      strong {
-        color: #ff4081;
-        text-shadow: 0 0 3px rgba(255, 105, 180, 0.2);
-      }
-      .game-stats {
-        margin-left: 10px;
-        margin-top: 6px;
-        padding-left: 10px;
-        border-left: 2px solid #4fc3f7;
-      }
-      .game-stats:empty {
-        display: none;
-      }
-      .game-stats li {
-        font-size: 0.9em;
-        padding-bottom: 2px;
-        margin-bottom: 2px;
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        border-bottom: none;
-      }
-      .game-stats .label {
-        min-width: 45px;
-        flex-shrink: 0;
-        margin-right: 6px;
-      }
-      .game-details {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        flex-grow: 1;
-        flex-wrap: nowrap;
-      }
-      .game-details .value {
-        text-align: left;
-        margin-right: 8px;
-        min-width: 45px;
-        white-space: nowrap;
-      }
-      .game-size {
-        color: #78909c;
-        font-weight: normal;
-        font-size: 0.85em;
-      }
-      .storage-details-block {
-        margin: 20px 0;
-        padding: 20px;
-        border-radius: 14px;
-        background: linear-gradient(to right, #f5faff, #e6f0ff);
-        border: 1px solid #ff4081;
-        box-shadow: 0 0 12px rgba(255, 105, 180, 0.2);
-        position: relative;
-        overflow: hidden;
-      }
-      .storage-details-block::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="3" fill="rgba(0, 230, 118, 0.25)"/><polyline points="15,45 30,30 45,45" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5" fill="none"/></svg>') repeat;
-        opacity: 0.2;
-        z-index: -1;
-      }
-      .storage-repo-columns {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        /* padding-bottom: 20px; /* 移除这里的底部边距和边框，放到新的总览行之后 */
-        /* margin-bottom: 20px; */
-        /* border-bottom: 1px solid #e0f0ff; */
-      }
-      .storage-column {
-        flex: 1;
-        min-width: 0;
-        position: relative;
-      }
-      .storage-summary-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        margin-top: 20px; 
-        padding-top: 20px;
-        border-top: 1px solid #e0f0ff; 
-      }
-      .storage-summary-column { 
-        flex: 2; 
-        min-width: 0;
-      }
-      .storage-repo4-column {
-        flex: 1; 
-        min-width: 0;
-      }
-      .storage-column h3, .storage-summary-column h3, .storage-repo4-column h3 {
-        color: #00acc1;
-        margin: 0 0 10px;
-        font-size: 16px;
-        font-weight: bold;
-        border-bottom: 1px solid #4fc3f7;
-        padding-bottom: 6px;
-        display: flex;
-        align-items: center;
-      }
-      .storage-column h3 .icon, .storage-repo4-column h3 .icon {
-        margin-right: 6px;
-        font-size: 16px;
-        color: #ff4081;
-      }
-      .storage-summary-column h3 .icon {
-        margin-right: 6px;
-        font-size: 17px;
-        color: #00acc1;
-      }
-      .storage-column ul, .storage-summary-column ul, .storage-repo4-column ul {
-        margin-top: 6px;
-        padding: 0;
-      }
-      .storage-column li, .storage-summary-column li, .storage-repo4-column li {
-        font-size: 0.9em;
+    .header {
+      text-align: left;
+      margin-bottom: 20px;
+      padding: 25px 30px 15px 30px;
+      background-color: var(--header-bg);
+      position: relative;
+      z-index: 1;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      box-shadow: inset 0 -1px 0 var(--header-border-line);
+      background-image:
+        radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
+      background-size: 100% 100%, 50% 100%;
+      background-position: center, center;
+      background-repeat: no-repeat, repeat-x;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      color: var(--header-title-color);
+      margin: 0;
+      letter-spacing: 0.5px;
+      position: relative;
+      display: flex;
+      align-items: baseline;
+      padding-bottom: 4px;
+      flex-grow: 1;
+    }
+
+    .header h1 span {
+      font-family: 'Orbitron';
+      color: var(--header-subtitle-color);
+      font-size: 16px;
+      margin-left: 10px;
+      letter-spacing: 0.25px;
+    }
+
+    .header h1::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 30%;
+      height: 3px;
+      background-color: var(--header-underline-color);
+      border-radius: 1px;
+      box-shadow: 0 0 4px var(--header-underline-color);
+    }
+    
+    .header-image-container {
+      width: 60px;
+      height: 60px;
+      overflow: hidden;
+      flex-shrink: 0;
+      margin-left: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .header-cute-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .main-content-padding {
+      padding: 0 30px;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stats-block {
+      flex: 1;
+      min-width: 0;
+      background-color: var(--section-bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--section-border-card);
+      box-shadow: 0 4px 15px var(--section-shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-block.meta {
+      border-color: var(--block-meta-border);
+      box-shadow: 0 4px 15px var(--block-meta-shadow);
+    }
+
+    .stats-block.meta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--block-meta-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .stats-block.scan {
+      border-color: var(--block-scan-border);
+      box-shadow: 0 4px 15px var(--block-scan-shadow);
+    }
+
+    .stats-block.scan::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--block-scan-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .storage-details-block {
+      background-color: var(--section-bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--block-storage-border);
+      box-shadow: 0 4px 15px var(--block-storage-shadow);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .storage-details-block.seamless-top {
+      margin-bottom: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-bottom: none;
+      background-color: var(--section-bg-card);
+      border-color: var(--system-overview-border);
+      box-shadow: 0 4px 15px var(--system-overview-shadow);
+    }
+
+    .storage-details-block.seamless-top::before {
+      background: var(--system-overview-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .config-section {
+      background-color: var(--section-bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--block-config-border);
+      box-shadow: 0 4px 15px var(--block-config-shadow);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .config-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--block-config-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .config-section .category-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .config-section .category-title .install-time {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+      margin-left: 10px;
+      white-space: nowrap;
+      font-weight: normal;
+    }
+    .config-section .install-days-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14em;
+      font-family: 'Orbitron';
+      color: rgba(255, 152, 0, 0.02);
+      pointer-events: none;
+      z-index: 2;
+      text-shadow: 0 0 5px rgba(255, 152, 0, 0.05);
+    }
+
+    .system-overview-block {
+      background-color: var(--section-bg-card);
+      border: 1px solid var(--system-overview-border);
+      box-shadow: 0 4px 15px var(--system-overview-shadow);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .system-overview-block.seamless-bottom {
+      margin-top: 0;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-top: none;
+    }
+
+
+    .system-overview-block::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--system-overview-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .system-overview-block .category-title {
+      color: var(--chart-text-color);
+      border-left-color: var(--system-overview-border);
+      margin-top: 0;
+      padding-top: 15px;
+    }
+
+    .system-overview-block .category-title .icon {
+      color: var(--system-overview-border);
+    }
+
+    .info-card-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .info-card-item {
+      flex: 1 1 calc(20% - 10px);
+      min-width: 100px;
+      background-color: var(--section-bg-card);
+      border: 1px solid var(--system-overview-border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .info-card-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background-color: var(--header-underline-color);
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    .card-label {
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .card-value {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: var(--chart-text-color);
+      line-height: 1.2;
+    }
+
+    .card-sub-value {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      margin-top: 3px;
+      display: block;
+    }
+
+    .info-card-item.last-card .card-sub-value {
+      line-height: 1.4;
+      white-space: normal;
+      margin-top: 8px;
+      text-align: left;
+    }
+
+    .info-card-item.last-card .card-sub-value span {
+      display: inline;
+      padding: 0;
+      margin-right: 0;
+      margin-bottom: 0;
+    }
+
+    .info-card-item.last-card .card-sub-value span:not(:last-child)::after {
+      content: "|";
+      margin: 0 6px;
+      color: var(--text-muted);
+    }
+
+
+    .disk-overview-bar-container {
+      width: 100%;
+      height: 25px;
+      background-color: var(--disk-free-color);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .disk-bar-fill {
+      height: 100%;
+      background-color: var(--disk-used-color);
+      width: {{ diskChartData.usedPercentage }}%;
+      border-radius: 12px;
+      transition: width 1s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9em;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .plugin-robot-overview-bar-container {
+      width: 100%;
+      height: 25px;
+      background-color: var(--disk-free-color);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .plugin-robot-bar-fill {
+      height: 100%;
+      background-color: var(--plugin-robot-bar-color);
+      width: {{ galleryOverviewData.galleryToRobot.percentage || 0 }}%;
+      border-radius: 12px;
+      transition: width 1s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9em;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .disk-usage-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      color: var(--chart-text-color);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .disk-usage-info .label {
+      color: var(--text-secondary);
+    }
+
+    .disk-usage-info .value {
+      color: var(--disk-used-color);
+    }
+
+    .disk-usage-info .free-label {
+      color: var(--text-primary);
+    }
+
+    .category-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-align: left;
+      margin: 0 0 15px 0;
+      padding: 8px 0 8px 10px;
+      border-left: 4px solid var(--header-underline-color);
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .category-title .icon {
+      margin-right: 6px;
+      font-size: 18px;
+      color: inherit;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .stats-block.meta .category-title {
+      color: #0288d1;
+      border-left-color: #ff4081;
+    }
+
+    .stats-block.meta .category-title .icon {
+      color: #ff4081;
+    }
+
+    .stats-block.scan .category-title {
+      color: #00acc1;
+      border-left-color: #28a745;
+    }
+
+    .stats-block.scan .category-title .icon {
+      color: #28a745;
+    }
+
+
+    .storage-details-block .category-title {
+      color: var(--chart-text-color);
+      border-left-color: var(--system-overview-border);
+    }
+
+    .storage-details-block .category-title .icon {
+      color: var(--system-overview-border);
+    }
+
+    .config-section .category-title {
+      color: #ff9800;
+      border-left-color: #f57c00;
+    }
+
+    .config-section .category-title .icon {
+      color: #f57c00;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stats-block ul>li {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 1.2em;
+    }
+
+    .stats-block ul>li:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .stats-block ul>li>.label {
+      flex-shrink: 0;
+      margin-right: 8px;
+      text-align: left;
+      color: var(--text-secondary);
+    }
+
+    .stats-block ul>li>.value {
+      flex-grow: 1;
+      text-align: right;
+      font-weight: bold;
+      color: var(--value-local-color);
+      white-space: nowrap;
+    }
+    
+    .stats-block ul > li > .value strong {
+      color: var(--highlight-color);
+      font-weight: bold;
+    }
+
+    .game-stats-container {
+      margin-left: 10px;
+      margin-top: 10px;
+      padding-left: 10px;
+      border-left: 2px solid var(--header-underline-color);
+    }
+
+    .game-stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+      table-layout: auto;
+    }
+
+    .game-stats-table td {
+      padding: 3px 0;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+    
+    .game-stats-table .game-name {
+      width: 60px;
+      padding-right: 5px;
+      color: var(--text-secondary);
+    }
+
+    .game-stats-table .stat-value {
+      text-align: right;
+      font-weight: bold;
+      color: var(--value-local-color);
+      padding-right: 15px;
+    }
+    
+    .game-stats-table .game-size {
+      color: var(--text-muted);
+      font-weight: normal;
+      text-align: right;
+    }
+    
+    .config-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      min-height: 20px;
+    }
+
+    .config-list-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .label {
+      color: var(--text-secondary);
+      margin-right: 10px;
+      white-space: nowrap;
+      font-size: 0.95em;
+    }
+
+    .value {
+      font-weight: bold;
+      color: var(--value-local-color);
+      text-align: right;
+      font-size: 0.9em;
+    }
+
+    .value strong {
+      color: inherit;
+      text-shadow: none;
+    }
+
+    .storage-repo-columns {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .storage-column,
+    .storage-repo4-column {
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      padding: 15px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .storage-column h3,
+    .storage-repo4-column h3 {
+      font-size: 1em;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin: 0 0 5px 0;
+      border-bottom: none;
+      padding-bottom: 0;
+      justify-content: center;
+      display: flex;
+      align-items: center;
+    }
+
+    .storage-column h3 .icon,
+    .storage-repo4-column h3 .icon {
+      margin-right: 6px;
+    }
+
+    .storage-column ul,
+    .storage-repo4-column ul {
+      margin-top: 0;
+      padding: 0;
+      list-style: none;
+      width: 100%;
+    }
+
+    .storage-column li,
+    .storage-repo4-column li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+      padding: 6px 0;
+      margin-bottom: 0;
+    }
+
+    .storage-column li:last-child,
+    .storage-repo4-column li:last-child {
+      border-bottom: none;
+    }
+
+    .storage-column .label,
+    .storage-repo4-column .label {
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .storage-column .value,
+    .storage-repo4-column .value {
+      font-weight: bold;
+      color: var(--value-local-color);
+      text-align: right;
+      padding-left: 8px;
+      line-height: 1.2;
+    }
+    
+    .storage-column .repo-not-exist,
+    .storage-repo4-column .repo-not-exist {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9em;
+      font-style: italic;
+      margin: auto 0;
+    }
+
+    .status-display-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--section-border-card);
+    }
+
+    .status-display-item {
+      flex: 1 1 calc(25% - 15px);
+      min-width: 100px;
+      background-color: var(--status-item-bg);
+      border: 1px solid var(--status-item-border);
+      box-shadow: 0 1px 4px var(--status-item-shadow);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-display-item:nth-child(-n+3) {
+      flex: 1 1 calc(33.333% - 15px);
+    }
+
+    .status-display-item .label {
+      font-size: 0.9em;
+      font-weight: 500;
+      color: var(--status-item-text);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      margin-right: 0;
+    }
+
+    .status-display-item .value {
+      font-size: 1.1em;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: var(--value-local-color);
+      background-color: rgba(0, 0, 0, 0.05);
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    .status-display-item .value.config-value-enabled {
+      color: var(--value-ok-color);
+      background-color: rgba(0, 230, 118, 0.15);
+    }
+
+    .status-display-item .value.config-value-disabled {
+      color: var(--value-error-color);
+      background-color: rgba(255, 105, 180, 0.15);
+    }
+
+    .status-display-item .status-sub-value {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      margin-top: 5px;
+      display: block;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .task-schedule-group {
+      grid-column: 1 / -1;
+      background-color: rgba(240, 248, 255, 0.7);
+      border: 1px solid rgba(173, 216, 230, 0.5);
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin-top: 15px;
+      font-family: 'Orbitron', monospace;
+    }
+
+    .task-schedule-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+    }
+    
+    .task-schedule-item:not(:last-child) {
         margin-bottom: 6px;
-        padding-bottom: 4px;
-      }
-      .storage-column li:last-child, .storage-summary-column li:last-child, .storage-repo4-column li:last-child {
-        border-bottom: none;
-      }
-      .storage-column .label, .storage-summary-column .label, .storage-repo4-column .label {
-        color: #555;
-      }
-      .storage-column .value, .storage-summary-column .value, .storage-repo4-column .value {
-        color: #0277bd;
-      }
-      .storage-column strong, .storage-summary-column strong, .storage-repo4-column strong {
-        color: #ff4081;
-      }
-      .repo-not-exist {
-        text-align: center;
-        color: #90a4ae;
-        font-size: 0.9em;
-        margin-top: 12px;
-        font-style: italic;
-      }
-      /* .storage-summary-section h3, .storage-summary-section ul, .storage-summary-section li 已被上面的 .storage-summary-column 规则覆盖或合并 */
+    }
 
-      .config-section {
-        margin-top: 20px;
-        background: linear-gradient(to bottom, #f5faff, #e6f0ff);
-        padding: 15px 20px;
-        border-radius: 12px;
-        border: 1px solid #00acc1;
-        box-shadow: 0 0 10px rgba(0, 172, 230, 0.2);
-        position: relative;
-        overflow: hidden;
-      }
-      .config-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><polygon points="20,5 35,20 20,35 5,20" fill="none" stroke="rgba(255, 105, 180, 0.2)" stroke-width="0.5"/></svg>') repeat;
-        opacity: 0.2;
-        z-index: -1;
-      }
-      .config-section h2 {
-        color: #00acc1;
-        border-left-color: #ff4081;
-        font-size: 18px;
-      }
-      .config-section ul {
-        margin-top: 10px;
-      }
-      .config-section li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.95em;
-        margin-bottom: 8px;
-      }
-      .config-value-enabled {
-        color: #00c853;
-        font-weight: bold;
-        background: rgba(0, 230, 118, 0.3);
-        padding: 3px 10px;
-        border-radius: 6px;
-      }
-      .config-value-disabled {
-        color: #d81b60;
-        font-weight: bold;
-        background: rgba(255, 105, 180, 0.3);
-        padding: 3px 10px;
-        border-radius: 6px;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 25px;
-        font-size: 0.8em;
-        color: #78909c;
-        border-top: 1px solid #e0f0ff;
-        padding-top: 10px;
-        position: relative;
-      }
-    </style>
+    .task-name {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .cron-expression {
+      color: var(--accent-color);
+      font-weight: bold;
+      background-color: rgba(0, 172, 193, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 0px 0px 20px 0px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      letter-spacing: 0.25px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
+    }
+
+    .repo-node-source {
+      padding: 4px 0px;
+      border-radius: 6px;
+      background-color: rgba(232, 245, 233, 0.7);
+      border: 1px solid rgba(40, 167, 69, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.85em;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    .repo-node-source .label {
+      color: var(--text-secondary);
+      margin-right: 5px;
+      border-bottom: none;
+      padding: 0;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    .repo-node-source .value {
+      font-weight: bold;
+      color: #1b5e20;
+      padding-left: 0;
+    }
+  </style>
 </head>
+
 <body style="{{scaleStyleValue}}">
+  <div class="container-shadow-wrapper">
     <div class="container">
-        <h1>咕咕牛的状态报告</h1>
+      <header class="header">
+        <h1>咕咕牛的状态报告<span>/ISTATUSI/</span></h1>
+        <div class="header-image-container">
+          {{ if headerImage }}
+          <img src="{{ headerImage }}" class="header-cute-image">
+          {{ /if }}
+      </div>
+      </header>
 
+      <main class="main-content-padding">
         <div class="stats-row">
-            <div class="stats-block">
-                <h2><span class="icon">📊</span>元数据统计</h2>
-                <ul>
-                    <li><span class="label">角色:</span> <span class="value"><strong>{{ stats.meta.roles || 0 }}</strong> 名</span></li>
-                    <li><span class="label">图片:</span> <span class="value"><strong>{{ stats.meta.images || 0 }}</strong> 张</span></li>
-                    <ul class="game-stats">
-                        {{ each stats.meta.games gameCount gameName }}
-                        <li> <span class="label">{{ gameName }}:</span> <div class="game-details"> <span class="value">{{ gameCount }} 张</span> </div> </li>
-                        {{ /each }}
-                    </ul>
-                </ul>
+          <div class="stats-block meta">
+            <h2 class="category-title"><span class="icon">📊</span>元数据统计</h2>
+            <ul>
+              <li><span class="label">角色:</span> <span class="value"><strong>{{ stats.meta.roles || 0 }}</strong> 名</span></li>
+              <li><span class="label">图片:</span> <span class="value"><strong>{{ stats.meta.images || 0 }}</strong> 张</span></li>
+            </ul>
+            <div class="game-stats-container">
+              <table class="game-stats-table">
+                <tbody>
+                  {{ each stats.meta.games gameCount gameName }}
+                  <tr>
+                    <td class="game-name">{{ gameName }}:</td>
+                    <td class="stat-value">{{ gameCount }} 张</td>
+                    <td class="stat-value">{{ stats.meta.gameRoles[gameName] || 0 }} 名</td> 
+                  </tr>
+                  {{ /each }}
+                </tbody>
+              </table>
             </div>
-            <div class="stats-block">
-                <h2><span class="icon">📁</span>本地文件扫描</h2>
-                <ul>
-                    <li><span class="label">角色(扫描):</span> <span class="value"><strong>{{ stats.scan.roles || 0 }}</strong> 名</span></li>
-                    <li><span class="label">图片(扫描):</span> <span class="value"><strong>{{ stats.scan.images || 0 }}</strong> 张</span></li>
-                    <ul class="game-stats">
-                        {{ each stats.scan.gameImages gameCount gameName }}
-                        <li> <span class="label">{{ gameName }}:</span> <div class="game-details"> <span class="value">{{ gameCount }} 张</span> <span class="value">{{ stats.scan.gameRoles[gameName] || 0 }} 名</span> <span class="value game-size">{{ stats.scan.gameSizesFormatted[gameName] || '0 B' }}</span> </div> </li>
-                        {{ /each }}
-                    </ul>
-                </ul>
+          </div>
+          <div class="stats-block scan">
+            <h2 class="category-title"><span class="icon">📁</span>本地文件扫描</h2>
+            <ul>
+              <li><span class="label">角色(扫描):</span> <span class="value"><strong>{{ stats.scan.roles || 0 }}</strong> 名</span></li>
+              <li><span class="label">图片(扫描):</span> <span class="value"><strong>{{ stats.scan.images || 0 }}</strong> 张</span></li>
+            </ul>
+            <div class="game-stats-container">
+              <table class="game-stats-table">
+                <tbody>
+                  {{ each stats.scan.gameImages gameCount gameName }}
+                  <tr>
+                    <td class="game-name">{{ gameName }}:</td>
+                    <td class="stat-value">{{ gameCount }} 张</td>
+                    <td class="stat-value">{{ stats.scan.gameRoles[gameName] || 0 }} 名</td>
+                    <td class="stat-value game-size">{{ stats.scan.gameSizesFormatted[gameName] || '0 B' }}</td>
+                  </tr>
+                  {{ /each }}
+                </tbody>
+              </table>
             </div>
-        </div>
-
-        <div class="storage-details-block">
-            <div class="storage-repo-columns">
-                <div class="storage-column">
-                    {{ if stats.repos['1'] }}
-                        <h3><span class="icon">📦</span>{{ stats.repos['1'].name }}</h3>
-                        {{ if stats.repos['1'].exists }}
-                        <ul> <li><span class="label">文件:</span> <span class="value">{{ stats.repos['1'].filesSizeFormatted || 'N/A' }}</span></li> <li><span class="label">Git:</span> <span class="value">{{ stats.repos['1'].gitSizeFormatted || 'N/A' }}</span></li> <li><span class="label">占用:</span> <span class="value">{{ stats.repos['1'].sizeFormatted || 'N/A' }}</span></li> </ul>
-                        {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
-                    {{ /if }}
-                </div>
-                <div class="storage-column">
-                    {{ if stats.repos['2'] }}
-                        <h3><span class="icon">📦</span>{{ stats.repos['2'].name }}</h3>
-                        {{ if stats.repos['2'].exists }}
-                        <ul> <li><span class="label">文件:</span> <span class="value">{{ stats.repos['2'].filesSizeFormatted || 'N/A' }}</span></li> <li><span class="label">Git:</span> <span class="value">{{ stats.repos['2'].gitSizeFormatted || 'N/A' }}</span></li> <li><span class="label">占用:</span> <span class="value">{{ stats.repos['2'].sizeFormatted || 'N/A' }}</span></li> </ul>
-                        {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
-                    {{ /if }}
-                </div>
-                <div class="storage-column">
-                    {{ if stats.repos['3'] }}
-                        <h3><span class="icon">📦</span>{{ stats.repos['3'].name }}</h3>
-                        {{ if stats.repos['3'].exists }}
-                        <ul> <li><span class="label">文件:</span> <span class="value">{{ stats.repos['3'].filesSizeFormatted || 'N/A' }}</span></li> <li><span class="label">Git:</span> <span class="value">{{ stats.repos['3'].gitSizeFormatted || 'N/A' }}</span></li> <li><span class="label">占用:</span> <span class="value">{{ stats.repos['3'].sizeFormatted || 'N/A' }}</span></li> </ul>
-                        {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
-                    {{ else }}
-                         <h3><span class="icon">📦</span>三号仓库</h3> <p class="repo-not-exist">(未配置)</p>
-                    {{ /if }}
-                </div>
-                 <div class="storage-repo4-column"> 
-                    {{ if stats.repos['4'] }}
-                        <h3><span class="icon">📦</span>{{ stats.repos['4'].name }}</h3>
-                        {{ if stats.repos['4'].exists }}
-                        <ul> <li><span class="label">文件:</span> <span class="value">{{ stats.repos['4'].filesSizeFormatted || 'N/A' }}</span></li> <li><span class="label">Git:</span> <span class="value">{{ stats.repos['4'].gitSizeFormatted || 'N/A' }}</span></li> <li><span class="label">占用:</span> <span class="value">{{ stats.repos['4'].sizeFormatted || 'N/A' }}</span></li> </ul>
-                        {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
-                    {{ else }}
-                         <h3><span class="icon">📦</span>四号仓库</h3> <p class="repo-not-exist">(未配置)</p>
-                    {{ /if }}
-                </div>
-            </div>
-            
-            <div class="storage-summary-row">
-                <div class="storage-summary-column">
-                    <h3><span class="icon">💾</span>存储总览</h3>
-                    <ul>
-                        <li><span class="label">总文件:</span> <span class="value"><strong>{{ stats.scan.totalFilesSizeFormatted || '0 B' }}</strong></span></li>
-                        <li><span class="label">Git缓存:</span> <span class="value"><strong>{{ stats.scan.totalGitSizeFormatted || '0 B' }}</strong></span></li>
-                        <li><span class="label">总占用:</span> <span class="value"><strong>{{ stats.scan.totalSizeFormatted || '0 B' }}</strong></span></li>
-                    </ul>
-                </div>
-               
-            </div>
+          </div>
         </div>
 
         <div class="config-section">
-            <h2><span class="icon">⚙️</span>配置状态</h2>
-            <ul>
-                <li><span class="label">启用状态:</span> <span class="value {{ config.enabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{ config.enabledText }}</span></li>
-                <li><span class="label">净化等级:</span> <span class="value">{{ config.pflLevel }} ({{ config.pflDesc }})</span></li>
-                <li><span class="label">生效屏蔽:</span> <span class="value"><strong>{{ config.activeBans || 0 }}</strong> 张 (手动 {{ config.userBans || 0 }} + 净化 {{ config.purifiedBans || 0 }})</span></li>
-                <li><span class="label">Ai 图状态:</span> <span class="value {{ config.aiEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{ config.aiStatusText }}</span></li>
-                <li><span class="label">彩蛋图状态:</span> <span class="value {{ config.easterEggEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{ config.easterEggStatusText }}</span></li>
-                <li><span class="label">横屏图状态:</span> <span class="value {{ config.layoutEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{ config.layoutStatusText }}</span></li>
-                <li><span class="label">PM18 功能:</span> <span class="value {{ config.pm18Enabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{ config.pm18StatusText }}</span></li>
-                <li><span class="label">低负载模式:</span> <span class="value {{ config.executionMode.class }}">{{ config.executionMode.text }}</span></li>
-            </ul>
+          <h2 class="category-title">
+            <span><span class="icon">⚙️</span>配置状态</span>
+            <span class="install-time">安装时间:{{ config.installationTime || 'N/A' }}</span>
+          </h2>
+          <div class="install-days-overlay">{{ config.installedDaysText || '' }}</div>
+          <div class="status-display-group">
+            <div class="status-display-item">
+              <span class="label">远程封禁</span>
+              <span class="value config-value-disabled">{{ config.remoteBansCount || 0 }} 张</span> 
+              <span class="status-sub-value">由咕咕牛封禁的图片数量</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">净化等级</span>
+              <span class="value">{{ config.pflLevel }}</span>
+              <span class="status-sub-value">({{ config.pflDesc }})</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">本地生效屏蔽</span>
+              <span class="value">{{ config.activeBans || 0 }} 张</span>
+              <span class="status-sub-value">(手动 {{ config.userBans || 0 }} + 净化 {{ config.purifiedBans || 0
+                }})</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">Ai图状态</span>
+              <span class="value {{ config.aiEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{
+                config.aiStatusText }}</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">彩蛋图状态</span>
+              <span class="value {{ config.easterEggEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{
+                config.easterEggStatusText }}</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">横屏图状态</span>
+              <span class="value {{ config.layoutEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{
+                config.layoutStatusText }}</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">低负载模式</span>
+              <span class="value {{ config.executionMode.class }}">{{ config.executionMode.text }}</span>
+            </div>
+          </div>
+          <div class="task-schedule-group">
+            <div class="task-schedule-item">
+              <span class="task-name">定时图库更新任务:</span>
+              <span class="cron-expression">每十二小时 | 0 */12 * * *</span>
+            </div>
+            <div class="task-schedule-item">
+              <span class="task-name">定时清理临时文件任务:</span>
+              <span class="cron-expression">每天凌晨三点 | 0 0 3 * * *</span>
+            </div>
+          </div>
         </div>
 
-        <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
+        <div class="storage-details-block seamless-top">
+          <h2 class="category-title"><span class="icon">💾</span>存储仓库详情</h2>
+          <div class="storage-repo-columns">
+            <div class="storage-column">
+              {{ if stats.repos['1'] }}
+              <h3><span class="icon">📦</span>{{ stats.repos['1'].name }}</h3>
+              {{ if stats.repos['1'].exists }}
+              <ul>
+                <li><span class="label">文件:</span> <span class="value">{{ stats.repos['1'].filesSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">Git:</span> <span class="value">{{ stats.repos['1'].gitSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">占用:</span> <span class="value">{{ stats.repos['1'].sizeFormatted || 'N/A' }}</span></li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['1'].nodeName || '未知' }}</span>
+              </div>
+              {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
+              {{ /if }}
+            </div>
+            <div class="storage-column">
+              {{ if stats.repos['2'] }}
+              <h3><span class="icon">📦</span>{{ stats.repos['2'].name }}</h3>
+              {{ if stats.repos['2'].exists }}
+              <ul>
+                <li><span class="label">文件:</span> <span class="value">{{ stats.repos['2'].filesSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">Git:</span> <span class="value">{{ stats.repos['2'].gitSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">占用:</span> <span class="value">{{ stats.repos['2'].sizeFormatted || 'N/A' }}</span></li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['2'].nodeName || '未知' }}</span>
+              </div>
+              {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
+              {{ /if }}
+            </div>
+            <div class="storage-column">
+              {{ if stats.repos['3'] }}
+              <h3><span class="icon">📦</span>{{ stats.repos['3'].name }}</h3>
+              {{ if stats.repos['3'].exists }}
+              <ul>
+                <li><span class="label">文件:</span> <span class="value">{{ stats.repos['3'].filesSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">Git:</span> <span class="value">{{ stats.repos['3'].gitSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">占用:</span> <span class="value">{{ stats.repos['3'].sizeFormatted || 'N/A' }}</span></li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['3'].nodeName || '未知' }}</span>
+              </div>
+              {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
+              {{ else }}
+              <h3><span class="icon">📦</span>三号仓库</h3>
+              <p class="repo-not-exist">(未配置)</p>
+              {{ /if }}
+            </div>
+            <div class="storage-repo4-column">
+              {{ if stats.repos['4'] }}
+              <h3><span class="icon">📦</span>{{ stats.repos['4'].name }}</h3>
+              {{ if stats.repos['4'].exists }}
+              <ul>
+                <li><span class="label">文件:</span> <span class="value">{{ stats.repos['4'].filesSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">Git:</span> <span class="value">{{ stats.repos['4'].gitSizeFormatted || 'N/A' }}</span></li>
+                <li><span class="label">占用:</span> <span class="value">{{ stats.repos['4'].sizeFormatted || 'N/A' }}</span></li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['4'].nodeName || '未知' }}</span>
+              </div>
+              {{ else }} <p class="repo-not-exist">(未下载)</p> {{ /if }}
+              {{ else }}
+              <h3><span class="icon">📦</span>四号仓库</h3>
+              <p class="repo-not-exist">(未配置)</p>
+              {{ /if }}
+            </div>
+          </div>
+        </div>
+
+        <div class="system-overview-block seamless-bottom">
+          <h2 class="category-title"><span class="icon">💻</span>机器人存储概览</h2>
+          <h3>硬盘占用: {{ diskChartData.usedPercentage }}%</h3>
+          <div class="disk-overview-bar-container">
+            <div class="disk-bar-fill" style="width: {{ diskChartData.usedPercentage }}%;">
+              {{ if diskChartData.usedPercentage > 5 }} {{ diskChartData.usedPercentage }}% {{ /if }}
+            </div>
+          </div>
+          <div class="disk-usage-info">
+            <span class="label">已用: <span class="value">{{ diskChartData.usedSizeFormatted }}</span></span>
+            <span class="free-label" style="color: var(--text-primary);">可用: {{ diskChartData.freeSizeFormatted
+              }}</span>
+            <span class="label">总计: <span class="value">{{ diskChartData.totalSizeFormatted }}</span></span>
+          </div>
+          <h3>图库/机器人占用: {{ galleryOverviewData.galleryToRobot.percentage || 0 }}% <span
+              style="float: right;">[{{
+              galleryOverviewData.galleryToRobot.sizeFormatted }} / {{ robotChartData.totalSizeFormatted }}]</span></h3>
+          <div class="plugin-robot-overview-bar-container">
+            <div class="plugin-robot-bar-fill"
+              style="width: {{ galleryOverviewData.galleryToRobot.percentage || 0 }}%;">
+              {{ if (galleryOverviewData.galleryToRobot.percentage || 0) > 5 }} {{
+              galleryOverviewData.galleryToRobot.percentage || 0 }}% {{ /if }}
+            </div>
+          </div>
+          <div class="info-card-row">
+            <div class="info-card-item">
+              <span class="card-label">原神占图库:</span>
+              <span class="card-value">{{ galleryOverviewData.genshinOfGallery.percentage || 0 }}%</span>
+              <span class="card-sub-value">({{ galleryOverviewData.genshinOfGallery.sizeFormatted }})</span>
+            </div>
+            <div class="info-card-item">
+              <span class="card-label">星铁占图库:</span>
+              <span class="card-value">{{ galleryOverviewData.starRailOfGallery.percentage || 0 }}%</span>
+              <span class="card-sub-value">({{ galleryOverviewData.starRailOfGallery.sizeFormatted }})</span>
+            </div>
+            <div class="info-card-item">
+              <span class="label">绝区零占图库:</span>
+              <span class="card-value">{{ galleryOverviewData.zzzOfGallery.percentage || 0 }}%</span>
+              <span class="card-sub-value">({{ galleryOverviewData.zzzOfGallery.sizeFormatted }})</span>
+            </div>
+            <div class="info-card-item">
+              <span class="label">鸣潮占图库:</span>
+              <span class="card-value">{{ galleryOverviewData.wavesOfGallery.percentage || 0 }}%</span>
+              <span class="card-sub-value">({{ galleryOverviewData.wavesOfGallery.sizeFormatted }})</span>
+            </div>
+            <div class="info-card-item last-card">
+              <span class="card-label">图库占机器人:</span>
+              <span class="card-value">{{ galleryOverviewData.galleryToRobot.percentage || 0 }}%</span>
+              <span class="card-sub-value">
+                <span>文件: {{ galleryOverviewData.totalGalleryContentSizeFormatted }}</span>
+                <span>GIT缓存: {{ galleryOverviewData.totalGitCacheSizeFormatted }}</span>
+                <span>仓库总占用: {{ galleryOverviewData.totalReposOccupancyFormatted }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</footer>
     </div>
+  </div>
 </body>
+
 </html>

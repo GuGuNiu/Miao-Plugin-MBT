@@ -1,275 +1,350 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛封禁列表</title>
-    <style>
-      :root {
-        --theme-primary-color: #d81b60;
-        --theme-secondary-color: #c2185b;
-        --theme-light-pink: #ff80ab;
-        --theme-lighter-pink: #ffb6c1;
-        --theme-bg-start: #fff0f5;
-        --theme-bg-end: #ffe4e1;
 
-        --text-color-dark: #333;
-        --text-color-light: #555;
-        --text-color-subtle: #78909c;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>咕咕牛封禁列表</title>
+  <style>
+    :root {
+      --bg-color: #fef2f2;
+      --container-bg: #ffffff;
+      --container-border: #e11d48;
+      --text-primary: #1f2937;
+      --text-secondary: #4b5563;
+      --header-bg: #be123c;
+      --header-title-color: #ffffff;
+      --header-underline-color: #fecdd3;
+      --header-stat-color: #fecdd3;
+      --tag-bg: rgba(0, 0, 0, 0.2);
+      --tag-manual-color: #ffcdd2;
+      --tag-purified-color: #d1c4e9;
+      --digit-bg: rgba(0, 0, 0, 0.25);
+      --digit-color: #ffffff;
+      --item-bg: #fff1f2;
+      --item-border: #fecdd3;
+      --item-shadow: rgba(0, 0, 0, 0.05);
+      --error-text-color: #be123c;
+      --error-bg-color: #ffe4e6;
+      --reason-tag-text-color: #be123c;
+      --reason-tag-bg-color: #ffe4e6;
+    }
 
-        --h2-text-color: var(--theme-secondary-color);
-        --h2-purified-border: #ffcc80;
-        --h2-manual-border: #ff8a80;
+    @font-face {
+      font-family: 'Orbitron';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+    }
 
-        --item-bg-gradient-start: #fff8f9;
-        --item-bg-gradient-end: #ffffff;
-        --item-border-color: var(--theme-lighter-pink);
-        --item-shadow-color: rgba(216, 27, 96, 0.15);
+    @font-face {
+      font-family: 'Noto Sans SC';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+    }
 
-        --item-hover-border-color: #ff4081;
-        --item-hover-shadow-color: rgba(255, 105, 180, 0.25);
+    * {
+      box-sizing: border-box;
+    }
 
-        --error-text-color: var(--theme-primary-color);
-        --error-bg-color: rgba(216, 27, 96, 0.1);
+    body {
+      font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      width: 1000px;
+      margin: 20px auto;
+    }
 
-        --reason-tag-text-color: var(--theme-primary-color);
-        --reason-tag-bg-color: rgba(216, 27, 96, 0.1);
+    .container {
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      border: 2px solid var(--container-border);
+      box-shadow: 0 8px 25px rgba(224, 38, 72, 0.2);
+      padding: 0;
+      overflow: hidden;
+    }
 
-        --container-glow-border-color: var(--theme-light-pink);
-        --container-glow-color-intense: rgba(216, 27, 96, 0.35); 
-        --container-glow-color-soft: rgba(255, 105, 180, 0.25);
-        --container-glow-blur-near: 12px;
-        --container-glow-spread-near: 4px;
-        --container-glow-blur-far: 28px;   /* 增加远端模糊 */
-        --container-glow-spread-far: 10px;  /* 大幅增加远端扩展 */
-        --base-shadow-color-container: rgba(0, 0, 0, 0.04); /* 基础阴影更淡 */
-      }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 40px 30px;
+      background-color: var(--header-bg);
+      background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 10px, transparent 10px, transparent 20px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    }
 
-      @font-face {
-        font-family: 'CuteFont';
-        src: local('Microsoft YaHei'),
-             local('PingFang SC'),
-             local('Yuanti SC'),
-             local('YouYuan'),
-             local('Microsoft YaHei UI Rounded'),
-             local('Arial Rounded MT Bold'),
-             sans-serif;
-        font-weight: normal;
-        font-style: normal;
-      }
+    .header-content-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
+    .main-title {
+      position: relative;
+      padding-bottom: 8px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--header-title-color);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .main-title::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 50%;
+      height: 2px;
+      background-color: var(--header-underline-color);
+      border-radius: 1px;
+    }
+
+    .list-type-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--tag-bg);
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .list-type-tag.manual {
+      color: var(--tag-manual-color);
+    }
+
+    .list-type-tag.purified {
+      color: var(--tag-purified-color);
+    }
+
+    .header-stats-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--header-stat-color);
+      font-size: 14px;
+      font-weight: 500;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .digit-container {
+      display: flex;
+      gap: 3px;
+    }
+
+    .digit {
+      background-color: var(--digit-bg);
+      color: var(--digit-color);
+      padding: 4px 7px;
+      border-radius: 4px;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.4em;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .pagination-info {
+      color: var(--header-stat-color);
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.15);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .pagination-info .page-number {
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .main-content {
+      padding: 20px 30px;
+    }
+
+    .ban-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      padding: 10px 0;
+      list-style: none;
+    }
+
+    .ban-item {
+      background-color: var(--item-bg);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid var(--item-border);
+      box-shadow: 0 2px 4px var(--item-shadow);
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .ban-item img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      background-color: #fff;
+    }
+
+    .ban-item .error-placeholder {
+      width: 100%;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--error-bg-color);
+      color: var(--error-text-color);
+      font-size: 12px;
+      border-radius: 6px;
+      margin: 0 auto 10px;
+      padding: 10px;
+      text-align: center;
+      border: 1px dashed var(--error-text-color);
+    }
+
+    .filename-area {
+      margin-top: auto;
+      padding-top: 5px;
+    }
+
+    .ban-item .filename {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      word-break: break-all;
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .ban-item .filename .index {
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-right: 4px;
+    }
+
+    .ban-reasons {
+      margin-top: 5px;
+    }
+
+    .reason-tag {
+      font-size: 0.85em;
+      color: var(--reason-tag-text-color);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin: 2px;
+      background-color: var(--reason-tag-bg-color);
+      white-space: nowrap;
+    }
+
+    .empty-list {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 20px;
+      font-size: 0.95em;
+      padding: 20px;
+      background: #fffafa;
+      border-radius: 10px;
+      border: 1px dashed #fecdd3;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      letter-spacing: 0.25px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      background-color: #fff1f2;
+      border-top: 1px solid #fecdd3;
+    }
+
+    @media (max-width: 640px) {
       body {
-        font-family: 'CuteFont', sans-serif;
-        margin: 30px auto;
-        padding: 20px;
-        background: linear-gradient(145deg, var(--theme-bg-start) 0%, var(--theme-bg-end) 100%);
-        color: var(--text-color-dark);
-        max-width: 800px;
-        box-sizing: border-box;
-        position: relative;
-        overflow-x: hidden;
+        width: 100%;
       }
 
-      .container {
-        padding: 30px;
-        background: rgba(255, 255, 255, 0.96);
-        border-radius: 20px;
-        border: 1px solid var(--container-glow-border-color);
-        box-shadow:
-            0 1px 4px var(--base-shadow-color-container),
-            0 0 var(--container-glow-blur-near) var(--container-glow-spread-near) var(--container-glow-color-intense),
-            0 0 var(--container-glow-blur-far) var(--container-glow-spread-far) var(--container-glow-color-soft);
-        position: relative;
-        z-index: 1;
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
       }
 
-      .container::before {
-        content: '🌸';
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        font-size: 28px;
-        opacity: 0.7;
-      }
-
-      .container::after {
-        content: '💖';
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        font-size: 28px;
-        opacity: 0.7;
-        transform: rotate(15deg);
-      }
-
-      h1 {
-        text-align: center;
-        color: var(--theme-primary-color);
-        margin: 0 0 25px;
-        font-size: 26px;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(216, 27, 96, 0.25);
-        border-bottom: 2px solid var(--theme-light-pink);
-        padding-bottom: 12px;
-      }
-
-      h2 {
-        font-size: 18px;
-        color: var(--h2-text-color);
-        margin: 25px 0 15px;
-        padding-left: 10px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        border-left: 4px solid;
-      }
-
-      h2.purified {
-        border-left-color: var(--h2-purified-border);
-      }
-
-      h2.manual {
-        border-left-color: var(--h2-manual-border);
+      .header-stats-area {
+        width: 100%;
+        justify-content: space-between;
       }
 
       .ban-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 18px;
-        padding: 0;
-        list-style: none;
+        grid-template-columns: repeat(2, 1fr);
       }
+    }
+  </style>
+</head>
 
-      .ban-item {
-        background: linear-gradient(to bottom, var(--item-bg-gradient-start), var(--item-bg-gradient-end));
-        border-radius: 14px;
-        padding: 12px;
-        border: 1px solid var(--item-border-color);
-        box-shadow: 0 2px 6px var(--item-shadow-color);
-        transition: transform 0.2s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        text-align: center;
-      }
-
-      .ban-item:hover {
-        transform: translateY(-4px);
-        border-color: var(--item-hover-border-color);
-        box-shadow: 0 6px 14px var(--item-hover-shadow-color);
-      }
-
-      .ban-item img {
-        display: block;
-        max-width: 100%;
-        max-height: 120px;
-        width: auto;
-        height: auto;
-        object-fit: contain;
-        border-radius: 6px;
-        margin: 0 auto 8px;
-        background-color: transparent;
-      }
-
-      .ban-item .error-placeholder {
-        width: 100%;
-        height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--error-bg-color);
-        color: var(--error-text-color);
-        font-size: 12px;
-        border-radius: 6px;
-        border-left: 3px solid var(--error-text-color);
-        margin: auto auto 8px;
-        padding: 10px;
-        box-sizing: border-box;
-        text-align: center;
-      }
-
-      .filename-area {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: auto;
-      }
-
-      .ban-item .filename {
-        font-size: 0.95em;
-        color: var(--text-color-light);
-        word-break: break-all;
-        line-height: 1.3;
-        padding-top: 5px;
-        font-weight: 600;
-      }
-
-      .ban-reasons {
-        margin-top: 5px;
-      }
-
-      .reason-tag {
-        font-size: 0.9em;
-        color: var(--reason-tag-text-color);
-        padding: 2px 5px;
-        border-radius: 3px;
-        margin: 2px;
-        background-color: var(--reason-tag-bg-color);
-        white-space: nowrap;
-      }
-
-      .empty-list {
-        text-align: center;
-        color: var(--text-color-subtle);
-        margin-top: 20px;
-        font-size: 0.95em;
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.85);
-        border-radius: 10px;
-      }
-
-      .footer {
-        text-align: center;
-        margin-top: 30px;
-        font-size: 0.8em;
-        color: var(--text-color-subtle);
-        border-top: 1px solid var(--theme-lighter-pink);
-        padding-top: 15px;
-      }
-
-      @media (max-width: 860px) {
-        body { margin: 15px; padding: 15px; }
-        .container { padding: 20px; }
-      }
-      @media (max-width: 480px) {
-        body { margin: 10px; padding: 10px; }
-        .container { padding: 15px; border-radius: 16px; }
-        .container::before, .container::after { font-size: 24px; top: 15px; left: 15px; bottom: 15px; right: 15px;}
-        h1 { font-size: 22px; margin-bottom: 20px; padding-bottom: 10px;}
-        .ban-grid { gap: 12px; }
-        .ban-item { padding: 10px; border-radius: 10px; }
-        .ban-item img, .ban-item .error-placeholder { max-height: 100px; margin-bottom: 5px; }
-        .footer { margin-top: 25px; padding-top: 10px; }
-      }
-
-    </style>
-  </head>
-  <body style="{{scaleStyleValue}}">
-    <div class="container">
-      <h1>咕咕牛的封禁列表</h1>
-
-      {{ if purifiedBans && purifiedBans.length > 0 }}
-      <h2 class="purified">🌱 净化屏蔽 ({{ purifiedBans.length }} 张)</h2>
+<body style="{{ scaleStyleValue }}">
+  <div class="container">
+    <div class="header">
+      <div class="header-content-left">
+        <div class="main-title">咕咕牛的封禁列表</div>
+        <div class="list-type-tag {{ listTypeClass }}">{{ emoji }} {{ listTypeName }}</div>
+      </div>
+      <div class="header-stats-area">
+        <div class="stat-item">
+          <span>总数</span>
+          <div class="digit-container">
+            {{ each totalCountDigits digit }}
+            <div class="digit">{{ digit }}</div>
+            {{ /each }}
+          </div>
+        </div>
+        {{ if totalPages > 1 }}
+        <div class="pagination-info">
+          PAGE <span class="page-number">{{ currentPage }}</span> / {{ totalPages }}
+        </div>
+        {{ /if }}
+      </div>
+    </div>
+    <div class="main-content">
+      {{ if items && items.length > 0 }}
       <div class="ban-grid">
-        {{ each purifiedBans item }}
+        {{ each items item index }}
         <div class="ban-item">
-          <img
-            src="{{ item.thumbnailPath }}"
-            alt="{{ item.fileNameNoExt }}"
-            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);"
-          />
+          <img src="{{ item.thumbnailPath }}" alt="{{ item.fileNameNoExt }}"
+            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);" />
           <div class="filename-area">
-            <span class="filename">{{ item.fileNameNoExt }}</span>
+            <div class="filename"><span class="index">{{ item.displayIndex }}.</span>{{ item.fileNameNoExt }}</div>
             {{ if item.reasons && item.reasons.length > 0 }}
             <div class="ban-reasons">
               {{ each item.reasons reason }}
@@ -281,31 +356,12 @@
         </div>
         {{ /each }}
       </div>
+      {{ else }}
+      <p class="empty-list">当前页面无内容</p>
       {{ /if }}
-
-      {{ if userBans && userBans.length > 0 }}
-      <h2 class="manual">🚫 手动封禁 ({{ userBans.length }} 张)</h2>
-      <div class="ban-grid">
-        {{ each userBans item }}
-        <div class="ban-item">
-          <img
-            src="{{ item.thumbnailPath }}"
-            alt="{{ item.fileNameNoExt }}"
-            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);"
-          />
-          <div class="filename-area">
-            <span class="filename">{{ item.fileNameNoExt }}</span>
-          </div>
-        </div>
-        {{ /each }}
-      </div>
-      {{ /if }}
-
-      {{ if (!purifiedBans || purifiedBans.length === 0) && (!userBans || userBans.length === 0) }}
-      <p class="empty-list">暂无封禁内容</p>
-      {{ /if }}
-
-      <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }} | By 咕咕牛</div>
     </div>
-  </body>
+    <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</div>
+  </div>
+</body>
+
 </html>
