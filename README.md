@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao-Yunzai-✓-blue.svg" alt="Miao-Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss-Yunzai-✓-green.svg" alt="Trss-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-✓-blue.svg" alt="Miao-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-✓-green.svg" alt="Trss-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
 </p>
@@ -88,9 +88,6 @@
 -   **Q: 插件报错或运行不正常？**
     -   **A:** 首先尝试执行 `#更新咕咕牛` 指令覆盖文件，然后**重启机器人**。90% 的问题都可以通过此方法解决。若问题依旧，请携带由 AI 生成的错误报告图前往 Issues 反馈。
 
--   **Q: 为什么我的机器人没有 ZZZ-Plugin 或 waves-plugin，但也能下载绝区零和鸣潮的图？**
-    -   **A:** 咕咕牛图库独立于这些插件，即使没有安装它们，图库资源也会被下载。但只有在安装了对应插件后，这些图片才会被实际应用到面板上。
-
 ---
 
 ## 🎨 界面一览
@@ -124,17 +121,8 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://github.moeyy.xyz/https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js"
 ```
 
-### 2. 下载图库资源
-
-机器人启动后，私聊或在群内发送以下指令，即可开始下载图库：
-```
-#下载咕咕牛
-```
-管理器将自动测速并下载所有仓库。下载完成后，图库将自动启用。
-
-### 3. 查看帮助
-
-发送 `#咕咕牛帮助` 获取完整的指令列表和功能说明。
+> [!TIP]
+> 部署插件后 输入 **#咕咕牛帮助** 查看命令，输入 **#下载咕咕牛** 安装图库 。
 
 ---
 

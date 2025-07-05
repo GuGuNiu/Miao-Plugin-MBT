@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛的更新报告</title>
+    <title>咕咕牛图库的更新报告</title>
     <style>
         @font-face {
             font-family: 'Orbitron';
@@ -58,13 +58,17 @@
             --card-3-color: #5a5a5a;
             --card-4-color: #ff9838;
             --card-text-color: #ffffff;
-            --log-bg: #fdfdff;
-            --log-border: #f1f3f5;
             --success-color: #28a745;
             --fail-color: #dc3545;
             --force-sync-color: #e67e22;
+            --auto-switch-color: #6f42c1;
+            --update-ok-text-color: #8a6ebe;
             --no-change-color: #6c757d;
             --accent-glow: rgba(0, 0, 0, 0.4);
+            --capsule-gs-bg: #e3f2fd;
+            --capsule-sr-bg: #e8eaf6;
+            --capsule-zzz-bg: #fce4ec;
+            --capsule-waves-bg: #fff3e0;
         }
 
         * {
@@ -80,10 +84,6 @@
         body {
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--bg-color);
-            background-image:
-                linear-gradient(90deg, rgba(0, 0, 0, 0.013) 1px, transparent 1px),
-                linear-gradient(rgba(0, 0, 0, 0.013) 1px, transparent 1px);
-            background-size: 20px 20px;
             color: var(--text-primary);
             padding: 20px;
         }
@@ -106,20 +106,15 @@
             border: 1px solid var(--container-border);
             border-radius: 18px;
             padding: 25px 30px;
-            clip-path: polygon(
-                40px 0,
-                calc(100% - 40px) 0,
-                100% 40px,
-                100% calc(100% - 40px),
-                calc(100% - 40px) 100%,
-                40px 100%,
-                0 calc(100% - 40px),
-                0 40px
-            );
+            clip-path: polygon(40px 0, calc(100% - 40px) 0, 100% 40px, 100% calc(100% - 40px), calc(100% - 40px) 100%, 40px 100%, 0 calc(100% - 40px), 0 40px);
             -webkit-backface-visibility: hidden;
             -moz-backface-visibility: hidden;
             -webkit-transform: translate3d(0, 0, 0);
             -moz-transform: translate3d(0, 0, 0);
+            background-image:
+                repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 28px),
+                repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 28px);
+            background-size: 28px 28px;
         }
 
         .glow-border {
@@ -140,16 +135,7 @@
             background: var(--container-bg);
             border: 3px solid var(--accent-color);
             border-radius: 22px;
-            clip-path: polygon(
-                40px 0,
-                calc(100% - 40px) 0,
-                100% 40px,
-                100% calc(100% - 40px),
-                calc(100% - 40px) 100%,
-                40px 100%,
-                0 calc(100% - 40px),
-                0 40px
-            );
+            clip-path: polygon(40px 0, calc(100% - 40px) 0, 100% 40px, 100% calc(100% - 40px), calc(100% - 40px) 100%, 40px 100%, 0 calc(100% - 40px), 0 40px);
         }
 
         .trapezoid-deco {
@@ -216,21 +202,10 @@
             display: inline-block;
             position: relative;
             font-family: 'Noto Sans SC';
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 500;
             color: var(--text-title);
             padding-bottom: 8px;
-        }
-
-        .title::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 40%;
-            height: 3px;
-            background-color: var(--card-2-color);
-            border-radius: 2px;
         }
 
         .title span {
@@ -260,21 +235,12 @@
             align-items: stretch;
             background-color: rgba(255, 255, 255, 0.25);
             border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
             overflow: hidden;
             border: 2px solid var(--container-border);
             position: relative;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-        }
-
-        .repo-item::before {
-            content: '';
-            position: absolute;
-            background: var(--repo-color, #ccc);
-            filter: blur(3px);
-            border-radius: 2px;
-            opacity: 0.6;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .repo-item-1 {
@@ -293,14 +259,24 @@
             --repo-color: var(--card-4-color);
         }
 
+        .repo-item.status-ok {
+            border-color: var(--repo-color);
+            box-shadow: 0 0 10px 2px var(--repo-color);
+        }
+
         .repo-item.status-fail {
             border-color: var(--fail-color);
-            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.15);
+            box-shadow: 0 0 10px 2px rgba(220, 53, 69, 0.4);
         }
 
         .repo-item.status-force-synced {
             border-color: var(--force-sync-color);
-            box-shadow: 0 4px 20px rgba(253, 126, 20, 0.2);
+            box-shadow: 0 0 10px 2px rgba(230, 126, 34, 0.4);
+        }
+
+        .repo-item.status-auto-switch {
+            border-color: var(--auto-switch-color);
+            box-shadow: 0 0 10px 2px rgba(111, 66, 193, 0.4);
         }
 
         .repo-card {
@@ -404,16 +380,18 @@
         .log-status {
             font-family: 'Rajdhani', sans-serif;
             font-weight: 700;
+            color: var(--text-primary);
         }
 
-        .status-fail {
-            color: var(--fail-color);
-            font-weight: 700;
+        .repo-item.status-ok .log-status {
+            color: var(--update-ok-text-color);
         }
 
-        .status-force-synced {
-            color: var(--force-sync-color);
+        .repo-item.status-auto-switch .log-status {
             font-weight: 700;
+            background: linear-gradient(45deg, #d8bfd8, #b19cd9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .log-content-container {
@@ -421,9 +399,15 @@
         }
 
         .commit-entry {
-            padding: 5px 0;
+            padding: 8px 0;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .commit-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
         }
 
         .commit-meta {
@@ -431,41 +415,113 @@
             font-family: 'Noto Sans SC', sans-serif;
             flex-shrink: 0;
             margin-right: 12px;
-            font-size: 14px;
-            font-weight: 0 !important;
+            font-size: 12px;
+        }
+
+        .commit-content-wrapper {
+            flex-grow: 1;
         }
 
         .commit-message-wrapper {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 4px 8px;
+            gap: 6px 8px;
             line-height: 1.6;
         }
 
-        .text-part {
-            white-space: normal;
-        }
-
-        .character-mention {
+        .character-capsule {
             display: inline-flex;
             align-items: center;
-            padding: 2px 3px;
-            border-radius: 4px;
+            border-radius: 13px;
+            height: 26px;
+            overflow: hidden;
+            background-color: white;
             border: 1px solid #dee2e6;
-            background-color: #f1f3f5;
         }
 
-        .character-face {
-            width: 1.2em;
-            height: 1.2em;
+        .character-capsule-face-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 26px;
+            padding-left: 2px;
+        }
+
+        .character-capsule-face {
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            margin-right: 5px;
         }
 
-        .character-name {
-            font-size: 1em;
+        .character-capsule[data-game="gs"] .character-capsule-face-wrapper {
+            background-color: var(--capsule-gs-bg);
+        }
+
+        .character-capsule[data-game="sr"] .character-capsule-face-wrapper {
+            background-color: var(--capsule-sr-bg);
+        }
+
+        .character-capsule[data-game="zzz"] .character-capsule-face-wrapper {
+            background-color: var(--capsule-zzz-bg);
+        }
+
+        .character-capsule[data-game="waves"] .character-capsule-face-wrapper {
+            background-color: var(--capsule-waves-bg);
+        }
+
+        .character-capsule-name {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 0 10px 0 8px;
             color: var(--text-primary);
+        }
+
+        .description-commit {
+            font-size: 0.7em;
+        }
+
+        .description-commit .title {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: var(--text-primary);
+        }
+
+        .description-commit .body {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 0.5em;
+        }
+
+        .description-commit .body h3 {
+            font-size: 1em;
+            margin: 0.8em 0 0.4em;
+            padding-bottom: 0.2em;
+            border-bottom: 1px solid #eaecef;
+            color: var(--text-primary);
+        }
+
+        .description-commit .body ul {
+            margin: 0.5em 0;
+            padding-left: 1.2em;
+            list-style-position: outside;
+        }
+
+        .description-commit .body li {
+            margin-bottom: 0.3em;
+        }
+
+        .description-commit .body p {
+            margin: 0 0 0.5em;
+        }
+
+        .description-commit .body code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: rgba(27, 31, 35, 0.05);
+            padding: .2em .4em;
+            font-size: 85%;
+            border-radius: 3px;
         }
 
         .summary-bar {
@@ -576,35 +632,56 @@
                         </div>
 
                         <div class="log-section">
-                            {{ if repoResult.statusText === '未配置' || repoResult.statusText === '未下载' }}
+                            {{ if repoResult.statusText === '未配置' || repoResult.statusText === '未下载' ||
+                            repoResult.statusText === '未下载 (插件未安装)' }}
                             <div class="special-status-display">
                                 {{ repoResult.statusText }}
                             </div>
                             {{ else }}
                             <div class="log-header">
                                 <div class="log-title">最新提交记录</div>
-                                <span class="log-status value {{ repoResult.statusClass }}">{{ repoResult.statusText
-                                    }}</span>
+                                <span class="log-status">
+                                    {{ if repoResult.autoSwitchedNode }}
+                                    更新成功 (节点自动切换至{{ repoResult.autoSwitchedNode }})
+                                    {{ else }}
+                                    {{ repoResult.statusText }}
+                                    {{ /if }}
+                                </span>
                             </div>
                             <div class="log-content-container">
-                                {{ if isArray(repoResult.log) && repoResult.log.length > 0 && repoResult.log[0].hash !==
-                                'N/A' }}
+                                {{ if isArray(repoResult.log) && repoResult.log.length > 0 && (repoResult.log[0].hash ||
+                                repoResult.log[0].descriptionTitle) }}
                                 {{ each repoResult.log commit }}
                                 <div class="commit-entry">
-                                    <span class="commit-meta">{{ commit.date }}</span>
-                                    <div class="commit-message-wrapper">
-                                        {{ each commit.displayParts part }}
-                                        {{ if part.type === 'text' }}
-                                        <span class="text-part">{{@ part.content }}</span>
-                                        {{ else if part.type === 'character' }}
-                                        <span class="character-mention">
-                                            {{ if part.imageUrl }}
-                                            <img src="{{ part.imageUrl }}" alt="{{ part.name }}" class="character-face">
+                                    <div class="commit-meta">
+                                        {{ commit.date }}
+                                    </div>
+                                    <div class="commit-content-wrapper">
+                                        {{ if commit.isDescription }}
+                                        <div class="description-commit">
+                                            <div class="title">{{@ commit.descriptionTitle }}</div>
+                                            {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
+                                            <hr style="border: none; border-top: 1px solid #eee; margin: 0.4em 0;" />
+                                            <div class="body">{{@ commit.descriptionBodyHtml }}</div>
                                             {{ /if }}
-                                            <span class="character-name">{{ part.name }}</span>
-                                        </span>
+                                        </div>
+                                        {{ else }}
+                                        <div class="commit-message-wrapper">
+                                            {{ each commit.displayParts part }}
+                                            {{ if part.type === 'character' }}
+                                            <div class="character-capsule" data-game="{{ part.game }}">
+                                                <div class="character-capsule-face-wrapper">
+                                                    {{ if part.imageUrl }}
+                                                    <img src="{{ part.imageUrl }}" alt="{{ part.name }}"
+                                                        class="character-capsule-face">
+                                                    {{ /if }}
+                                                </div>
+                                                <span class="character-capsule-name">{{ part.name }}</span>
+                                            </div>
+                                            {{ /if }}
+                                            {{ /each }}
+                                        </div>
                                         {{ /if }}
-                                        {{ /each }}
                                     </div>
                                 </div>
                                 {{ /each }}
