@@ -3301,7 +3301,7 @@ class MiaoPluginMBT extends plugin {
     } catch (error) {
       taskError = error;
       this.logger.error(`${Default_Config.logPrefix}手动触发更新任务时发生错误:`, error);
-      await this.ReportError(e, "手动执行更新任务", error);
+      await MiaoPluginMBT.ReportError(e, "手动执行更新任务", error);
     } finally {
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
       this.logger.info(`${Default_Config.logPrefix}手动触发更新任务流程结束，总耗时 ${duration} 秒。`);
@@ -3676,9 +3676,9 @@ class MiaoPluginMBT extends plugin {
 
     } catch (error) {
       logger.error(`${logPrefix}下载流程顶层执行出错:`, error);
-      if (e) {
+      if (e) {  
         const endTime = Date.now();
-        await this.ReportError(e, "下载流程", error, "", { startTime, endTime });
+        await MiaoPluginMBT.ReportError(e, "下载流程", error, "", { startTime, endTime });
       }
     } finally {
       processManager.killAll('SIGTERM', 'DownloadTuKu function finished');
@@ -3982,7 +3982,7 @@ class MiaoPluginMBT extends plugin {
           contextMessage = `操作 ${errorOperations[0]} 可能也存在问题。以下是捕获到的第一个错误详情：`;
         }
         // 现在传递给 ReportError 的 error 对象是 safeDelete 抛出的包含具体 code 的错误
-        await this.ReportError(e, `重置咕咕牛 (${firstError.operation})`, firstError.error, contextMessage);
+        await MiaoPluginMBT.ReportError(e, `重置咕咕牛 (${firstError.operation})`, firstError.error, contextMessage);
       } else {
         const failureMessage = "重置过程中出了点问题，但未捕获到具体错误原因，请检查日志吧！";
         await e.reply(failureMessage, true);
