@@ -734,6 +734,7 @@ class MiaoPluginMBT extends plugin {
       { sourceSubPath: "GuGuNiu-Gallery/html/update_report.html", destFileName: "html/update_report.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/check_gallerymap.html", destFileName: "html/check_gallerymap.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/search_helper.html", destFileName: "html/search_helper.html", copyIfExists: true },
+      { sourceSubPath: "GuGuNiu-Gallery/html/help.html", destFileName: "html/help.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/img", destFileName: "html/img", copyIfExists: true, isDir: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/fonts", destFileName: "html/fonts", copyIfExists: true, isDir: true },
     ],
