@@ -2653,47 +2653,59 @@ class MiaoPluginMBT extends plugin {
 
       if (!updateResult.success && isNetworkError(updateResult.error)) {
         logger.warn(`${Default_Config.logPrefix}${RepoName} 更新失败，检测到网络问题，尝试自动切换节点...`);
-
-        const allTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, logger);
-        const availableSources = MiaoPluginMBT.applySmartSelectionStrategy(allTestResults, logger);
-        const bestSource = availableSources[0];
-
-        if (bestSource) {
-          const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-          let userAndRepoPath = "";
-          if (repoPathMatch && repoPathMatch[1]) {
-            userAndRepoPath = repoPathMatch[1].replace(/\.git$/, "");
-          } else {
-            throw new Error(`无法从原始repoUrl (${RepoUrl}) 提取仓库路径。`);
-          }
-
-          let newUrl = "";
-          if (bestSource.name === "GitHub") {
-            newUrl = `https://github.com/${userAndRepoPath}.git`;
-          } else if (bestSource.cloneUrlPrefix) {
-            const cleanPrefix = bestSource.cloneUrlPrefix.replace(/\/$/, "");
-            if (bestSource.name === "GitClone") {
-              newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
-            } else if (bestSource.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
-              newUrl = `${cleanPrefix}/${userAndRepoPath}`;
-            } else {
-              newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
-            }
-          }
-
-          if (newUrl) {
-            try {
-              await ExecuteCommand("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
-              logger.info(`${Default_Config.logPrefix}${RepoName} 成功将远程URL切换至: ${bestSource.name} (${newUrl})`);
-              autoSwitchedNode = bestSource.name;
-              updateResult = await attemptUpdate(true); // 再次尝试更新
-            } catch (setUrlError) {
-              logger.error(`${Default_Config.logPrefix}${RepoName} 切换远程URL失败:`, setUrlError);
-              updateResult.error = setUrlError; // 将错误更新为切换URL的错误
-            }
-          }
+    
+        // 执行完整的HTTP和GIT双重测试
+        const allHttpTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, logger);
+        const httpSurvivors = allHttpTestResults.filter(r => r.speed !== Infinity);
+        if (httpSurvivors.length === 0) {
+          logger.warn(`${Default_Config.logPrefix}${RepoName} 自动测速后未找到任何可用的HTTP节点。`);
         } else {
-          logger.warn(`${Default_Config.logPrefix}${RepoName} 自动测速后未找到可用节点。`);
+          const gitTestPromises = httpSurvivors.map(node =>
+            MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, logger).then(gitResult => ({ name: node.name, gitResult }))
+          );
+          const gitTestResults = await Promise.all(gitTestPromises);
+          
+          // 两个测试结果都传入策略函数
+          const availableSources = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger);
+          const bestSource = availableSources[0];
+    
+          if (bestSource) {
+            const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+            let userAndRepoPath = "";
+            if (repoPathMatch && repoPathMatch[1]) {
+              userAndRepoPath = repoPathMatch[1].replace(/\.git$/, "");
+            } else {
+              throw new Error(`无法从原始repoUrl (${RepoUrl}) 提取仓库路径。`);
+            }
+    
+            let newUrl = "";
+            if (bestSource.name === "GitHub") {
+              newUrl = `https://github.com/${userAndRepoPath}.git`;
+            } else if (bestSource.cloneUrlPrefix) {
+              const cleanPrefix = bestSource.cloneUrlPrefix.replace(/\/$/, "");
+              if (bestSource.name === "GitClone") {
+                newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
+              } else if (bestSource.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
+                newUrl = `${cleanPrefix}/${userAndRepoPath}`;
+              } else {
+                newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
+              }
+            }
+    
+            if (newUrl) {
+              try {
+                await ExecuteCommand("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
+                logger.info(`${Default_Config.logPrefix}${RepoName} 成功将远程URL切换至: ${bestSource.name} (${newUrl})`);
+                autoSwitchedNode = bestSource.name;
+                updateResult = await attemptUpdate(true); // 再次尝试更新
+              } catch (setUrlError) {
+                logger.error(`${Default_Config.logPrefix}${RepoName} 切换远程URL失败:`, setUrlError);
+                updateResult.error = setUrlError; // 将错误更新为切换URL的错误
+              }
+            }
+          } else {
+            logger.warn(`${Default_Config.logPrefix}${RepoName} 自动测速后未找到可用节点。`);
+          }
         }
       }
 

@@ -5,22 +5,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Yunzai--Bot-✓-blue.svg" alt="Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-✓-green.svg" alt="Trss-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao-Yunzai-✓-blue.svg" alt="Miao-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss-Yunzai-✓-green.svg" alt="Trss-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
 </p>
 
 # 前言
 
-**咕咕牛图库 (GuGuNiu Gallery)** 是为 `Yunzai-Bot` 设计的高性能、高可控的面板图库扩展插件。提供了海量的游戏角色图片资源，更内置了一套强大的智能管理系统，旨在为提供稳定、流畅且安全的图库体验。所有功能逻辑代码都素互相交叉，代码内配置了10把不同的互斥锁和大量异步逻辑和分散到处都素的错误处理器以及大量的静态属性，如果有问题最好是提交Issues而不是尝试修改，除非你真的准备好面对草莓塔了~
+**咕咕牛图库 (GuGuNiu Gallery)** 是为 `Yunzai` 设计的高性能、高可控的面板图库扩展插件。提供了海量的游戏角色图片资源，更内置了一套强大的智能管理系统，旨在为提供稳定、流畅且安全的图库体验。所有功能逻辑代码都素互相交叉，代码内配置了10把不同的互斥锁和大量异步逻辑和分散到处都素的错误处理器以及大量的静态属性，如果有问题最好是提交Issues而不是尝试修改，除非你真的准备好面对草莓塔了~
 
 插件已经做到了95%的场景无人值守的自主运维，”操作自动化”、“流程自动化”和“智能自动化”三个层面基本是无需人工介入干预。
 
 ## ✨ 核心功能
 
 - **跨插件无缝支持**: 完美兼容 `Miao-Plugin`、`ZZZ-Plugin` 及 `waves-plugin`，自动同步并替换面板图。
-- **丰富的游戏覆盖**: 提供 **原神、崩坏：星穹铁道、绝区零、鸣潮** 的高质量图库资源。
+- **丰富的游戏覆盖**: 提供 **原神、崩坏：星穹铁道、绝区零、鸣潮** 的面板图库资源。
 - **高度可定制化**: 内置净化等级、AI/彩蛋/横屏图过滤、渲染精度调节等多种配置项，满足不同需求。
 - **智能管理系统**:
   - **AI 错误诊断**: 插件出错时，自动生成包含**原因分析**和**解决方案**的图文报告。
@@ -78,14 +78,6 @@
 > 开启后，插件会静默拦截 `#原图` 指令。若识别到图片来自咕咕牛图库，将以更安全的“合并转发”形式发送，有效规避风控。
 - **开关指令**: `#咕咕牛设置原图拦截 [开启|关闭]`
 
-### 📩 高级合并消息
-
-> [!NOTE]
-> 在发送大量图片或信息时（如 `#咕咕牛查看` 标签），此功能可将所有内容打包成一个可层层展开的“高级”合并消息，使消息列表更整洁。
-
-- **开关指令**: `#咕咕牛设置高级合并 [开启|关闭]`
-- **兼容性提示**: 此功能在 **手机端** 或 **Lagrange** 等框架上可能无法正常展开，建议根据使用环境决定是否开启。
-
 ---
 
 ## 🤔 常见问题 (Q&A)
@@ -114,7 +106,7 @@
 ## ⚠️ 使用须知
 
 -   本项目基于 `MIT` 协议开源，仅供学习交流使用，**严禁用于任何商业用途**。
--   图库资源均收集自公开网络，版权归原作者所有。如内容涉及侵权，请立即联系作者删除。
+-   图库资源均收集自公开网络，版权归原作者所有。如内容涉及侵权，请立即联系删除。
 
 ## 🚀 快速上手
 
@@ -131,8 +123,6 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 ```bash
 curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://github.moeyy.xyz/https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main/咕咕牛图库管理器.js"
 ```
-> [!TIP]
-> 安装成功后，请**重启机器人**以加载插件。
 
 ### 2. 下载图库资源
 
