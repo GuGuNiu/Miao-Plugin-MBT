@@ -1844,7 +1844,7 @@ class MiaoPluginMBT extends plugin {
       }
     }
 
-    const SCORE_THRESHOLD = 50; 
+    const SCORE_THRESHOLD = 65; 
     let bestMatch = { mainName: null, score: -Infinity };
 
     for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
@@ -1855,22 +1855,19 @@ class MiaoPluginMBT extends plugin {
       let bestScoreForChar = -Infinity;
 
       for (const term of allTerms) {
+        const distance = levenshtein(lowerInput, term);
+        const maxLen = Math.max(lowerInput.length, term.length);
         let score = 0;
 
         if (term.startsWith(lowerInput)) {
-          score = 80;
-        } else if (term.includes(lowerInput)) {
-          score = 60;
-        }
-
-        score -= Math.abs(lowerInput.length - term.length) * 5;
-
-        const distance = levenshtein(lowerInput, term);
-        
-        if (score < 80) {
-            score -= distance * 15;
+            score = 85 - (term.length - lowerInput.length) * 5 - distance * 10;
         } else {
-            score -= distance * 5;
+            const similarity = maxLen === 0 ? 1 : (maxLen - distance) / maxLen;
+            score = similarity * 100;
+
+            if (distance === 1) {
+                score += 25;
+            }
         }
         
         if (score > bestScoreForChar) {
@@ -2505,7 +2502,6 @@ class MiaoPluginMBT extends plugin {
 
       //logger.info(`${logPrefix}检测到插件核心逻辑已更新`);
       await common.sleep(30000);
-      
       //logger.info(`${logPrefix}开始执行覆盖操作...`);
       await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
       //logger.info(`${logPrefix}核心管理器文件覆盖完成。`);
@@ -2807,7 +2803,7 @@ class MiaoPluginMBT extends plugin {
             const subjectLine = lines.shift() || "";
             const bodyContent = lines.join('\n').trim();
 
-            const commitData = { hash: 'N/A', date: '', displayParts: [], isDescription: false, descriptionTitle: '', descriptionBodyHtml: '' };
+            const commitData = { hash: 'N/A', date: '', displayParts: [], isDescription: false, descriptionTitle: '', descriptionBodyHtml: '', groupedDisplayParts: [] };
 
             const dateMatch = headerLine.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
             if (dateMatch) { commitData.date = `[${dateMatch[1]}]`; }
@@ -2832,7 +2828,7 @@ class MiaoPluginMBT extends plugin {
                   const nameSegments = subjectLine.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
                   for (const rawNameSegment of nameSegments) {
                     let displayName = rawNameSegment;
-                    let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, logger);
+                    let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, { gameKey: entry.gameType }, logger);
                     if (aliasResult.exists) { displayName = aliasResult.mainName; }
                     const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
                     let faceImageUrl = defaultFaceUrl;
@@ -2879,6 +2875,86 @@ class MiaoPluginMBT extends plugin {
                   break;
                 }
               }
+
+              if (commitData.displayParts.length > 0) {
+                const findOptimalLineBreaks = (parts, targetWidth) => {
+                  const n = parts.length;
+                  if (n === 0) return [];
+
+                  const memo = new Array(n + 1).fill(null);
+                  memo[0] = { badness: 0, lastBreak: -1 };
+
+                  for (let i = 1; i <= n; i++) {
+                    let bestResult = { badness: Infinity, lastBreak: -1 };
+
+                    for (let j = 0; j < i; j++) {
+                      let currentLineWidth = 0;
+                      for (let k = j; k < i; k++) {
+                        currentLineWidth += parts[k].width;
+                      }
+                      if (i - j > 1) {
+                          currentLineWidth += (i - j - 1) * 4;
+                      }
+
+                      if (currentLineWidth > targetWidth + 20 && i - j > 1) continue;
+
+                      let badness;
+                      if (i === n) {
+                        badness = 0;
+                      } else {
+                        const diff = targetWidth - currentLineWidth;
+                        badness = diff * diff;
+                      }
+
+                      const totalBadness = memo[j].badness + badness;
+
+                      if (totalBadness < bestResult.badness) {
+                        bestResult = { badness: totalBadness, lastBreak: j };
+                      }
+                    }
+                    memo[i] = bestResult;
+                  }
+
+                  const lines = [];
+                  let current = n;
+                  while (current > 0) {
+                    const prev = memo[current].lastBreak;
+                    lines.unshift(parts.slice(prev, current));
+                    current = prev;
+                  }
+                  return lines;
+                };
+
+                const getPixelWidth = (name) => {
+                  const BASE_WIDTH = 90;
+                  const CHINESE_CHAR_WIDTH = 26;
+                  const ASCII_CHAR_WIDTH = 13;
+
+                  let textWidth = 0;
+                  for (const char of name) {
+                    textWidth += /[^\u0000-\u00ff]/.test(char) ? CHINESE_CHAR_WIDTH : ASCII_CHAR_WIDTH;
+                  }
+                  
+                  return BASE_WIDTH + textWidth;
+                };
+                
+                const partsWithWidth = commitData.displayParts.map(p => ({
+                  ...p,
+                  width: getPixelWidth(p.name)
+                }));
+                
+                const CONTAINER_WIDTH = 490;
+                const GAP_WIDTH = 4;
+                const totalCapsulesWidth = partsWithWidth.reduce((sum, p) => sum + p.width, 0);
+                const totalGapsWidth = (partsWithWidth.length > 0 ? partsWithWidth.length - 1 : 0) * GAP_WIDTH;
+                const totalContentWidth = totalCapsulesWidth + totalGapsWidth;
+
+                const idealRows = Math.max(1, Math.ceil(totalContentWidth / CONTAINER_WIDTH));
+                const dynamicTargetWidth = totalContentWidth / idealRows;
+
+                commitData.groupedDisplayParts = findOptimalLineBreaks(partsWithWidth, dynamicTargetWidth);
+              }
+
             } else {
               commitData.descriptionTitle = subjectLine;
               if (bodyContent) {
