@@ -420,8 +420,16 @@
             color: #333;
         }
 
+        .repo-item.status-fail .log-status {
+            color: var(--fail-color);
+        }
+
         .repo-item.status-ok .log-status {
             color: var(--update-ok-text-color);
+        }
+
+        .repo-item.status-force-synced .log-status {
+            color: var(--force-sync-color);
         }
 
         .repo-item.status-auto-switch .log-status {
@@ -561,12 +569,22 @@
 
         .description-commit .body ul {
             margin: 0.5em 0;
-            padding-left: 1.2em;
-            list-style-position: outside;
+            padding-left: 0;
+            list-style-type: none;
         }
 
         .description-commit .body li {
             margin-bottom: 0.3em;
+            padding-left: 1.2em;
+            position: relative;
+        }
+
+        .description-commit .body li::before {
+            content: '-';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--text-secondary);
         }
 
         .description-commit .body p {
@@ -709,7 +727,8 @@
                                 {{ if isArray(repoResult.log) && repoResult.log.length > 0 && (repoResult.log[0].hash ||
                                 repoResult.log[0].descriptionTitle) }}
                                 {{ each repoResult.log commit commit_index }}
-                                <div class="commit-entry {{ if repoResult.statusClass !== 'status-no-change' && repoResult.statusClass !== 'status-fail' && repoResult.statusClass !== 'status-skipped' && commit_index === 0 }}commit-entry-highlight{{ /if }}">
+                                <div
+                                    class="commit-entry {{ if repoResult.statusClass !== 'status-no-change' && repoResult.statusClass !== 'status-fail' && repoResult.statusClass !== 'status-skipped' && commit_index === 0 }}commit-entry-highlight{{ /if }}">
                                     <div class="commit-meta">
                                         {{ commit.date }}
                                     </div>
@@ -725,7 +744,6 @@
                                         {{ else }}
                                         <div class="commit-message-wrapper">
                                             {{ each commit.displayParts part }}
-                                            {{ if part.type === 'character' }}
                                             <div class="character-capsule" data-game="{{ part.game }}">
                                                 <div class="character-capsule-face-wrapper">
                                                     {{ if part.imageUrl }}
@@ -735,7 +753,6 @@
                                                 </div>
                                                 <span class="character-capsule-name">{{ part.name }}</span>
                                             </div>
-                                            {{ /if }}
                                             {{ /each }}
                                         </div>
                                         {{ /if }}
