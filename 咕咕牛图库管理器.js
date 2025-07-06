@@ -1787,24 +1787,107 @@ class MiaoPluginMBT extends plugin {
     return null;
   }
 
-  static async FindRoleAliasAndMain(inputName, logger = global.logger || console) {
+  static async FindRoleAliasAndMain(inputName, options = {}, logger = global.logger || console) {
+     const levenshtein = (s1, s2) => {
+        if (s1 === s2) return 0;
+        const l1 = s1.length, l2 = s2.length;
+        if (l1 === 0) return l2; if (l2 === 0) return l1;
+        let v0 = new Array(l2 + 1), v1 = new Array(l2 + 1);
+        for (let i = 0; i <= l2; i++) v0[i] = i;
+        for (let i = 0; i < l1; i++) {
+            v1[0] = i + 1;
+            for (let j = 0; j < l2; j++) {
+                v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + (s1[i] === s2[j] ? 0 : 1));
+            }
+            v0 = v1.slice();
+        }
+        return v0[l2];
+    };
+
     const cleanInput = inputName?.trim();
-    if (!cleanInput) return { mainName: null, exists: false };
+    if (!cleanInput) {
+      return { mainName: null, exists: false };
+    }
+
     if (!MiaoPluginMBT._aliasData) {
       await MiaoPluginMBT.LoadAliasData(false, logger);
-      if (!MiaoPluginMBT._aliasData?.combined) { logger.error(`${Default_Config.logPrefix}无法加载。`); const dirExistsFallback = await MiaoPluginMBT.CheckRoleDirExists(cleanInput); return { mainName: cleanInput, exists: dirExistsFallback }; }
     }
-    const combinedAliases = MiaoPluginMBT._aliasData.combined || {}; const lowerInput = cleanInput.toLowerCase();
-    if (combinedAliases.hasOwnProperty(cleanInput)) return { mainName: cleanInput, exists: true };
-    for (const mainNameKeyInAliases in combinedAliases) { if (mainNameKeyInAliases.toLowerCase() === lowerInput) return { mainName: mainNameKeyInAliases, exists: true }; }
-    for (const [mainName, aliasesValue] of Object.entries(combinedAliases)) {
-      let aliasArray = [];
-      if (typeof aliasesValue === 'string') aliasArray = aliasesValue.split(",").map(a => a.trim().toLowerCase());
-      else if (Array.isArray(aliasesValue)) aliasArray = aliasesValue.map(a => String(a).trim().toLowerCase());
-      if (aliasArray.includes(lowerInput)) return { mainName: mainName, exists: true };
+    const combinedAliases = MiaoPluginMBT._aliasData?.combined;
+    if (!combinedAliases || Object.keys(combinedAliases).length === 0) {
+      logger.error(`${Default_Config.logPrefix}别名数据缺失，无法进行任何匹配。`);
+      return { mainName: cleanInput, exists: false };
     }
-    const dirExists = await MiaoPluginMBT.CheckRoleDirExists(cleanInput);
-    return { mainName: cleanInput, exists: dirExists };
+    
+    const lowerInput = cleanInput.toLowerCase();
+    const { gameKey = null } = options;
+    
+    let searchScope = {};
+    if (gameKey) {
+        const gameAliasKey = `${gameKey}Alias`;
+        searchScope = MiaoPluginMBT._aliasData?.[gameAliasKey] || {};
+    } else {
+        searchScope = combinedAliases;
+    }
+
+    if (Object.keys(searchScope).length === 0) {
+        return { mainName: cleanInput, exists: false };
+    }
+
+    for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
+      if (mainName.toLowerCase() === lowerInput) {
+        return { mainName: mainName, exists: true };
+      }
+      const aliasArray = (Array.isArray(aliasesValue) ? aliasesValue : String(aliasesValue).split(","))
+        .map(a => String(a).trim().toLowerCase());
+      if (aliasArray.includes(lowerInput)) {
+        return { mainName: mainName, exists: true };
+      }
+    }
+
+    const SCORE_THRESHOLD = 50; 
+    let bestMatch = { mainName: null, score: -Infinity };
+
+    for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
+      const lowerMainName = mainName.toLowerCase();
+      const allTerms = [lowerMainName, ...(Array.isArray(aliasesValue) ? aliasesValue : String(aliasesValue).split(","))
+          .map(a => String(a).trim().toLowerCase()).filter(Boolean)];
+      
+      let bestScoreForChar = -Infinity;
+
+      for (const term of allTerms) {
+        let score = 0;
+
+        if (term.startsWith(lowerInput)) {
+          score = 80;
+        } else if (term.includes(lowerInput)) {
+          score = 60;
+        }
+
+        score -= Math.abs(lowerInput.length - term.length) * 5;
+
+        const distance = levenshtein(lowerInput, term);
+        
+        if (score < 80) {
+            score -= distance * 15;
+        } else {
+            score -= distance * 5;
+        }
+        
+        if (score > bestScoreForChar) {
+          bestScoreForChar = score;
+        }
+      }
+      
+      if (bestScoreForChar > bestMatch.score) {
+        bestMatch = { mainName: mainName, score: bestScoreForChar };
+      }
+    }
+
+    if (bestMatch.score >= SCORE_THRESHOLD) {
+      return { mainName: bestMatch.mainName, exists: true };
+    }
+
+    return { mainName: cleanInput, exists: false };
   }
 
   static async CheckRoleDirExists(roleName) {
@@ -2413,33 +2496,23 @@ class MiaoPluginMBT extends plugin {
         const oldFileContent = await fsPromises.readFile(oldJsFilePath);
         oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
       } catch (e) {
-        // 旧文件不存在，很正常
         oldHash = null;
       }
+
       if (newHash === oldHash) {
-        // logger.info(`${logPrefix}文件无变化，跳过覆盖。`);
         return false;
       }
-      // 首次下载时，如果旧文件存在，说明是修复性下载，需要覆盖。如果不存在，则不覆盖。
-      if (context === 'download') {
-        if (oldHash) {
-          //logger.info(`${logPrefix}修复性下载检测到文件不一致，执行覆盖。`);
-          await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-          return true; // 文件被更新
-        } else {
-          //logger.info(`${logPrefix}首次下载，不执行覆盖。`);
-          return false;
-        }
-      }
-      // 更新场景，只要不一致就覆盖
-      if (context === 'update') {
-        //logger.info(`${logPrefix}检测到文件更新，执行覆盖。`);
-        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-        return true;
-      }
+
+      //logger.info(`${logPrefix}检测到插件核心逻辑已更新`);
+      await common.sleep(30000);
+      
+      //logger.info(`${logPrefix}开始执行覆盖操作...`);
+      await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+      //logger.info(`${logPrefix}核心管理器文件覆盖完成。`);
+      return true;
 
     } catch (error) {
-      //logger.error(`${logPrefix}JS覆盖处理失败:`, error);
+      logger.error(`${logPrefix}JS文件同步处理失败:`, error);
     }
     return false;
   }
@@ -3485,6 +3558,7 @@ class MiaoPluginMBT extends plugin {
           throw new Error(`核心仓库下载失败 (${coreRepoResult.nodeName})`);
         }
 
+        await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger, 'download');
         await MiaoPluginMBT.RunPostDownloadSetup(e, logger, 'core');
         //logger.info(`${logPrefix}核心仓库部署完成。`);
 
