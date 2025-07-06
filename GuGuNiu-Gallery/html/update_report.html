@@ -441,6 +441,34 @@
             align-items: flex-start;
             border-bottom: 1px solid var(--repo-border-light);
         }
+        
+        .commit-entry-highlight {
+            background-color: #ffffff;
+            border: 1.5px solid var(--repo-color);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 4px -8px;
+            box-shadow: 0 4px 12px -2px var(--repo-border-light);
+            border-bottom: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .commit-entry.commit-entry-highlight:before {
+            content: '★';
+            position: absolute;
+            top: -1px;
+            right: 8px;
+            font-size: 20px;
+            color: var(--repo-color);
+            transform: rotate(15deg);
+            opacity: 0.8;
+        }
+
+        .commit-entry-highlight+.commit-entry {
+            border-top: 1px solid var(--repo-border-light);
+            padding-top: 12px;
+        }
 
         .commit-entry:last-child {
             border-bottom: none;
@@ -498,7 +526,7 @@
         .character-capsule-name {
             display: flex;
             align-items: center;
-            padding: 0 12px 0 8px;
+            padding: 0 6px 0 6px;
             font-size: 13px;
             font-weight: 500;
             color: var(--capsule-name-color);
@@ -680,8 +708,8 @@
                             <div class="log-content-container">
                                 {{ if isArray(repoResult.log) && repoResult.log.length > 0 && (repoResult.log[0].hash ||
                                 repoResult.log[0].descriptionTitle) }}
-                                {{ each repoResult.log commit }}
-                                <div class="commit-entry">
+                                {{ each repoResult.log commit commit_index }}
+                                <div class="commit-entry {{ if repoResult.statusClass !== 'status-no-change' && repoResult.statusClass !== 'status-fail' && repoResult.statusClass !== 'status-skipped' && commit_index === 0 }}commit-entry-highlight{{ /if }}">
                                     <div class="commit-meta">
                                         {{ commit.date }}
                                     </div>
