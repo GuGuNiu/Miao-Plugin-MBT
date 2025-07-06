@@ -65,10 +65,6 @@
             --update-ok-text-color: #8a6ebe;
             --no-change-color: #6c757d;
             --accent-glow: rgba(0, 0, 0, 0.4);
-            --capsule-gs-bg: #e3f2fd;
-            --capsule-sr-bg: #e8eaf6;
-            --capsule-zzz-bg: #fce4ec;
-            --capsule-waves-bg: #fff3e0;
         }
 
         * {
@@ -208,6 +204,18 @@
             padding-bottom: 8px;
         }
 
+        .header .title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 35%;
+            height: 3px;
+            background: #1395ff;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(19, 149, 255, 0.5);
+        }
+
         .title span {
             font-family: 'Orbitron', sans-serif;
             color: var(--text-secondary);
@@ -240,24 +248,52 @@
             position: relative;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .repo-item-1 {
             --repo-color: var(--card-1-color);
+            --repo-bg-light: #f3fcf9;
+            --repo-border-light: rgba(32, 201, 151, 0.2);
+            --capsule-bg: #d9f3e9;
+
+            --capsule-border-color: #b2e5d6;
+            --capsule-face-bg: #e9fbf3;
+            --capsule-name-color: #206e5a;
         }
 
         .repo-item-2 {
             --repo-color: var(--card-2-color);
+            --repo-bg-light: #f3f8ff;
+            --repo-border-light: rgba(19, 149, 255, 0.2);
+            --capsule-bg: #dbeaff;
+
+            --capsule-border-color: #b8d9ff;
+            --capsule-face-bg: #eff6ff;
+            --capsule-name-color: #155ec1;
         }
 
         .repo-item-3 {
             --repo-color: var(--card-3-color);
+            --repo-bg-light: #f7f7f7;
+            --repo-border-light: rgba(90, 90, 90, 0.2);
+            --capsule-bg: #e8e8e8;
+
+            --capsule-border-color: #cccccc;
+            --capsule-face-bg: #f0f0f0;
+            --capsule-name-color: #333333;
         }
 
         .repo-item-4 {
             --repo-color: var(--card-4-color);
+            --repo-bg-light: #fffaf3;
+            --repo-border-light: rgba(255, 152, 56, 0.2);
+            --capsule-bg: #ffeeda;
+
+            --capsule-border-color: #f8d0a5;
+            --capsule-face-bg: #fff4e2;
+            --capsule-name-color: #9b4b00;
         }
+
 
         .repo-item.status-ok {
             border-color: var(--repo-color);
@@ -345,6 +381,8 @@
         .log-section {
             flex-grow: 1;
             padding: 15px 20px;
+            background-color: var(--repo-bg-light);
+            color: #333;
         }
 
         .log-section .special-status-display {
@@ -357,8 +395,7 @@
             font-size: 50px;
             letter-spacing: 40px;
             font-weight: 1000;
-            color: var(--text-muted);
-            opacity: 0.6;
+            color: rgba(0, 0, 0, 0.2);
         }
 
         .log-header {
@@ -367,20 +404,20 @@
             align-items: center;
             padding-bottom: 8px;
             margin-bottom: 8px;
-            border-bottom: 1px dashed #e0e0e0;
+            border-bottom: 1px dashed var(--repo-border-light);
         }
 
         .log-title {
             font-family: 'Rajdhani', sans-serif;
             font-size: 15px;
             font-weight: 500;
-            color: var(--text-secondary);
+            color: #333;
         }
 
         .log-status {
             font-family: 'Rajdhani', sans-serif;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #333;
         }
 
         .repo-item.status-ok .log-status {
@@ -402,7 +439,7 @@
             padding: 8px 0;
             display: flex;
             align-items: flex-start;
-            border-bottom: 1px solid #f1f3f5;
+            border-bottom: 1px solid var(--repo-border-light);
         }
 
         .commit-entry:last-child {
@@ -411,7 +448,8 @@
         }
 
         .commit-meta {
-            color: #757575;
+            color: #333;
+            opacity: 0.7;
             font-family: 'Noto Sans SC', sans-serif;
             flex-shrink: 0;
             margin-right: 12px;
@@ -426,71 +464,62 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 6px 8px;
-            line-height: 1.6;
+            gap: 6px 3px;
+            line-height: 1.5;
         }
 
         .character-capsule {
             display: inline-flex;
-            align-items: center;
-            border-radius: 13px;
-            height: 26px;
+            align-items: stretch;
+            height: 28px;
+            border-radius: 14px;
             overflow: hidden;
-            background-color: white;
-            border: 1px solid #dee2e6;
+            background-color: #ffffff;
+            border: 1px solid var(--capsule-border-color);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
+
 
         .character-capsule-face-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 26px;
-            padding-left: 2px;
+            padding: 0 2px;
+            background-color: var(--capsule-face-bg);
         }
 
         .character-capsule-face {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-        }
-
-        .character-capsule[data-game="gs"] .character-capsule-face-wrapper {
-            background-color: var(--capsule-gs-bg);
-        }
-
-        .character-capsule[data-game="sr"] .character-capsule-face-wrapper {
-            background-color: var(--capsule-sr-bg);
-        }
-
-        .character-capsule[data-game="zzz"] .character-capsule-face-wrapper {
-            background-color: var(--capsule-zzz-bg);
-        }
-
-        .character-capsule[data-game="waves"] .character-capsule-face-wrapper {
-            background-color: var(--capsule-waves-bg);
+            margin-left: 1px;
         }
 
         .character-capsule-name {
+            display: flex;
+            align-items: center;
+            padding: 0 12px 0 8px;
             font-size: 13px;
             font-weight: 500;
-            padding: 0 10px 0 8px;
-            color: var(--text-primary);
+            color: var(--capsule-name-color);
+            border-left: 1px solid var(--capsule-border-color);
         }
 
         .description-commit {
             font-size: 0.7em;
+            color: #333;
         }
 
         .description-commit .title {
             font-weight: 600;
-            font-size: 1.1em;
-            color: var(--text-primary);
+            font-size: 0.75rem;
+            color: #333;
         }
 
         .description-commit .body {
             font-size: 0.85em;
-            color: var(--text-secondary);
+            color: #333;
+            opacity: 0.85;
             margin-top: 0.5em;
         }
 
@@ -498,8 +527,8 @@
             font-size: 1em;
             margin: 0.8em 0 0.4em;
             padding-bottom: 0.2em;
-            border-bottom: 1px solid #eaecef;
-            color: var(--text-primary);
+            border-bottom: 1px solid var(--repo-border-light);
+            color: #333;
         }
 
         .description-commit .body ul {
@@ -518,7 +547,7 @@
 
         .description-commit .body code {
             font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            background-color: rgba(27, 31, 35, 0.05);
+            background-color: rgba(255, 255, 255, 0.5);
             padding: .2em .4em;
             font-size: 85%;
             border-radius: 3px;

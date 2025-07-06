@@ -2655,7 +2655,7 @@ class MiaoPluginMBT extends plugin {
 
       if (!updateResult.success && isNetworkError(updateResult.error)) {
         logger.warn(`${Default_Config.logPrefix}${RepoName} 更新失败，检测到网络问题，尝试自动切换节点...`);
-    
+
         const allHttpTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, logger);
         const httpSurvivors = allHttpTestResults.filter(r => r.speed !== Infinity);
         if (httpSurvivors.length === 0) {
@@ -2665,10 +2665,10 @@ class MiaoPluginMBT extends plugin {
             MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, logger).then(gitResult => ({ name: node.name, gitResult }))
           );
           const gitTestResults = await Promise.all(gitTestPromises);
-          
+
           const availableSources = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger);
           const bestSource = availableSources[0];
-    
+
           if (bestSource) {
             const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
             let userAndRepoPath = "";
@@ -2677,7 +2677,7 @@ class MiaoPluginMBT extends plugin {
             } else {
               throw new Error(`无法从原始repoUrl (${RepoUrl}) 提取仓库路径。`);
             }
-    
+
             let newUrl = "";
             if (bestSource.name === "GitHub") {
               newUrl = `https://github.com/${userAndRepoPath}.git`;
@@ -2691,7 +2691,7 @@ class MiaoPluginMBT extends plugin {
                 newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
               }
             }
-    
+
             if (newUrl) {
               try {
                 await ExecuteCommand("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
@@ -2713,128 +2713,139 @@ class MiaoPluginMBT extends plugin {
       hasChanges = updateResult.hasChanges;
       pullError = updateResult.error;
       wasForceReset = updateResult.wasForceReset;
-      
+
       const format = "%cd [%h]%n%s%n%b";
       const gitLogArgs = ["log", `-n 3`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
       let rawLogString = "";
       try {
         const logResult = await ExecuteCommand("git", gitLogArgs, { cwd: localPath }, 5000);
         rawLogString = logResult.stdout;
-      } catch(logError) {
+      } catch (logError) {
         rawLogString = "获取日志失败";
       }
 
       if (rawLogString) {
-          const logEntries = rawLogString.split(/(?=\d{2}-\d{2}\s\d{2}:\d{2}\s+\[)/).filter(s => s.trim());
-          if (logEntries.length > 0) {
-              latestLog = await Promise.all(logEntries.map(async (fullCommit) => {
-              const lines = fullCommit.trim().split('\n');
-              const headerLine = lines.shift() || "";
-              const subjectLine = lines.shift() || "";
-              const bodyContent = lines.join('\n').trim();
+        const logEntries = rawLogString.split(/(?=\d{2}-\d{2}\s\d{2}:\d{2}\s+\[)/).filter(s => s.trim());
+        if (logEntries.length > 0) {
+          const defaultFaceUrl = `file://${MiaoPluginMBT.paths.commonResPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
+          latestLog = await Promise.all(logEntries.map(async (fullCommit) => {
+            const lines = fullCommit.trim().split('\n');
+            const headerLine = lines.shift() || "";
+            const subjectLine = lines.shift() || "";
+            const bodyContent = lines.join('\n').trim();
 
-              const commitData = { hash: 'N/A', date: '', displayParts: [], isDescription: false, descriptionTitle: '', descriptionBodyHtml: '' };
-              
-              const dateMatch = headerLine.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
-              if (dateMatch) { commitData.date = `[${dateMatch[1]}]`; }
+            const commitData = { hash: 'N/A', date: '', displayParts: [], isDescription: false, descriptionTitle: '', descriptionBodyHtml: '' };
 
-              const hashMatch = headerLine.match(/\[([a-f0-9]{7,40})\]/);
-              if (hashMatch) { commitData.hash = hashMatch[1]; }
-              
-              const gamePrefixes = [
-                  { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
-                  { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
-                  { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
-                  { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
-              ];
-              
-              const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(subjectLine));
-              commitData.isDescription = !isCharacterUpdate;
+            const dateMatch = headerLine.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
+            if (dateMatch) { commitData.date = `[${dateMatch[1]}]`; }
 
-              if (isCharacterUpdate) {
-                  for (const entry of gamePrefixes) {
-                      const prefixMatchFull = subjectLine.match(entry.prefixPattern);
-                      if (prefixMatchFull) {
-                          const nameSegments = subjectLine.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
-                          for (const rawNameSegment of nameSegments) {
-                              let displayName = rawNameSegment;
-                              let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, logger);
-                              if (aliasResult.exists) { displayName = aliasResult.mainName; }
-                              const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
-                              let faceImageUrl = null;
-                              if (entry.gameType === "gs") {
-                                  const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                                  try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                              } else if (entry.gameType === "sr") {
-                                  const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                                  try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                              } else if (entry.gameType === "zzz") {
-                                  try {
-                                    const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
-                                    for (const file of files) {
-                                      if (file.endsWith('.json')) {
-                                        const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
-                                        if (data.Name === displayName || data.CodeName === displayName) {
-                                          const iconMatch = data.Icon?.match(/\d+$/);
-                                          if (iconMatch) {
-                                            const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
-                                            await fsPromises.access(zzzFacePath);
-                                            faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
-                                          }
-                                          break;
-                                        }
-                                      }
-                                    }
-                                  } catch (err) { }
-                              } else if (entry.gameType === 'waves') {
-                                  const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
-                                  if (roleData && roleData.icon) { faceImageUrl = roleData.icon; }
+            const hashMatch = headerLine.match(/\[([a-f0-9]{7,40})\]/);
+            if (hashMatch) { commitData.hash = hashMatch[1]; }
+
+            const gamePrefixes = [
+              { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
+              { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
+              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
+              { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
+            ];
+
+            const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(subjectLine));
+            commitData.isDescription = !isCharacterUpdate;
+
+            if (isCharacterUpdate) {
+              for (const entry of gamePrefixes) {
+                const prefixMatchFull = subjectLine.match(entry.prefixPattern);
+                if (prefixMatchFull) {
+                  const nameSegments = subjectLine.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
+                  for (const rawNameSegment of nameSegments) {
+                    let displayName = rawNameSegment;
+                    let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, logger);
+                    if (aliasResult.exists) { displayName = aliasResult.mainName; }
+                    const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
+                    let faceImageUrl = defaultFaceUrl;
+                    let faceImagePath = null;
+                    if (entry.gameType === "gs") {
+                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                    } else if (entry.gameType === "sr") {
+                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                    } else if (entry.gameType === "zzz") {
+                      try {
+                        const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+                        for (const file of files) {
+                          if (file.endsWith('.json')) {
+                            const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
+                            if (data.Name === displayName || data.CodeName === displayName) {
+                              const iconMatch = data.Icon?.match(/\d+$/);
+                              if (iconMatch) {
+                                const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
+                                await fsPromises.access(zzzFacePath);
+                                faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
                               }
-                              commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl });
+                              break;
+                            }
                           }
-                          break; 
+                        }
+                      } catch (err) { }
+                    } else if (entry.gameType === 'waves') {
+                      const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
+                      if (roleData && roleData.icon) {
+                        faceImageUrl = roleData.icon;
+                        faceImagePath = null;
                       }
+                    }
+                    if (faceImagePath) {
+                      try {
+                        await fsPromises.access(faceImagePath);
+                        faceImageUrl = `file://${faceImagePath.replace(/\\/g, "/")}`;
+                      } catch (err) { }
+                    }
+                    commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl });
                   }
-              } else {
-                   commitData.descriptionTitle = subjectLine;
-                   if (bodyContent) {
-                       let htmlBody = bodyContent
-                          .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
-                          .replace(/`([^`]+)`/g, '<code>$1</code>');
-                      
-                      const bodyLines = htmlBody.split('\n');
-                      let listOpen = false;
-                      htmlBody = bodyLines.map(line => {
-                          line = line.trim();
-                          if (line.startsWith('###')) {
-                              return `<h3>${line.replace(/###\s*/, '')}</h3>`;
-                          }
-                          if (line.startsWith('- ')) {
-                              let listItem = `<li>${line.replace(/-\s*/, '')}</li>`;
-                              if (!listOpen) {
-                                  listItem = '<ul>' + listItem;
-                                  listOpen = true;
-                              }
-                              return listItem;
-                          }
-                          if (listOpen) {
-                              listOpen = false;
-                              return `</ul>` + (line ? `<p>${line}</p>` : '');
-                          }
-                          return line ? `<p>${line}</p>` : '';
-                      }).join('');
-
-                      if (listOpen) {
-                          htmlBody += '</ul>';
-                      }
-                      
-                      commitData.descriptionBodyHtml = htmlBody;
-                   }
+                  break;
+                }
               }
-              return commitData;
+            } else {
+              commitData.descriptionTitle = subjectLine;
+              if (bodyContent) {
+                let htmlBody = bodyContent
+                  .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
+                  .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+                const bodyLines = htmlBody.split('\n');
+                let listOpen = false;
+                htmlBody = bodyLines.map(line => {
+                  line = line.trim();
+                  if (line.startsWith('###')) {
+                    return `<h3>${line.replace(/###\s*/, '')}</h3>`;
+                  }
+                  if (line.startsWith('- ')) {
+                    let listItem = `<li>${line.replace(/-\s*/, '')}</li>`;
+                    if (!listOpen) {
+                      listItem = '<ul>' + listItem;
+                      listOpen = true;
+                    }
+                    return listItem;
+                  }
+                  if (listOpen) {
+                    listOpen = false;
+                    return `</ul>` + (line ? `<p>${line}</p>` : '');
+                  }
+                  return line ? `<p>${line}</p>` : '';
+                }).join('');
+
+                if (listOpen) {
+                  htmlBody += '</ul>';
+                }
+
+                commitData.descriptionBodyHtml = htmlBody;
+              }
+            }
+            return commitData;
           }));
         } else {
-          latestLog = [{ isDescription: true, descriptionTitle: rawLogString || "无有效提交记录", descriptionBodyHtml: ''}];
+          latestLog = [{ isDescription: true, descriptionTitle: rawLogString || "无有效提交记录", descriptionBodyHtml: '' }];
         }
       }
 
@@ -2842,7 +2853,7 @@ class MiaoPluginMBT extends plugin {
       success = false; hasChanges = false;
       pullError = outerError;
       wasForceReset = false;
-      latestLog = [{ isDescription: true, descriptionTitle: "发生意外错误，无法获取日志", descriptionBodyHtml: ''}];
+      latestLog = [{ isDescription: true, descriptionTitle: "发生意外错误，无法获取日志", descriptionBodyHtml: '' }];
     } finally {
       MiaoPluginMBT.gitMutex.release();
     }
@@ -3630,7 +3641,7 @@ class MiaoPluginMBT extends plugin {
 
     } catch (error) {
       logger.error(`${logPrefix}下载流程顶层执行出错:`, error);
-      if (e) {  
+      if (e) {
         const endTime = Date.now();
         await MiaoPluginMBT.ReportError(e, "下载流程", error, "", { startTime, endTime });
       }
@@ -3717,16 +3728,16 @@ class MiaoPluginMBT extends plugin {
       let statusClass = "";
       if (result.success) {
         if (result.autoSwitchedNode) {
-          statusClass = "status-auto-switch"; 
+          statusClass = "status-auto-switch";
         } else if (result.wasForceReset) {
-          statusClass = "status-force-synced"; 
+          statusClass = "status-force-synced";
         } else if (result.hasChanges) {
-          statusClass = "status-ok"; 
+          statusClass = "status-ok";
         } else {
-          statusClass = "status-no-change"; 
+          statusClass = "status-no-change";
         }
       } else {
-        statusClass = "status-fail"; 
+        statusClass = "status-fail";
       }
 
       return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode };
@@ -3833,7 +3844,7 @@ class MiaoPluginMBT extends plugin {
       }
     }
 
-    logger.info(`${Default_Config.logPrefix}更新流程结束，耗时 ${duration} 秒。`);
+    //logger.info(`${Default_Config.logPrefix}更新流程结束，耗时 ${duration} 秒。`);
     return overallHasChanges;
   }
 
