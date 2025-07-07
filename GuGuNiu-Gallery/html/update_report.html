@@ -454,26 +454,36 @@
             background-color: #ffffff;
             border: 1.5px solid var(--repo-color);
             border-radius: 8px;
-            padding: 10px;
-            margin: 4px -8px;
+            padding: 6px 10px;
+            margin: 4px -8px 8px;
             box-shadow: 0 4px 12px -2px var(--repo-border-light);
-            border-bottom: none;
             position: relative;
             z-index: 1;
         }
 
-        .commit-entry.commit-entry-highlight:before {
-            content: '★';
-            position: absolute;
-            top: -1px;
-            right: 8px;
-            font-size: 20px;
-            color: var(--repo-color);
-            transform: rotate(15deg);
-            opacity: 0.8;
+        .commit-entry-highlight .commit-entry {
+            border-bottom: 1px solid var(--repo-border-light);
         }
 
-        .commit-entry-highlight+.commit-entry {
+        .commit-entry-highlight .commit-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 4px;
+            margin-bottom: 0;
+        }
+
+        .commit-entry-highlight:before {
+            content: '★';
+            position: absolute;
+            top: 5px;
+            right: 12px;
+            font-size: 20px;
+            color: var(--repo-color);
+            transform: rotate(-25deg);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .commit-entry-highlight + .commit-entry {
             border-top: 1px solid var(--repo-border-light);
             padding-top: 12px;
         }
@@ -726,9 +736,47 @@
                             <div class="log-content-container">
                                 {{ if isArray(repoResult.log) && repoResult.log.length > 0 && (repoResult.log[0].hash ||
                                 repoResult.log[0].descriptionTitle) }}
-                                {{ each repoResult.log commit commit_index }}
-                                <div
-                                    class="commit-entry {{ if repoResult.statusClass !== 'status-no-change' && repoResult.statusClass !== 'status-fail' && repoResult.statusClass !== 'status-skipped' && commit_index === 0 }}commit-entry-highlight{{ /if }}">
+                                {{ if repoResult.statusClass !== 'status-no-change' && repoResult.statusClass !==
+                                'status-fail' && repoResult.statusClass !== 'status-skipped' &&
+                                repoResult.newCommitsCount > 0 }}
+                                <div class="commit-entry-highlight">
+                                    {{ each repoResult.log.slice(0, repoResult.newCommitsCount) commit }}
+                                    <div class="commit-entry">
+                                        <div class="commit-meta">
+                                            {{ commit.date }}
+                                        </div>
+                                        <div class="commit-content-wrapper">
+                                            {{ if commit.isDescription }}
+                                            <div class="description-commit">
+                                                <div class="title">{{@ commit.descriptionTitle }}</div>
+                                                {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length >
+                                                0 }}
+                                                <hr
+                                                    style="border: none; border-top: 1px solid #eee; margin: 0.4em 0;" />
+                                                <div class="body">{{@ commit.descriptionBodyHtml }}</div>
+                                                {{ /if }}
+                                            </div>
+                                            {{ else }}
+                                            <div class="commit-message-wrapper">
+                                                {{ each commit.displayParts part }}
+                                                <div class="character-capsule" data-game="{{ part.game }}">
+                                                    <div class="character-capsule-face-wrapper">
+                                                        {{ if part.imageUrl }}
+                                                        <img src="{{ part.imageUrl }}" alt="{{ part.name }}"
+                                                            class="character-capsule-face">
+                                                        {{ /if }}
+                                                    </div>
+                                                    <span class="character-capsule-name">{{ part.name }}</span>
+                                                </div>
+                                                {{ /each }}
+                                            </div>
+                                            {{ /if }}
+                                        </div>
+                                    </div>
+                                    {{ /each }}
+                                </div>
+                                {{ each repoResult.log.slice(repoResult.newCommitsCount) commit }}
+                                <div class="commit-entry">
                                     <div class="commit-meta">
                                         {{ commit.date }}
                                     </div>
@@ -759,6 +807,40 @@
                                     </div>
                                 </div>
                                 {{ /each }}
+                                {{ else }}
+                                {{ each repoResult.log commit }}
+                                <div class="commit-entry">
+                                    <div class="commit-meta">
+                                        {{ commit.date }}
+                                    </div>
+                                    <div class="commit-content-wrapper">
+                                        {{ if commit.isDescription }}
+                                        <div class="description-commit">
+                                            <div class="title">{{@ commit.descriptionTitle }}</div>
+                                            {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
+                                            <hr style="border: none; border-top: 1px solid #eee; margin: 0.4em 0;" />
+                                            <div class="body">{{@ commit.descriptionBodyHtml }}</div>
+                                            {{ /if }}
+                                        </div>
+                                        {{ else }}
+                                        <div class="commit-message-wrapper">
+                                            {{ each commit.displayParts part }}
+                                            <div class="character-capsule" data-game="{{ part.game }}">
+                                                <div class="character-capsule-face-wrapper">
+                                                    {{ if part.imageUrl }}
+                                                    <img src="{{ part.imageUrl }}" alt="{{ part.name }}"
+                                                        class="character-capsule-face">
+                                                    {{ /if }}
+                                                </div>
+                                                <span class="character-capsule-name">{{ part.name }}</span>
+                                            </div>
+                                            {{ /each }}
+                                        </div>
+                                        {{ /if }}
+                                    </div>
+                                </div>
+                                {{ /each }}
+                                {{ /if }}
                                 {{ else }}
                                 <div class="commit-entry">(无有效提交记录)</div>
                                 {{ /if }}
