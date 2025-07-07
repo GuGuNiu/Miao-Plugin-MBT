@@ -1055,18 +1055,36 @@ class MiaoPluginMBT extends plugin {
       const content = await fsPromises.readFile(configPath, "utf8");
       const parsed = yaml.parse(content);
       if (parsed === null || typeof parsed !== 'object') {
-        logger.warn(`${Default_Config.logPrefix}${configPath} 解析结果非对象或为null，视为空配置。`);
-        configData = {};
+        logger.warn(`${Default_Config.logPrefix}${configPath} 解析结果非对象或为null，将被视为空配置并触发本地自动修复。`);
+        throw new Error("YAML配置文件内容不是一个有效的对象");
       } else {
         configData = parsed;
       }
     } catch (error) {
-      if (error.code === ERROR_CODES.NotFound) {
-        //logger.info(`${Default_Config.logPrefix}${configPath} 未找到，将使用默认配置。`);
+      if (error.code !== ERROR_CODES.NotFound) {
+        logger.warn(`${Default_Config.logPrefix} 配置文件读取或解析失败，启动本地自动修复... (错误: ${error.message})`);
+        try {
+          const rawContent = await fsPromises.readFile(configPath, "utf8");
+          const healedData = MiaoPluginMBT._healConfigLocally(rawContent, logger);
+
+          if (healedData && Object.keys(healedData).length > 0) {
+            configData = healedData;
+            const tempConfigForSave = { ...MiaoPluginMBT.MBTConfig, ...healedData };
+            logger.info(`${Default_Config.logPrefix} 本地自动修复成功！已根据损坏文件内容恢复并保存新配置。`);
+            await MiaoPluginMBT.SaveTuKuConfig(tempConfigForSave, logger);
+            await MiaoPluginMBT.SendMasterMsg(`${Default_Config.logPrefix} 检测到 GalleryConfig.yaml 配置文件已损坏，插件已尝试从文件中抢救并恢复设置。请使用 #咕咕牛面板 检查设置是否符合预期。`);
+          } else {
+            logger.error(`${Default_Config.logPrefix} 本地自动修复失败，将使用默认配置。`);
+            configData = {};
+          }
+        } catch (healProcessError) {
+          logger.error(`${Default_Config.logPrefix} 本地自动修复流程中发生意外错误，将使用默认配置。`, healProcessError);
+          configData = {};
+        }
       } else {
-        logger.error(`${Default_Config.logPrefix}读取或解析配置文件 ${configPath} 失败:`, error);
+        logger.info(`${Default_Config.logPrefix}${configPath} 未找到，将使用默认配置。`);
+        configData = {};
       }
-      configData = {};
     }
     const parseBoolLike = (value, defaultValue) => {
       if (value === 1 || String(value).toLowerCase() === "true") return true;
@@ -1138,6 +1156,108 @@ class MiaoPluginMBT extends plugin {
       }
       MiaoPluginMBT._configSaveLock.isLocked = false;
       MiaoPluginMBT._configSaveLock.resolver = null;
+    }
+  }
+
+  static _healConfigLocally(rawContent, logger) {
+    const logPrefix = Default_Config.logPrefix;
+    if (!rawContent || typeof rawContent !== 'string' || rawContent.trim() === '') {
+      logger.warn(`${logPrefix}传入的损坏内容为空，无法自动修复。`);
+      return null;
+    }
+
+    const healedData = {};
+    const healingRules = {
+      // 布尔值类型
+      TuKuOP: { type: 'boolean', aliases: ['TuKuOP'] },
+      Ai: { type: 'boolean', aliases: ['Ai'] },
+      EasterEgg: { type: 'boolean', aliases: ['EasterEgg'] },
+      layout: { type: 'boolean', aliases: ['layout'] },
+      Use_Secondary_Forward: { type: 'boolean', aliases: ['Use_Secondary_Forward', '高级合并'] },
+      SleeperAgent_switch: { type: 'boolean', aliases: ['SleeperAgent_switch', '原图拦截'] },
+      // 枚举值类型
+      PFL: { type: 'enum', aliases: ['PFL', '净化等级'], validValues: [0, 1, 2] },
+      Execution_Mode: { type: 'enum', aliases: ['Execution_Mode', '低负载'], validValues: ['Batch', 'Serial'] },
+      Load_Level: { type: 'enum', aliases: ['Load_Level', '负载等级'], validValues: [1, 2, 3] },
+
+      // 数值范围类型
+      renderScale: { type: 'range', aliases: ['renderScale', '渲染精度'], min: 100, max: 500 },
+
+      // 字符串类型
+      cronUpdate: { type: 'cron', aliases: ['cronUpdate'] }
+    };
+
+    const lines = rawContent.split('\n');
+    for (const line of lines) {
+      // 忽略注释和空行
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('#') || trimmedLine === '') {
+        continue;
+      }
+
+      // 尝试匹配 key: value 格式
+      const match = trimmedLine.match(/^([^#:]+?)\s*:\s*(.+?)\s*$/);
+      if (!match) {
+        continue;
+      }
+
+      const key = match[1].trim();
+      const valueStr = match[2].trim().replace(/['"`]/g, '');
+
+      for (const configKey in healingRules) {
+        const rule = healingRules[configKey];
+        if (rule.aliases.includes(key)) {
+          // 如果这个配置已经被修复过了，就跳过，防止被后续的无效行覆盖
+          if (healedData[configKey] !== undefined) {
+            break;
+          }
+
+          let parsedValue;
+          switch (rule.type) {
+            case 'boolean':
+              if (['true', '1', '开启', '启用'].includes(valueStr.toLowerCase())) {
+                parsedValue = true;
+              } else if (['false', '0', '关闭', '禁用'].includes(valueStr.toLowerCase())) {
+                parsedValue = false;
+              }
+              break;
+            case 'enum':
+              const numValue = parseInt(valueStr, 10);
+              // 优先匹配数字（针对PFL, Load_Level），再匹配字符串
+              if (!isNaN(numValue) && rule.validValues.includes(numValue)) {
+                parsedValue = numValue;
+              } else if (rule.validValues.includes(valueStr)) {
+                parsedValue = valueStr;
+              }
+              break;
+            case 'range':
+              const rangeValue = parseInt(valueStr, 10);
+              if (!isNaN(rangeValue) && rangeValue >= rule.min && rangeValue <= rule.max) {
+                parsedValue = rangeValue;
+              }
+              break;
+            case 'cron':
+              if (valueStr.split(' ').length >= 5) {
+                parsedValue = valueStr;
+              }
+              break;
+          }
+
+          // 如果成功解析并验证了值，就存入healedData
+          if (parsedValue !== undefined) {
+            healedData[configKey] = parsedValue;
+          }
+          break;
+        }
+      }
+    }
+
+    if (Object.keys(healedData).length > 0) {
+      logger.info(`${logPrefix} 成功从损坏配置中提取并验证了 ${Object.keys(healedData).length} 个有效配置项。`);
+      return healedData;
+    } else {
+      logger.warn(`${logPrefix} 未能从损坏配置中提取任何有效项。`);
+      return null;
     }
   }
 
@@ -1788,20 +1908,20 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async FindRoleAliasAndMain(inputName, options = {}, logger = global.logger || console) {
-     const levenshtein = (s1, s2) => {
-        if (s1 === s2) return 0;
-        const l1 = s1.length, l2 = s2.length;
-        if (l1 === 0) return l2; if (l2 === 0) return l1;
-        let v0 = new Array(l2 + 1), v1 = new Array(l2 + 1);
-        for (let i = 0; i <= l2; i++) v0[i] = i;
-        for (let i = 0; i < l1; i++) {
-            v1[0] = i + 1;
-            for (let j = 0; j < l2; j++) {
-                v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + (s1[i] === s2[j] ? 0 : 1));
-            }
-            v0 = v1.slice();
+    const levenshtein = (s1, s2) => {
+      if (s1 === s2) return 0;
+      const l1 = s1.length, l2 = s2.length;
+      if (l1 === 0) return l2; if (l2 === 0) return l1;
+      let v0 = new Array(l2 + 1), v1 = new Array(l2 + 1);
+      for (let i = 0; i <= l2; i++) v0[i] = i;
+      for (let i = 0; i < l1; i++) {
+        v1[0] = i + 1;
+        for (let j = 0; j < l2; j++) {
+          v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + (s1[i] === s2[j] ? 0 : 1));
         }
-        return v0[l2];
+        v0 = v1.slice();
+      }
+      return v0[l2];
     };
 
     const cleanInput = inputName?.trim();
@@ -1817,20 +1937,20 @@ class MiaoPluginMBT extends plugin {
       logger.error(`${Default_Config.logPrefix}别名数据缺失，无法进行任何匹配。`);
       return { mainName: cleanInput, exists: false };
     }
-    
+
     const lowerInput = cleanInput.toLowerCase();
     const { gameKey = null } = options;
-    
+
     let searchScope = {};
     if (gameKey) {
-        const gameAliasKey = `${gameKey}Alias`;
-        searchScope = MiaoPluginMBT._aliasData?.[gameAliasKey] || {};
+      const gameAliasKey = `${gameKey}Alias`;
+      searchScope = MiaoPluginMBT._aliasData?.[gameAliasKey] || {};
     } else {
-        searchScope = combinedAliases;
+      searchScope = combinedAliases;
     }
 
     if (Object.keys(searchScope).length === 0) {
-        return { mainName: cleanInput, exists: false };
+      return { mainName: cleanInput, exists: false };
     }
 
     for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
@@ -1844,14 +1964,14 @@ class MiaoPluginMBT extends plugin {
       }
     }
 
-    const SCORE_THRESHOLD = 65; 
+    const SCORE_THRESHOLD = 65;
     let bestMatch = { mainName: null, score: -Infinity };
 
     for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
       const lowerMainName = mainName.toLowerCase();
       const allTerms = [lowerMainName, ...(Array.isArray(aliasesValue) ? aliasesValue : String(aliasesValue).split(","))
-          .map(a => String(a).trim().toLowerCase()).filter(Boolean)];
-      
+        .map(a => String(a).trim().toLowerCase()).filter(Boolean)];
+
       let bestScoreForChar = -Infinity;
 
       for (const term of allTerms) {
@@ -1860,21 +1980,21 @@ class MiaoPluginMBT extends plugin {
         let score = 0;
 
         if (term.startsWith(lowerInput)) {
-            score = 85 - (term.length - lowerInput.length) * 5 - distance * 10;
+          score = 85 - (term.length - lowerInput.length) * 5 - distance * 10;
         } else {
-            const similarity = maxLen === 0 ? 1 : (maxLen - distance) / maxLen;
-            score = similarity * 100;
+          const similarity = maxLen === 0 ? 1 : (maxLen - distance) / maxLen;
+          score = similarity * 100;
 
-            if (distance === 1) {
-                score += 25;
-            }
+          if (distance === 1) {
+            score += 25;
+          }
         }
-        
+
         if (score > bestScoreForChar) {
           bestScoreForChar = score;
         }
       }
-      
+
       if (bestScoreForChar > bestMatch.score) {
         bestMatch = { mainName: mainName, score: bestScoreForChar };
       }
@@ -1965,6 +2085,9 @@ class MiaoPluginMBT extends plugin {
   static async SyncSpecificFiles(logger = global.logger || console) {
     let s = 0, f = 0;
     for (const { sourceSubPath, destDir, destFileName } of MiaoPluginMBT.paths.filesToSyncSpecific) {
+      if (sourceSubPath === "咕咕牛图库管理器.js") {
+        continue;
+      }
       const source = path.join(MiaoPluginMBT.paths.LocalTuKuPath, sourceSubPath);
       const dest = path.join(destDir, destFileName);
       try { await fsPromises.access(source); await fsPromises.mkdir(destDir, { recursive: true }); await fsPromises.copyFile(source, dest); s++; }
@@ -2893,7 +3016,7 @@ class MiaoPluginMBT extends plugin {
                         currentLineWidth += parts[k].width;
                       }
                       if (i - j > 1) {
-                          currentLineWidth += (i - j - 1) * 4;
+                        currentLineWidth += (i - j - 1) * 4;
                       }
 
                       if (currentLineWidth > targetWidth + 20 && i - j > 1) continue;
@@ -2934,15 +3057,15 @@ class MiaoPluginMBT extends plugin {
                   for (const char of name) {
                     textWidth += /[^\u0000-\u00ff]/.test(char) ? CHINESE_CHAR_WIDTH : ASCII_CHAR_WIDTH;
                   }
-                  
+
                   return BASE_WIDTH + textWidth;
                 };
-                
+
                 const partsWithWidth = commitData.displayParts.map(p => ({
                   ...p,
                   width: getPixelWidth(p.name)
                 }));
-                
+
                 const CONTAINER_WIDTH = 490;
                 const GAP_WIDTH = 4;
                 const totalCapsulesWidth = partsWithWidth.reduce((sum, p) => sum + p.width, 0);
@@ -3421,10 +3544,9 @@ class MiaoPluginMBT extends plugin {
       this.logger.info(`${Default_Config.logPrefix}手动触发更新任务流程结束，总耗时 ${duration} 秒。`);
     }
     if (!taskError) {
-      if (!overallHasChanges) { // 只有在没有变化时才发送“已是最新”
+      if (!overallHasChanges) {
         await e.reply(`${Default_Config.logPrefix}更新检查完成，图库已是最新。`, true);
       }
-      // 如果有变化，UpdateTuKu 内部会发送图片报告，这里不再重复
     }
     return true;
   }
@@ -3947,16 +4069,31 @@ class MiaoPluginMBT extends plugin {
     const now = new Date();
     const reportTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}   ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    const reportData = { pluginVersion: Version, duration, scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), results: reportResults, overallSuccess, overallHasChanges, isArray: Array.isArray, reportTime: reportTime, };
+    const reportData = {
+      pluginVersion: Version,
+      duration,
+      scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+      results: reportResults,
+      overallSuccess,
+      overallHasChanges,
+      isArray: Array.isArray,
+      reportTime: reportTime,
+    };
 
     let imageBuffer = null;
-    const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
-    try {
-      await fsPromises.access(sourceHtmlPath);
-      imageBuffer = await renderPageToImage("update-report", { tplFile: sourceHtmlPath, data: reportData, imgType: "png", pageGotoParams: { waitUntil: "networkidle0" }, pageBoundingRect: { selector: ".container" }, }, this);
-    } catch (accessOrRenderError) { logger.error(`${Default_Config.logPrefix}模板访问或渲染时出错:`, accessOrRenderError); }
-
     const shouldNotifyMaster = isScheduled && (reportData.overallHasChanges || !reportData.overallSuccess);
+    const shouldRenderReport = (!isScheduled && e) || shouldNotifyMaster;
+
+    if (shouldRenderReport) {
+      const sourceHtmlPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "update_report.html");
+      try {
+        await fsPromises.access(sourceHtmlPath);
+        imageBuffer = await renderPageToImage("update-report", { tplFile: sourceHtmlPath, data: reportData, imgType: "png", pageGotoParams: { waitUntil: "networkidle0" }, pageBoundingRect: { selector: ".container" }, }, this);
+      } catch (accessOrRenderError) {
+        logger.error(`${Default_Config.logPrefix}模板访问或渲染时出错:`, accessOrRenderError);
+      }
+    }
+
     if (imageBuffer) {
       if (!isScheduled && e) {
         await e.reply(imageBuffer);
@@ -3978,11 +4115,15 @@ class MiaoPluginMBT extends plugin {
         }
       }
     } else {
-      logger.error(`${Default_Config.logPrefix}Puppeteer 生成更新报告图片失败 (返回空)。`);
-      let fallbackMsg = `${Default_Config.logPrefix}更新检查完成。\n`;
-      reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
-      if (e && !isScheduled) await e.reply(fallbackMsg);
-      else if (shouldNotifyMaster) await MiaoPluginMBT.SendMasterMsg(fallbackMsg, e, 0, logger);
+      if (shouldRenderReport) {
+        logger.error(`${Default_Config.logPrefix}Puppeteer 生成更新报告图片失败 (返回空)。`);
+        let fallbackMsg = `${Default_Config.logPrefix}更新检查完成。\n`;
+        reportResults.forEach((res) => { fallbackMsg += `${res.name}: ${res.statusText}\n`; if (res.error && res.error.message) fallbackMsg += `  错误: ${res.error.message.split("\n")[0]}\n`; });
+        if (e && !isScheduled) await e.reply(fallbackMsg);
+        else if (shouldNotifyMaster) await MiaoPluginMBT.SendMasterMsg(fallbackMsg, e, 0, logger);
+      } else if (!isScheduled && e && !reportData.overallHasChanges && reportData.overallSuccess) {
+        await e.reply("『咕咕牛🐂』更新检查完成，图库已是最新。", true);
+      }
     }
 
     if (jsFileUpdated) {
