@@ -2781,15 +2781,11 @@ class MiaoPluginMBT extends plugin {
         }
 
         let needsReset = false;
-        let pullOutput = "";
-
         try {
-          const pullResult = await ExecuteCommand("git", ["pull", "origin", branch, "--ff-only", "--progress"], { cwd: localPath }, Default_Config.gitPullTimeout);
-          pullOutput = (pullResult.stdout || "") + (pullResult.stderr || "");
+          await ExecuteCommand("git", ["pull", "origin", branch, "--ff-only", "--progress"], { cwd: localPath }, Default_Config.gitPullTimeout);
           currentSuccess = true;
         } catch (err) {
           currentPullError = err;
-          pullOutput = err.stderr || "" || err.stdout || "" || err.message || String(err);
           logger.warn(`${Default_Config.logPrefix}${RepoName} 'git pull --ff-only' 失败，错误码: ${err.code}`);
           if (err.code !== 0 && ((err.stderr || "").includes("Not possible to fast-forward") || (err.stderr || "").includes("diverging") || (err.stderr || "").includes("unrelated histories") || (err.stderr || "").includes("commit your changes or stash them") || (err.stderr || "").includes("needs merge") || (err.stderr || "").includes("lock file") || (err.message || "").includes("failed"))) {
             needsReset = true;
@@ -2803,11 +2799,14 @@ class MiaoPluginMBT extends plugin {
           try {
             await ExecuteCommand("git", ["fetch", "origin"], { cwd: localPath }, Default_Config.gitPullTimeout);
             await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], { cwd: localPath });
-            currentSuccess = true; currentHasChanges = true; currentWasForceReset = true; currentPullError = null;
+            currentSuccess = true;
+            currentWasForceReset = true; 
+            currentPullError = null;
             logger.info(`${Default_Config.logPrefix}${RepoName} 强制重置成功。`);
           } catch (resetError) {
             logger.error(`${Default_Config.logPrefix}${RepoName} 强制重置失败！`);
-            currentSuccess = false; currentPullError = resetError;
+            currentSuccess = false; 
+            currentPullError = resetError;
           }
         }
 
@@ -2819,20 +2818,21 @@ class MiaoPluginMBT extends plugin {
           } catch (newRevParseError) {
             logger.warn(`${Default_Config.logPrefix}${RepoName} 获取新 commit 失败:`, newRevParseError.message);
           }
-          if (!currentWasForceReset) currentHasChanges = oldCommit && newCommit && oldCommit !== newCommit;
-          if (currentHasChanges && !currentWasForceReset && oldCommit && newCommit) {
-            try {
-              const countResult = await ExecuteCommand("git", ["rev-list", "--count", `${oldCommit}..${newCommit}`], { cwd: localPath }, 5000);
-              const count = parseInt(countResult.stdout.trim(), 10);
-              if (!isNaN(count)) {
-                newCommitsCount = count;
-              }
-            } catch (countError) {
-              //logger.warn(`${Default_Config.logPrefix}${RepoName} 获取新提交数量失败，默认高亮1条:`, countError.message);
+
+          if ( (oldCommit && newCommit && oldCommit !== newCommit) || currentWasForceReset ) {
+            currentHasChanges = true;
+            if (currentWasForceReset || !oldCommit) {
               newCommitsCount = 1;
+            } else {
+              try {
+                const countResult = await ExecuteCommand("git", ["rev-list", "--count", `${oldCommit}..${newCommit}`], { cwd: localPath }, 5000);
+                const count = parseInt(countResult.stdout.trim(), 10);
+                newCommitsCount = !isNaN(count) && count > 0 ? count : 1;
+              } catch (countError) {
+                //logger.warn(`${Default_Config.logPrefix}${RepoName} 获取新提交数量失败，默认高亮1条:`, countError.message);
+                newCommitsCount = 1;
+              }
             }
-          } else if (currentHasChanges) {
-            newCommitsCount = 1;
           }
         }
         return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset, newCommitsCount: newCommitsCount };
@@ -4035,7 +4035,7 @@ class MiaoPluginMBT extends plugin {
         statusClass = "status-fail";
       }
 
-      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode };
+      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode, newCommitsCount: result.newCommitsCount };   
     };
 
     const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;

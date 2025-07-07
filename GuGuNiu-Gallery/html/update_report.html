@@ -452,8 +452,11 @@
         
         .commit-entry-highlight {
             background-color: #ffffff;
-            border: 1.5px solid var(--repo-color);
-            border-radius: 8px;
+            border-top: 1.5px solid var(--repo-color);
+            border-right: 1.5px solid var(--repo-color);
+            border-left: 1.5px solid var(--repo-color);
+            border-bottom: none;
+            border-radius: 8px 8px 8px 8px;
             padding: 6px 10px;
             margin: 4px -8px 8px;
             box-shadow: 0 4px 12px -2px var(--repo-border-light);
@@ -736,8 +739,8 @@
                             <div class="log-content-container">
                                 {{ if isArray(repoResult.log) && repoResult.log.length > 0 && (repoResult.log[0].hash ||
                                 repoResult.log[0].descriptionTitle) }}
-                                {{ if repoResult.statusClass !== 'status-no-change' && repoResult.statusClass !==
-                                'status-fail' && repoResult.statusClass !== 'status-skipped' &&
+                                {{ if (repoResult.statusClass === 'status-ok' || repoResult.statusClass ===
+                                'status-force-synced' || repoResult.statusClass === 'status-auto-switch') &&
                                 repoResult.newCommitsCount > 0 }}
                                 <div class="commit-entry-highlight">
                                     {{ each repoResult.log.slice(0, repoResult.newCommitsCount) commit }}
