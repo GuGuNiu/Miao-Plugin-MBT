@@ -2603,10 +2603,10 @@ class MiaoPluginMBT extends plugin {
     catch (error) { logger.warn(`${Default_Config.logPrefix}Git log 失败 (${RepoPath})`); return null; }
   }
 
-  static async _handleJsFileSync(sourceRepoPath, logger, context = 'update') {
-    const logPrefix = Default_Config.logPrefix;
+  static async _handleJsFileSync(sourceRepoPath, logger) {
     const newJsFilePath = path.join(sourceRepoPath, "咕咕牛图库管理器.js");
     const oldJsFilePath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
+
     try {
       const newFileContent = await fsPromises.readFile(newJsFilePath);
       const newHash = crypto.createHash('md5').update(newFileContent).digest('hex');
@@ -2616,6 +2616,9 @@ class MiaoPluginMBT extends plugin {
         const oldFileContent = await fsPromises.readFile(oldJsFilePath);
         oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
       } catch (e) {
+        if (e.code !== 'ENOENT') {
+          logger.warn(`${Default_Config.logPrefix}读取旧核心脚本时发生错误:`, e);
+        }
         oldHash = null;
       }
 
@@ -2623,17 +2626,21 @@ class MiaoPluginMBT extends plugin {
         return false;
       }
 
-      //logger.info(`${logPrefix}检测到插件核心逻辑已更新`);
+      //logger.info(`${Default_Config.logPrefix} 检测到插件核心逻辑已更新，将在30秒后执行覆盖...`);
       await common.sleep(30000);
-      //logger.info(`${logPrefix}开始执行覆盖操作...`);
+
+      //logger.info(`${Default_Config.logPrefix} 延迟结束，开始执行覆盖操作...`);
       await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-      //logger.info(`${logPrefix}核心管理器文件覆盖完成。`);
-      return true;
+      //logger.info(`${Default_Config.logPrefix} 核心管理器文件覆盖完成。该操作将触发插件热重载。`);
+
+      return true; // 返回 true 表示执行了更新
 
     } catch (error) {
-      logger.error(`${logPrefix}JS文件同步处理失败:`, error);
+      if (error.code !== 'ENOENT') {
+        logger.error(`${Default_Config.logPrefix}核心脚本更新流程失败:`, error);
+      }
+      return false;
     }
-    return false;
   }
 
   static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, e, logger, sortedNodes = [], isRaceMode = false, processManager) {
@@ -3756,7 +3763,7 @@ class MiaoPluginMBT extends plugin {
           throw new Error(`核心仓库下载失败 (${coreRepoResult.nodeName})`);
         }
 
-        await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger, 'download');
+        await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger);
         await MiaoPluginMBT.RunPostDownloadSetup(e, logger, 'core');
         //logger.info(`${logPrefix}核心仓库部署完成。`);
 
@@ -4021,7 +4028,7 @@ class MiaoPluginMBT extends plugin {
 
     const repo1Result = reportResults.find(r => r.name === "一号仓库");
     if (repo1Result && repo1Result.success) {
-      jsFileUpdated = await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger, 'update');
+      await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger);
     }
     if (Repo2UrlConfigured) { if (Repo2Exists) reportResults.push(await processRepoResult(2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch)); else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
     if (Repo3UrlConfigured) { if (Repo3Exists) reportResults.push(await processRepoResult(3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch)); else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
