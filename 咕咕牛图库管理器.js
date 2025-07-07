@@ -2762,12 +2762,14 @@ class MiaoPluginMBT extends plugin {
     let pullError = null;
     let wasForceReset = false;
     let autoSwitchedNode = null;
+    let finalNewCommitsCount = 0;
 
     const attemptUpdate = async (isRetry = false) => {
       let currentSuccess = false;
       let currentHasChanges = false;
       let currentPullError = null;
       let currentWasForceReset = false;
+      let newCommitsCount = 0;
 
       try {
         let oldCommit = "";
@@ -2818,12 +2820,25 @@ class MiaoPluginMBT extends plugin {
             logger.warn(`${Default_Config.logPrefix}${RepoName} 获取新 commit 失败:`, newRevParseError.message);
           }
           if (!currentWasForceReset) currentHasChanges = oldCommit && newCommit && oldCommit !== newCommit;
+          if (currentHasChanges && !currentWasForceReset && oldCommit && newCommit) {
+            try {
+              const countResult = await ExecuteCommand("git", ["rev-list", "--count", `${oldCommit}..${newCommit}`], { cwd: localPath }, 5000);
+              const count = parseInt(countResult.stdout.trim(), 10);
+              if (!isNaN(count)) {
+                newCommitsCount = count;
+              }
+            } catch (countError) {
+              //logger.warn(`${Default_Config.logPrefix}${RepoName} 获取新提交数量失败，默认高亮1条:`, countError.message);
+              newCommitsCount = 1;
+            }
+          } else if (currentHasChanges) {
+            newCommitsCount = 1;
+          }
         }
-
-        return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset };
+        return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset, newCommitsCount: newCommitsCount };
 
       } catch (innerError) {
-        return { success: false, hasChanges: false, error: innerError, wasForceReset: false };
+        return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0 };
       }
     };
 
@@ -2912,6 +2927,7 @@ class MiaoPluginMBT extends plugin {
       hasChanges = updateResult.hasChanges;
       pullError = updateResult.error;
       wasForceReset = updateResult.wasForceReset;
+      finalNewCommitsCount = updateResult.newCommitsCount;
 
       const format = "%cd [%h]%n%s%n%b";
       const gitLogArgs = ["log", `-n 3`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
@@ -3137,7 +3153,7 @@ class MiaoPluginMBT extends plugin {
       MiaoPluginMBT.gitMutex.release();
     }
 
-    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, autoSwitchedNode: autoSwitchedNode };
+    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, autoSwitchedNode: autoSwitchedNode, newCommitsCount: finalNewCommitsCount };
   }
 
   static async GitLsRemoteTest(repoUrl, cloneUrlPrefix, nodeName, logger) {
@@ -6210,7 +6226,6 @@ class MiaoPluginMBT extends plugin {
           return { name: repoName, text: '下载失败', statusClass: 'status-fail', nodeName: result.nodeName || '执行异常' };
         };
 
-        // 统一的数据构建函数
         const buildReportData = (results, overallSuccess) => {
           const successCount = results.filter(r => r.statusClass === 'status-ok' || r.statusClass === 'status-local').length;
           const totalCount = results.length;
@@ -6225,8 +6240,136 @@ class MiaoPluginMBT extends plugin {
             successRateRounded: percent,
           };
         };
+        
+        const mockFaceUrl = `file://${MiaoPluginMBT.paths.commonResPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
 
         switch (type) {
+          case 'UP_REPORT_FULL_MOCK': {
+            const repo1Log = [
+              {
+                hash: "fakehash1",
+                isDescription: false,
+                date: '[07-07 14:47]',
+                displayParts: [
+                  { name: '橘福福', imageUrl: mockFaceUrl },
+                  { name: '伊芙琳', imageUrl: mockFaceUrl },
+                  { name: '柏妮思', imageUrl: mockFaceUrl },
+                  { name: '辉嘉音', imageUrl: mockFaceUrl }
+                ]
+              },
+              {
+                hash: "fakehash2",
+                isDescription: false,
+                date: '[07-07 13:59]',
+                displayParts: [
+                  { name: '橘福福', imageUrl: mockFaceUrl },
+                  { name: '爱丽丝', imageUrl: mockFaceUrl },
+                  { name: '浮波柚叶', imageUrl: mockFaceUrl }
+                ]
+              },
+              {
+                hash: "fakehash3",
+                isDescription: true,
+                date: '[07-07 11:00]',
+                descriptionTitle: 'Feat: 增加配置文件自动修复能力并优化更新逻辑',
+                descriptionBodyHtml: '<p>实现本地配置自愈：</p><p>通过本地规则即可从损坏的 GalleryConfig.yaml 中抢救并恢复有效设置。</p><p>优化JS更新延迟：</p><p>解决了核心JS文件更新时，30秒延迟被后续操作覆盖的逻辑冲突，确保插件热重载行为正确。</p><p>优化报告渲染：</p><p>更新报告图片只在手动触发或定时任务有实际内容时才生成，避免了不必要的性能开销。</p>'
+              }
+            ];
+          
+            const repo2Log = [
+              {
+                hash: "fakehash4",
+                isDescription: false,
+                date: '[07-06 10:30]',
+                displayParts: [
+                  { name: '可莉', imageUrl: mockFaceUrl },
+                  { name: '妮露', imageUrl: mockFaceUrl },
+                  { name: '胡桃', imageUrl: mockFaceUrl },
+                  { name: '申鹤', imageUrl: mockFaceUrl },
+                  { name: '菲谢尔', imageUrl: mockFaceUrl }
+                ]
+              },
+              {
+                hash: "fakehash5",
+                isDescription: true,
+                date: '[07-05 01:30]',
+                descriptionTitle: 'Fix: 仓库重构了'
+              },
+              {
+                hash: "fakehash6",
+                isDescription: false,
+                date: '[06-19 13:01]',
+                displayParts: [
+                  { name: '雷电将军', imageUrl: mockFaceUrl },
+                  { name: '莱欧斯利', imageUrl: mockFaceUrl },
+                  { name: '胡桃', imageUrl: mockFaceUrl },
+                  { name: '申鹤', imageUrl: mockFaceUrl },
+                  { name: '枫原万叶', imageUrl: mockFaceUrl },
+                  { name: '希格雯', imageUrl: mockFaceUrl },
+                  { name: '克洛琳德', imageUrl: mockFaceUrl },
+                  { name: '甘雨', imageUrl: mockFaceUrl },
+                  { name: '艾梅莉埃', imageUrl: mockFaceUrl },
+                  { name: '优菈', imageUrl: mockFaceUrl }
+                ]
+              }
+            ];
+          
+            const repo3Log = [
+              {
+                hash: "fakehash7",
+                isDescription: false,
+                date: '[07-06 10:29]',
+                displayParts: [
+                  { name: '黑塔', imageUrl: mockFaceUrl },
+                  { name: '花火', imageUrl: mockFaceUrl }
+                ]
+              },
+              {
+                hash: "fakehash8",
+                isDescription: true,
+                date: '[07-05 01:31]',
+                descriptionTitle: 'Fix: 仓库重构了'
+              },
+              {
+                hash: "fakehash9",
+                isDescription: false,
+                date: '[06-16 11:41]',
+                displayParts: [
+                  { name: '黑塔', imageUrl: mockFaceUrl },
+                  { name: '托帕&账账', imageUrl: mockFaceUrl }
+                ]
+              }
+            ];
+          
+            const repo4Log = [
+              {
+                hash: "fakehash10",
+                isDescription: true,
+                date: '[07-05 01:31]',
+                descriptionTitle: 'Fix: 仓库重构了'
+              },
+              {
+                hash: "fakehash11",
+                isDescription: true,
+                date: '[06-11 11:16]',
+                descriptionTitle: '♥ READMEEE'
+              }
+            ];
+
+            return {
+              ...baseData,
+              overallSuccess: true,
+              overallHasChanges: true,
+              duration: '84.7',
+              reportTime: '2025-07-07 15:08',
+              results: [
+                { name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", newCommitsCount: 2, log: repo1Log },
+                { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo2Log },
+                { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo3Log },
+                { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log }
+              ]
+            };
+          }
           case 'DL_REPORT_SUCCESS': {
             const results = [
               getStatusInfo({ repo: 1, success: true, nodeName: 'Ghfast(代理)' }),
@@ -6327,7 +6470,6 @@ class MiaoPluginMBT extends plugin {
             if (msg && msg.type === 'forward') {
               capturedForwardMsg = msg;
             }
-            // 阻止真实消息发送
             return true;
           }
         };
@@ -6355,7 +6497,7 @@ class MiaoPluginMBT extends plugin {
 
           const forwardMsg = await common.makeForwardMsg(mockE, errorDetailsForForwardMsg, "咕咕牛更新失败详情");
           await mockE.reply(forwardMsg);
-          return false; // 模拟更新失败
+          return false;
         };
 
         try {
@@ -6447,7 +6589,6 @@ class MiaoPluginMBT extends plugin {
     } catch (error) { await this.ReportError(e, `模拟错误 (${itemToTrigger.name})`, error, `用户触发: #${triggerInput}`); }
     return true;
   }
-
   async ManualTestProxies(e) {
     if (!(await this.CheckInit(e))) return true;
     await e.reply(`收到！开始火力全开测试网络节点🚀🚀🚀🚀🚀...`, true);
@@ -7108,6 +7249,7 @@ const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 36, name: "更新报告: 自动切换节点成功", category: "核心图片报告模拟", description: "模拟核心库更新失败后，自动切换到Ghfast节点并成功更新。", type: "SIM_TPL_UP_REPORT_AUTOSWITCH_SUCCESS_LOCAL" },
   { id: 37, name: "更新报告: 自动切换节点后仍失败", category: "核心图片报告模拟", description: "模拟核心库更新失败，自动切换节点后再次失败。", type: "SIM_TPL_UP_REPORT_AUTOSWITCH_FAIL_LOCAL" },
   { id: 38, name: "更新报告: 失败并生成详细错误消息", category: "核心图片报告模拟", description: "模拟核心库更新失败，并触发生成详细的合并转发错误报告。", type: "SIM_UPDATE_FAIL_WITH_DETAILS" },
+  { id: 39, name: "更新报告: 完整效果模拟", category: "核心图片报告模拟", description: "模拟一张包含多条高亮、多种提交类型的完整更新报告。", type: "SIM_TPL_UP_REPORT_FULL_MOCK_LOCAL" },
   { id: 50, name: "逻辑: 截图过程返回空值", category: "业务逻辑状态", description: "模拟任何截图操作后，Puppeteer未抛错但返回了null/undefined (可能是空白图)。预期：插件记录错误，可能回复用户生成失败。", type: "THROW_RENDER_NULL_BUFFER" },
   { id: 51, name: "逻辑: 配置文件恢复并通知", category: "业务逻辑状态", description: "模拟配置加载时触发恢复，成功恢复并(尝试)通知主人。预期：日志记录，主人收到私聊。", type: "THROW_CONFIG_RECOVERY_NOTICE" },
   { id: 52, name: "报告: 聚合下载进度(随机)", category: "核心图片报告模拟", description: "生成并发送一张模拟的聚合下载进度报告，核心库100%，附属库随机进度。", type: "SIM_TPL_DL_PROGRESS_REMOTE" },
