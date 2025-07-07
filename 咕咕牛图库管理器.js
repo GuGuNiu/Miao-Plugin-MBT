@@ -2821,6 +2821,25 @@ class MiaoPluginMBT extends plugin {
 
           if ( (oldCommit && newCommit && oldCommit !== newCommit) || currentWasForceReset ) {
             currentHasChanges = true;
+            let diffStat = null;
+            if(oldCommit && newCommit && oldCommit !== newCommit) {
+              try {
+                const diffResult = await ExecuteCommand("git", ["diff", "--shortstat", oldCommit, newCommit], { cwd: localPath }, 5000);
+                const stdout = diffResult.stdout.trim();
+                if (stdout) {
+                  const insertionsMatch = stdout.match(/(\d+)\s+insertion/);
+                  const deletionsMatch = stdout.match(/(\d+)\s+deletion/);
+                  diffStat = {
+                    insertions: insertionsMatch ? parseInt(insertionsMatch[1], 10) : 0,
+                    deletions: deletionsMatch ? parseInt(deletionsMatch[1], 10) : 0,
+                  };
+                }
+              } catch (diffError) {
+                //logger.warn(`${Default_Config.logPrefix}${RepoName} 获取 diff-stat 失败:`, diffError.message);
+                diffStat = null; 
+              }
+            }
+    
             if (currentWasForceReset || !oldCommit) {
               newCommitsCount = 1;
             } else {
@@ -2838,7 +2857,7 @@ class MiaoPluginMBT extends plugin {
         return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset, newCommitsCount: newCommitsCount };
 
       } catch (innerError) {
-        return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0 };
+        return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0, diffStat: null };
       }
     };
 
@@ -4035,7 +4054,15 @@ class MiaoPluginMBT extends plugin {
         statusClass = "status-fail";
       }
 
-      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode, newCommitsCount: result.newCommitsCount };   
+      let currentSha = '获取失败';
+      try {
+        const shaResult = await ExecuteCommand("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000);
+        currentSha = shaResult.stdout.trim();
+      } catch (shaError) {
+        //logger.warn(`${logPrefix}获取 ${repoDisplayName} 的Commit SHA失败:`, shaError.message);
+      }
+
+      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode, newCommitsCount: result.newCommitsCount, commitSha: currentSha, diffStat: result.diffStat };   
     };
 
     const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;
@@ -6244,131 +6271,86 @@ class MiaoPluginMBT extends plugin {
         const mockFaceUrl = `file://${MiaoPluginMBT.paths.commonResPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
 
         switch (type) {
-          case 'UP_REPORT_FULL_MOCK': {
-            const repo1Log = [
-              {
-                hash: "fakehash1",
-                isDescription: false,
-                date: '[07-07 14:47]',
-                displayParts: [
-                  { name: '橘福福', imageUrl: mockFaceUrl },
-                  { name: '伊芙琳', imageUrl: mockFaceUrl },
-                  { name: '柏妮思', imageUrl: mockFaceUrl },
-                  { name: '辉嘉音', imageUrl: mockFaceUrl }
-                ]
-              },
-              {
-                hash: "fakehash2",
-                isDescription: false,
-                date: '[07-07 13:59]',
-                displayParts: [
-                  { name: '橘福福', imageUrl: mockFaceUrl },
-                  { name: '爱丽丝', imageUrl: mockFaceUrl },
-                  { name: '浮波柚叶', imageUrl: mockFaceUrl }
-                ]
-              },
-              {
-                hash: "fakehash3",
-                isDescription: true,
-                date: '[07-07 11:00]',
-                descriptionTitle: 'Feat: 增加配置文件自动修复能力并优化更新逻辑',
-                descriptionBodyHtml: '<p>实现本地配置自愈：</p><p>通过本地规则即可从损坏的 GalleryConfig.yaml 中抢救并恢复有效设置。</p><p>优化JS更新延迟：</p><p>解决了核心JS文件更新时，30秒延迟被后续操作覆盖的逻辑冲突，确保插件热重载行为正确。</p><p>优化报告渲染：</p><p>更新报告图片只在手动触发或定时任务有实际内容时才生成，避免了不必要的性能开销。</p>'
-              }
-            ];
-          
-            const repo2Log = [
-              {
-                hash: "fakehash4",
-                isDescription: false,
-                date: '[07-06 10:30]',
-                displayParts: [
-                  { name: '可莉', imageUrl: mockFaceUrl },
-                  { name: '妮露', imageUrl: mockFaceUrl },
-                  { name: '胡桃', imageUrl: mockFaceUrl },
-                  { name: '申鹤', imageUrl: mockFaceUrl },
-                  { name: '菲谢尔', imageUrl: mockFaceUrl }
-                ]
-              },
-              {
-                hash: "fakehash5",
-                isDescription: true,
-                date: '[07-05 01:30]',
-                descriptionTitle: 'Fix: 仓库重构了'
-              },
-              {
-                hash: "fakehash6",
-                isDescription: false,
-                date: '[06-19 13:01]',
-                displayParts: [
-                  { name: '雷电将军', imageUrl: mockFaceUrl },
-                  { name: '莱欧斯利', imageUrl: mockFaceUrl },
-                  { name: '胡桃', imageUrl: mockFaceUrl },
-                  { name: '申鹤', imageUrl: mockFaceUrl },
-                  { name: '枫原万叶', imageUrl: mockFaceUrl },
-                  { name: '希格雯', imageUrl: mockFaceUrl },
-                  { name: '克洛琳德', imageUrl: mockFaceUrl },
-                  { name: '甘雨', imageUrl: mockFaceUrl },
-                  { name: '艾梅莉埃', imageUrl: mockFaceUrl },
-                  { name: '优菈', imageUrl: mockFaceUrl }
-                ]
-              }
-            ];
-          
-            const repo3Log = [
-              {
-                hash: "fakehash7",
-                isDescription: false,
-                date: '[07-06 10:29]',
-                displayParts: [
-                  { name: '黑塔', imageUrl: mockFaceUrl },
-                  { name: '花火', imageUrl: mockFaceUrl }
-                ]
-              },
-              {
-                hash: "fakehash8",
-                isDescription: true,
-                date: '[07-05 01:31]',
-                descriptionTitle: 'Fix: 仓库重构了'
-              },
-              {
-                hash: "fakehash9",
-                isDescription: false,
-                date: '[06-16 11:41]',
-                displayParts: [
-                  { name: '黑塔', imageUrl: mockFaceUrl },
-                  { name: '托帕&账账', imageUrl: mockFaceUrl }
-                ]
-              }
-            ];
-          
-            const repo4Log = [
-              {
-                hash: "fakehash10",
-                isDescription: true,
-                date: '[07-05 01:31]',
-                descriptionTitle: 'Fix: 仓库重构了'
-              },
-              {
-                hash: "fakehash11",
-                isDescription: true,
-                date: '[06-11 11:16]',
-                descriptionTitle: '♥ READMEEE'
-              }
-            ];
+          case 'DIFFSTAT_MOCK': {
+            const mockLogEntry = { date: "刚刚", isDescription: true, descriptionTitle: "feat: 功能变更", descriptionBodyHtml: "<p>本次更新包含文件变更。</p>" };
+            const noChangeLog = [{ date: "昨天", isDescription: true, descriptionTitle: "fix: 常规修复", descriptionBodyHtml: "" }];
 
             return {
+              ...baseData,
+              overallSuccess: true,
+              overallHasChanges: true,
+              duration: '42.0',
+              reportTime: new Date().toLocaleString(),
+              results: [
+                {
+                  name: "一号仓库", statusText: "更新成功", statusClass: "status-ok",
+                  hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'a1b2c3d',
+                  diffStat: { insertions: 27, deletions: 24 }
+                },
+                {
+                  name: "二号仓库", statusText: "更新成功", statusClass: "status-ok",
+                  hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'b4c5d6e',
+                  diffStat: { insertions: 158, deletions: 0 }
+                },
+                {
+                  name: "三号仓库", statusText: "本地冲突 (强制同步)", statusClass: "status-force-synced",
+                  hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'c7d8e9f',
+                  diffStat: { insertions: 0, deletions: 99 }
+                },
+                {
+                  name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change",
+                  hasChanges: false, newCommitsCount: 0, log: noChangeLog, commitSha: 'd1e2f3g',
+                  diffStat: null
+                }
+              ]
+            };
+          }
+          case 'UP_REPORT_FULL_MOCK': {
+            const mockFaceUrl = `file://${MiaoPluginMBT.paths.commonResPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
+            const repo1Log = [
+              { hash: "fakehash1", isDescription: false, date: '[07-07 14:47]', displayParts: [ { name: '橘福福', imageUrl: mockFaceUrl }, { name: '伊芙琳', imageUrl: mockFaceUrl }, { name: '柏妮思', imageUrl: mockFaceUrl }, { name: '辉嘉音', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash2", isDescription: false, date: '[07-07 13:59]', displayParts: [ { name: '橘福福', imageUrl: mockFaceUrl }, { name: '爱丽丝', imageUrl: mockFaceUrl }, { name: '浮波柚叶', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash3", isDescription: true, date: '[07-07 11:00]', descriptionTitle: 'Feat: 增加配置文件自动修复能力并优化更新逻辑', descriptionBodyHtml: '<p>实现本地配置自愈：</p><p>通过本地规则即可从损坏的 GalleryConfig.yaml 中抢救并恢复有效设置。</p><p>优化JS更新延迟：</p><p>解决了核心JS文件更新时，30秒延迟被后续操作覆盖的逻辑冲突，确保插件热重载行为正确。</p><p>优化报告渲染：</p><p>更新报告图片只在手动触发或定时任务有实际内容时才生成，避免了不必要的性能开销。</p>' }
+            ];
+            const repo2Log = [
+              { hash: "fakehash4", isDescription: false, date: '[07-06 10:30]', displayParts: [ { name: '可莉', imageUrl: mockFaceUrl }, { name: '妮露', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '菲谢尔', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash5", isDescription: true, date: '[07-05 01:30]', descriptionTitle: 'Fix: 仓库重构了' },
+              { hash: "fakehash6", isDescription: false, date: '[06-19 13:01]', displayParts: [ { name: '雷电将军', imageUrl: mockFaceUrl }, { name: '莱欧斯利', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '枫原万叶', imageUrl: mockFaceUrl }, { name: '希格雯', imageUrl: mockFaceUrl }, { name: '克洛琳德', imageUrl: mockFaceUrl }, { name: '甘雨', imageUrl: mockFaceUrl }, { name: '艾梅莉埃', imageUrl: mockFaceUrl }, { name: '优菈', imageUrl: mockFaceUrl } ] }
+            ];
+            const repo3Log = [
+              { hash: "fakehash7", isDescription: false, date: '[07-06 10:29]', displayParts: [ { name: '黑塔', imageUrl: mockFaceUrl }, { name: '花火', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash8", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
+              { hash: "fakehash9", isDescription: false, date: '[06-16 11:41]', displayParts: [ { name: '黑塔', imageUrl: mockFaceUrl }, { name: '托帕&账账', imageUrl: mockFaceUrl } ] }
+            ];
+            const repo4Log = [
+              { hash: "fakehash10", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
+              { hash: "fakehash11", isDescription: true, date: '[06-11 11:16]', descriptionTitle: '♥ READMEEE' }
+            ];
+
+            const baseResults = {
               ...baseData,
               overallSuccess: true,
               overallHasChanges: true,
               duration: '84.7',
               reportTime: '2025-07-07 15:08',
               results: [
-                { name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", newCommitsCount: 2, log: repo1Log },
-                { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo2Log },
-                { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo3Log },
-                { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log }
+                { name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", newCommitsCount: 2, log: repo1Log, hasChanges: true, commitSha: 'a1b2c3d' },
+                { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo2Log, hasChanges: false, commitSha: 'e4f5g6h' },
+                { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo3Log, hasChanges: false, commitSha: 'i7j8k9l' },
+                { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log, hasChanges: false, commitSha: 'm1n2o3p' }
               ]
             };
+            
+            if (itemToTrigger && itemToTrigger.id === 40) {
+              baseResults.results[0].diffStat = { insertions: 27, deletions: 24 };
+              baseResults.results[2].hasChanges = true; 
+              baseResults.results[2].statusText = "更新成功";
+              baseResults.results[2].statusClass = "status-ok";
+              baseResults.results[2].newCommitsCount = 1;
+              baseResults.results[2].diffStat = { insertions: 158, deletions: 0 };
+            }
+            
+            return baseResults;
           }
           case 'DL_REPORT_SUCCESS': {
             const results = [
@@ -6564,8 +6546,9 @@ class MiaoPluginMBT extends plugin {
           templateFileName = 'help';
         } else if (coreType === 'SPEEDTEST_SUCCESS') {
           templateFileName = 'speedtest';
+        } else if (coreType === 'DIFFSTAT_MOCK') {
+          templateFileName = 'update_report';
         }
-
         if (!templateFileName) throw new Error(`未找到核心类型 '${coreType}' 的模板映射。`);
 
         const imageBuffer = await renderEngine(templateFileName, coreType, source);
@@ -7250,6 +7233,7 @@ const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 37, name: "更新报告: 自动切换节点后仍失败", category: "核心图片报告模拟", description: "模拟核心库更新失败，自动切换节点后再次失败。", type: "SIM_TPL_UP_REPORT_AUTOSWITCH_FAIL_LOCAL" },
   { id: 38, name: "更新报告: 失败并生成详细错误消息", category: "核心图片报告模拟", description: "模拟核心库更新失败，并触发生成详细的合并转发错误报告。", type: "SIM_UPDATE_FAIL_WITH_DETAILS" },
   { id: 39, name: "更新报告: 完整效果模拟", category: "核心图片报告模拟", description: "模拟一张包含多条高亮、多种提交类型的完整更新报告。", type: "SIM_TPL_UP_REPORT_FULL_MOCK_LOCAL" },
+  { id: 40, name: "更新报告: 差异统计(独立模拟)", category: "核心图片报告模拟", description: "生成一个包含多种差异统计情况的完整报告，用于功能展示。", type: "SIM_TPL_DIFFSTAT_MOCK_LOCAL" },
   { id: 50, name: "逻辑: 截图过程返回空值", category: "业务逻辑状态", description: "模拟任何截图操作后，Puppeteer未抛错但返回了null/undefined (可能是空白图)。预期：插件记录错误，可能回复用户生成失败。", type: "THROW_RENDER_NULL_BUFFER" },
   { id: 51, name: "逻辑: 配置文件恢复并通知", category: "业务逻辑状态", description: "模拟配置加载时触发恢复，成功恢复并(尝试)通知主人。预期：日志记录，主人收到私聊。", type: "THROW_CONFIG_RECOVERY_NOTICE" },
   { id: 52, name: "报告: 聚合下载进度(随机)", category: "核心图片报告模拟", description: "生成并发送一张模拟的聚合下载进度报告，核心库100%，附属库随机进度。", type: "SIM_TPL_DL_PROGRESS_REMOTE" },

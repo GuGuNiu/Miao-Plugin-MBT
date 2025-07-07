@@ -60,7 +60,7 @@
             --card-text-color: #ffffff;
             --success-color: #28a745;
             --fail-color: #dc3545;
-            --force-sync-color: #e67e22;
+            --force-sync-color: #14b8a6;
             --auto-switch-color: #6f42c1;
             --update-ok-text-color: #8a6ebe;
             --no-change-color: #6c757d;
@@ -307,7 +307,7 @@
 
         .repo-item.status-force-synced {
             border-color: var(--force-sync-color);
-            box-shadow: 0 0 10px 2px rgba(230, 126, 34, 0.4);
+            box-shadow: 0 0 10px 2px rgba(45, 212, 191, 0.8);
         }
 
         .repo-item.status-auto-switch {
@@ -374,6 +374,50 @@
             font-weight: 500;
         }
 
+        .diff-stats-flip {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .diff-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+            padding: 0 5px;
+            border-radius: 6px;
+            color: #ffffff;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .diff-box.insertions {
+            background-color: rgba(16, 185, 129, 0.6);
+        }
+
+        .diff-box.deletions {
+            background-color: rgba(244, 63, 94, 0.6);
+        }
+
+        .diff-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 4px;
+            line-height: 1;
+        }
+
+        .diff-value {
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-size: 8px;
+            font-weight: 500;
+            line-height: 1;
+        }
+
         .repo-item-4 .repo-card {
             color: #ffffff;
         }
@@ -414,6 +458,14 @@
             color: #333;
         }
 
+        .log-title .commit-sha {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 0px;
+            font-weight: 400;
+        }
+
         .log-status {
             font-family: 'Rajdhani', sans-serif;
             font-weight: 700;
@@ -449,7 +501,7 @@
             align-items: flex-start;
             border-bottom: 1px solid var(--repo-border-light);
         }
-        
+
         .commit-entry-highlight {
             background-color: #ffffff;
             border-top: 1.5px solid var(--repo-color);
@@ -486,7 +538,7 @@
             z-index: 2;
         }
 
-        .commit-entry-highlight + .commit-entry {
+        .commit-entry-highlight+.commit-entry {
             border-top: 1px solid var(--repo-border-light);
             padding-top: 12px;
         }
@@ -717,6 +769,18 @@
                                     {{/if}}
                                 </span>
                             </div>
+                            {{ if repoResult.hasChanges && repoResult.diffStat }}
+                            <div class="diff-stats-flip">
+                                <div class="diff-box insertions">
+                                    <span class="diff-label">+</span>
+                                    <span class="diff-value">{{ repoResult.diffStat.insertions }}</span>
+                                </div>
+                                <div class="diff-box deletions">
+                                    <span class="diff-label">-</span>
+                                    <span class="diff-value">{{ repoResult.diffStat.deletions }}</span>
+                                </div>
+                            </div>
+                            {{ /if }}
                         </div>
 
                         <div class="log-section">
@@ -727,7 +791,13 @@
                             </div>
                             {{ else }}
                             <div class="log-header">
-                                <div class="log-title">最新提交记录</div>
+                                <div class="log-title">
+                                    最新提交记录
+                                    {{ if repoResult.commitSha && repoResult.commitSha !== '获取失败' }}
+                                    <span class="commit-sha">[SHA:{{ repoResult.commitSha.substring(0, 20)
+                                        }}]</span>
+                                    {{ /if }}
+                                </div>
                                 <span class="log-status">
                                     {{ if repoResult.autoSwitchedNode }}
                                     更新成功 (节点自动切换至{{ repoResult.autoSwitchedNode }})
@@ -764,10 +834,8 @@
                                                 {{ each commit.displayParts part }}
                                                 <div class="character-capsule" data-game="{{ part.game }}">
                                                     <div class="character-capsule-face-wrapper">
-                                                        {{ if part.imageUrl }}
-                                                        <img src="{{ part.imageUrl }}" alt="{{ part.name }}"
-                                                            class="character-capsule-face">
-                                                        {{ /if }}
+                                                        <img src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}" alt="{{ part.name }}"
+                                                        class="character-capsule-face">
                                                     </div>
                                                     <span class="character-capsule-name">{{ part.name }}</span>
                                                 </div>
@@ -797,10 +865,8 @@
                                             {{ each commit.displayParts part }}
                                             <div class="character-capsule" data-game="{{ part.game }}">
                                                 <div class="character-capsule-face-wrapper">
-                                                    {{ if part.imageUrl }}
-                                                    <img src="{{ part.imageUrl }}" alt="{{ part.name }}"
+                                                    <img src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}" alt="{{ part.name }}"
                                                         class="character-capsule-face">
-                                                    {{ /if }}
                                                 </div>
                                                 <span class="character-capsule-name">{{ part.name }}</span>
                                             </div>
@@ -830,10 +896,8 @@
                                             {{ each commit.displayParts part }}
                                             <div class="character-capsule" data-game="{{ part.game }}">
                                                 <div class="character-capsule-face-wrapper">
-                                                    {{ if part.imageUrl }}
-                                                    <img src="{{ part.imageUrl }}" alt="{{ part.name }}"
+                                                    <img src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}" alt="{{ part.name }}"
                                                         class="character-capsule-face">
-                                                    {{ /if }}
                                                 </div>
                                                 <span class="character-capsule-name">{{ part.name }}</span>
                                             </div>
