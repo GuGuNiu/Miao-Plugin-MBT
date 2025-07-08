@@ -219,8 +219,7 @@
         .title span {
             font-family: 'Orbitron', sans-serif;
             color: var(--text-secondary);
-            font-size: 16px;
-            margin-left: 10px;
+            font-size: 13px;
             font-weight: 500;
         }
 
@@ -255,7 +254,6 @@
             --repo-bg-light: #f3fcf9;
             --repo-border-light: rgba(32, 201, 151, 0.2);
             --capsule-bg: #d9f3e9;
-
             --capsule-border-color: #b2e5d6;
             --capsule-face-bg: #e9fbf3;
             --capsule-name-color: #206e5a;
@@ -266,7 +264,6 @@
             --repo-bg-light: #f3f8ff;
             --repo-border-light: rgba(19, 149, 255, 0.2);
             --capsule-bg: #dbeaff;
-
             --capsule-border-color: #b8d9ff;
             --capsule-face-bg: #eff6ff;
             --capsule-name-color: #155ec1;
@@ -277,7 +274,6 @@
             --repo-bg-light: #f7f7f7;
             --repo-border-light: rgba(90, 90, 90, 0.2);
             --capsule-bg: #e8e8e8;
-
             --capsule-border-color: #cccccc;
             --capsule-face-bg: #f0f0f0;
             --capsule-name-color: #333333;
@@ -288,12 +284,10 @@
             --repo-bg-light: #fffaf3;
             --repo-border-light: rgba(255, 152, 56, 0.2);
             --capsule-bg: #ffeeda;
-
             --capsule-border-color: #f8d0a5;
             --capsule-face-bg: #fff4e2;
             --capsule-name-color: #9b4b00;
         }
-
 
         .repo-item.status-ok {
             border-color: var(--repo-color);
@@ -580,7 +574,6 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
-
         .character-capsule-face-wrapper {
             display: flex;
             align-items: center;
@@ -606,15 +599,17 @@
             border-left: 1px solid var(--capsule-border-color);
         }
 
-        .description-commit {
-            font-size: 0.7em;
+        .description-commit .title {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
             color: #333;
         }
 
-        .description-commit .title {
+        .description-commit .title>span:last-child {
+            font-size: 13px;
+            line-height: 1.5;
             font-weight: 600;
-            font-size: 0.75rem;
-            color: #333;
         }
 
         .description-commit .body {
@@ -723,6 +718,67 @@
             position: relative;
             z-index: 1;
         }
+
+        .commit-prefix {
+            display: inline-block;
+            padding: 3px 9px;
+            margin-right: 8px;
+            border-radius: 12px 4px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Orbitron-Medium', 'SFMono-Regular', Consolas, monospace;
+            color: #fff;
+            text-transform: uppercase;
+            line-height: 1.2;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .prefix-feat {
+            background-color: #28a745 !important;
+            color: white !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-fix {
+            background-color: #fd7e14 !important;
+            color: #ffe663 !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-perf {
+            background-color: #007bff !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-refactor {
+            background-color: #ffc107 !important;
+            color: #212529;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-style {
+            background-color: #6f42c1 !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-docs {
+            background-color: #17a2b8 !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-test {
+            background-color: #e83e8c !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+
+        .prefix-chore,
+        .prefix-build,
+        .prefix-ci {
+            background-color: #6c757d !important;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
+        }
     </style>
 </head>
 
@@ -741,7 +797,6 @@
                     <h1 class="title">咕咕牛图库的更新报告 <span>/IREPOPORTI/</span></h1>
                     <div class="report-time">{{ reportTime }}</div>
                 </header>
-
                 <main class="repo-list">
                     {{ each results repoResult index }}
                     <div class="repo-item repo-item-{{index + 1}} {{ repoResult.statusClass }}">
@@ -758,15 +813,8 @@
                             </div>
                             <div class="card-footer">
                                 <span class="card-status">
-                                    {{if index === 0}}
-                                    主 资 源
-                                    {{else if index === 1}}
-                                    原 神
-                                    {{else if index === 2}}
-                                    崩坏：星穹铁道
-                                    {{else if index === 3}}
-                                    鸣潮 & 绝区零
-                                    {{/if}}
+                                    {{if index === 0}}主 资 源{{else if index === 1}}原 神{{else if index ===
+                                    2}}崩坏：星穹铁道{{else if index === 3}}鸣潮 & 绝区零{{/if}}
                                 </span>
                             </div>
                             {{ if repoResult.hasChanges && repoResult.diffStat }}
@@ -782,10 +830,8 @@
                             </div>
                             {{ /if }}
                         </div>
-
                         <div class="log-section">
-                            {{ if repoResult.statusText === '未配置' || repoResult.statusText === '未下载' ||
-                            repoResult.statusText === '未下载 (插件未安装)' }}
+                            {{ if repoResult.statusClass === 'status-skipped' }}
                             <div class="special-status-display">
                                 {{ repoResult.statusText }}
                             </div>
@@ -794,8 +840,7 @@
                                 <div class="log-title">
                                     最新提交记录
                                     {{ if repoResult.commitSha && repoResult.commitSha !== '获取失败' }}
-                                    <span class="commit-sha">[SHA:{{ repoResult.commitSha.substring(0, 20)
-                                        }}]</span>
+                                    <span class="commit-sha">[SHA:{{ repoResult.commitSha.substring(0, 20) }}]</span>
                                     {{ /if }}
                                 </div>
                                 <span class="log-status">
@@ -807,36 +852,34 @@
                                 </span>
                             </div>
                             <div class="log-content-container">
-                                {{ if isArray(repoResult.log) && repoResult.log.length > 0 && (repoResult.log[0].hash ||
-                                repoResult.log[0].descriptionTitle) }}
-                                {{ if (repoResult.statusClass === 'status-ok' || repoResult.statusClass ===
-                                'status-force-synced' || repoResult.statusClass === 'status-auto-switch') &&
-                                repoResult.newCommitsCount > 0 }}
+                                {{ if repoResult.hasValidLogs }}
+                                {{ if repoResult.shouldHighlight }}
                                 <div class="commit-entry-highlight">
                                     {{ each repoResult.log.slice(0, repoResult.newCommitsCount) commit }}
                                     <div class="commit-entry">
-                                        <div class="commit-meta">
-                                            {{ commit.date }}
-                                        </div>
+                                        <div class="commit-meta">{{ commit.date }}</div>
                                         <div class="commit-content-wrapper">
                                             {{ if commit.isDescription }}
                                             <div class="description-commit">
-                                                <div class="title">{{@ commit.descriptionTitle }}</div>
-                                                {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length >
-                                                0 }}
-                                                <hr
-                                                    style="border: none; border-top: 1px solid #eee; margin: 0.4em 0;" />
+                                                <div class="title">
+                                                    {{ if commit.commitPrefix }}<span
+                                                        class="commit-prefix prefix-{{commit.commitPrefix}}">{{
+                                                        commit.commitPrefix }}</span>{{ /if }}
+                                                    <span>{{@ commit.commitTitle }}</span>
+                                                </div>
+                                                {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
                                                 <div class="body">{{@ commit.descriptionBodyHtml }}</div>
                                                 {{ /if }}
                                             </div>
-                                            {{ else }}
+                                            {{ /if }}
+                                        
+                                            {{ if commit.displayParts && commit.displayParts.length > 0 }}
                                             <div class="commit-message-wrapper">
                                                 {{ each commit.displayParts part }}
                                                 <div class="character-capsule" data-game="{{ part.game }}">
-                                                    <div class="character-capsule-face-wrapper">
-                                                        <img src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}" alt="{{ part.name }}"
-                                                        class="character-capsule-face">
-                                                    </div>
+                                                    <div class="character-capsule-face-wrapper"><img
+                                                            src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}"
+                                                            alt="{{ part.name }}" class="character-capsule-face"></div>
                                                     <span class="character-capsule-name">{{ part.name }}</span>
                                                 </div>
                                                 {{ /each }}
@@ -846,28 +889,32 @@
                                     </div>
                                     {{ /each }}
                                 </div>
+                                {{ /if }}
                                 {{ each repoResult.log.slice(repoResult.newCommitsCount) commit }}
                                 <div class="commit-entry">
-                                    <div class="commit-meta">
-                                        {{ commit.date }}
-                                    </div>
+                                    <div class="commit-meta">{{ commit.date }}</div>
                                     <div class="commit-content-wrapper">
                                         {{ if commit.isDescription }}
                                         <div class="description-commit">
-                                            <div class="title">{{@ commit.descriptionTitle }}</div>
+                                            <div class="title">
+                                                {{ if commit.commitPrefix }}<span
+                                                    class="commit-prefix prefix-{{commit.commitPrefix}}">{{
+                                                    commit.commitPrefix }}</span>{{ /if }}
+                                                <span>{{@ commit.commitTitle }}</span>
+                                            </div>
                                             {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
-                                            <hr style="border: none; border-top: 1px solid #eee; margin: 0.4em 0;" />
                                             <div class="body">{{@ commit.descriptionBodyHtml }}</div>
                                             {{ /if }}
                                         </div>
-                                        {{ else }}
+                                        {{ /if }}
+                                    
+                                        {{ if commit.displayParts && commit.displayParts.length > 0 }}
                                         <div class="commit-message-wrapper">
                                             {{ each commit.displayParts part }}
                                             <div class="character-capsule" data-game="{{ part.game }}">
-                                                <div class="character-capsule-face-wrapper">
-                                                    <img src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}" alt="{{ part.name }}"
-                                                        class="character-capsule-face">
-                                                </div>
+                                                <div class="character-capsule-face-wrapper"><img
+                                                        src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}"
+                                                        alt="{{ part.name }}" class="character-capsule-face"></div>
                                                 <span class="character-capsule-name">{{ part.name }}</span>
                                             </div>
                                             {{ /each }}
@@ -876,38 +923,6 @@
                                     </div>
                                 </div>
                                 {{ /each }}
-                                {{ else }}
-                                {{ each repoResult.log commit }}
-                                <div class="commit-entry">
-                                    <div class="commit-meta">
-                                        {{ commit.date }}
-                                    </div>
-                                    <div class="commit-content-wrapper">
-                                        {{ if commit.isDescription }}
-                                        <div class="description-commit">
-                                            <div class="title">{{@ commit.descriptionTitle }}</div>
-                                            {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
-                                            <hr style="border: none; border-top: 1px solid #eee; margin: 0.4em 0;" />
-                                            <div class="body">{{@ commit.descriptionBodyHtml }}</div>
-                                            {{ /if }}
-                                        </div>
-                                        {{ else }}
-                                        <div class="commit-message-wrapper">
-                                            {{ each commit.displayParts part }}
-                                            <div class="character-capsule" data-game="{{ part.game }}">
-                                                <div class="character-capsule-face-wrapper">
-                                                    <img src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}" alt="{{ part.name }}"
-                                                        class="character-capsule-face">
-                                                </div>
-                                                <span class="character-capsule-name">{{ part.name }}</span>
-                                            </div>
-                                            {{ /each }}
-                                        </div>
-                                        {{ /if }}
-                                    </div>
-                                </div>
-                                {{ /each }}
-                                {{ /if }}
                                 {{ else }}
                                 <div class="commit-entry">(无有效提交记录)</div>
                                 {{ /if }}
@@ -917,25 +932,11 @@
                     </div>
                     {{ /each }}
                 </main>
-
-                <footer class="summary-bar
-                {{ if !overallSuccess }}has-errors
-                {{ else if !overallHasChanges }}no-changes
-                {{ else }}success
-                {{ /if }}">
-                    <span class="icon">
-                        {{ if !overallSuccess }}💔
-                        {{ else if !overallHasChanges }}⭐
-                        {{ else }}🎉
-                        {{ /if }}
-                    </span>
-                    {{ if overallSuccess }}
-                    {{ if overallHasChanges }}所有仓库更新检查完成，部分仓库有更新！
-                    {{ else }}所有仓库更新检查完成，均已是最新版本！
-                    {{ /if }}
-                    {{ else }}
-                    更新过程中遇到问题，请检查日志！
-                    {{ /if }}
+                <footer
+                    class="summary-bar {{ if !overallSuccess }}has-errors{{ else if !overallHasChanges }}no-changes{{ else }}success{{ /if }}">
+                    <span class="icon">{{ if !overallSuccess }}💔{{ else if !overallHasChanges }}⭐{{ else }}🎉{{ /if
+                        }}</span>
+                    {{ summaryText }}
                     <span class="duration">[耗时: {{ duration }} s]</span>
                 </footer>
                 <div class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</div>

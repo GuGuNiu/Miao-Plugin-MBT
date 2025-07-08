@@ -2763,6 +2763,7 @@ class MiaoPluginMBT extends plugin {
     let wasForceReset = false;
     let autoSwitchedNode = null;
     let finalNewCommitsCount = 0;
+    let finalDiffStat = null;
 
     const attemptUpdate = async (isRetry = false) => {
       let currentSuccess = false;
@@ -2770,6 +2771,7 @@ class MiaoPluginMBT extends plugin {
       let currentPullError = null;
       let currentWasForceReset = false;
       let newCommitsCount = 0;
+      let diffStat = null;
 
       try {
         let oldCommit = "";
@@ -2800,12 +2802,12 @@ class MiaoPluginMBT extends plugin {
             await ExecuteCommand("git", ["fetch", "origin"], { cwd: localPath }, Default_Config.gitPullTimeout);
             await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], { cwd: localPath });
             currentSuccess = true;
-            currentWasForceReset = true; 
+            currentWasForceReset = true;
             currentPullError = null;
             logger.info(`${Default_Config.logPrefix}${RepoName} 强制重置成功。`);
           } catch (resetError) {
             logger.error(`${Default_Config.logPrefix}${RepoName} 强制重置失败！`);
-            currentSuccess = false; 
+            currentSuccess = false;
             currentPullError = resetError;
           }
         }
@@ -2819,27 +2821,25 @@ class MiaoPluginMBT extends plugin {
             logger.warn(`${Default_Config.logPrefix}${RepoName} 获取新 commit 失败:`, newRevParseError.message);
           }
 
-          if ( (oldCommit && newCommit && oldCommit !== newCommit) || currentWasForceReset ) {
+          if ((oldCommit && newCommit && oldCommit !== newCommit) || currentWasForceReset) {
             currentHasChanges = true;
-            let diffStat = null;
-            if(oldCommit && newCommit && oldCommit !== newCommit) {
+
+            diffStat = { insertions: 0, deletions: 0 };
+            if (oldCommit && newCommit && oldCommit !== newCommit) {
               try {
                 const diffResult = await ExecuteCommand("git", ["diff", "--shortstat", oldCommit, newCommit], { cwd: localPath }, 5000);
                 const stdout = diffResult.stdout.trim();
                 if (stdout) {
                   const insertionsMatch = stdout.match(/(\d+)\s+insertion/);
                   const deletionsMatch = stdout.match(/(\d+)\s+deletion/);
-                  diffStat = {
-                    insertions: insertionsMatch ? parseInt(insertionsMatch[1], 10) : 0,
-                    deletions: deletionsMatch ? parseInt(deletionsMatch[1], 10) : 0,
-                  };
+                  diffStat.insertions = insertionsMatch ? parseInt(insertionsMatch[1], 10) : 0;
+                  diffStat.deletions = deletionsMatch ? parseInt(deletionsMatch[1], 10) : 0;
                 }
               } catch (diffError) {
-                //logger.warn(`${Default_Config.logPrefix}${RepoName} 获取 diff-stat 失败:`, diffError.message);
-                diffStat = null; 
+                // logger.warn(`${Default_Config.logPrefix}${RepoName} 获取 diff-stat 失败, diffError.message);
               }
             }
-    
+
             if (currentWasForceReset || !oldCommit) {
               newCommitsCount = 1;
             } else {
@@ -2854,7 +2854,7 @@ class MiaoPluginMBT extends plugin {
             }
           }
         }
-        return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset, newCommitsCount: newCommitsCount };
+        return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset, newCommitsCount: newCommitsCount, diffStat: diffStat };
 
       } catch (innerError) {
         return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0, diffStat: null };
@@ -2864,22 +2864,15 @@ class MiaoPluginMBT extends plugin {
     const gameKeysForPreUpdateManage = ["zzz", "waves"];
     for (const gameKeyToManage of gameKeysForPreUpdateManage) {
       const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
-      if (!gameFolderToManage) {
-        continue;
-      }
+      if (!gameFolderToManage) { continue; }
       let isRepoRelevant = false;
-      if (gameKeyToManage === "zzz" || gameKeyToManage === "waves") {
-        isRepoRelevant = (RepoNum === 1 || RepoNum === 4);
-      }
-      if (isRepoRelevant) {
-        await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger);
-      }
+      if (gameKeyToManage === "zzz" || gameKeyToManage === "waves") { isRepoRelevant = (RepoNum === 1 || RepoNum === 4); }
+      if (isRepoRelevant) { await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger); }
     }
 
     await MiaoPluginMBT.gitMutex.acquire();
     try {
-      let updateResult = await attemptUpdate();
-
+      const updateResult = await attemptUpdate();
       const isNetworkError = (err) => {
         if (!err) return false;
         const errorString = ((err.stderr || "") + (err.message || "")).toLowerCase();
@@ -2888,65 +2881,55 @@ class MiaoPluginMBT extends plugin {
 
       if (!updateResult.success && isNetworkError(updateResult.error)) {
         logger.warn(`${Default_Config.logPrefix}${RepoName} 更新失败，检测到网络问题，尝试自动切换节点...`);
-
         const allHttpTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, logger);
         const httpSurvivors = allHttpTestResults.filter(r => r.speed !== Infinity);
-        if (httpSurvivors.length === 0) {
-          logger.warn(`${Default_Config.logPrefix}${RepoName} 自动测速后未找到任何可用的HTTP节点。`);
-        } else {
-          const gitTestPromises = httpSurvivors.map(node =>
-            MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, logger).then(gitResult => ({ name: node.name, gitResult }))
-          );
+        if (httpSurvivors.length > 0) {
+          const gitTestPromises = httpSurvivors.map(node => MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, logger).then(gitResult => ({ name: node.name, gitResult })));
           const gitTestResults = await Promise.all(gitTestPromises);
-
           const availableSources = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger);
           const bestSource = availableSources[0];
 
           if (bestSource) {
             const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-            let userAndRepoPath = "";
-            if (repoPathMatch && repoPathMatch[1]) {
-              userAndRepoPath = repoPathMatch[1].replace(/\.git$/, "");
-            } else {
-              throw new Error(`无法从原始repoUrl (${RepoUrl}) 提取仓库路径。`);
-            }
+            let userAndRepoPath = repoPathMatch?.[1]?.replace(/\.git$/, "") || null;
+            if (userAndRepoPath) {
+              let newUrl = "";
+              if (bestSource.name === "GitHub") newUrl = `https://github.com/${userAndRepoPath}.git`;
+              else if (bestSource.cloneUrlPrefix) {
+                const cleanPrefix = bestSource.cloneUrlPrefix.replace(/\/$/, "");
+                if (bestSource.name === "GitClone") newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
+                else if (bestSource.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) newUrl = `${cleanPrefix}/${userAndRepoPath}`;
+                else newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
+              }
 
-            let newUrl = "";
-            if (bestSource.name === "GitHub") {
-              newUrl = `https://github.com/${userAndRepoPath}.git`;
-            } else if (bestSource.cloneUrlPrefix) {
-              const cleanPrefix = bestSource.cloneUrlPrefix.replace(/\/$/, "");
-              if (bestSource.name === "GitClone") {
-                newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
-              } else if (bestSource.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
-                newUrl = `${cleanPrefix}/${userAndRepoPath}`;
-              } else {
-                newUrl = `${cleanPrefix}/github.com/${userAndRepoPath}.git`;
+              if (newUrl) {
+                try {
+                  await ExecuteCommand("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
+                  logger.info(`${Default_Config.logPrefix}${RepoName} 成功将远程URL切换至: ${bestSource.name} (${newUrl})`);
+                  autoSwitchedNode = bestSource.name;
+                  const retryResult = await attemptUpdate(true);
+                  success = retryResult.success;
+                  hasChanges = retryResult.hasChanges;
+                  pullError = retryResult.error;
+                  wasForceReset = retryResult.wasForceReset;
+                  finalNewCommitsCount = retryResult.newCommitsCount;
+                  finalDiffStat = retryResult.diffStat;
+                } catch (setUrlError) {
+                  logger.error(`${Default_Config.logPrefix}${RepoName} 切换远程URL失败:`, setUrlError);
+                  pullError = setUrlError;
+                }
               }
             }
-
-            if (newUrl) {
-              try {
-                await ExecuteCommand("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
-                logger.info(`${Default_Config.logPrefix}${RepoName} 成功将远程URL切换至: ${bestSource.name} (${newUrl})`);
-                autoSwitchedNode = bestSource.name;
-                updateResult = await attemptUpdate(true);
-              } catch (setUrlError) {
-                logger.error(`${Default_Config.logPrefix}${RepoName} 切换远程URL失败:`, setUrlError);
-                updateResult.error = setUrlError;
-              }
-            }
-          } else {
-            logger.warn(`${Default_Config.logPrefix}${RepoName} 自动测速后未找到可用节点。`);
           }
         }
+      } else {
+        success = updateResult.success;
+        hasChanges = updateResult.hasChanges;
+        pullError = updateResult.error;
+        wasForceReset = updateResult.wasForceReset;
+        finalNewCommitsCount = updateResult.newCommitsCount;
+        finalDiffStat = updateResult.diffStat;
       }
-
-      success = updateResult.success;
-      hasChanges = updateResult.hasChanges;
-      pullError = updateResult.error;
-      wasForceReset = updateResult.wasForceReset;
-      finalNewCommitsCount = updateResult.newCommitsCount;
 
       const format = "%cd [%h]%n%s%n%b";
       const gitLogArgs = ["log", `-n 3`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
@@ -2965,214 +2948,139 @@ class MiaoPluginMBT extends plugin {
           latestLog = await Promise.all(logEntries.map(async (fullCommit) => {
             const lines = fullCommit.trim().split('\n');
             const headerLine = lines.shift() || "";
-            const subjectLine = lines.shift() || "";
+            let subjectLine = lines.shift() || "";
             const bodyContent = lines.join('\n').trim();
 
-            const commitData = { hash: 'N/A', date: '', displayParts: [], isDescription: false, descriptionTitle: '', descriptionBodyHtml: '', groupedDisplayParts: [] };
+            const commitData = {
+              hash: 'N/A', date: '', isDescription: false, displayParts: [], groupedDisplayParts: [],
+              commitPrefix: null, commitScope: null, commitTitle: '', descriptionBodyHtml: ''
+            };
 
             const dateMatch = headerLine.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
             if (dateMatch) { commitData.date = `[${dateMatch[1]}]`; }
-
             const hashMatch = headerLine.match(/\[([a-f0-9]{7,40})\]/);
             if (hashMatch) { commitData.hash = hashMatch[1]; }
 
+            const prefixMatch = subjectLine.match(/^([a-zA-Z]+)(?:\((.+?)\))?[:：]\s*(.+)/);
+            if (prefixMatch) {
+              commitData.commitPrefix = prefixMatch[1].toLowerCase();
+              commitData.commitScope = prefixMatch[2];
+              subjectLine = prefixMatch[3].trim();
+            }
+            commitData.commitTitle = subjectLine;
+
             const gamePrefixes = [
-              { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
-              { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
-              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
-              { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
+                { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
+                { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
+                { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
+                { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
             ];
-
-            const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(subjectLine));
-            commitData.isDescription = !isCharacterUpdate;
-
-            if (isCharacterUpdate) {
-              for (const entry of gamePrefixes) {
-                const prefixMatchFull = subjectLine.match(entry.prefixPattern);
-                if (prefixMatchFull) {
-                  const nameSegments = subjectLine.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
-                  for (const rawNameSegment of nameSegments) {
-                    let displayName = rawNameSegment;
-                    let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, { gameKey: entry.gameType }, logger);
-                    if (aliasResult.exists) { displayName = aliasResult.mainName; }
-                    const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
-                    let faceImageUrl = defaultFaceUrl;
-                    let faceImagePath = null;
-                    if (entry.gameType === "gs") {
-                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                    } else if (entry.gameType === "sr") {
-                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                    } else if (entry.gameType === "zzz") {
-                      try {
-                        const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
-                        for (const file of files) {
-                          if (file.endsWith('.json')) {
-                            const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
-                            if (data.Name === displayName || data.CodeName === displayName) {
-                              const iconMatch = data.Icon?.match(/\d+$/);
-                              if (iconMatch) {
-                                const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
-                                await fsPromises.access(zzzFacePath);
-                                faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
-                              }
-                              break;
-                            }
-                          }
-                        }
-                      } catch (err) { }
-                    } else if (entry.gameType === 'waves') {
-                      const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
-                      if (roleData && roleData.icon) {
-                        faceImageUrl = roleData.icon;
-                        faceImagePath = null;
-                      }
-                    }
-                    if (faceImagePath) {
-                      try {
-                        await fsPromises.access(faceImagePath);
-                        faceImageUrl = `file://${faceImagePath.replace(/\\/g, "/")}`;
-                      } catch (err) { }
-                    }
-                    commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl });
-                  }
-                  break;
-                }
-              }
-
-              if (commitData.displayParts.length > 0) {
-                const findOptimalLineBreaks = (parts, targetWidth) => {
-                  const n = parts.length;
-                  if (n === 0) return [];
-
-                  const memo = new Array(n + 1).fill(null);
-                  memo[0] = { badness: 0, lastBreak: -1 };
-
-                  for (let i = 1; i <= n; i++) {
-                    let bestResult = { badness: Infinity, lastBreak: -1 };
-
-                    for (let j = 0; j < i; j++) {
-                      let currentLineWidth = 0;
-                      for (let k = j; k < i; k++) {
-                        currentLineWidth += parts[k].width;
-                      }
-                      if (i - j > 1) {
-                        currentLineWidth += (i - j - 1) * 4;
-                      }
-
-                      if (currentLineWidth > targetWidth + 20 && i - j > 1) continue;
-
-                      let badness;
-                      if (i === n) {
-                        badness = 0;
-                      } else {
-                        const diff = targetWidth - currentLineWidth;
-                        badness = diff * diff;
-                      }
-
-                      const totalBadness = memo[j].badness + badness;
-
-                      if (totalBadness < bestResult.badness) {
-                        bestResult = { badness: totalBadness, lastBreak: j };
-                      }
-                    }
-                    memo[i] = bestResult;
-                  }
-
-                  const lines = [];
-                  let current = n;
-                  while (current > 0) {
-                    const prev = memo[current].lastBreak;
-                    lines.unshift(parts.slice(prev, current));
-                    current = prev;
-                  }
-                  return lines;
-                };
-
-                const getPixelWidth = (name) => {
-                  const BASE_WIDTH = 90;
-                  const CHINESE_CHAR_WIDTH = 26;
-                  const ASCII_CHAR_WIDTH = 13;
-
-                  let textWidth = 0;
-                  for (const char of name) {
-                    textWidth += /[^\u0000-\u00ff]/.test(char) ? CHINESE_CHAR_WIDTH : ASCII_CHAR_WIDTH;
-                  }
-
-                  return BASE_WIDTH + textWidth;
-                };
-
-                const partsWithWidth = commitData.displayParts.map(p => ({
-                  ...p,
-                  width: getPixelWidth(p.name)
-                }));
-
-                const CONTAINER_WIDTH = 490;
-                const GAP_WIDTH = 4;
-                const totalCapsulesWidth = partsWithWidth.reduce((sum, p) => sum + p.width, 0);
-                const totalGapsWidth = (partsWithWidth.length > 0 ? partsWithWidth.length - 1 : 0) * GAP_WIDTH;
-                const totalContentWidth = totalCapsulesWidth + totalGapsWidth;
-
-                const idealRows = Math.max(1, Math.ceil(totalContentWidth / CONTAINER_WIDTH));
-                const dynamicTargetWidth = totalContentWidth / idealRows;
-
-                commitData.groupedDisplayParts = findOptimalLineBreaks(partsWithWidth, dynamicTargetWidth);
-              }
-
-            } else {
-              commitData.descriptionTitle = subjectLine;
-              if (bodyContent) {
+            
+            if (bodyContent) {
                 let htmlBody = bodyContent
-                  .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
-                  .replace(/`([^`]+)`/g, '<code>$1</code>');
-
+                    .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>');
                 const bodyLines = htmlBody.split('\n');
                 let listOpen = false;
                 htmlBody = bodyLines.map(line => {
-                  line = line.trim();
-                  if (line.startsWith('###')) {
-                    return `<h3>${line.replace(/###\s*/, '')}</h3>`;
-                  }
-                  if (line.startsWith('- ')) {
-                    let listItem = `<li>${line.replace(/-\s*/, '')}</li>`;
-                    if (!listOpen) {
-                      listItem = '<ul>' + listItem;
-                      listOpen = true;
+                    line = line.trim();
+                    if (line.startsWith('###')) return `<h3>${line.replace(/###\s*/, '')}</h3>`;
+                    if (line.startsWith('- ')) {
+                        let listItem = `<li>${line.replace(/-\s*/, '')}</li>`;
+                        if (!listOpen) { listItem = '<ul>' + listItem; listOpen = true; }
+                        return listItem;
                     }
-                    return listItem;
-                  }
-                  if (listOpen) {
-                    listOpen = false;
-                    return `</ul>` + (line ? `<p>${line}</p>` : '');
-                  }
-                  return line ? `<p>${line}</p>` : '';
+                    if (listOpen) { listOpen = false; return `</ul>` + (line ? `<p>${line}</p>` : ''); }
+                    return line ? `<p>${line}</p>` : '';
                 }).join('');
-
-                if (listOpen) {
-                  htmlBody += '</ul>';
-                }
-
+                if (listOpen) htmlBody += '</ul>';
                 commitData.descriptionBodyHtml = htmlBody;
-              }
             }
+
+            const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(commitData.commitTitle));
+            if(isCharacterUpdate) {
+                commitData.isDescription = false; 
+                for (const entry of gamePrefixes) {
+                    const prefixMatchFull = commitData.commitTitle.match(entry.prefixPattern);
+                    if (prefixMatchFull) {
+                      const nameSegments = commitData.commitTitle.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
+                      for (const rawNameSegment of nameSegments) {
+                        let displayName = rawNameSegment;
+                        let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, { gameKey: entry.gameType }, logger);
+                        if (aliasResult.exists) { displayName = aliasResult.mainName; }
+                        const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
+                        let faceImageUrl = defaultFaceUrl;
+                        let faceImagePath = null;
+                        if (entry.gameType === "gs") {
+                          const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                          try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                        } else if (entry.gameType === "sr") {
+                          const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                          try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                        } else if (entry.gameType === "zzz") {
+                          try {
+                            const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+                            for (const file of files) {
+                              if (file.endsWith('.json')) {
+                                const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
+                                if (data.Name === displayName || data.CodeName === displayName) {
+                                  const iconMatch = data.Icon?.match(/\d+$/);
+                                  if (iconMatch) {
+                                    const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
+                                    await fsPromises.access(zzzFacePath);
+                                    faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
+                                  }
+                                  break;
+                                }
+                              }
+                            }
+                          } catch (err) { }
+                        } else if (entry.gameType === 'waves') {
+                          const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
+                          if (roleData && roleData.icon) { faceImageUrl = roleData.icon; faceImagePath = null; }
+                        }
+                        if (faceImagePath) {
+                          try { await fsPromises.access(faceImagePath); faceImageUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                        }
+                        commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl || defaultFaceUrl });
+                      }
+                      break;
+                    }
+                }
+            } else {
+                commitData.isDescription = true;
+            }
+            
             return commitData;
           }));
         } else {
-          latestLog = [{ isDescription: true, descriptionTitle: rawLogString || "无有效提交记录", descriptionBodyHtml: '' }];
+            latestLog = [{
+                isDescription: true,
+                commitTitle: rawLogString || "无有效提交记录",
+                hash: 'N/A', 
+                date: '', 
+                commitPrefix: null, 
+                descriptionBodyHtml: '', 
+            }];
         }
       }
 
     } catch (outerError) {
-      success = false; hasChanges = false;
-      pullError = outerError;
-      wasForceReset = false;
-      latestLog = [{ isDescription: true, descriptionTitle: "发生意外错误，无法获取日志", descriptionBodyHtml: '' }];
+      success = false; hasChanges = false; pullError = outerError; wasForceReset = false;
+      latestLog = [{
+          isDescription: true,
+          commitTitle: "发生意外错误，无法获取日志",
+          hash: 'N/A', 
+          date: '', 
+          commitPrefix: null, 
+          descriptionBodyHtml: '', 
+      }];
     } finally {
       MiaoPluginMBT.gitMutex.release();
     }
 
-    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, autoSwitchedNode: autoSwitchedNode, newCommitsCount: finalNewCommitsCount };
+    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, autoSwitchedNode: autoSwitchedNode, newCommitsCount: finalNewCommitsCount, diffStat: finalDiffStat };
   }
 
   static async GitLsRemoteTest(repoUrl, cloneUrlPrefix, nodeName, logger) {
@@ -4041,15 +3949,10 @@ class MiaoPluginMBT extends plugin {
 
       let statusClass = "";
       if (result.success) {
-        if (result.autoSwitchedNode) {
-          statusClass = "status-auto-switch";
-        } else if (result.wasForceReset) {
-          statusClass = "status-force-synced";
-        } else if (result.hasChanges) {
-          statusClass = "status-ok";
-        } else {
-          statusClass = "status-no-change";
-        }
+        if (result.autoSwitchedNode) statusClass = "status-auto-switch";
+        else if (result.wasForceReset) statusClass = "status-force-synced";
+        else if (result.hasChanges) statusClass = "status-ok";
+        else statusClass = "status-no-change";
       } else {
         statusClass = "status-fail";
       }
@@ -4062,7 +3965,9 @@ class MiaoPluginMBT extends plugin {
         //logger.warn(`${logPrefix}获取 ${repoDisplayName} 的Commit SHA失败:`, shaError.message);
       }
 
-      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode, newCommitsCount: result.newCommitsCount, commitSha: currentSha, diffStat: result.diffStat };   
+      const hasValidLogs = Array.isArray(result.log) && result.log.length > 0 && result.log[0] && (result.log[0].hash !== 'N/A');
+      const shouldHighlight = (statusClass === 'status-ok' || statusClass === 'status-force-synced' || statusClass === 'status-auto-switch') && result.newCommitsCount > 0;
+      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode, newCommitsCount: result.newCommitsCount, commitSha: currentSha, diffStat: result.diffStat, hasChanges: result.hasChanges, hasValidLogs: hasValidLogs, shouldHighlight: shouldHighlight };
     };
 
     const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;
@@ -4071,7 +3976,7 @@ class MiaoPluginMBT extends plugin {
 
     const repo1Result = reportResults.find(r => r.name === "一号仓库");
     if (repo1Result && repo1Result.success) {
-      await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger);
+      jsFileUpdated = await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger);
     }
     if (Repo2UrlConfigured) { if (Repo2Exists) reportResults.push(await processRepoResult(2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch)); else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
     if (Repo3UrlConfigured) { if (Repo3Exists) reportResults.push(await processRepoResult(3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch)); else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
@@ -4119,6 +4024,17 @@ class MiaoPluginMBT extends plugin {
     const now = new Date();
     const reportTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}   ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+    let summaryText = "";
+    if (overallSuccess) {
+      if (overallHasChanges) {
+        summaryText = "所有仓库更新检查完成，部分仓库有更新！";
+      } else {
+        summaryText = "所有仓库更新检查完成，均已是最新版本！";
+      }
+    } else {
+      summaryText = "更新过程中遇到问题，请检查日志！";
+    }
+
     const reportData = {
       pluginVersion: Version,
       duration,
@@ -4128,6 +4044,7 @@ class MiaoPluginMBT extends plugin {
       overallHasChanges,
       isArray: Array.isArray,
       reportTime: reportTime,
+      summaryText: summaryText,
     };
 
     let imageBuffer = null;
@@ -4184,7 +4101,7 @@ class MiaoPluginMBT extends plugin {
         await MiaoPluginMBT.SendMasterMsg(restartMessage);
       }
     }
-
+    
     //logger.info(`${Default_Config.logPrefix}更新流程结束，耗时 ${duration} 秒。`);
     return overallHasChanges;
   }
@@ -6267,7 +6184,7 @@ class MiaoPluginMBT extends plugin {
             successRateRounded: percent,
           };
         };
-        
+
         const mockFaceUrl = `file://${MiaoPluginMBT.paths.commonResPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
 
         switch (type) {
@@ -6308,19 +6225,19 @@ class MiaoPluginMBT extends plugin {
           case 'UP_REPORT_FULL_MOCK': {
             const mockFaceUrl = `file://${MiaoPluginMBT.paths.commonResPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
             const repo1Log = [
-              { hash: "fakehash1", isDescription: false, date: '[07-07 14:47]', displayParts: [ { name: '橘福福', imageUrl: mockFaceUrl }, { name: '伊芙琳', imageUrl: mockFaceUrl }, { name: '柏妮思', imageUrl: mockFaceUrl }, { name: '辉嘉音', imageUrl: mockFaceUrl } ] },
-              { hash: "fakehash2", isDescription: false, date: '[07-07 13:59]', displayParts: [ { name: '橘福福', imageUrl: mockFaceUrl }, { name: '爱丽丝', imageUrl: mockFaceUrl }, { name: '浮波柚叶', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash1", isDescription: false, date: '[07-07 14:47]', displayParts: [{ name: '橘福福', imageUrl: mockFaceUrl }, { name: '伊芙琳', imageUrl: mockFaceUrl }, { name: '柏妮思', imageUrl: mockFaceUrl }, { name: '辉嘉音', imageUrl: mockFaceUrl }] },
+              { hash: "fakehash2", isDescription: false, date: '[07-07 13:59]', displayParts: [{ name: '橘福福', imageUrl: mockFaceUrl }, { name: '爱丽丝', imageUrl: mockFaceUrl }, { name: '浮波柚叶', imageUrl: mockFaceUrl }] },
               { hash: "fakehash3", isDescription: true, date: '[07-07 11:00]', descriptionTitle: 'Feat: 增加配置文件自动修复能力并优化更新逻辑', descriptionBodyHtml: '<p>实现本地配置自愈：</p><p>通过本地规则即可从损坏的 GalleryConfig.yaml 中抢救并恢复有效设置。</p><p>优化JS更新延迟：</p><p>解决了核心JS文件更新时，30秒延迟被后续操作覆盖的逻辑冲突，确保插件热重载行为正确。</p><p>优化报告渲染：</p><p>更新报告图片只在手动触发或定时任务有实际内容时才生成，避免了不必要的性能开销。</p>' }
             ];
             const repo2Log = [
-              { hash: "fakehash4", isDescription: false, date: '[07-06 10:30]', displayParts: [ { name: '可莉', imageUrl: mockFaceUrl }, { name: '妮露', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '菲谢尔', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash4", isDescription: false, date: '[07-06 10:30]', displayParts: [{ name: '可莉', imageUrl: mockFaceUrl }, { name: '妮露', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '菲谢尔', imageUrl: mockFaceUrl }] },
               { hash: "fakehash5", isDescription: true, date: '[07-05 01:30]', descriptionTitle: 'Fix: 仓库重构了' },
-              { hash: "fakehash6", isDescription: false, date: '[06-19 13:01]', displayParts: [ { name: '雷电将军', imageUrl: mockFaceUrl }, { name: '莱欧斯利', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '枫原万叶', imageUrl: mockFaceUrl }, { name: '希格雯', imageUrl: mockFaceUrl }, { name: '克洛琳德', imageUrl: mockFaceUrl }, { name: '甘雨', imageUrl: mockFaceUrl }, { name: '艾梅莉埃', imageUrl: mockFaceUrl }, { name: '优菈', imageUrl: mockFaceUrl } ] }
+              { hash: "fakehash6", isDescription: false, date: '[06-19 13:01]', displayParts: [{ name: '雷电将军', imageUrl: mockFaceUrl }, { name: '莱欧斯利', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '枫原万叶', imageUrl: mockFaceUrl }, { name: '希格雯', imageUrl: mockFaceUrl }, { name: '克洛琳德', imageUrl: mockFaceUrl }, { name: '甘雨', imageUrl: mockFaceUrl }, { name: '艾梅莉埃', imageUrl: mockFaceUrl }, { name: '优菈', imageUrl: mockFaceUrl }] }
             ];
             const repo3Log = [
-              { hash: "fakehash7", isDescription: false, date: '[07-06 10:29]', displayParts: [ { name: '黑塔', imageUrl: mockFaceUrl }, { name: '花火', imageUrl: mockFaceUrl } ] },
+              { hash: "fakehash7", isDescription: false, date: '[07-06 10:29]', displayParts: [{ name: '黑塔', imageUrl: mockFaceUrl }, { name: '花火', imageUrl: mockFaceUrl }] },
               { hash: "fakehash8", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
-              { hash: "fakehash9", isDescription: false, date: '[06-16 11:41]', displayParts: [ { name: '黑塔', imageUrl: mockFaceUrl }, { name: '托帕&账账', imageUrl: mockFaceUrl } ] }
+              { hash: "fakehash9", isDescription: false, date: '[06-16 11:41]', displayParts: [{ name: '黑塔', imageUrl: mockFaceUrl }, { name: '托帕&账账', imageUrl: mockFaceUrl }] }
             ];
             const repo4Log = [
               { hash: "fakehash10", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
@@ -6340,16 +6257,16 @@ class MiaoPluginMBT extends plugin {
                 { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log, hasChanges: false, commitSha: 'm1n2o3p' }
               ]
             };
-            
+
             if (itemToTrigger && itemToTrigger.id === 40) {
               baseResults.results[0].diffStat = { insertions: 27, deletions: 24 };
-              baseResults.results[2].hasChanges = true; 
+              baseResults.results[2].hasChanges = true;
               baseResults.results[2].statusText = "更新成功";
               baseResults.results[2].statusClass = "status-ok";
               baseResults.results[2].newCommitsCount = 1;
               baseResults.results[2].diffStat = { insertions: 158, deletions: 0 };
             }
-            
+
             return baseResults;
           }
           case 'DL_REPORT_SUCCESS': {
