@@ -111,7 +111,6 @@ const Default_Config = {
   Execution_Mode: 'Batch',
   Load_Level: 1,
   SleeperAgent_switch: false,
-  rootFixedFiles: ['logo.png', 'logoIcon.png'],
 };
 let backgroundCache = { files: [], lastScan: 0, ttl: 60000, };
 
@@ -5998,8 +5997,7 @@ static async DetermineTargetPath(relativePath) {
           const shuffledIcons = lodash.shuffle(availablePictureFiles);
           for (let i = 0; i < numberOfIcons; i++) {
             const iconFilename = shuffledIcons[i % shuffledIcons.length];
-            const fullPath = `file://${path.join(pictureDirPath, iconFilename).replace(/\\/g, '/')}`;
-            randomIconPaths.push(fullPath);
+            randomIconPaths.push(iconFilename);
           }
         } else { }
 
@@ -6322,7 +6320,30 @@ static async DetermineTargetPath(relativePath) {
         logger.info(`模拟错误流程已执行完毕。`);
         return true;
       }
-      if (type === 'THROW_SYNC_FILES_FAILED') {
+      if (type === 'TRIGGER_DOWNLOAD_TYPEERROR_WITH_CONTEXT') {
+        const mockError = new TypeError("Cannot read properties of undefined (reading 'success')");
+        const allRepoStatus = [
+          { repo: 1, success: true, nodeName: 'Ghfast(代理)', toDownload: false },
+          { repo: 2, success: true, nodeName: '本地', toDownload: false },
+          undefined,
+          { repo: 4, nodeName: '未配置', success: true, toDownload: false }
+        ];
+        const statusSummary = allRepoStatus.map((s, i) => {
+          if (!s) return `  - 仓库索引 ${i}: 状态对象为 undefined (这很可能是错误的直接原因)`;
+          return `  - 仓库 ${s.repo || '未知'}: toDownload=${s.toDownload === undefined ? 'N/A' : s.toDownload}, success=${s.success === undefined ? 'N/A' : s.success}, node=${s.nodeName || 'N/A'}`;
+        }).join('\n');
+        const context = `下载流程在最终报告生成前发生意外。\n当前各仓库状态快照:\n${statusSummary}`;
+        await this.ReportError(e, "下载流程", mockError, context);
+      }
+      else if (type === 'TRIGGER_GIT_FAIL_WITH_FULL_DETAILS') {
+        const mockError = new Error("Command failed with code 128: git clone https://github.com/user/repo");
+        mockError.code = 128;
+        mockError.signal = 'SIGTERM';
+        mockError.stderr = "fatal: Authentication failed for 'https://github.com/...'\nfatal: could not read from remote repository.";
+        mockError.stdout = "Cloning into 'Miao-Plugin-MBT'...";
+        await this.ReportError(e, "模拟Git认证失败", mockError, "这是一个由触发器生成的模拟上下文");
+      }
+      else if (type === 'THROW_SYNC_FILES_FAILED') {
         const mockError = new Error("一个或多个关键资源同步失败，可能是仓库文件不完整。");
         mockError.code = 'SYNC_FAILED';
         mockError.syncDetails = {
@@ -6468,6 +6489,7 @@ static async DetermineTargetPath(relativePath) {
     } catch (error) { await this.ReportError(e, `模拟错误 (${itemToTrigger.name})`, error, `用户触发: #${triggerInput}`); }
     return true;
   }
+
   async ManualTestProxies(e) {
     if (!(await this.CheckInit(e))) return true;
     await e.reply(`收到！开始火力全开测试网络节点🚀🚀🚀🚀🚀...`, true);
@@ -7111,6 +7133,8 @@ const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 11, name: "资源同步失败 (文件丢失)", category: "底层错误", description: "模拟核心库下载后，同步公共资源时发现文件丢失。预期：显示专属的文件丢失报告图。", type: "THROW_SYNC_FILES_FAILED" },
   { id: 12, name: "下载流程: 核心库下载失败", category: "底层错误", description: "模拟核心库所有节点均下载失败，以测试顶层错误和日志捕获。", type: "TRIGGER_DOWNLOAD_FAILURE" },
   { id: 13, name: "错误报告: 附带精确日志", category: "核心图片报告模拟", description: "伪造一个带时间戳的错误，测试ReportError附加日志功能。", type: "SIMULATE_ERROR_WITH_LOG_CONTEXT" },
+  { id: 14, name: "下载流程: 模拟 TypeError 并捕获状态上下文", category: "核心图片报告模拟", description: "在下载流程中模拟一个 TypeError，测试顶层 catch 块是否能捕获并上报当时所有仓库的状态快照。", type: "TRIGGER_DOWNLOAD_TYPEERROR_WITH_CONTEXT" },
+  { id: 15, name: "错误报告: 模拟 Git 失败并展示完整技术细节", category: "核心图片报告模拟", description: "模拟一个包含 code 和 signal 的 Git 命令执行失败，测试错误报告能否展示完整的错误摘要信息。", type: "TRIGGER_GIT_FAIL_WITH_FULL_DETAILS" },
   { id: 21, name: "报告: 下载完成-混合结果", category: "核心图片报告模拟", description: "生成并发送一张模拟的“下载完成报告”：核心库成功，一个附属库失败，一个已存在。", type: "SIM_TPL_DL_REPORT_MIXED_REMOTE" },
   { id: 22, name: "报告: 下载完成-全部失败", category: "核心图片报告模拟", description: "生成并发送一张模拟的“下载完成报告”：所有尝试的仓库均下载失败。", type: "SIM_TPL_DL_REPORT_FAIL_REMOTE" },
   { id: 23, name: "报告: 下载完成-全部成功", category: "核心图片报告模拟", description: "生成并发送一张模拟的“下载完成报告”：所有配置的仓库均下载成功。", type: "SIM_TPL_DL_REPORT_SUCCESS_REMOTE" },
