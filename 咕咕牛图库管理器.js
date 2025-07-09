@@ -1850,28 +1850,27 @@ class MiaoPluginMBT extends plugin {
     await Promise.all(deletePromises);
   }
 
-  static async DetermineTargetPath(relativePath) {
-    if (!relativePath) return null;
-    const normalizedRelativePath = relativePath.replace(/\\/g, "/");
-    for (const fileSync of MiaoPluginMBT.paths.filesToSyncToCommonRes) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(MiaoPluginMBT.paths.commonResPath, fileSync.destFileName); }
-    for (const fileSync of MiaoPluginMBT.paths.filesToSyncSpecific) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(fileSync.destDir, fileSync.destFileName); }
-    const parts = normalizedRelativePath.split("/");
-    if (parts.length >= 3) {
-      const sourceFolder = parts[0]; const characterNameInRepo = parts[1]; const fileName = parts.slice(2).join("/");
-      let targetBaseDir = null, GameKey = null;
-      if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.gs) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; GameKey = "gs"; }
-      else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.sr) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; GameKey = "sr"; }
-      else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.zzz) { targetBaseDir = MiaoPluginMBT.paths.target.zzzChar; GameKey = "zzz"; }
-      else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.waves) { targetBaseDir = MiaoPluginMBT.paths.target.wavesChar; GameKey = "waves"; }
+static async DetermineTargetPath(relativePath) {
+  if (!relativePath) return null;
+  const normalizedRelativePath = relativePath.replace(/\\/g, "/");
+  for (const fileSync of MiaoPluginMBT.paths.filesToSyncToCommonRes) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(MiaoPluginMBT.paths.commonResPath, fileSync.destFileName); }
+  for (const fileSync of MiaoPluginMBT.paths.filesToSyncSpecific) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(fileSync.destDir, fileSync.destFileName); }
+  const parts = normalizedRelativePath.split("/");
+  if (parts.length >= 3) {
+    const sourceFolder = parts[0]; const characterNameInRepo = parts[1]; const fileName = parts.slice(2).join("/");
+    let targetBaseDir = null;
+    if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.gs) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; }
+    else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.sr) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; }
+    else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.zzz) { targetBaseDir = MiaoPluginMBT.paths.target.zzzChar; }
+    else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.waves) { targetBaseDir = MiaoPluginMBT.paths.target.wavesChar; }
 
-      if (targetBaseDir && GameKey) {
-        const aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(characterNameInRepo);
-        const targetCharacterName = aliasResult.exists ? aliasResult.mainName : characterNameInRepo;
-        return path.join(targetBaseDir, targetCharacterName, fileName);
-      }
+    if (targetBaseDir) {
+      const targetCharacterName = characterNameInRepo;
+      return path.join(targetBaseDir, targetCharacterName, fileName);
     }
-    return null;
   }
+  return null;
+}
 
   static async FindImageAbsolutePath(relativePath) {
     if (!relativePath) return null; const normalizedPath = relativePath.replace(/\\/g, "/");
@@ -6998,7 +6997,7 @@ class SleeperAgent extends plugin {
     super({
       name: '『咕咕牛🐂』原图管理 ',
       event: 'message',
-      priority: 4900,
+      priority: -100,
       rule: [
         { reg: /^#?原图$/, fnc: 'interceptOriginalImage' },
         { reg: /^#原图([\s\S]+)$/, fnc: 'debugOriginalImage', permission: 'master' },
