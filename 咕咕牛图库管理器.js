@@ -57,7 +57,7 @@ class ProcessManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.0";
+const Version = "5.0.1";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -87,6 +87,7 @@ const Default_Config = {
     { name: "Yumenaka", priority: 70, testUrlPrefix: `https://git.yumenaka.net/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://git.yumenaka.net/" },
     { name: "GhConSh", priority: 75, testUrlPrefix: `https://gh.con.sh/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.con.sh/" },
     { name: "GhddlcTop", priority: 80, testUrlPrefix: `https://gh.ddlc.top/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.ddlc.top/" },
+    { name: "SdutGit", priority: 90, testUrlPrefix: `https://git.sdut.me/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://git.sdut.me/" },
     { name: "GhpsCc", priority: 300, testUrlPrefix: `https://ghps.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghps.cc/" },
     { name: "Mirror", priority: 310, testUrlPrefix: `https://raw.gitmirror.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.gitmirror.com/" },
     { name: "GitHub", priority: 500, testUrlPrefix: RAW_URL_Repo1, cloneUrlPrefix: "https://github.com/" },
@@ -109,7 +110,6 @@ const Default_Config = {
   layout: true,
   Execution_Mode: 'Batch',
   Load_Level: 1,
-  Use_Secondary_Forward: false,
   SleeperAgent_switch: false,
   rootFixedFiles: ['logo.png', 'logoIcon.png'],
 };
@@ -1101,7 +1101,6 @@ class MiaoPluginMBT extends plugin {
       cronUpdate: configData.cronUpdate || Default_Config.cronUpdate,
       Execution_Mode: configData.Execution_Mode || Default_Config.Execution_Mode,
       Load_Level: configData.Load_Level ?? Default_Config.Load_Level,
-      Use_Secondary_Forward: configData.Use_Secondary_Forward ?? Default_Config.Use_Secondary_Forward,
       SleeperAgent_switch: parseBoolLike(configData.SleeperAgent_switch, Default_Config.SleeperAgent_switch),
       renderScale: configData.renderScale ?? Default_Config.renderScale,
       repoNodeInfo: configData.repoNodeInfo || {},
@@ -1132,7 +1131,6 @@ class MiaoPluginMBT extends plugin {
         cronUpdate: configData.cronUpdate,
         Execution_Mode: configData.Execution_Mode,
         Load_Level: configData.Load_Level,
-        Use_Secondary_Forward: configData.Use_Secondary_Forward,
         SleeperAgent_switch: configData.SleeperAgent_switch ? 1 : 0,
         renderScale: configData.renderScale,
         repoNodeInfo: configData.repoNodeInfo,
@@ -1173,7 +1171,6 @@ class MiaoPluginMBT extends plugin {
       Ai: { type: 'boolean', aliases: ['Ai'] },
       EasterEgg: { type: 'boolean', aliases: ['EasterEgg'] },
       layout: { type: 'boolean', aliases: ['layout'] },
-      Use_Secondary_Forward: { type: 'boolean', aliases: ['Use_Secondary_Forward', '高级合并'] },
       SleeperAgent_switch: { type: 'boolean', aliases: ['SleeperAgent_switch', '原图拦截'] },
       // 枚举值类型
       PFL: { type: 'enum', aliases: ['PFL', '净化等级'], validValues: [0, 1, 2] },
@@ -5032,7 +5029,7 @@ static async DetermineTargetPath(relativePath) {
                 await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKey, gameFolder, logger);
               }
             }
-            logger.info(`${logPrefix} [启用图库] 可选游戏内容检查并处理完毕。`);
+            //logger.info(`${logPrefix} [启用图库] 可选游戏内容检查并处理完毕。`);
 
           } else {
             await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, logger);
@@ -5768,27 +5765,10 @@ static async DetermineTargetPath(relativePath) {
     }
 
     if (allForwardMessages.length > 0) {
-      if (MiaoPluginMBT.MBTConfig.Use_Advanced_Forward) {
-        try {
-          if (allForwardMessages.length === 1) {
-            await e.reply(allForwardMessages[0]);
-          } else {
-            const finalForwardMsg = await common.makeForwardMsg(e, allForwardMessages, `咕咕牛图库 - ${inputName} (高级合并)`);
-            await e.reply(finalForwardMsg);
-          }
-        } catch (fwdError) {
-          logger.error(`${Default_Config.logPrefix}创建或发送失败:`, fwdError);
-          await e.reply("创建高级合并消息失败了，可能是内容太多了，已为你自动回退到分批发送模式...");
-          for (const msg of allForwardMessages) {
-            await e.reply(msg);
-            await common.sleep(1000);
-          }
-        }
-      } else {
         for (const msg of allForwardMessages) {
           await e.reply(msg);
           await common.sleep(1000);
-        }
+        
       }
     }
 
@@ -6705,7 +6685,6 @@ static async DetermineTargetPath(relativePath) {
           valueClass: `value-level-${currentLoadLevel}`,
           levelName: `LV.${currentLoadLevel} ${levelInfo.name}`
         },
-        advancedForward: { text: (config?.Use_Advanced_Forward ?? false) ? "已开启" : "已关闭", class: (config?.Use_Advanced_Forward ?? false) ? "value-enabled" : "value-disabled", },
         sleeperAgentStatus: {
           text: (config?.SleeperAgent_switch ?? true) ? "已开启" : "已关闭",
           class: (config?.SleeperAgent_switch ?? true) ? "value-enabled" : "value-disabled",
@@ -6750,7 +6729,7 @@ static async DetermineTargetPath(relativePath) {
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${Default_Config.logPrefix}只有主人才能使用设置命令哦~`);
 
-    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|低负载|负载等级|高级合并|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i);
+    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|低负载|负载等级|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i);
     if (!match) return false;
 
     const featureKey = match[1].toLowerCase();
@@ -6794,13 +6773,6 @@ static async DetermineTargetPath(relativePath) {
           return e.reply(`无效的负载等级: [${valueRaw}]，只能是 1, 2, 或 3。`, true);
         }
         await this.setLoadLevelInternal(e, loadLevel);
-        break;
-
-      case '高级合并':
-        if (valueRaw !== '开启' && valueRaw !== '关闭') {
-          return e.reply(`无效操作: 只能用 '开启' 或 '关闭'。`, true);
-        }
-        await this.handleSwitchCommand(e, 'Use_Secondary_Forward', '高级合并模式', valueRaw === '开启');
         break;
 
       case '原图拦截':
@@ -6999,16 +6971,16 @@ class SleeperAgent extends plugin {
       event: 'message',
       priority: -100,
       rule: [
-        { reg: /^#?原图$/, fnc: 'interceptOriginalImage' },
-        { reg: /^#原图([\s\S]+)$/, fnc: 'debugOriginalImage', permission: 'master' },
+        { reg: /^#?原图$/, fnc: 'interceptImage' },
+        { reg: /^#原图([\s\S]+)$/, fnc: 'debugImage', permission: 'master' },
         //============ 适配小叶面板 ============//
-        { reg: /^(?:\[reply:[^\]]+\]\n?)?#?原图$/, fnc: 'interceptOriginalImage' },
+        { reg: /^(?:\[reply:[^\]]+\]\n?)?#?原图$/, fnc: 'interceptImage' },
       ],
     });
     this.task = { fnc: () => { }, log: false };
   }
 
-  async debugOriginalImage(e) {
+  async debugImage(e) {
     const logger = global.logger || console;
     const sourceMsgId = e.msg.replace(/^#原图/, '').trim();
 
@@ -7039,7 +7011,7 @@ class SleeperAgent extends plugin {
     return true;
   }
 
-  async interceptOriginalImage(e) {
+  async interceptImage(e) {
     //============ 适配小叶面板 ============//
     const replyReg = /^\[reply:(.+?)\]\n?/;
     let replyId = null;
@@ -7088,9 +7060,7 @@ class SleeperAgent extends plugin {
           const imagePath = decodeURIComponent(imagePathEncoded);
           const fileName = path.basename(imagePath);
           let absolutePath;
-          if (imagePath.startsWith('http')) {
-            absolutePath = imagePath;
-          }
+          if (imagePath.startsWith('http')) { absolutePath = imagePath; }
           else if (type === 'miao') { absolutePath = path.join(YunzaiPath, 'plugins', 'miao-plugin', 'resources', imagePath); }
           else if (type === 'zzz') { absolutePath = path.join(MiaoPluginMBT.paths.target.zzzChar, imagePath); }
           else if (type === 'waves') { absolutePath = path.join(MiaoPluginMBT.paths.target.wavesChar, imagePath); }
@@ -7099,8 +7069,12 @@ class SleeperAgent extends plugin {
           if (fileName.toLowerCase().includes('gu')) {
             //logger.info(`[SleeperAgent] 文件名 "${fileName}" 包含 "Gu"，启动安全包装模式...`);
             try {
-              const forwardNodes = [{ user_id: e.user_id, nickname: e.sender.card || e.sender.nickname, message: [segment.image(imagePath.startsWith('http') ? absolutePath : `file://${absolutePath.replace(/\\/g, "/")}`)] }];
-              const forwardMsg = await common.makeForwardMsg(e, [forwardNodes], `原图 - ${fileName}`);
+              const characterName = fileName.replace(/Gu\d+\.webp$/i, '');
+              const promptText = `输入#咕咕牛查看${characterName} 可以看图库全部图片`;
+              const imageSegment = segment.image(imagePath.startsWith('http') ? absolutePath : `file://${absolutePath.replace(/\\/g, "/")}`);
+
+              const forwardList = [promptText, imageSegment];
+              const forwardMsg = await common.makeForwardMsg(e, forwardList, `原图 - ${fileName}`);
               await e.reply(forwardMsg);
               await common.sleep(300);
               await e.reply(segment.at(e.user_id), false, { recallMsg: 15 });
@@ -7109,10 +7083,10 @@ class SleeperAgent extends plugin {
               await e.reply(`无法获取原图，请稍后再试。`, true);
             }
             return true;
+          } else {
+            logger.info(`${Default_Config.logPrefix}SleeperAgent检测到非本插件图片(${fileName})，已放行。`);
+            return false;
           }
-          //logger.info(`[SleeperAgent] 文件名 "${fileName}" 不含 "Gu"，执行标准原图转发...`);
-          await e.reply(segment.image(imagePath.startsWith('http') ? absolutePath : `file://${absolutePath.replace(/\\/g, "/")}`));
-          return true;
         }
       } catch (err) {
         //logger.error(`[SleeperAgent] 处理 [${type}] 插件Redis数据时出错:`, err);
@@ -7122,7 +7096,6 @@ class SleeperAgent extends plugin {
     return false;
   }
 }
-
 
 const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 1, name: "Git 操作失败 (认证/访问)", category: "底层错误", description: "模拟 Git 命令认证失败或无权限。预期：命令失败，ReportError报告。", type: "THROW_GIT_AUTH_FAIL" },
@@ -7177,7 +7150,7 @@ const GUGUNIU_RULES = [
   { reg: /^#咕咕牛测速$/i, fnc: "ManualTestProxies" },
   { reg: /^#执行咕咕牛更新$/i, fnc: "ManualRunUpdateTask", permission: "master" },
   { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: "ShowSettingsPanel" },
-  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|低负载|负载等级|高级合并|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
+  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|低负载|负载等级|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
 ];
 
 
