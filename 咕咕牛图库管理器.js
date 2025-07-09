@@ -7088,7 +7088,9 @@ class SleeperAgent extends plugin {
           const imagePath = decodeURIComponent(imagePathEncoded);
           const fileName = path.basename(imagePath);
           let absolutePath;
-          if (imagePath.startsWith('http')) { absolutePath = imagePath; }
+          if (imagePath.startsWith('http')) {
+            absolutePath = imagePath;
+          }
           else if (type === 'miao') { absolutePath = path.join(YunzaiPath, 'plugins', 'miao-plugin', 'resources', imagePath); }
           else if (type === 'zzz') { absolutePath = path.join(MiaoPluginMBT.paths.target.zzzChar, imagePath); }
           else if (type === 'waves') { absolutePath = path.join(MiaoPluginMBT.paths.target.wavesChar, imagePath); }
@@ -7097,7 +7099,7 @@ class SleeperAgent extends plugin {
           if (fileName.toLowerCase().includes('gu')) {
             //logger.info(`[SleeperAgent] 文件名 "${fileName}" 包含 "Gu"，启动安全包装模式...`);
             try {
-              const forwardNodes = [{ user_id: e.user_id, nickname: e.sender.card || e.sender.nickname, message: [segment.image(absolutePath)] }];
+              const forwardNodes = [{ user_id: e.user_id, nickname: e.sender.card || e.sender.nickname, message: [segment.image(imagePath.startsWith('http') ? absolutePath : `file://${absolutePath.replace(/\\/g, "/")}`)] }];
               const forwardMsg = await common.makeForwardMsg(e, [forwardNodes], `原图 - ${fileName}`);
               await e.reply(forwardMsg);
               await common.sleep(300);
@@ -7109,7 +7111,7 @@ class SleeperAgent extends plugin {
             return true;
           }
           //logger.info(`[SleeperAgent] 文件名 "${fileName}" 不含 "Gu"，执行标准原图转发...`);
-          await e.reply(segment.image(absolutePath));
+          await e.reply(segment.image(imagePath.startsWith('http') ? absolutePath : `file://${absolutePath.replace(/\\/g, "/")}`));
           return true;
         }
       } catch (err) {
