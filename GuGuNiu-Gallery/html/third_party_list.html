@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>咕咕牛第三方图库列表</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f4f7f9;
+            --container-bg: #ffffff;
+            --primary-color: #5e7ce2;
+            --text-dark: #333d4b;
+            --text-light: #5f7a93;
+            --border-color: #e9eef3;
+            --header-bg: #ffffff;
+            --header-border: #e0e6ed;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 12px 48px 16px rgba(0, 0, 0, 0.03), 0 9px 28px 0 rgba(0, 0, 0, 0.05), 0 6px 16px -8px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            width: 700px;
+            margin: 10px auto;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .header {
+            padding: 20px 30px;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            width: 250px;
+            height: 60px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .header h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .main-content-area {
+            padding: 25px 30px;
+        }
+
+        .repo-card {
+            background: #fdfdff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .alias-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alias-container .platform-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .alias {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .owner {
+            display: flex;
+            align-items: center;
+        }
+
+        .owner img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .owner-name {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .card-body {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .stats-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-start;
+            text-align: right;
+        }
+
+        .info-row {
+            font-size: 14px;
+            color: #666;
+            word-wrap: break-word;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .info-row.url-row {
+            align-items: center;
+        }
+
+        .info-row strong {
+            color: #333;
+            margin-right: 8px;
+            flex-shrink: 0;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .url-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .content-map {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .unknown-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .unknown-tag {
+            background-color: #fef4e2;
+            color: #88601d;
+            border: 1px solid #fceecf;
+            padding: 3px 7px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .game-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .game-tag.gs {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .game-tag.sr {
+            background-color: #495057;
+            color: #ffffff;
+        }
+
+        .game-tag.zzz {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .game-tag.waves {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .size,
+        .sync-time,
+        .install-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .sync-time,
+        .install-time {
+            font-size: 12px;
+            font-weight: normal;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px 30px;
+            font-size: 14px;
+            color: #6c757d;
+            letter-spacing: 0.1px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 15px;
+        }0
+
+        .no-repo {
+            text-align: center;
+            font-size: 20px;
+            color: #888;
+            padding: 50px;
+        }
+    </style>
+</head>
+
+<body style="{{ scaleStyleValue }}">
+    <div class="container-wrapper">
+        <header class="header">
+            <img class="header-logo" src="{{ guguniu_res_path }}html/img/logo.png" alt="Logo">
+            <h1> · 第三方图库列表</h1>
+        </header>
+        <main class="main-content-area">
+            {{ if repos.length > 0 }}
+            {{ each repos item }}
+            <div class="repo-card">
+                <div class="card-header">
+                    <div class="alias-container">
+                        {{ if item.platform === 'github' }}
+                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/github.png">
+                        {{ else if item.platform === 'gitee' }}
+                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitee.png">
+                        {{ else if item.platform === 'gitcode' }}
+                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitcode.png">
+                        {{ /if }}
+                        <div class="alias">{{ item.alias }}</div>
+                    </div>
+                    <div class="owner">
+                        {{ if item.ownerAvatarUrl }}
+                        <img src="{{ item.ownerAvatarUrl }}" alt="owner">
+                        {{ else }}
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARRSURBVHhe7ZxrbxxVFMd/e9/M7Owmk5nZ2Z3dbMYmsdnsJjGFYm0pEqIVlSp4gKiAHgA9QA8eEAWJEKpUFJWAEh+AIAUqXhC0FFQhPZAWUuLHUvMqpZpGqSm1Zfdt7s5kZ3Y/33vYk7s7s7NzJtk/+eXOzL33f/7nu+d8c2dYWFhYWFhYWFhYWFhYWFj2mZ6eZuTj4wMvLy84ODgQz/fPz094eXnBw8MDpqamGB4eJg/o7OzM4OfnB0dHRxgcHOT7hGz7SduZmpom18wE21lVVRWmpqZ48/o0s0E2b7P24cOHmJqaIjc3l+xK6e/vJ6+srGB+fh4DAwMMDAxw4/XpZkNk5jY2NlJ7e3vJrpR2d3cJq6urjI2NMTIyws+59axmQ2TWZrm5uWzfvR22856envLfpLS9vc2OHTtI6+vrjI6Ocn7NreczwzIjI6M8fvyYfHx8YHd3t7z/Xz/v7u4mNzcX27ZtI62vrzMwMCCHn9e8ZkZmY8yYMfLkyROsrq6yY8cOsv3y8vKSPGq/fPkyW7duJXXp8vKyhV3z+D1AxsYBAwbQwYMH+d3x8PCQh/G3pKSk8M0bN25k+/bthY03btxYsJ/r2cZkZNqCgoLk5uaydevW0aZNm5iZmcHt7S3Zf3JykhwJNj/f2NhIenl50bJlywgKCsJgMICTkxOqqqqIjo5m4cKFuHPnDgsWLMDX11dy79GjR7l+/TpmZmYYGxtjcHCAXFJSUnjl+S3z2Zk9oI6ODuLj4xkdHSX3x44dS0FBQdIjdXV1sXXrVmJiYjAMBsMN2cTExCAyMpKcnJzExcUxc+ZMATz348eP3LlzJxcvXkRGRgZutxsxMTHs3btXmNi4cSPZ+fnz58m/V69eTf7r6+sZHR3l7e3NTe9vmc/M7AENDAzg5+cHa2trmJubQ7Jft24d8fHxhIeHIzY2llxfvHixHCtgW1pa8PDwgKury5XyBw8e4M6dO9y4cQOzZ89m8ODBNDQ04OTkBFFRUSxYsIA03dPTk8zS4OCg5G9BQQFZpbe3l+yspaUFgUAAwGAYl/a3zKdk5p4/f57c3d2lP2q7u7u5ceMGhg0bBmAgIICIiAgSExPlwNjW1paUlJTw/319fWS/3d7ePq5o19XV4e7uDj8/v1t+VFVV0a5dOwICArhx4wZbtmwhKioKCQkJiIiIQFxcHIqKiiAYDNLpBgYGZBeJjIwUv7W+ZT4zs/b19aX2x44dS84oKzMzE0dHRwgEAowgEODHl5eX8u7du3eT/Xl6evD09JS0fH192djY4N+lpaW5YfX39wMAnJyc4ObmBicnJwYHBxkYGFB/+sTERHJycpK7ZkHhW/PT9nZmaT927NhxMjIymJubY3Z2lqwsPT2dpKSkMGbMGGRlZSEhIQGJiYlkZWVxd+/e4jM+Pj6ysrL+s5v/nZycGBwcZHZ2NtlqRUXF09kEGTNlXj9vZmZNjV6dPn2adHV15dq1a0hJSWHQoEFs2rQJU6dOJS8vL7l58yYJCQl4eHjgD+0sKysTFBSUjM2C7c82NjaSu0w9U+b1M7M74H/5t+r3VdK3x9bS+gq2/2+Y3n8C9f5b6/13k5v/W2P9/+b/279+39m5/g+N/+h+S+Y35/m3Z3x2fmbmBwsLCwsLCwsLCwsLCwsLYvM/p9uG6d+83kQAAAAASUVORK5CYII="
+                            alt="default">
+                        {{ /if }}
+                        <div class="owner-name">{{ item.ownerName || '未知作者' }}</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="info-section">
+                        <div class="info-row url-row">
+                            <strong>GIT 来源:</strong>
+                            <span class="url-text">{{ item.url }}</span>
+                        </div>
+                        <div class="info-row">
+                            <strong>仓库分析:</strong>
+                            <div class="content-map">
+                                {{ if item.contentMap.gs > 0 }}<span class="game-tag gs">原神: {{ item.contentMap.gs }}</span>{{ /if }}
+                                {{ if item.contentMap.sr > 0 }}<span class="game-tag sr">星铁: {{ item.contentMap.sr }}</span>{{ /if }}
+                                {{ if item.contentMap.zzz > 0 }}<span class="game-tag zzz">绝区零: {{ item.contentMap.zzz }}</span>{{ /if }}
+                                {{ if item.contentMap.waves > 0 }}<span class="game-tag waves">鸣潮: {{ item.contentMap.waves }}</span>{{ /if }}
+                                {{ if !item.hasRecognized }}
+                                    <span>无</span>
+                                {{ /if }}
+                            </div>
+                        </div>
+                        {{ if item.contentMap.unknownFolders && item.contentMap.unknownFolders.length > 0 }}
+                        <div class="info-row">
+                            <strong>未识别 ({{ item.contentMap.unknownFolders.length }}):</strong>
+                            <div class="unknown-list">
+                                {{ each item.contentMap.unknownFolders folderName }}
+                                <span class="unknown-tag">{{ folderName }}</span>
+                                {{ /each }}
+                            </div>
+                        </div>
+                        {{ /if }}
+                    </div>
+                    <div class="stats-section">
+                        <div class="size">容量：{{ item.sizeFormatted }}</div>
+                        <div class="install-time">安装时间: {{ item.installDateFormatted }}</div>
+                        <div class="sync-time">上次同步: {{ item.lastSyncFormatted }}</div>
+                    </div>
+                </div>
+            </div>
+            {{ /each }}
+            {{ else }}
+            <div class="no-repo">尚未安装任何第三方图库</div>
+            {{ /if }}
+        </main>
+        <footer class="footer">由咕咕牛图库管理器 v{{ pluginVersion }} 提供支持</footer>
+    </div>
+</body>
+
+</html>

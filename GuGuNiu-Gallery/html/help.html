@@ -63,6 +63,7 @@
             --color-op: #17a2b8;
             --color-manage: #dc3545;
             --color-test: #ffc107;
+            --color-third-party: #6f42c1;
 
             --accent-glow: rgba(0, 0, 0, 0.4);
         }
@@ -233,9 +234,13 @@
             border-color: var(--color-test);
         }
 
+        .command-item.third-party {
+            border-color: var(--color-third-party);
+        }
+
         .command-icon-container {
             flex-shrink: 0;
-            width: 90px;
+            width: 80px;
             height: 100%;
             display: flex;
             justify-content: flex-start;
@@ -243,7 +248,7 @@
             color: var(--text-light);
             clip-path: polygon(0 0, 100% 0, 75% 100%, 0 100%);
             border-radius: 7px 0 0 7px;
-            padding-left: 10px;
+            padding-left: 5px;
         }
 
         .install .command-icon-container {
@@ -260,6 +265,10 @@
 
         .testing .command-icon-container {
             background-color: var(--color-test);
+        }
+
+        .third-party .command-icon-container {
+            background-color: var(--color-third-party);
         }
 
         .command-icon-container img {
@@ -291,6 +300,10 @@
 
         .command-item.testing.filled-background {
             background-color: rgba(255, 193, 7, 0.08);
+        }
+
+        .command-item.third-party.filled-background {
+            background-color: rgba(111, 66, 193, 0.08);
         }
 
         .filled-background .command-info {
@@ -492,6 +505,48 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="section-category">
+                <div class="category-title">
+                    <span>第三方图库管理</span>
+                </div>
+                <div class="commands-grid">
+                    <div class="command-item third-party filled-background span-2-columns">
+                        <div class="command-icon-container"><img
+                                src="{{guguniu_res_path}}html/img/picture/{{randomIconPaths[4]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛安装 <span class="highlight">URL:简称</span></div>
+                            <div class="command-desc">安装一个第三方图库,示例：#咕咕牛安装https://github.com/GuGuNiu/Miao-Plugin-MBT:咕咕牛</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="commands-grid three-columns" style="margin-top: 15px;">
+                    <div class="command-item third-party filled-background">
+                        <div class="command-icon-container"><img
+                                src="{{guguniu_res_path}}html/img/picture/{{randomIconPaths[5]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛更新<span class="highlight">简称</span></div>
+                            <div class="command-desc">更新指定图库 / 全部</div>
+                        </div>
+                    </div>
+                    <div class="command-item third-party filled-background">
+                        <div class="command-icon-container"><img
+                                src="{{guguniu_res_path}}html/img/picture/{{randomIconPaths[6]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛卸载<span class="highlight">简称</span></div>
+                            <div class="command-desc">卸载指定图库</div>
+                        </div>
+                    </div>
+                    <div class="command-item third-party filled-background">
+                        <div class="command-icon-container"><img
+                                src="{{guguniu_res_path}}html/img/picture/{{randomIconPaths[7]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛列表</div>
+                            <div class="command-desc">查看已安装图库</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="section-category">
                 <div class="category-title">
@@ -516,9 +571,10 @@
                     </div>
                 </div>
             </div>
+
         </main>
 
-        <footer class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</footer>
+        <footer class="footer">Miao-Plugin-MBT v{{ pluginVersion }} </footer>
     </div>
 </body>
 

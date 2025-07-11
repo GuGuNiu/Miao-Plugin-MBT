@@ -57,7 +57,7 @@ class ProcessManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.1";
+const Version = "5.0.2";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -677,6 +677,7 @@ class MiaoPluginMBT extends plugin {
   static _indexByGid = new Map();
   static _indexByCharacter = new Map();
   static _indexByTag = new Map();
+  static _characterGameMap = new Map();
   static _systemLoadState = { level: 'NORMAL', lastCheck: 0, autoSwitchLock: false };
   static _loadMonitorInterval = null;
   //static _configWatcher = null;
@@ -1702,16 +1703,20 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async LoadAliasData(forceReload = false, logger = global.logger || console) {
-
     if (MiaoPluginMBT._aliasData && !forceReload) return true;
+
     const aliasSources = [
-      { key: "gsAlias", path: path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "alias.js"), type: "js" },
-      { key: "srAlias", path: path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "alias.js"), type: "js" },
+      { key: "gsAlias", path: path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "alias.js"), type: "js", scanDir: MiaoPluginMBT.paths.target.miaoGsAliasDir },
+      { key: "srAlias", path: path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "alias.js"), type: "js", scanDir: MiaoPluginMBT.paths.target.miaoSrAliasDir },
       { key: "zzzAlias", path: path.join(MiaoPluginMBT.paths.target.zzzAliasDir, "alias.yaml"), type: "yaml" },
       { key: "wavesAlias", path: path.join(MiaoPluginMBT.paths.target.wavesAliasDir, "role.yaml"), type: "yaml" },
     ];
-    const loadedAliases = {}; const combined = {}; let overallSuccess = true;
-    const parseFile = async (filePath, fileType) => {
+
+    const loadedAliases = {};
+    const combined = {};
+    let overallSuccess = true;
+
+    const parseFile = async (filePath, fileType, scanDir) => {
       let data = {};
       try {
         await fsPromises.access(filePath);
@@ -1732,9 +1737,35 @@ class MiaoPluginMBT extends plugin {
           catch (yamlErr) { logger.error(`${Default_Config.logPrefix}解析 YAML 失败 (${filePath}):`, yamlErr); overallSuccess = false; }
         }
       } catch (err) { if (err.code !== ERROR_CODES.NotFound) { logger.warn(`${Default_Config.logPrefix}读取 ${fileType} 文件失败: ${filePath}`, err.code); overallSuccess = false; } }
+
+      // 扫描目录并将文件夹名作为主角色名添加到别名数据中
+      if (scanDir) {
+        try {
+          await fsPromises.access(scanDir);
+          const entries = await fsPromises.readdir(scanDir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'common') {
+              const dirName = entry.name;
+              // 如果这个文件夹名还没有被定义为主角色名，就把它加上
+              if (!data[dirName]) {
+                data[dirName] = [dirName.toLowerCase()]; // 至少包含一个自身的小写别名
+              }
+            }
+          }
+        } catch (scanErr) {
+          logger.warn(`${Default_Config.logPrefix}扫描目录 ${scanDir} 失败:`, scanErr.message);
+        }
+      }
+
       return data;
     };
-    await Promise.all(aliasSources.map(async ({ key, path: filePath, type }) => { const data = await parseFile(filePath, type); loadedAliases[key] = data; Object.assign(combined, data); }));
+
+    await Promise.all(aliasSources.map(async ({ key, path: filePath, type, scanDir }) => {
+      const data = await parseFile(filePath, type, scanDir);
+      loadedAliases[key] = data;
+      Object.assign(combined, data);
+    }));
+
     MiaoPluginMBT._aliasData = { ...loadedAliases, combined };
     return overallSuccess;
   }
@@ -1846,27 +1877,27 @@ class MiaoPluginMBT extends plugin {
     await Promise.all(deletePromises);
   }
 
-static async DetermineTargetPath(relativePath) {
-  if (!relativePath) return null;
-  const normalizedRelativePath = relativePath.replace(/\\/g, "/");
-  for (const fileSync of MiaoPluginMBT.paths.filesToSyncToCommonRes) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(MiaoPluginMBT.paths.commonResPath, fileSync.destFileName); }
-  for (const fileSync of MiaoPluginMBT.paths.filesToSyncSpecific) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(fileSync.destDir, fileSync.destFileName); }
-  const parts = normalizedRelativePath.split("/");
-  if (parts.length >= 3) {
-    const sourceFolder = parts[0]; const characterNameInRepo = parts[1]; const fileName = parts.slice(2).join("/");
-    let targetBaseDir = null;
-    if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.gs) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; }
-    else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.sr) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; }
-    else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.zzz) { targetBaseDir = MiaoPluginMBT.paths.target.zzzChar; }
-    else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.waves) { targetBaseDir = MiaoPluginMBT.paths.target.wavesChar; }
+  static async DetermineTargetPath(relativePath) {
+    if (!relativePath) return null;
+    const normalizedRelativePath = relativePath.replace(/\\/g, "/");
+    for (const fileSync of MiaoPluginMBT.paths.filesToSyncToCommonRes) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(MiaoPluginMBT.paths.commonResPath, fileSync.destFileName); }
+    for (const fileSync of MiaoPluginMBT.paths.filesToSyncSpecific) { if (normalizedRelativePath === fileSync.sourceSubPath.replace(/\\/g, "/")) return path.join(fileSync.destDir, fileSync.destFileName); }
+    const parts = normalizedRelativePath.split("/");
+    if (parts.length >= 3) {
+      const sourceFolder = parts[0]; const characterNameInRepo = parts[1]; const fileName = parts.slice(2).join("/");
+      let targetBaseDir = null;
+      if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.gs) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; }
+      else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.sr) { targetBaseDir = MiaoPluginMBT.paths.target.miaoChar; }
+      else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.zzz) { targetBaseDir = MiaoPluginMBT.paths.target.zzzChar; }
+      else if (sourceFolder === MiaoPluginMBT.paths.sourceFolders.waves) { targetBaseDir = MiaoPluginMBT.paths.target.wavesChar; }
 
-    if (targetBaseDir) {
-      const targetCharacterName = characterNameInRepo;
-      return path.join(targetBaseDir, targetCharacterName, fileName);
+      if (targetBaseDir) {
+        const targetCharacterName = characterNameInRepo;
+        return path.join(targetBaseDir, targetCharacterName, fileName);
+      }
     }
+    return null;
   }
-  return null;
-}
 
   static async FindImageAbsolutePath(relativePath) {
     if (!relativePath) return null; const normalizedPath = relativePath.replace(/\\/g, "/");
@@ -2965,111 +2996,111 @@ static async DetermineTargetPath(relativePath) {
             commitData.commitTitle = subjectLine;
 
             const gamePrefixes = [
-                { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
-                { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
-                { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
-                { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
+              { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
+              { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
+              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
+              { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
             ];
-            
+
             if (bodyContent) {
-                let htmlBody = bodyContent
-                    .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/`([^`]+)`/g, '<code>$1</code>');
-                const bodyLines = htmlBody.split('\n');
-                let listOpen = false;
-                htmlBody = bodyLines.map(line => {
-                    line = line.trim();
-                    if (line.startsWith('###')) return `<h3>${line.replace(/###\s*/, '')}</h3>`;
-                    if (line.startsWith('- ')) {
-                        let listItem = `<li>${line.replace(/-\s*/, '')}</li>`;
-                        if (!listOpen) { listItem = '<ul>' + listItem; listOpen = true; }
-                        return listItem;
-                    }
-                    if (listOpen) { listOpen = false; return `</ul>` + (line ? `<p>${line}</p>` : ''); }
-                    return line ? `<p>${line}</p>` : '';
-                }).join('');
-                if (listOpen) htmlBody += '</ul>';
-                commitData.descriptionBodyHtml = htmlBody;
+              let htmlBody = bodyContent
+                .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>');
+              const bodyLines = htmlBody.split('\n');
+              let listOpen = false;
+              htmlBody = bodyLines.map(line => {
+                line = line.trim();
+                if (line.startsWith('###')) return `<h3>${line.replace(/###\s*/, '')}</h3>`;
+                if (line.startsWith('- ')) {
+                  let listItem = `<li>${line.replace(/-\s*/, '')}</li>`;
+                  if (!listOpen) { listItem = '<ul>' + listItem; listOpen = true; }
+                  return listItem;
+                }
+                if (listOpen) { listOpen = false; return `</ul>` + (line ? `<p>${line}</p>` : ''); }
+                return line ? `<p>${line}</p>` : '';
+              }).join('');
+              if (listOpen) htmlBody += '</ul>';
+              commitData.descriptionBodyHtml = htmlBody;
             }
 
             const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(commitData.commitTitle));
-            if(isCharacterUpdate) {
-                commitData.isDescription = false; 
-                for (const entry of gamePrefixes) {
-                    const prefixMatchFull = commitData.commitTitle.match(entry.prefixPattern);
-                    if (prefixMatchFull) {
-                      const nameSegments = commitData.commitTitle.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
-                      for (const rawNameSegment of nameSegments) {
-                        let displayName = rawNameSegment;
-                        let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, { gameKey: entry.gameType }, logger);
-                        if (aliasResult.exists) { displayName = aliasResult.mainName; }
-                        const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
-                        let faceImageUrl = defaultFaceUrl;
-                        let faceImagePath = null;
-                        if (entry.gameType === "gs") {
-                          const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                          try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                        } else if (entry.gameType === "sr") {
-                          const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                          try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                        } else if (entry.gameType === "zzz") {
-                          try {
-                            const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
-                            for (const file of files) {
-                              if (file.endsWith('.json')) {
-                                const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
-                                if (data.Name === displayName || data.CodeName === displayName) {
-                                  const iconMatch = data.Icon?.match(/\d+$/);
-                                  if (iconMatch) {
-                                    const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
-                                    await fsPromises.access(zzzFacePath);
-                                    faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
-                                  }
-                                  break;
-                                }
+            if (isCharacterUpdate) {
+              commitData.isDescription = false;
+              for (const entry of gamePrefixes) {
+                const prefixMatchFull = commitData.commitTitle.match(entry.prefixPattern);
+                if (prefixMatchFull) {
+                  const nameSegments = commitData.commitTitle.substring(prefixMatchFull[0].length).trim().split(/[/、，,]/).map(name => name.trim()).filter(Boolean);
+                  for (const rawNameSegment of nameSegments) {
+                    let displayName = rawNameSegment;
+                    let aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(rawNameSegment, { gameKey: entry.gameType }, logger);
+                    if (aliasResult.exists) { displayName = aliasResult.mainName; }
+                    const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
+                    let faceImageUrl = defaultFaceUrl;
+                    let faceImagePath = null;
+                    if (entry.gameType === "gs") {
+                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                    } else if (entry.gameType === "sr") {
+                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
+                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                    } else if (entry.gameType === "zzz") {
+                      try {
+                        const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
+                        for (const file of files) {
+                          if (file.endsWith('.json')) {
+                            const data = JSON.parse(await fsPromises.readFile(path.join(MiaoPluginMBT.paths.target.zzzDataDir, file), 'utf-8'));
+                            if (data.Name === displayName || data.CodeName === displayName) {
+                              const iconMatch = data.Icon?.match(/\d+$/);
+                              if (iconMatch) {
+                                const zzzFacePath = path.join(MiaoPluginMBT.paths.target.zzzFaceDir, `IconRoleCircle${iconMatch[0]}.png`);
+                                await fsPromises.access(zzzFacePath);
+                                faceImageUrl = `file://${zzzFacePath.replace(/\\/g, "/")}`;
                               }
+                              break;
                             }
-                          } catch (err) { }
-                        } else if (entry.gameType === 'waves') {
-                          const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
-                          if (roleData && roleData.icon) { faceImageUrl = roleData.icon; faceImagePath = null; }
+                          }
                         }
-                        if (faceImagePath) {
-                          try { await fsPromises.access(faceImagePath); faceImageUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                        }
-                        commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl || defaultFaceUrl });
-                      }
-                      break;
+                      } catch (err) { }
+                    } else if (entry.gameType === 'waves') {
+                      const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
+                      if (roleData && roleData.icon) { faceImageUrl = roleData.icon; faceImagePath = null; }
                     }
+                    if (faceImagePath) {
+                      try { await fsPromises.access(faceImagePath); faceImageUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                    }
+                    commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl || defaultFaceUrl });
+                  }
+                  break;
                 }
+              }
             } else {
-                commitData.isDescription = true;
+              commitData.isDescription = true;
             }
-            
+
             return commitData;
           }));
         } else {
-            latestLog = [{
-                isDescription: true,
-                commitTitle: rawLogString || "无有效提交记录",
-                hash: 'N/A', 
-                date: '', 
-                commitPrefix: null, 
-                descriptionBodyHtml: '', 
-            }];
+          latestLog = [{
+            isDescription: true,
+            commitTitle: rawLogString || "无有效提交记录",
+            hash: 'N/A',
+            date: '',
+            commitPrefix: null,
+            descriptionBodyHtml: '',
+          }];
         }
       }
 
     } catch (outerError) {
       success = false; hasChanges = false; pullError = outerError; wasForceReset = false;
       latestLog = [{
-          isDescription: true,
-          commitTitle: "发生意外错误，无法获取日志",
-          hash: 'N/A', 
-          date: '', 
-          commitPrefix: null, 
-          descriptionBodyHtml: '', 
+        isDescription: true,
+        commitTitle: "发生意外错误，无法获取日志",
+        hash: 'N/A',
+        date: '',
+        commitPrefix: null,
+        descriptionBodyHtml: '',
       }];
     } finally {
       MiaoPluginMBT.gitMutex.release();
@@ -4096,7 +4127,7 @@ static async DetermineTargetPath(relativePath) {
         await MiaoPluginMBT.SendMasterMsg(restartMessage);
       }
     }
-    
+
     //logger.info(`${Default_Config.logPrefix}更新流程结束，耗时 ${duration} 秒。`);
     return overallHasChanges;
   }
@@ -5764,10 +5795,10 @@ static async DetermineTargetPath(relativePath) {
     }
 
     if (allForwardMessages.length > 0) {
-        for (const msg of allForwardMessages) {
-          await e.reply(msg);
-          await common.sleep(1000);
-        
+      for (const msg of allForwardMessages) {
+        await e.reply(msg);
+        await common.sleep(1000);
+
       }
     }
 
@@ -7119,6 +7150,678 @@ class SleeperAgent extends plugin {
   }
 }
 
+class YunluTukuManager extends plugin {
+  constructor() {
+    super({
+      name: '『咕咕牛🐂』第三方图库管理器',
+      dsc: '管理第三方咕咕牛图库',
+      event: 'message',
+      priority: 101,
+      rule: [
+        { reg: /^#咕咕牛安装\s*https?:\/\/[^:]+:.+$/i, fnc: "install", permission: "master" },
+        { reg: /^#咕咕牛更新\s*.+$/i, fnc: "update", permission: "master" },
+        { reg: /^#咕咕牛卸载\s*.+$/i, fnc: "uninstall", permission: "master" },
+        { reg: /^#咕咕牛列表$/i, fnc: "list", permission: "master" },
+        { reg: /^#咕咕牛(安装|更新|安|更)/i, fnc: "handleCorrection", permission: "master", priority: 102 }
+      ]
+    });
+    this.logger = global.logger || console;
+    this.logPrefix = `『咕咕牛🐂』第三方图库管理器`;
+    this.paths = {
+      base: path.join(YunzaiPath, "resources", "Guguniu_third_party"),
+      configFile: path.join(YunzaiPath, "resources", "Guguniu_third_party", "config.json")
+    };
+    this.config = {};
+    this.mutex = new SimpleAsyncMutex();
+    this._loadConfig();
+  }
+
+  async handleCorrection(e) {
+    if (e.msg.includes("安装") || e.msg.includes("安")) {
+      await e.reply("你这格式不对咧，得是 `#咕咕牛安装 网址:你起个名儿` 这样婶儿的。\n\n比方说哈：\n#咕咕牛安装 https://github.com/GuGuNiu/Miao-Plugin-MBT:咕咕牛", true);
+    } else if (e.msg.includes("更新") || e.msg.includes("更")) {
+      await e.reply("这是要更新哪个咧？你得告诉俺名儿啊。\n格式是：`#咕咕牛更新 <你起个名儿>`\n要不就 `#咕咕牛更新 全部`，俺给你全更新一遍。", true);
+    }
+    return true;
+  }
+
+  async _loadConfig() {
+    try {
+      await fsPromises.access(this.paths.configFile);
+      const content = await fsPromises.readFile(this.paths.configFile, "utf-8");
+      this.config = JSON.parse(content);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        this.config = {};
+      } else {
+        this.logger.error(`${this.logPrefix} 读取配置文件失败:`, error);
+        this.config = {};
+      }
+    }
+    return this.config;
+  }
+
+  async _saveConfig() {
+    try {
+      await fsPromises.mkdir(this.paths.base, { recursive: true });
+      await fsPromises.writeFile(this.paths.configFile, JSON.stringify(this.config, null, 2), "utf-8");
+      return true;
+    } catch (error) {
+      this.logger.error(`${this.logPrefix} 保存配置文件失败:`, error);
+      return false;
+    }
+  }
+
+  _extractOwnerFromUrl(repoUrl) {
+    const match = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(?:github\.com|gitee\.com|gitcode\.net)\/([^/]+)/);
+    return match ? match[1] : null;
+  }
+
+  async _fetchRepoOwnerInfo(repoUrl) {
+    try {
+      const urlMatch = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitee\.com|gitcode\.net)\/([^/]+)\/([^/]+)/);
+      if (!urlMatch) return null;
+
+      const platform = urlMatch[1];
+      const owner = urlMatch[2];
+      const repo = urlMatch[3].replace(/\.git$/, '');
+      let apiUrl;
+      let ownerInfo = null;
+
+      if (platform === 'github.com') {
+        apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
+      } else if (platform === 'gitee.com') {
+        apiUrl = `https://gitee.com/api/v5/repos/${owner}/${repo}`;
+      } else if (platform === 'gitcode.net') {
+        const encodedProjectId = encodeURIComponent(`${owner}/${repo}`);
+        apiUrl = `https://gitcode.net/api/v4/projects/${encodedProjectId}`;
+      } else {
+        return null;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+      const response = await fetch(apiUrl, { signal: controller.signal, headers: { 'User-Agent': 'GuGuNiu-Tuku-Manager' } });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API 请求失败，状态码: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (platform === 'gitcode.net') {
+        ownerInfo = data.namespace;
+      } else {
+        ownerInfo = data.owner;
+      }
+
+      if (ownerInfo) {
+        return {
+          ownerName: ownerInfo.name || ownerInfo.login,
+          ownerAvatarUrl: ownerInfo.avatar_url
+        };
+      }
+    } catch (error) {
+      this.logger.warn(`${this.logPrefix} 获取仓库所有者信息失败 (${repoUrl}):`, error.message);
+    }
+    return null;
+  }
+
+  async _ensureMainPluginReady(e) {
+    if (!MiaoPluginMBT.isGloballyInitialized) {
+      this.logger.info(`${this.logPrefix} 检测到主插件未就绪，正在等待初始化...`);
+      try {
+        await MiaoPluginMBT.InitializePlugin(this.logger);
+      } catch (initError) {
+        this.logger.error(`${this.logPrefix} 等待主插件初始化失败:`, initError);
+        if (e) {
+          await e.reply("哎呀，咕咕牛的核心功能好像没准备好，这次操作先取消了哈。你稍等一下再试试，或者看看后台日志是不是有啥问题。", true);
+        }
+        return false;
+      }
+    }
+
+    if (!MiaoPluginMBT._aliasData || Object.keys(MiaoPluginMBT._aliasData.combined).length === 0) {
+      this.logger.warn(`${this.logPrefix} 主插件已初始化，但别名数据为空，尝试强制重载...`);
+      await MiaoPluginMBT.LoadAliasData(true, this.logger);
+      if (!MiaoPluginMBT._aliasData || Object.keys(MiaoPluginMBT._aliasData.combined).length === 0) {
+        if (e) {
+          await e.reply("咕咕牛的别名库好像是空的，没法给你分析是啥游戏的角色咧。你先用 `#更新咕咕牛` 试试中不中？", true);
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
+  async _detectStructure(repoPath) {
+    const MIN_RECOGNIZED_CHARS = 3;
+    const allDirs = [];
+    const queue = [repoPath];
+    const visited = new Set([repoPath]);
+
+    while (queue.length > 0) {
+      const currentPath = queue.shift();
+      allDirs.push(currentPath);
+
+      try {
+        const entries = await fsPromises.readdir(currentPath, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory() && !['.git', '.github', 'docs', 'assets', 'resources'].includes(entry.name.toLowerCase())) {
+            const nextPath = path.join(currentPath, entry.name);
+            if (!visited.has(nextPath)) {
+              visited.add(nextPath);
+              queue.push(nextPath);
+            }
+          }
+        }
+      } catch (error) {
+        if (error.code !== 'ENOENT' && error.code !== 'EACCES') {
+          this.logger.warn(`${this.logPrefix} 探测目录时读取失败: ${currentPath}`, error.message);
+        }
+      }
+    }
+
+    if (allDirs.length === 0) {
+      return { structureType: "root", sourcePath: repoPath };
+    }
+
+    const scoredCandidates = await Promise.all(
+      allDirs.map(async (dir) => {
+        try {
+          const entries = await fsPromises.readdir(dir, { withFileTypes: true });
+          const subdirectories = entries.filter(entry => entry.isDirectory());
+          const totalSubdirs = subdirectories.length;
+          if (totalSubdirs === 0) return { path: dir, score: 0, rawScore: 0 };
+
+          const checks = await Promise.all(
+            subdirectories.map(subdir => MiaoPluginMBT.FindRoleAliasAndMain(subdir.name, {}, this.logger))
+          );
+
+          const recognizedCount = checks.filter(result => result.exists).length;
+          const score = (recognizedCount / totalSubdirs) * recognizedCount;
+          return { path: dir, score, rawScore: recognizedCount };
+
+        } catch (err) {
+          return { path: dir, score: 0, rawScore: 0 };
+        }
+      })
+    );
+
+    scoredCandidates.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return a.path.split(path.sep).length - b.path.split(path.sep).length;
+    });
+
+    const bestCandidate = scoredCandidates[0];
+
+    if (bestCandidate && bestCandidate.rawScore >= MIN_RECOGNIZED_CHARS) {
+      const isRoot = bestCandidate.path === repoPath;
+      return {
+        structureType: isRoot ? "root" : "subdir",
+        sourcePath: bestCandidate.path
+      };
+    }
+
+    this.logger.warn(`${this.logPrefix} 未能找到足够数量的可识别角色文件夹，将回退到根目录作为源。最高分: ${bestCandidate?.rawScore || 0}`);
+    return { structureType: "root", sourcePath: repoPath };
+  }
+
+  async _analyzeContent(sourcePath) {
+    const contentMap = { gs: 0, sr: 0, zzz: 0, waves: 0, unknown: 0, unknownFolders: [] };
+    const characterFolders = await fsPromises.readdir(sourcePath, { withFileTypes: true });
+
+    for (const entry of characterFolders) {
+      if (entry.isDirectory()) {
+        if (['.git', '.github', '.vscode', 'docs'].includes(entry.name.toLowerCase())) {
+          continue;
+        }
+        const charName = entry.name;
+        const aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(charName, this.logger);
+        let gameKey = 'unknown';
+
+        if (aliasResult.exists && MiaoPluginMBT._aliasData && typeof MiaoPluginMBT._aliasData === 'object') {
+          const canonicalName = aliasResult.mainName;
+          if (MiaoPluginMBT._aliasData.gsAlias && Object.keys(MiaoPluginMBT._aliasData.gsAlias).includes(canonicalName)) {
+            gameKey = 'gs';
+          } else if (MiaoPluginMBT._aliasData.srAlias && Object.keys(MiaoPluginMBT._aliasData.srAlias).includes(canonicalName)) {
+            gameKey = 'sr';
+          } else if (MiaoPluginMBT._aliasData.zzzAlias && Object.keys(MiaoPluginMBT._aliasData.zzzAlias).includes(canonicalName)) {
+            gameKey = 'zzz';
+          } else if (MiaoPluginMBT._aliasData.wavesAlias && Object.keys(MiaoPluginMBT._aliasData.wavesAlias).includes(canonicalName)) {
+            gameKey = 'waves';
+          }
+        }
+
+        contentMap[gameKey]++;
+        if (gameKey === 'unknown') {
+          contentMap.unknownFolders.push(charName);
+        }
+      }
+    }
+    return contentMap;
+  }
+
+  async _getManifestPath(alias) {
+    const repoInfo = this.config[alias];
+    if (!repoInfo || !repoInfo.folderName) return null;
+    return path.join(this.paths.base, repoInfo.folderName, 'sync_manifest.json');
+  }
+
+  async _loadSyncManifest(alias) {
+    const manifestPath = await this._getManifestPath(alias);
+    if (!manifestPath) return [];
+    try {
+      await fsPromises.access(manifestPath);
+      const content = await fsPromises.readFile(manifestPath, 'utf-8');
+      return JSON.parse(content);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        this.logger.error(`${this.logPrefix} 读取清单文件 ${manifestPath} 失败:`, error);
+      }
+      return [];
+    }
+  }
+
+  async _saveSyncManifest(alias, fileList) {
+    const manifestPath = await this._getManifestPath(alias);
+    if (!manifestPath) return false;
+    try {
+      await fsPromises.writeFile(manifestPath, JSON.stringify(fileList, null, 2), 'utf-8');
+      return true;
+    } catch (error) {
+      this.logger.error(`${this.logPrefix} 保存清单文件 ${manifestPath} 失败:`, error);
+      return false;
+    }
+  }
+
+  async _syncRepo(alias) {
+    const repoInfo = this.config[alias];
+    if (!repoInfo || !repoInfo.folderName) {
+      this.logger.error(`${this.logPrefix} 同步失败，在配置中找不到别名或文件夹名: ${alias}`);
+      return { success: false, totalSynced: 0 };
+    }
+
+    await this._cleanSyncedFiles(alias);
+
+    const localRepoPath = path.join(this.paths.base, repoInfo.folderName);
+    const { sourcePath } = await this._detectStructure(localRepoPath);
+
+    const targetPaths = {
+      gs: MiaoPluginMBT.paths.target.miaoChar,
+      sr: MiaoPluginMBT.paths.target.miaoChar,
+      zzz: MiaoPluginMBT.paths.target.zzzChar,
+      waves: MiaoPluginMBT.paths.target.wavesChar,
+    };
+
+    let totalSynced = 0;
+    const syncedFilesManifest = [];
+    const characterFolders = await fsPromises.readdir(sourcePath, { withFileTypes: true });
+    const imageExtensions = ['.webp', '.png', '.jpg', '.jpeg'];
+
+    for (const charEntry of characterFolders) {
+      if (!charEntry.isDirectory()) continue;
+
+      const charName = charEntry.name;
+      const aliasResult = await MiaoPluginMBT.FindRoleAliasAndMain(charName, this.logger);
+      let gameKey = 'unknown';
+
+      if (aliasResult.exists && MiaoPluginMBT._aliasData) {
+        if (MiaoPluginMBT._aliasData.gsAlias && MiaoPluginMBT._aliasData.gsAlias[aliasResult.mainName]) gameKey = 'gs';
+        else if (MiaoPluginMBT._aliasData.srAlias && MiaoPluginMBT._aliasData.srAlias[aliasResult.mainName]) gameKey = 'sr';
+        else if (MiaoPluginMBT._aliasData.zzzAlias && MiaoPluginMBT._aliasData.zzzAlias[aliasResult.mainName]) gameKey = 'zzz';
+        else if (MiaoPluginMBT._aliasData.wavesAlias && MiaoPluginMBT._aliasData.wavesAlias[aliasResult.mainName]) gameKey = 'waves';
+      }
+
+      const targetDir = targetPaths[gameKey];
+      if (targetDir) {
+        const sourceCharDir = path.join(sourcePath, charName);
+        const destCharDir = path.join(targetDir, charName);
+        await fsPromises.mkdir(destCharDir, { recursive: true });
+
+        const imageFiles = await fsPromises.readdir(sourceCharDir);
+        for (const imageFile of imageFiles) {
+          if (imageExtensions.includes(path.extname(imageFile).toLowerCase())) {
+            const sourceFilePath = path.join(sourceCharDir, imageFile);
+            const prefixedFileName = `${alias}-${imageFile}`;
+            const destFilePath = path.join(destCharDir, prefixedFileName);
+            try {
+              await fsPromises.copyFile(sourceFilePath, destFilePath);
+              syncedFilesManifest.push({
+                gameKey: gameKey,
+                relativePath: path.join(charName, prefixedFileName)
+              });
+              totalSynced++;
+            } catch (copyError) {
+              this.logger.error(`${this.logPrefix} 同步文件 ${imageFile} 失败:`, copyError);
+            }
+          }
+        }
+      }
+    }
+    await this._saveSyncManifest(alias, syncedFilesManifest);
+    repoInfo.lastSync = new Date().toISOString();
+    return { success: true, totalSynced };
+  }
+
+  async _cleanSyncedFiles(alias) {
+    const manifest = await this._loadSyncManifest(alias);
+    if (manifest.length === 0) return;
+
+    const targetPaths = {
+      gs: MiaoPluginMBT.paths.target.miaoChar,
+      sr: MiaoPluginMBT.paths.target.miaoChar,
+      zzz: MiaoPluginMBT.paths.target.zzzChar,
+      waves: MiaoPluginMBT.paths.target.wavesChar,
+    };
+
+    let cleanedCount = 0;
+    for (const fileInfo of manifest) {
+      const targetDir = targetPaths[fileInfo.gameKey];
+      if (targetDir) {
+        const filePathToDelete = path.join(targetDir, fileInfo.relativePath);
+        try {
+          await fsPromises.unlink(filePathToDelete);
+          cleanedCount++;
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            this.logger.warn(`${this.logPrefix} 清理文件 ${filePathToDelete} 失败:`, error.message);
+          }
+        }
+      }
+    }
+    this.logger.info(`${this.logPrefix} 为 ${alias} 清理了 ${cleanedCount} 个已同步文件。`);
+    await this._saveSyncManifest(alias, []);
+  }
+
+  async install(e) {
+    if (!(await this._ensureMainPluginReady(e))) return true;
+    await this.mutex.runExclusive(async () => {
+      const match = e.msg.match(/^#咕咕牛安装\s*(https?:\/\/[^:]+):(.+)$/i);
+      if (!match) return;
+      const [, url, alias] = match;
+
+      const sanitizedAlias = alias.trim().replace(/[\\/.:]/g, '');
+      if (!sanitizedAlias) {
+        return e.reply("你这给的简名中不中啊，不能空着也不能有乱七八糟的符号咧。", true);
+      }
+
+      const folderName = this._extractOwnerFromUrl(url.trim());
+      if (!folderName) {
+        return e.reply("俺从你这网址里看不出来作者是谁咧，换个 GitHub、Gitee 或者 GitCode 的链接中不中？", true);
+      }
+
+      await this._loadConfig();
+      if (this.config[sanitizedAlias]) {
+        return e.reply(`哎呀，这个叫「${sanitizedAlias}」的库俺们这已经有咧，你换个名儿中不中？要不就先用卸载命令给它弄掉。`, true);
+      }
+
+      await e.reply(`中咧！这就给你把「${sanitizedAlias}」这个库给装上哈，你稍等一下下...`, true);
+      const targetPath = path.join(this.paths.base, folderName);
+
+      try {
+        const repoUrl = url.trim();
+        if (repoUrl.includes("github.com")) {
+          this.logger.info(`${this.logPrefix} 检测到 GitHub 仓库，启动高级下载模式...`);
+          const processManager = new ProcessManager(this.logger);
+          const allHttpTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, this.logger);
+          const gitTestPromises = allHttpTestResults.map(node => MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, this.logger).then(gitResult => ({ name: node.name, gitResult })));
+          const gitTestResults = await Promise.all(gitTestPromises);
+          const sortedNodes = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, this.logger);
+
+          if (!sortedNodes || sortedNodes.length === 0) {
+            throw new Error("所有下载节点都测不通，中不了啊！");
+          }
+
+          this.logger.info(`${this.logPrefix} 优选下载节点顺序: ${sortedNodes.map(n => n.name).join(' -> ')}`);
+
+          const downloadResult = await MiaoPluginMBT.DownloadRepoWithFallback(
+            `third-party-${sanitizedAlias}`, repoUrl, 'main', targetPath, e, this.logger, sortedNodes, true, processManager
+          );
+
+          if (!downloadResult.success) {
+            throw downloadResult.error || new Error(`所有节点都试过了，还是没下载成咧，你说这咋整。`);
+          }
+        } else {
+          this.logger.info(`${this.logPrefix} 检测到非 GitHub 仓库，启动标准下载模式...`);
+          await ExecuteCommand("git", ["clone", "--depth=1", "--progress", repoUrl, targetPath], { cwd: YunzaiPath }, Default_Config.gitCloneTimeout);
+        }
+
+        const ownerInfo = await this._fetchRepoOwnerInfo(repoUrl);
+        const { sourcePath, structureType } = await this._detectStructure(targetPath);
+        const contentMap = await this._analyzeContent(sourcePath);
+
+        this.config[sanitizedAlias] = {
+          url: repoUrl,
+          folderName: folderName,
+          installDate: new Date().toISOString(),
+          ownerName: ownerInfo?.ownerName || null,
+          ownerAvatarUrl: ownerInfo?.ownerAvatarUrl || null,
+          structureType,
+          contentMap,
+          lastSync: new Date().toISOString()
+        };
+        await this._saveConfig();
+
+        const { totalSynced } = await this._syncRepo(sanitizedAlias);
+
+        await this._renderOpReport(e, "安装成功", sanitizedAlias, totalSynced);
+
+      } catch (error) {
+        await safeDelete(targetPath);
+        delete this.config[sanitizedAlias];
+        await this._saveConfig();
+        await MiaoPluginMBT.ReportError(e, `安装第三方图库 ${sanitizedAlias}`, error, '', this);
+      }
+    });
+    return true;
+  }
+
+  async _renderOpReport(e, title, alias, totalSynced) {
+    const tplPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "third_party_op_report.html");
+    const repoInfo = this.config[alias];
+    if (!repoInfo) return;
+
+    const renderData = {
+      title: title,
+      alias: alias,
+      url: repoInfo.url,
+      totalSynced: totalSynced,
+      ownerName: repoInfo.ownerName || '未知作者',
+      ownerAvatarUrl: repoInfo.ownerAvatarUrl,
+      pluginVersion: Version,
+      scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+      guguniu_res_path: `file://${MiaoPluginMBT.paths.commonResPath}/`.replace(/\\/g, '/')
+    };
+
+    const imageBuffer = await renderPageToImage("third-party-op-report", { tplFile: tplPath, data: renderData, pageBoundingRect: { selector: ".container-wrapper" } }, this);
+    if (imageBuffer) {
+      await e.reply(imageBuffer);
+    } else {
+      await e.reply(`俺说，这报告图片没整出来。不过你放心，事儿办妥了：${title} [${alias}]，给你同步了 ${totalSynced} 个角色文件夹咧。`);
+    }
+  }
+
+  async update(e) {
+    if (!(await this._ensureMainPluginReady(e))) return true;
+    await this.mutex.runExclusive(async () => {
+      const match = e.msg.match(/^#咕咕牛更新\s*(.+)$/i);
+      if (!match) return;
+      const alias = match[1].trim();
+
+      await this._loadConfig();
+      const aliasesToUpdate = alias.toLowerCase() === '全部' ? Object.keys(this.config) : [alias];
+
+      if (aliasesToUpdate.length === 0 || (alias.toLowerCase() !== '全部' && !this.config[alias])) {
+        return e.reply(`俺寻思半天，也没找到叫「${alias}」的库啊。你用 #咕咕牛列表 瞅瞅都装过啥咧。`, true);
+      }
+
+      await e.reply(`得嘞，这就给你更新图库去，你说的这个是: ${alias}`, true);
+
+      for (const a of aliasesToUpdate) {
+        const repoInfo = this.config[a];
+        if (!repoInfo || !repoInfo.folderName) {
+          this.logger.error(`${this.logPrefix} 更新跳过，配置不完整或找不到文件夹名: ${a}`);
+          await e.reply(`更新「${a}」的时候跳过去了，它的记录好像有点问题。`, true);
+          continue;
+        }
+        const repoPath = path.join(this.paths.base, repoInfo.folderName);
+        try {
+          await ExecuteCommand("git", ["pull"], { cwd: repoPath }, Default_Config.gitPullTimeout);
+          const { sourcePath } = await this._detectStructure(repoPath);
+          const contentMap = await this._analyzeContent(sourcePath);
+          this.config[a].contentMap = contentMap;
+          const { totalSynced } = await this._syncRepo(a);
+          await this._saveConfig();
+          await this._renderOpReport(e, "更新成功", a, totalSynced);
+        } catch (error) {
+          await MiaoPluginMBT.ReportError(e, `更新第三方图库 ${a}`, error, '', this);
+        }
+      }
+    });
+    return true;
+  }
+
+  async uninstall(e) {
+    if (!(await this._ensureMainPluginReady(e))) return true;
+    await this.mutex.runExclusive(async () => {
+      const match = e.msg.match(/^#咕咕牛卸载\s*(.+)$/i);
+      if (!match) return;
+      const alias = match[1].trim();
+
+      await this._loadConfig();
+      const repoInfo = this.config[alias];
+      if (!repoInfo) {
+        return e.reply(`没找着叫「${alias}」的库咧。`, true);
+      }
+
+      if (!repoInfo.folderName) {
+        this.logger.error(`${this.logPrefix} 卸载失败，配置记录已损坏 (缺少文件夹名): ${alias}`);
+        delete this.config[alias];
+        await this._saveConfig();
+        return e.reply(`哎呀，出大事了！「${alias}」这个库的记录坏掉了，找不着它的文件夹名。俺已经把这条坏记录给你删了，你可以重新装了哈。`, true);
+      }
+
+      await e.reply(`收到咧，俺这就去把「${alias}」这个库给你拾掇干净哈，连文件带配置都给你弄掉。`, true);
+
+      try {
+        await this._cleanSyncedFiles(alias);
+        const repoPath = path.join(this.paths.base, repoInfo.folderName);
+        await safeDelete(repoPath);
+        delete this.config[alias];
+        await this._saveConfig();
+        await e.reply(`中！「${alias}」这个库已经给你卸掉咧。`, true);
+      } catch (error) {
+        await MiaoPluginMBT.ReportError(e, `卸载第三方图库 ${alias}`, error, '', this);
+      }
+    });
+    return true;
+  }
+
+  async list(e) {
+    if (!(await this._ensureMainPluginReady(e))) return true;
+
+    await this.mutex.runExclusive(async () => {
+      await this._loadConfig();
+      const repos = Object.entries(this.config);
+
+      if (repos.length === 0) {
+        return e.reply("一个第三方图库都还没装咧。\n想装的话，就用 `#咕咕牛安装 网址:你给它起个名儿`。", true);
+      }
+
+      for (const [alias, info] of repos) {
+        if (!info.folderName) {
+          this.logger.warn(`${this.logPrefix}跳过 ${alias}，配置缺少文件夹名。`);
+          continue;
+        }
+        const repoPath = path.join(this.paths.base, info.folderName);
+        try {
+          await fsPromises.access(repoPath);
+          const { sourcePath, structureType } = await this._detectStructure(repoPath);
+          const contentMap = await this._analyzeContent(sourcePath);
+
+          this.config[alias].structureType = structureType;
+          this.config[alias].contentMap = contentMap;
+        } catch (error) {
+          if (error.code === 'ENOENT') {
+            this.logger.warn(`${this.logPrefix}仓库目录 ${repoPath} 不存在，跳过分析。`);
+          } else {
+            this.logger.error(`${this.logPrefix}分析仓库 ${alias} 时出错:`, error);
+          }
+        }
+      }
+
+      await this._saveConfig();
+
+      const tplPath = path.join(MiaoPluginMBT.paths.commonResPath, "html", "third_party_list.html");
+      const repoList = [];
+      const updatedRepos = Object.entries(this.config);
+
+      for (const [alias, info] of updatedRepos) {
+        if (!info.folderName) continue;
+        const repoPath = path.join(this.paths.base, info.folderName);
+        let size = 0;
+        try {
+          size = await FolderSize(repoPath);
+        } catch (err) { }
+
+        let platform = 'unknown';
+        if (info.url) {
+          if (info.url.includes('github')) platform = 'github';
+          else if (info.url.includes('gitee')) platform = 'gitee';
+          else if (info.url.includes('gitcode')) platform = 'gitcode';
+        }
+
+        const hasRecognized = (info.contentMap.gs || 0) > 0 ||
+          (info.contentMap.sr || 0) > 0 ||
+          (info.contentMap.zzz || 0) > 0 ||
+          (info.contentMap.waves || 0) > 0;
+
+        let installDateStr = '未知';
+        if (info.installDate) {
+          installDateStr = new Date(info.installDate).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        } else {
+          try {
+            const stats = await fsPromises.stat(repoPath);
+            installDateStr = new Date(stats.birthtime).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            this.config[alias].installDate = stats.birthtime.toISOString();
+          } catch (statError) {
+            this.logger.warn(`${this.logPrefix} 无法获取文件夹 ${repoPath} 的创建时间: ${statError.message}`);
+          }
+        }
+
+        repoList.push({
+          alias,
+          ...info,
+          platform,
+          hasRecognized,
+          sizeFormatted: FormatBytes(size),
+          lastSyncFormatted: new Date(info.lastSync).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+          installDateFormatted: installDateStr,
+        });
+      }
+      await this._saveConfig();
+      const renderData = {
+        repos: repoList,
+        pluginVersion: Version,
+        scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+        guguniu_res_path: `file://${MiaoPluginMBT.paths.commonResPath}/`.replace(/\\/g, '/')
+      };
+
+      const imageBuffer = await renderPageToImage("third-party-list", { tplFile: tplPath, data: renderData, pageBoundingRect: { selector: ".container-wrapper" } }, this);
+      if (imageBuffer) {
+        await e.reply(imageBuffer);
+      } else {
+        await e.reply("哎呀，这列表图片没整出来，你看看后台是不是有啥毛病咧。");
+      }
+    });
+    return true;
+  }
+}
 const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 1, name: "Git 操作失败 (认证/访问)", category: "底层错误", description: "模拟 Git 命令认证失败或无权限。预期：命令失败，ReportError报告。", type: "THROW_GIT_AUTH_FAIL" },
   { id: 2, name: "网络连接/超时失败", category: "底层错误", description: "模拟通用网络请求超时。预期：相关操作失败，ReportError报告。", type: "THROW_NET_TIMEOUT" },
@@ -7178,4 +7881,4 @@ const GUGUNIU_RULES = [
 ];
 
 
-export { MiaoPluginMBT, SleeperAgent }
+export { MiaoPluginMBT, SleeperAgent, YunluTukuManager }
