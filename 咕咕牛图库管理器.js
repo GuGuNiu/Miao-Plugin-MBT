@@ -7822,6 +7822,7 @@ class YunluTukuManager extends plugin {
     return true;
   }
 }
+
 const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 1, name: "Git 操作失败 (认证/访问)", category: "底层错误", description: "模拟 Git 命令认证失败或无权限。预期：命令失败，ReportError报告。", type: "THROW_GIT_AUTH_FAIL" },
   { id: 2, name: "网络连接/超时失败", category: "底层错误", description: "模拟通用网络请求超时。预期：相关操作失败，ReportError报告。", type: "THROW_NET_TIMEOUT" },
