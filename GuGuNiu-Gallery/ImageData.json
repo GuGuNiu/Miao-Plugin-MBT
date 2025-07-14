@@ -367,7 +367,7 @@
         "attributes": {
             "filename": "爱可菲Gu10.webp",
             "parentFolder": "爱可菲",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -376,7 +376,7 @@
             "md5": "d6bd0abf2110034d874188f1a8bd359a",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-06-16T05:13:04.908Z",
+        "timestamp": "2025-07-14T09:13:08.603Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -427,7 +427,7 @@
         "attributes": {
             "filename": "爱可菲Gu13.webp",
             "parentFolder": "爱可菲",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -436,7 +436,7 @@
             "md5": "66806fd32d7e210f671e13b2140cebe5",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-07T06:44:22.968Z",
+        "timestamp": "2025-07-14T09:13:25.635Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -487,7 +487,7 @@
         "attributes": {
             "filename": "爱可菲Gu16.webp",
             "parentFolder": "爱可菲",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -496,7 +496,7 @@
             "md5": "c1d6a7404b193173c4e234284e129f26",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-07T06:44:22.968Z",
+        "timestamp": "2025-07-14T09:13:34.746Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -541,26 +541,6 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
-        "gid": "1179379311",
-        "characterName": "爱可菲",
-        "path": "gs-character/爱可菲/爱可菲Gu19.webp",
-        "attributes": {
-            "filename": "爱可菲Gu19.webp",
-            "parentFolder": "爱可菲",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "711b1ea894d1e32c0af133c83fe168af",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-06-07T05:53:41.791Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
         "gid": "1016578887",
         "characterName": "爱可菲",
         "path": "gs-character/爱可菲/爱可菲Gu2.webp",
@@ -581,53 +561,13 @@
     },
     {
         "storagebox": "Miao-Plugin-MBT",
-        "gid": "8615913583",
-        "characterName": "爱可菲",
-        "path": "gs-character/爱可菲/爱可菲Gu20.webp",
-        "attributes": {
-            "filename": "爱可菲Gu20.webp",
-            "parentFolder": "爱可菲",
-            "isPx18": false,
-            "isRx18": true,
-            "layout": "normal",
-            "isEasterEgg": false,
-            "isAiImage": false,
-            "isBan": false,
-            "md5": "fd6d824e8777a146cf96cc01ae2060af",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-06-13T03:16:42.713Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
-        "gid": "2314549117",
-        "characterName": "爱可菲",
-        "path": "gs-character/爱可菲/爱可菲Gu21.webp",
-        "attributes": {
-            "filename": "爱可菲Gu21.webp",
-            "parentFolder": "爱可菲",
-            "isPx18": false,
-            "isRx18": false,
-            "layout": "normal",
-            "isEasterEgg": true,
-            "isAiImage": true,
-            "isBan": false,
-            "md5": "bde3937880971e963d8896d04408cd8d",
-            "Downloaded_From": "none"
-        },
-        "timestamp": "2025-07-07T06:40:40.803Z",
-        "sourceGallery": "gs-character"
-    },
-    {
-        "storagebox": "Miao-Plugin-MBT",
         "gid": "9388652101",
         "characterName": "爱可菲",
         "path": "gs-character/爱可菲/爱可菲Gu3.webp",
         "attributes": {
             "filename": "爱可菲Gu3.webp",
             "parentFolder": "爱可菲",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -636,7 +576,7 @@
             "md5": "17400420241036a461c18d5da26f4db7",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-07T06:44:22.968Z",
+        "timestamp": "2025-07-14T09:12:14.157Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -647,8 +587,8 @@
         "attributes": {
             "filename": "爱可菲Gu4.webp",
             "parentFolder": "爱可菲",
-            "isPx18": true,
-            "isRx18": false,
+            "isPx18": false,
+            "isRx18": true,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
@@ -656,7 +596,7 @@
             "md5": "5beeb5b700d4a18e3987cd30095d12cf",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-10T07:37:52.833Z",
+        "timestamp": "2025-07-14T09:12:45.740Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -727,8 +667,8 @@
         "attributes": {
             "filename": "爱可菲Gu8.webp",
             "parentFolder": "爱可菲",
-            "isPx18": true,
-            "isRx18": false,
+            "isPx18": false,
+            "isRx18": true,
             "layout": "normal",
             "isEasterEgg": false,
             "isAiImage": false,
@@ -736,7 +676,7 @@
             "md5": "22c665796e3d6646975f5cdee5eb76a1",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-15T03:18:44.211Z",
+        "timestamp": "2025-07-14T09:13:01.779Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -747,7 +687,7 @@
         "attributes": {
             "filename": "爱可菲Gu9.webp",
             "parentFolder": "爱可菲",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -756,7 +696,7 @@
             "md5": "1411512c5c073ff25ffb389e374930cb",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-06-11T01:58:00.976Z",
+        "timestamp": "2025-07-14T09:13:18.467Z",
         "sourceGallery": "gs-character"
     },
     {
