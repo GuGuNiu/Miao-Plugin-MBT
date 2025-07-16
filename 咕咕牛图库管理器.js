@@ -699,7 +699,7 @@ class MiaoPluginMBT extends plugin {
 
     commonResPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery"),
     configFilePath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "GalleryConfig.yaml"),
-    imageDataPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "imagedata.json"),
+    imageDataPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "ImageData.json"),
     banListPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "banlist.json"),
 
     tempPath: path.join(YunzaiPath, "temp", "html", "GuGuNiu"),
@@ -724,7 +724,7 @@ class MiaoPluginMBT extends plugin {
     },
     sourceFolders: { gs: "gs-character", sr: "sr-character", zzz: "zzz-character", waves: "waves-character", gallery: "GuGuNiu-Gallery", },
     filesToSyncToCommonRes: [
-      { sourceSubPath: "GuGuNiu-Gallery/imagedata.json", destFileName: "imagedata.json" },
+      { sourceSubPath: "GuGuNiu-Gallery/ImageData.json", destFileName: "ImageData.json" },
       { sourceSubPath: "GuGuNiu-Gallery/GalleryConfig.yaml", destFileName: "GalleryConfig.yaml", copyIfExists: false },
       { sourceSubPath: "GuGuNiu-Gallery/html/status.html", destFileName: "html/status.html", copyIfExists: true },
       { sourceSubPath: "GuGuNiu-Gallery/html/banlist.html", destFileName: "html/banlist.html", copyIfExists: true },
@@ -2309,7 +2309,7 @@ class MiaoPluginMBT extends plugin {
 
     **第一步：识别错误类型，并构建“核心原因”**
     *   **配置错误**: 如果细节包含 \`YAML.parse\`，核心原因：\`GuGuNiu-Gallery/GalleryConfig.yaml\` 配置文件存在语法错误。
-    *   **数据错误**: 如果细节包含 \`JSON.parse\`，核心原因：\`GuGuNiu-Gallery/imagedata.json\` 或 \`banlist.json\` 数据文件格式损坏。
+    *   **数据错误**: 如果细节包含 \`JSON.parse\`，核心原因：\`GuGuNiu-Gallery/ImageData.json\` 或 \`banlist.json\` 数据文件格式损坏。
     *   **网络/Git问题**: 如果细节包含 \`ETIMEDOUT\`, \`Git\`, \`clone\`, \`pull\`，核心原因：在执行“<操作名称>”时，网络连接超时或Git仓库访问失败。
     *   **文件权限问题**: 如果细节包含 \`EACCES\`, \`EPERM\`，核心原因：插件在执行“<操作名称>”时，缺少对相关目录的文件读写权限。
     *   **文件/路径丢失**: 如果细节包含 \`ENOENT\`，核心原因：在执行“<操作名称>”时，找不到必要的文件或目录。
@@ -2558,7 +2558,7 @@ class MiaoPluginMBT extends plugin {
         [ERROR_CODES.Busy]: "文件系统: 文件或目录正被占用，稍后再试试？",
         [ERROR_CODES.NotEmpty]: "文件系统: 文件夹里还有东西，删不掉。",
         [ERROR_CODES.ConnReset]: "网络: 连接突然断了。",
-        "json.parse": "数据问题: JSON 文件格式不对，检查下 `imagedata.json` 或 `banlist.json`。",
+        "json.parse": "数据问题: JSON 文件格式不对，检查下 `ImageData.json` 或 `banlist.json`。",
         "yaml.parse": "配置问题: YAML 文件格式不对，检查下 `GalleryConfig.yaml`。",
       };
 
@@ -7831,7 +7831,7 @@ const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 5, name: "截图: 模板数据错误", category: "底层错误", description: "模拟Puppeteer渲染时模板数据缺失或错误。预期：截图失败，ReportError报告。", type: "THROW_RENDER_TEMPLATE_DATA_ERROR" },
   { id: 6, name: "截图: 渲染超时", category: "底层错误", description: "模拟Puppeteer截图操作超时。预期：截图失败，ReportError报告。", type: "THROW_RENDER_TIMEOUT" },
   { id: 7, name: "配置: YAML解析失败", category: "底层错误", description: "模拟GalleryConfig.yaml格式错误。预期：配置加载失败，ReportError或日志。", type: "THROW_YAML_PARSE" },
-  { id: 8, name: "数据: JSON解析失败", category: "底层错误", description: "模拟imagedata.json或banlist.json格式错误。预期：数据加载失败，ReportError或日志。", type: "THROW_JSON_PARSE" },
+  { id: 8, name: "数据: JSON解析失败", category: "底层错误", description: "模拟ImageData.json或banlist.json格式错误。预期：数据加载失败，ReportError或日志。", type: "THROW_JSON_PARSE" },
   { id: 9, name: "通用: 调用未知变量", category: "底层错误", description: "模拟代码中引用一个未定义的变量，触发ReferenceError。", type: "THROW_REFERENCE_ERROR" },
   { id: 10, name: "通用: 未知底层错误", category: "底层错误", description: "模拟一个未分类的底层异常。预期：ReportError报告。", type: "THROW_GENERIC_ERROR" },
   { id: 11, name: "资源同步失败 (文件丢失)", category: "底层错误", description: "模拟核心库下载后，同步公共资源时发现文件丢失。预期：显示专属的文件丢失报告图。", type: "THROW_SYNC_FILES_FAILED" },
