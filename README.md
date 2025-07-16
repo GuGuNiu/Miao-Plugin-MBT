@@ -3,35 +3,41 @@
     <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="800" alt="咕咕牛图库 Banner"/>
   </a>
 </p>
-
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-✓-blue.svg" alt="Miao-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-✓-green.svg" alt="Trss-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
 </p>
+<p align="center">
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
+    <img src="https://count.getloli.com/get/@GuGuNiu-MiaoPluginMBT?theme=moebooru" alt="Visitor Count" />
+  </a>
+</p>
 
 # 前言
 
-**咕咕牛图库 (GuGuNiu Gallery)** 是为 `Yunzai` 设计的高性能、高可控的面板图库扩展插件。提供了海量的游戏角色图片资源，更内置了一套强大的智能管理系统，旨在为提供稳定、流畅且安全的图库体验。所有功能逻辑代码都素互相交叉，代码内配置了10把不同的互斥锁和大量异步逻辑和分散到处都素的错误处理器以及大量的静态属性，如果有问题最好是提交Issues而不是尝试修改，插件已经做到了95%的场景无人值守的自主运维，”操作自动化”、“流程自动化”和“智能自动化”三个层面基本是无需人工介入干预。
+**咕咕牛的图库 (GuGuNiu Gallery)** 是基于 `Yunzai` 框架下的面板图扩展，提供了海量的游戏角色面板图资源并且内置强大的智能管理系统，旨在为提供稳定、流畅且安全的图库体验。管理器Js已经做到了95%的场景无人值守的自主运维，”操作自动化”、“流程自动化”和“智能自动化”基本无需人工介入干预。图库部分资源是我个人付费采购的，有一些是咕咕牛才有的独家图片。
 
-## ✨ 核心功能
-
-- **跨插件无缝支持**: 完美兼容 `Miao-Plugin`、`ZZZ-Plugin` 及 `waves-plugin`，自动同步并替换面板图。
-- **丰富的游戏覆盖**: 提供 **原神、崩坏：星穹铁道、绝区零、鸣潮** 的面板图库资源。
-- **高度可定制化**: 内置净化等级、AI/彩蛋/横屏图过滤、渲染精度调节等多种配置项，满足不同需求。
+- **完美兼容 `Miao-Plugin`、`ZZZ-Plugin` 及 `Waves-plugin`插件。**
+- **提供 **原神、崩坏：星穹铁道、绝区零、鸣潮** 的面板图库资源。**
+- **内置净化等级、AI/彩蛋/横屏图过滤、渲染精度调节等多种配置项。**
 - **智能管理系统**:
   - **AI 错误诊断**: 插件出错时，自动生成包含**原因分析**和**解决方案**的图文报告。
   - **智能节点切换**: 下载/更新时自动探测网络，选择最优线路，并在失败时自动切换。
   - **系统负载保护**: 独有的三级负载防御系统，保障低配设备稳定运行。
-- **模糊匹配与索引**: 支持角色名与别名的模糊匹配，并采用高性能内存索引，实现秒级响应。
+- **支持角色名与别名的模糊匹配，并采用高性能内存索引，秒级响应。**
 
-## 🛠️ 功能详解
+## ⚠️ 使用须知
 
-### 🛡️ 净化等级与内容过滤
+-   本项目除` 图片资源`外基于 `MIT` 协议开源，仅供学习交流使用，**严禁用于任何商业用途,图片版权归属原作者**。
+-   图库资源均收集自公开网络，版权归原作者所有。如内容涉及侵权，请立即联系删除。
+
+
+## 🛡️ 净化等级与内容过滤
 
 > [!WARNING]
-> 为了应对潜在的平台风控，咕咕牛提供了一套强大的内容净化系统。强烈建议根据自身需求配置。
+> 为了应对潜在的平台风控，咕咕牛提供了一套内容净化系统，建议根据自身需求配置。
 
 使用指令 `#咕咕牛设置净化等级 <等级>` 来调整，等级定义如下：
 
@@ -43,7 +49,7 @@
 
 -   **Px18**: 指轻微性暗示或低度挑逗性图片，无关键部位裸露。
 -   **Rx18**: 指存在关键部位刻意裸露或具有高度挑逗性的图片。
--   AI生成图指：由ai制作的图片
+-   Ai图指：由Ai制作的图片
 -   彩蛋图指：由咕咕牛图库内置的自控彩蛋非各个插件的彩蛋逻辑
 -   横屏图指：全屏铺满的面板图
 
@@ -51,9 +57,6 @@
 此外还可以通过 `#咕咕牛设置` 指令对 **AI生成图、彩蛋图、横屏图** 进行独立开关。
 
 ### ⚙️ 负载防御系统
-
-> [!NOTE]
-> 为保障在低性能设备或高强度使用场景下的稳定性，插件内置了智能负载管理系统。
 
 管理器提供两种运行模式，可通过 `#咕咕牛设置低负载 [开启|关闭]` 切换：
 
@@ -79,14 +82,9 @@
 > [!IMPORTANT]
 咕咕牛现在允许你通过管理器安装和管理来自社区和其它仓库的第三方图库。
 
-管理器内置了一套完整的第三方图库管理方案：
-
 - **多平台兼容**: 支持从 **GitHub、Gitee、GitCode** 等平台克隆仓库。
 - **智能结构分析**: 自动探测仓库内的文件夹结构，精准定位角色图片目录。
-- **文件隔离与追踪**:
-  - **清单追踪**: 为每个第三方图库建立独立的 `sync_manifest.json` 清单，精确记录每一个同步到游戏插件的文件。
-  - **文件防冲突**: 同步时自动为文件名添加**仓库别名**作为前缀，避免不同图库间的文件覆盖。
-- **精准卸载**: 基于同步清单，确保在卸载时**彻底清除**所有相关文件。
+
 
 ### 第三方图库指令
 
@@ -98,8 +96,6 @@
 | `#咕咕牛列表`                          | 以图文形式展示所有已安装的第三方图库。     |
 
 **例如**: `#咕咕牛安装 https://github.com/user/repo:我的图库`
-
----
 
 ---
 
@@ -116,23 +112,25 @@
 ## 🎨 界面一览
 
 <p align="center">
-  <i>咕咕牛图库管理器 v5.0 核心界面预览</i>
+  <i>咕咕牛图库管理器 UX/UI 2.0界面预览</i>
   <br><br>
   <img src="https://s2.loli.net/2025/07/01/Lt7Aw6gSGv4ZeCD.webp" width="100%">
 </p>
 
+<p align="center">
+  
+![预览面板图](./gs-character/芙宁娜/芙宁娜Gu6.webp)
+
+</p>
+  <i>水印说明：在保障原图作者利益和咕咕牛图库权益的前提下,每张面板图都会带有标识信息的水印，如介意请勿安装图库</i>
+  
 ---
-
-## ⚠️ 使用须知
-
--   本项目基于 `MIT` 协议开源，仅供学习交流使用，**严禁用于任何商业用途,图片版权归属原作者**。
--   图库资源均收集自公开网络，版权归原作者所有。如内容涉及侵权，请立即联系删除。
 
 ## 🚀 快速上手
 
 ### 1. 安装管理器
 
-在机器人项目**根目录**下，打开终端并执行以下任一指令：
+在**Yunzai**项目**根目录**下，打开终端并执行以下任一指令：
 
 **✅ 主源 (Jsdelivr CDN)**
 ```bash
@@ -156,7 +154,7 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://github.moeyy
 
 ## 📦 仓库分流
 
-为提升下载速度和稳定性，咕咕牛将图库资源分散在四个不同的 GitHub 仓库中。
+为提升下载速度和稳定性，图库资源分散在多个 GitHub 仓库中。
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true&theme=transparent" alt="Repo 1"></a>
@@ -166,9 +164,5 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://github.moeyy
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-4"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true&theme=transparent" alt="Repo 4"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://count.getloli.com/get/@GuGuNiu-MiaoPluginMBT?theme=moebooru" alt="Visitor Count" />
-  </a>
-</p>
+
 
