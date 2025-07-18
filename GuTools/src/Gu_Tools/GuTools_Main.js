@@ -7,7 +7,7 @@
  * @param {'generator' | 'import' | 'md5' | 'sequence' | 'json_calibration' | 'stockroom_go' | 'storagebox_calibration'} targetMode 要切换到的目标模式
  */
 async function switchGuToolMode(targetMode) {
-  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration"];
+  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check"];
   if (!validModes.includes(targetMode)) {
     console.error(`无效的 GuTools 模式: ${targetMode}`);
     return;
@@ -21,6 +21,7 @@ async function switchGuToolMode(targetMode) {
     json_calibration: DOM.jsonCalibrationPaneView,
     stockroom_go: DOM.stockroomGoPaneView,
     storagebox_calibration: DOM.storageboxCalibrationPaneView,
+    file_size_check: DOM.fileSizePaneView,
   };
 
   const targetView = views[targetMode];
@@ -165,6 +166,13 @@ async function switchGuToolMode(targetMode) {
         }
         if (AppState.userData.length === 0 && typeof fetchUserData === "function") {
           await fetchUserData();
+        }
+        break;
+      case "file_size_check":
+        if (typeof initializeFileSizeView === "function") {
+          initializeFileSizeView();
+        } else {
+          console.error("GuTools FileSize: initializeFileSizeView 未定义！");
         }
         break;
       default:

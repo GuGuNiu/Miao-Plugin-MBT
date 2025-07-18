@@ -21,6 +21,7 @@ const API_ENDPOINTS = {
   FETCH_BACKGROUND_IMAGES: "/api/background-images",
   FETCH_FOLDER_CONTENTS: "/api/folder-contents",
   BATCH_UPDATE_STORAGEBOX: "/api/batch-update-storagebox",
+  FETCH_FILE_SIZES: "/api/file-sizes",
 };
 
 const DELAYS = {
@@ -55,18 +56,19 @@ const UI_CLASSES = {
 
 const PAGINATION = {
   PLUGIN_GALLERY_ITEMS_PER_PAGE: 8,
+  FILE_SIZE_ITEMS_PER_PAGE: 8,
 };
 
 let lazyLoadObserver = null;
 
-// --- 全局状态管理 AppState ---
+// --- 全局状态管理  ---
 const AppState = {
   isSettingInputProgrammatically: false,
   isProcessingSelection: false,
   generator: {
     isShowingFolderSuggestions: false,
     showingRelatedImages: false,
-    currentSelection: null, // { name, fileName, folderName, urlPath(相对), gallery, storageBox(原始大小写) }
+    currentSelection: null, 
     currentGeneratedId: null,
     currentCalculatedMd5: null,
     searchDelayTimer: null,
@@ -81,9 +83,9 @@ const AppState = {
     dataLoaded: false,
     tempImagesList: [],
     characterFoldersList: [],
-    selectedTempImageInfo: null, // { filename, path }
+    selectedTempImageInfo: null, 
     selectedTargetFolder: null,
-    selectedStorageBox: null, // 存储原始大小写
+    selectedStorageBox: null, 
     suggestedFilenameBase: "",
     suggestedFilenameNum: 0,
     suggestedFilenameExt: "",
@@ -105,6 +107,13 @@ const AppState = {
   sequenceManager: { isRunning: false },
   jsonCalibrator: { isRunning: false },
   storageboxCalibrator: { isRunning: false, isAborted: false },
+  fileSizeChecker: {
+    dataLoaded: false,
+    allFiles: [],
+    filteredFiles: [],
+    currentPage: 1,
+    totalPages: 1,
+  },
   dataList: {
     currentEditPath: null,
     searchDebounceTimer: null,
@@ -318,6 +327,22 @@ function cacheDomElements() {
   DOM.sbxCalTotalFilesDisplay = document.getElementById('sbxCalTotalFilesDisplay');
   DOM.sbxCalMismatchCountDisplay = document.getElementById('sbxCalMismatchCountDisplay');
   DOM.sbxCalMismatchCountDisplayInner = document.getElementById('sbxCalMismatchCountDisplayInner'); 
+
+  // --- GuTools - 文件大小核查视图 ---
+  DOM.fileSizePaneView = document.getElementById('fileSizePaneView');
+  DOM.fsMinSizeInput = document.getElementById('fsMinSizeInput');
+  DOM.fsMaxSizeInput = document.getElementById('fsMaxSizeInput');
+  DOM.fsUnitSelector = document.getElementById('fsUnitSelector');
+  DOM.fsApplyFilterBtn = document.getElementById('fsApplyFilterBtn');
+  DOM.fsResetFilterBtn = document.getElementById('fsResetFilterBtn');
+  DOM.fsResultsGrid = document.getElementById('fsResultsGrid');
+  DOM.fsStatusText = document.getElementById('fsStatusText');
+  DOM.fsGameFilter = document.getElementById('fsGameFilter');
+  DOM.fsStorageBoxFilter = document.getElementById('fsStorageBoxFilter');
+  DOM.fsPaginationControls = document.getElementById('fsPaginationControls');
+  DOM.fsPrevPageBtn = document.getElementById('fsPrevPageBtn');
+  DOM.fsNextPageBtn = document.getElementById('fsNextPageBtn');
+  DOM.fsPageInfo = document.getElementById('fsPageInfo');
 
   // --- Data List 面板 ---
   DOM.dataListPane = document.getElementById("dataListPane");
@@ -1173,6 +1198,7 @@ async function initializeApplication() {
       { name: "setupJsonCalibratorEventListeners", file: "GuTools_JsonCal.js" },
       { name: 'setupStockroomGoEventListeners', file: 'GuTools_StockroomGo.js' },
       { name: 'setupStorageboxCalibratorEventListeners', file: 'GuTools_StorageboxCal.js' }, 
+      { name: 'setupFileSizeCheckerEventListeners', file: 'GuTools_FileSize.js' },
       { name: "setupDataListEventListeners", file: "Data_List.js" },
       { name: "setupPluginGalleryEventListeners", file: "Plugin_Gallery.js" },
       { name: "setupGlobalEventListeners", file: "Ui_Controls.js" },

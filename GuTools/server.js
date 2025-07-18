@@ -384,14 +384,14 @@ const resolvePhysicalPath = async (webPath) => {
   // 检查新格式主图库路径 (/仓库名/分类/...)
   const repo = REPO_ROOTS.find(r => r.name === firstSegment); // 比较原始大小写
   if (repo && pathSegments.length >= 3) {
-      const galleryName = pathSegments[1];
-      if (MAIN_GALLERY_FOLDERS.includes(galleryName)) {
-          const potentialPath = path.join(repo.path, galleryName, ...pathSegments.slice(2)); // 拼接物理路径
-          if (await pathExists(potentialPath) && await isFile(potentialPath)) {
-               console.log(`[resolvePhysicalPath] 匹配到新格式主图库 (在 ${repo.name}): ${potentialPath}`);
-               return potentialPath; // 返回正确的物理路径
-          }
+    const galleryName = pathSegments[1];
+    if (MAIN_GALLERY_FOLDERS.includes(galleryName)) {
+      const potentialPath = path.join(repo.path, galleryName, ...pathSegments.slice(2)); // 拼接物理路径
+      if (await pathExists(potentialPath) && await isFile(potentialPath)) {
+        console.log(`[resolvePhysicalPath] 匹配到新格式主图库 (在 ${repo.name}): ${potentialPath}`);
+        return potentialPath; // 返回正确的物理路径
       }
+    }
   }
 
   // 检查外部插件
@@ -424,16 +424,16 @@ const resolvePhysicalPath = async (webPath) => {
   // 检查旧格式主图库 (兼容 /分类/...)
   if (MAIN_GALLERY_FOLDERS.includes(firstSegment) && pathSegments.length >= 2) {
     console.log(`[resolvePhysicalPath] 尝试匹配旧格式主图库: ${normalizedWebPath}`);
-    for(const repoLoop of REPO_ROOTS) { // 使用不同的变量名避免作用域混淆
-        const potentialPath = path.join(repoLoop.path, ...pathSegments);
-        if (await pathExists(potentialPath) && await isFile(potentialPath)) {
-             // --- 修改日志：明确指出找到的仓库 ---
-             console.log(`[resolvePhysicalPath] 匹配到旧格式路径 (在仓库 ${repoLoop.name}): ${potentialPath}`);
-             // --- 日志修改结束 ---
-             return potentialPath;
-        }
+    for (const repoLoop of REPO_ROOTS) { // 使用不同的变量名避免作用域混淆
+      const potentialPath = path.join(repoLoop.path, ...pathSegments);
+      if (await pathExists(potentialPath) && await isFile(potentialPath)) {
+        // --- 修改日志：明确指出找到的仓库 ---
+        console.log(`[resolvePhysicalPath] 匹配到旧格式路径 (在仓库 ${repoLoop.name}): ${potentialPath}`);
+        // --- 日志修改结束 ---
+        return potentialPath;
+      }
     }
-}
+  }
 
   console.warn(`[resolvePhysicalPath] 未能解析物理路径: ${webPath}`);
   return null;
@@ -489,7 +489,7 @@ console.log("--- 静态服务配置完毕 ---");
 
 // --- API 端点 ---
 
-// [GET] 获取主图库图片列表 (多仓库 返回相对路径和原始大小写 storageBox)
+// [GET] 获取主图库图片列表
 app.get("/api/images", async (req, res) => {
   console.log("请求: [GET] /api/images (多仓库)");
   try {
@@ -587,65 +587,65 @@ app.get("/api/gallery-config", async (req, res) => {
 });
 
 // [POST] 更新图库配置项 (只允许 TuKuOP 和 PFL)
-app.post('/api/update-gallery-config', async (req, res) => { 
+app.post('/api/update-gallery-config', async (req, res) => {
   console.log("请求: [POST] /api/update-gallery-config");
   const { configKey, newValue } = req.body;
   console.log(`  > 更新项: ${configKey}, 新值: ${newValue}`);
 
-  const allowedKeys = ['TuKuOP', 'PFL']; 
+  const allowedKeys = ['TuKuOP', 'PFL'];
   if (!configKey || !allowedKeys.includes(configKey)) {
-      console.error(`  > 错误: 无效的配置键: ${configKey}`);
-      return res.status(400).json({ success: false, error: `无效的配置项: ${configKey}` });
+    console.error(`  > 错误: 无效的配置键: ${configKey}`);
+    return res.status(400).json({ success: false, error: `无效的配置项: ${configKey}` });
   }
 
   let processedNewValue;
   if (configKey === 'TuKuOP') {
-      processedNewValue = Number(newValue);
-      if (processedNewValue !== 0 && processedNewValue !== 1) {
-          console.error(`  > 错误: TuKuOP 值无效 (非0或1): ${processedNewValue}`);
-          return res.status(400).json({ success: false, error: "TuKuOP 状态值必须是 0 或 1。" });
-      }
+    processedNewValue = Number(newValue);
+    if (processedNewValue !== 0 && processedNewValue !== 1) {
+      console.error(`  > 错误: TuKuOP 值无效 (非0或1): ${processedNewValue}`);
+      return res.status(400).json({ success: false, error: "TuKuOP 状态值必须是 0 或 1。" });
+    }
   } else if (configKey === 'PFL') {
-      processedNewValue = Number(newValue);
-      if (![0, 1, 2].includes(processedNewValue)) {
-          console.error(`  > 错误: PFL 值无效 (非0,1,2): ${processedNewValue}`);
-          return res.status(400).json({ success: false, error: "PFL 净化等级值必须是 0, 1 或 2。" });
-      }
+    processedNewValue = Number(newValue);
+    if (![0, 1, 2].includes(processedNewValue)) {
+      console.error(`  > 错误: PFL 值无效 (非0,1,2): ${processedNewValue}`);
+      return res.status(400).json({ success: false, error: "PFL 净化等级值必须是 0, 1 或 2。" });
+    }
   } else {
-       return res.status(400).json({ success: false, error: `未知的配置项: ${configKey}` });
+    return res.status(400).json({ success: false, error: `未知的配置项: ${configKey}` });
   }
 
   try {
-      let configData = { ...DEFAULT_GALLERY_CONFIG }; // 从默认值开始
-      if (await pathExists(GALLERY_CONFIG_FILE)) {
-          try {
-              const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, 'utf8');
-              const loadedConfig = yaml.load(fileContents);
-              if (typeof loadedConfig === 'object' && loadedConfig !== null) {
-                  configData = { ...configData, ...loadedConfig }; // 合并加载的配置
-              } else {
-                   console.warn(`配置文件 ${GALLERY_CONFIG_FILE} 格式无效，将覆盖为新配置`);
-              }
-          } catch (readError) {
-               console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错，将覆盖:`, readError);
-          }
-      } else {
-           console.log(`配置文件 ${GALLERY_CONFIG_FILE} 不存在，将创建新文件`);
+    let configData = { ...DEFAULT_GALLERY_CONFIG }; // 从默认值开始
+    if (await pathExists(GALLERY_CONFIG_FILE)) {
+      try {
+        const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, 'utf8');
+        const loadedConfig = yaml.load(fileContents);
+        if (typeof loadedConfig === 'object' && loadedConfig !== null) {
+          configData = { ...configData, ...loadedConfig }; // 合并加载的配置
+        } else {
+          console.warn(`配置文件 ${GALLERY_CONFIG_FILE} 格式无效，将覆盖为新配置`);
+        }
+      } catch (readError) {
+        console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错，将覆盖:`, readError);
       }
+    } else {
+      console.log(`配置文件 ${GALLERY_CONFIG_FILE} 不存在，将创建新文件`);
+    }
 
-      configData[configKey] = processedNewValue; // 更新值
-      const newYamlContents = yaml.dump(configData, { indent: 2 }); // 转回 YAML
-      await fs.writeFile(GALLERY_CONFIG_FILE, newYamlContents, 'utf8'); // 写入文件
+    configData[configKey] = processedNewValue; // 更新值
+    const newYamlContents = yaml.dump(configData, { indent: 2 }); // 转回 YAML
+    await fs.writeFile(GALLERY_CONFIG_FILE, newYamlContents, 'utf8'); // 写入文件
 
-      console.log(`  > 成功更新 ${configKey} 为 ${processedNewValue}`);
-      res.json({ success: true, message: `设置 '${configKey}' 成功！`, newConfig: configData });
+    console.log(`  > 成功更新 ${configKey} 为 ${processedNewValue}`);
+    res.json({ success: true, message: `设置 '${configKey}' 成功！`, newConfig: configData });
   } catch (error) {
-      console.error(`[API 配置] 更新配置 ${configKey} 出错:`, error);
-      res.status(500).json({ success: false, error: `更新配置项 '${configKey}' 出错: ${error.message}` });
+    console.error(`[API 配置] 更新配置 ${configKey} 出错:`, error);
+    res.status(500).json({ success: false, error: `更新配置项 '${configKey}' 出错: ${error.message}` });
   }
 });
 
-// [GET] 获取主图库列表 (复用 /api/images)
+// [GET] 获取主图库列表
 app.get("/api/local-images", async (req, res) => {
   console.log("请求: [GET] /api/local-images (获取本地图库列表, 多仓库)");
   try {
@@ -879,22 +879,20 @@ app.post('/api/batch-update-storagebox', async (req, res) => {
     let updatedCount = 0;
 
     entriesToUpdate.forEach(itemToUpdate => {
-      if (!itemToUpdate || typeof itemToUpdate.gid !== 'string' || typeof itemToUpdate.correctStorageBox !== 'string') { 
+      if (!itemToUpdate || typeof itemToUpdate.gid !== 'string' || typeof itemToUpdate.correctStorageBox !== 'string') {
         console.warn("  > 跳过无效的更新条目:", itemToUpdate);
-        return; 
+        return;
       }
 
       const entryIndex = imageData.findIndex(entry => entry.gid === itemToUpdate.gid);
 
       if (entryIndex > -1) {
-        // ***** 核心修改：直接使用前端传递的 correctStorageBox (应为原始大小写) *****
-        const newStorageBoxValue = itemToUpdate.correctStorageBox; 
-        // ***** 修改结束 *****
+        const newStorageBoxValue = itemToUpdate.correctStorageBox;
 
         if (imageData[entryIndex].storagebox !== newStorageBoxValue) { // 与JSON中当前值比较
           console.log(`    > 校准 GID: ${itemToUpdate.gid}, 从 "${imageData[entryIndex].storagebox}" -> "${newStorageBoxValue}"`);
           imageData[entryIndex].storagebox = newStorageBoxValue; // 更新为原始大小写
-          imageData[entryIndex].timestamp = new Date().toISOString(); 
+          imageData[entryIndex].timestamp = new Date().toISOString();
           updatedCount++;
         } else {
           console.log(`    > GID: ${itemToUpdate.gid}, storagebox 无需更改 ("${imageData[entryIndex].storagebox}")`);
@@ -919,7 +917,7 @@ app.post('/api/batch-update-storagebox', async (req, res) => {
   }
 });
 
-// [POST] 导入图片 (使用修正后的自动确定仓库逻辑)
+// [POST] 导入图片
 app.post("/api/import-image", async (req, res) => {
   console.log("请求: [POST] /api/import-image (自动确定仓库)");
   const { tempImagePath, targetFolder, targetFilename, attributes } = req.body;
@@ -1166,7 +1164,7 @@ app.get("/api/background-images", async (req, res) => {
   }
 });
 
-// [GET] 获取主图库角色文件夹列表 (多仓库汇总)
+// [GET] 获取主图库角色文件夹列表
 app.get("/api/character-folders", async (req, res) => {
   console.log("请求: [GET] /api/character-folders (多仓库)");
   const folderSet = new Set();
@@ -1200,7 +1198,7 @@ app.get("/api/character-folders", async (req, res) => {
   }
 });
 
-// [GET] 获取文件夹内最大文件编号 (自动查找仓库)
+// [GET] 获取文件夹内最大文件编号
 app.get("/api/last-file-number", async (req, res) => {
   const folderName = req.query.folder;
   console.log(
@@ -1214,7 +1212,6 @@ app.get("/api/last-file-number", async (req, res) => {
   console.log(`  > 使用正则: ${filenamePattern}`);
   try {
     for (const repo of REPO_ROOTS) {
-      // 确保 REPO_ROOTS 在此作用域可用
       if (!(await pathExists(repo.path)) || !(await isDirectory(repo.path)))
         continue;
       for (const gallery of MAIN_GALLERY_FOLDERS) {
@@ -1323,8 +1320,7 @@ app.post("/api/rename-sequence-files", async (req, res) => {
         renameError
       );
       errors.push(
-        `重命名 ${path.basename(op.oldPath)} (临时) 失败: ${
-          renameError.message
+        `重命名 ${path.basename(op.oldPath)} (临时) 失败: ${renameError.message
         }`
       );
     }
@@ -1378,19 +1374,17 @@ app.post('/api/transfer-folder', async (req, res) => {
   const { sourceStorageBox, sourceFolderName, targetStorageBox } = req.body;
   console.log(`  > 转移请求: 从 [${sourceStorageBox}] 的 "${sourceFolderName}" 到 [${targetStorageBox}]`);
 
-  // --- 参数校验 ---
   if (!sourceStorageBox || !sourceFolderName || !targetStorageBox) {
-      return res.status(400).json({ success: false, error: "缺少必要的参数 (源仓库/源文件夹/目标仓库)" });
+    return res.status(400).json({ success: false, error: "缺少必要的参数 (源仓库/源文件夹/目标仓库)" });
   }
   if (sourceStorageBox === targetStorageBox) {
-      return res.status(400).json({ success: false, error: "源仓库和目标仓库不能相同" });
+    return res.status(400).json({ success: false, error: "源仓库和目标仓库不能相同" });
   }
   const sourceRepo = REPO_ROOTS.find(r => r.name === sourceStorageBox);
   const targetRepo = REPO_ROOTS.find(r => r.name === targetStorageBox);
   if (!sourceRepo || !targetRepo) {
-      return res.status(404).json({ success: false, error: "指定的源仓库或目标仓库未找到" });
+    return res.status(404).json({ success: false, error: "指定的源仓库或目标仓库未找到" });
   }
-  // --- 校验结束 ---
 
   let sourceFolderPath = null;
   let sourceGallery = null; // 源文件夹所在的图库分类 (gs-character 等)
@@ -1399,92 +1393,180 @@ app.post('/api/transfer-folder', async (req, res) => {
   let filesToMove = []; // 要移动的文件列表
 
   try {
-      //查找源文件夹的完整物理路径和所属分类
-      let foundSource = false;
-      for (const gallery of MAIN_GALLERY_FOLDERS) {
-          const potentialPath = path.join(sourceRepo.path, gallery, sourceFolderName);
-          if (await pathExists(potentialPath) && await isDirectory(potentialPath)) {
-              sourceFolderPath = potentialPath;
-              sourceGallery = gallery;
-              foundSource = true;
-              console.log(`  > 找到源文件夹: ${sourceFolderPath}`);
-              // 读取源文件夹内容
-              filesToMove = await fs.readdir(sourceFolderPath);
-              filesToMove = filesToMove.filter(f => !f.startsWith('.')); // 过滤隐藏文件
-              break;
-          }
+    //查找源文件夹的完整物理路径和所属分类
+    let foundSource = false;
+    for (const gallery of MAIN_GALLERY_FOLDERS) {
+      const potentialPath = path.join(sourceRepo.path, gallery, sourceFolderName);
+      if (await pathExists(potentialPath) && await isDirectory(potentialPath)) {
+        sourceFolderPath = potentialPath;
+        sourceGallery = gallery;
+        foundSource = true;
+        console.log(`  > 找到源文件夹: ${sourceFolderPath}`);
+        // 读取源文件夹内容
+        filesToMove = await fs.readdir(sourceFolderPath);
+        filesToMove = filesToMove.filter(f => !f.startsWith('.')); // 过滤隐藏文件
+        break;
       }
-      if (!foundSource) {
-          throw new Error(`在源仓库 [${sourceStorageBox}] 中未找到文件夹 "${sourceFolderName}"`);
+    }
+    if (!foundSource) {
+      throw new Error(`在源仓库 [${sourceStorageBox}] 中未找到文件夹 "${sourceFolderName}"`);
+    }
+
+    // 确定目标文件夹路径 (通常使用与源相同的分类)
+    targetGallery = sourceGallery;
+    targetFolderPath = path.join(targetRepo.path, targetGallery, sourceFolderName);
+    console.log(`  > 目标文件夹路径: ${targetFolderPath}`);
+
+    //  检查目标路径是否已存在同名文件夹
+    if (await pathExists(targetFolderPath)) {
+      // 可以选择报错，或者合并 (合并逻辑复杂，暂不实现)
+      throw new Error(`目标仓库 [${targetStorageBox}] 中已存在同名文件夹 "${sourceFolderName}"`);
+    }
+
+    // 移动文件夹 (使用 rename 实现移动)
+    console.log(`  > 准备移动文件夹从 ${sourceFolderPath} 到 ${targetFolderPath}`);
+    await fs.rename(sourceFolderPath, targetFolderPath);
+    console.log(`  > 文件夹移动成功`);
+
+    // 更新 ImageData.json
+    console.log(`  > 开始更新 ImageData.json...`);
+    let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
+    let updatedCount = 0;
+    const targetStorageboxLower = targetStorageBox.toLowerCase(); // 目标仓库小写
+    const sourceStorageboxLower = sourceStorageBox.toLowerCase(); // 源仓库小写
+    const sourceRelativePrefix = `${sourceGallery}/${sourceFolderName}/`; // 源相对路径前缀
+
+    // 使用 map 创建新数组 确保修改生效
+    const updatedImageData = imageData.map(entry => {
+      // 找到属于源仓库 (比较小写) 且 路径以源文件夹开头的条目
+      if (entry.storagebox?.toLowerCase() === sourceStorageboxLower && entry.path?.startsWith(sourceRelativePrefix)) {
+        // 创建一个新的 entry 对象进行修改 避免直接修改原数组中的对象引用
+        const updatedEntry = { ...entry };
+        updatedEntry.storagebox = targetStorageBox; // 更新为目标仓库小写
+        // path (相对路径) 通常不需要改变 因为分类和文件夹名不变
+        updatedEntry.timestamp = new Date().toISOString(); // 更新时间戳
+        updatedCount++;
+        console.log(`    > 更新条目: GID ${entry.gid || 'N/A'}, 原路径 ${entry.path}, 新仓库 ${targetStorageboxLower}`);
+        return updatedEntry; // 返回修改后的对象
       }
+      return entry; // 返回原始对象
+    });
 
-      // 确定目标文件夹路径 (通常使用与源相同的分类)
-      targetGallery = sourceGallery; 
-      targetFolderPath = path.join(targetRepo.path, targetGallery, sourceFolderName);
-      console.log(`  > 目标文件夹路径: ${targetFolderPath}`);
-
-      //  检查目标路径是否已存在同名文件夹
-      if (await pathExists(targetFolderPath)) {
-          // 可以选择报错，或者合并 (合并逻辑复杂，暂不实现)
-          throw new Error(`目标仓库 [${targetStorageBox}] 中已存在同名文件夹 "${sourceFolderName}"`);
-      }
-
-      // 移动文件夹 (使用 rename 实现移动)
-      console.log(`  > 准备移动文件夹从 ${sourceFolderPath} 到 ${targetFolderPath}`);
-      await fs.rename(sourceFolderPath, targetFolderPath);
-      console.log(`  > 文件夹移动成功`);
-
-      // 更新 ImageData.json
-      console.log(`  > 开始更新 ImageData.json...`);
-      let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
-      let updatedCount = 0;
-      const targetStorageboxLower = targetStorageBox.toLowerCase(); // 目标仓库小写
-      const sourceStorageboxLower = sourceStorageBox.toLowerCase(); // 源仓库小写
-      const sourceRelativePrefix = `${sourceGallery}/${sourceFolderName}/`; // 源相对路径前缀
-
-      // 使用 map 创建新数组 确保修改生效
-      const updatedImageData = imageData.map(entry => {
-          // 找到属于源仓库 (比较小写) 且 路径以源文件夹开头的条目
-          if (entry.storagebox?.toLowerCase() === sourceStorageboxLower && entry.path?.startsWith(sourceRelativePrefix)) {
-              // 创建一个新的 entry 对象进行修改 避免直接修改原数组中的对象引用
-              const updatedEntry = { ...entry };
-              updatedEntry.storagebox = targetStorageBox; // 更新为目标仓库小写
-              // path (相对路径) 通常不需要改变 因为分类和文件夹名不变
-              updatedEntry.timestamp = new Date().toISOString(); // 更新时间戳
-              updatedCount++;
-              console.log(`    > 更新条目: GID ${entry.gid || 'N/A'}, 原路径 ${entry.path}, 新仓库 ${targetStorageboxLower}`);
-              return updatedEntry; // 返回修改后的对象
-          }
-          return entry; // 返回原始对象
-      });
-
-      // 确保写回的是更新后的数组
-      await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, updatedImageData, "内部用户数据");
-      console.log(`  > ImageData.json 更新完成 更新了 ${updatedCount} 条记录`);
+    // 确保写回的是更新后的数组
+    await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, updatedImageData, "内部用户数据");
+    console.log(`  > ImageData.json 更新完成 更新了 ${updatedCount} 条记录`);
 
 
-      // 查找被更新的第一个条目作为示例返回 
-      const sampleUpdatedEntry = updatedImageData.find(entry =>
-           entry.storagebox === targetStorageboxLower &&
-           entry.path?.startsWith(`${sourceGallery}/${sourceFolderName}/`)
-      );
+    // 查找被更新的第一个条目作为示例返回 
+    const sampleUpdatedEntry = updatedImageData.find(entry =>
+      entry.storagebox === targetStorageboxLower &&
+      entry.path?.startsWith(`${sourceGallery}/${sourceFolderName}/`)
+    );
 
-      res.json({
-          success: true,
-          message: `成功将文件夹 "${sourceFolderName}" 从 [${sourceStorageBox}] 转移到 [${targetStorageBox}]`,
-          filesMoved: filesToMove.length,
-          jsonUpdated: updatedCount,
-          // sampleEntry: sampleUpdatedEntry ? { ...sampleUpdatedEntry, storageBox: targetStorageBox, storagebox: undefined } : null
-      });
+    res.json({
+      success: true,
+      message: `成功将文件夹 "${sourceFolderName}" 从 [${sourceStorageBox}] 转移到 [${targetStorageBox}]`,
+      filesMoved: filesToMove.length,
+      jsonUpdated: updatedCount,
+      // sampleEntry: sampleUpdatedEntry ? { ...sampleUpdatedEntry, storageBox: targetStorageBox, storagebox: undefined } : null
+    });
 
   } catch (error) {
-      console.error(`[API 仓库转移] 处理转移时出错:`, error);
-      // TODO: 尝试回滚文件移动 (如果移动已发生)
-      res.status(500).json({ success: false, error: `仓库转移失败: ${error.message}` });
+    console.error(`[API 仓库转移] 处理转移时出错:`, error);
+    // TODO: 尝试回滚文件移动 (如果移动已发生)
+    res.status(500).json({ success: false, error: `仓库转移失败: ${error.message}` });
   }
 });
 
-// [GET] 计算图片 MD5 (使用修正后的路径解析)
+// [GET] 获取所有仓库文件的详细信息（包括大小）
+app.get("/api/file-sizes", async (req, res) => {
+  console.log("请求: [GET] /api/file-sizes");
+  try {
+    const filePromises = [];
+    for (const repo of REPO_ROOTS) {
+      if (!(await pathExists(repo.path)) || !(await isDirectory(repo.path)))
+        continue;
+      for (const gallery of MAIN_GALLERY_FOLDERS) {
+        const galleryBasePath = path.join(repo.path, gallery);
+        if (
+          (await pathExists(galleryBasePath)) &&
+          (await isDirectory(galleryBasePath))
+        ) {
+          const findAndStatFiles = async (currentRelativePath = "") => {
+            const currentFullPath = path.join(
+              galleryBasePath,
+              currentRelativePath
+            );
+            if (
+              !(await pathExists(currentFullPath)) ||
+              !(await isDirectory(currentFullPath))
+            )
+              return;
+
+            const entries = await fs.readdir(currentFullPath, {
+              withFileTypes: true,
+            });
+            for (const entry of entries) {
+              const entryRelativePath = path.join(
+                currentRelativePath,
+                entry.name
+              );
+              const entryFullPath = path.join(currentFullPath, entry.name);
+              if (entry.isDirectory()) {
+                await findAndStatFiles(entryRelativePath);
+              } else if (entry.isFile()) {
+                const fileExt = path.extname(entry.name).toLowerCase();
+                if (ALLOWED_IMAGE_EXTENSIONS.has(fileExt)) {
+                  filePromises.push(
+                    (async () => {
+                      try {
+                        const stats = await fs.stat(entryFullPath);
+                        const pathSegments = entryRelativePath.split(path.sep);
+                        const fileName = pathSegments.pop() || entry.name;
+                        const folderName = pathSegments.pop() || "unknown";
+                        const relativeUrlPath =
+                          `${gallery}/${entryRelativePath}`.replace(
+                            /\\/g,
+                            "/"
+                          );
+                        const repoMatch = repo.name.match(/-(\d+)$/);
+                        return {
+                          storageBox: repo.name,
+                          urlPath: relativeUrlPath,
+                          fileName: fileName,
+                          folderName: folderName,
+                          sizeInBytes: stats.size,
+                          repoNumber: repoMatch ? parseInt(repoMatch[1], 10) : 1,
+                        };
+                      } catch (statError) {
+                        console.error(
+                          `[文件大小] 无法获取文件状态: ${entryFullPath}`,
+                          statError
+                        );
+                        return null;
+                      }
+                    })()
+                  );
+                }
+              }
+            }
+          };
+          await findAndStatFiles();
+        }
+      }
+    }
+
+    const allFileData = (await Promise.all(filePromises)).filter(Boolean);
+    allFileData.sort((a, b) => b.sizeInBytes - a.sizeInBytes);
+    console.log(`[API 文件大小] 返回 ${allFileData.length} 个文件的信息`);
+    res.json(allFileData);
+  } catch (error) {
+    console.error("[API 文件大小] 处理请求出错:", error);
+    res.status(500).json({ error: "服务器在扫描文件大小时遇到问题。" });
+  }
+});
+
+// [GET] 计算图片 MD5
 app.get("/api/image-md5", async (req, res) => {
   const imageWebPath = req.query.path;
   console.log(`请求: [GET] /api/image-md5?path=${imageWebPath}`);

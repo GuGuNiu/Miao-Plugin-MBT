@@ -1,11 +1,13 @@
 /* ===================================== */
 /* == GuTools - 仓库转移视图样式 == */
 /* ===================================== */
+#stockroomGoPaneView{
+    background-color: #fff0f5;
+}
 
 #stockroomGoPaneView .stockroom-go-layout-wrapper {
     display: flex;
     gap: 20px;
-    background-color: #fff0f5;
     padding: 20px;
     height: 100%;
     overflow: hidden;
