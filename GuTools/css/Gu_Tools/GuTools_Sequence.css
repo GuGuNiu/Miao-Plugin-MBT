@@ -1,11 +1,13 @@
 /* ===================================== */
 /* == GuTools - 序号管理视图样式 == */
 /* ===================================== */
+#sequencePaneView {
+    background-color: #e6fffa;
+}
 
 #sequencePaneView .sequence-layout-wrapper {
     display: flex;
     gap: 20px;
-    background-color: #e6fffa;
     padding: 20px;
     height: 100%;
     overflow: hidden;

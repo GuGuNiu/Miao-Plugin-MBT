@@ -12,10 +12,13 @@
     --shadow-gold-medium: rgba(184, 134, 11, 0.35);
 }
 
+#storageboxCalibrationPaneView {
+    background-color: var(--gold-light);
+}
+
 #storageboxCalibrationPaneView .sbxcal-layout-wrapper {
     display: flex;
     gap: 20px;
-    background-color: var(--gold-light);
     padding: 20px;
     height: 100%;
     overflow: hidden;

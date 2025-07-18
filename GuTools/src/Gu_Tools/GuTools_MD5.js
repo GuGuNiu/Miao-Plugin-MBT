@@ -139,7 +139,7 @@ async function startMd5Calibration() {
     displayToast("MD5 校准开始...", UI_CLASSES.INFO, 2000);
 
     try {
-        // 1. 获取实际存在的文件列表 (galleryImages 包含相对路径和原始大小写 storageBox)
+        // 获取实际存在的文件列表
         let allPhysicalFilesData = AppState.galleryImages || [];
         if (allPhysicalFilesData.length === 0) {
             console.log("MD5 校准: 图库数据为空 尝试重新获取...");
@@ -179,7 +179,7 @@ async function startMd5Calibration() {
         DOM.md5TotalFilesChecked.textContent = totalFiles.toString();
         DOM.md5ProgressBar.max = totalFiles;
 
-        // 2. 准备 JSON 数据 (userDataPaths 存储完整路径 含原始大小写 storageBox)
+        // 准备 JSON 数据
         const jsonEntries = AppState.userData || [];
         const jsonPathToMd5Map = new Map(); // key: 完整 Web 路径 value: md5
         const jsonPathSet = AppState.userDataPaths; // 直接使用已构建好的 Set
@@ -194,7 +194,7 @@ async function startMd5Calibration() {
             }
         });
 
-        // 3. 遍历文件列表 进行比较
+        // 遍历文件列表 进行比较
         let mismatchedCount = 0;
         let checkedFileCount = 0;
         let filesNotInJsonCountLocal = 0;
@@ -334,7 +334,7 @@ async function fixAllMd5Mismatches() {
     let failedCount = 0;
     const updatedUserDataList = JSON.parse(JSON.stringify(AppState.userData));
 
-    md5Mismatches.forEach(mismatch => { // mismatch.path 是完整 Web 路径
+    md5Mismatches.forEach(mismatch => { 
         const fullWebPath = mismatch.path;
         const segments = fullWebPath.startsWith('/') ? fullWebPath.substring(1).split('/') : fullWebPath.split('/');
         if (segments.length < 2) { console.warn(`MD5 修复: 无法从路径解析仓库和相对路径 ${fullWebPath}`); failedCount++; return; }
@@ -395,7 +395,7 @@ async function fixAllMd5Mismatches() {
 }
 
 
-// --- 事件监听器设置 MD5 Checker Specific ---
+// --- 事件监听器设置 ---
 /**
  * 设置 MD5 校准视图内的事件监听器
  */

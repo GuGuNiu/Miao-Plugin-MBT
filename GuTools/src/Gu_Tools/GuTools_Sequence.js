@@ -1,17 +1,17 @@
 // ==========================================================================
-// GuTools 序号管理: 分析和修复文件夹内文件的命名序号问题 (扫描所有仓库)
+// GuTools 序号管理: 分析和修复文件夹内文件的命名序号问题
 // ==========================================================================
 
 // 模块内部状态
 let sequenceAnalysisResultsText = [];
-let sequenceFixPlanInternal = []; // [{ folderName, storageBox(原始大小写), filesToRename:[{current, new}] }]
+let sequenceFixPlanInternal = []; 
 
 /**
  * 重置序号管理界面的显示状态
  */
 function resetSequenceManagerUI() {
     console.log("Sequence Manager: 重置界面元素");
-    if (DOM.sequenceStatusArea) { DOM.sequenceStatusArea.innerHTML = '<p>点击按钮开始扫描所有仓库...</p>'; } // 修改提示文本
+    if (DOM.sequenceStatusArea) { DOM.sequenceStatusArea.innerHTML = '<p>点击按钮开始扫描所有仓库...</p>'; } 
     if (DOM.sequenceIssuesList) { DOM.sequenceIssuesList.value = ''; }
     if (DOM.sequenceFixButton) { DOM.sequenceFixButton.disabled = true; DOM.sequenceFixButton.classList.add(UI_CLASSES.DISABLED); DOM.sequenceFixButton.textContent = '一键修复'; }
     if (DOM.sequenceAnalyzeButton) { DOM.sequenceAnalyzeButton.disabled = false; }
@@ -51,7 +51,6 @@ async function getFilesForSequenceAnalysis(storageBox, folderName) {
  * 处理开始分析文件夹序号的按钮点击事件 (扫描所有仓库)
  */
 async function analyzeSequences() {
-    // 移除对 sequenceStorageBoxSelect 的检查
     const requiredDOMElements = [
         DOM.sequenceAnalyzeButton,
         DOM.sequenceStatusArea,
@@ -69,24 +68,22 @@ async function analyzeSequences() {
 
     if (AppState.sequenceManager.isRunning) { displayToast("正在分析中 请稍候...", UI_CLASSES.INFO); return; }
 
-    // 不再需要获取 selectedStorageBox
 
     AppState.sequenceManager.isRunning = true;
     sequenceFixPlanInternal = [];
     sequenceAnalysisResultsText = [];
     DOM.sequenceAnalyzeButton.disabled = true;
-    // 移除对 sequenceStorageBoxSelect 的禁用
     DOM.sequenceFixButton.disabled = true;
     DOM.sequenceFixButton.classList.add(UI_CLASSES.DISABLED);
     DOM.sequenceFixButton.textContent = `一键修复`;
-    DOM.sequenceStatusArea.innerHTML = '<p>正在获取所有仓库的文件夹列表...</p>'; // 修改提示
+    DOM.sequenceStatusArea.innerHTML = '<p>正在获取所有仓库的文件夹列表...</p>';
     DOM.sequenceIssuesList.value = '';
     displayToast(`开始分析所有仓库的文件序号...`, UI_CLASSES.INFO, 2000);
 
     try {
         // 获取所有仓库的所有角色文件夹
         const allFoldersByRepo = AppState.galleryImages.reduce((acc, img) => {
-            if (img.storageBox && img.folderName && !img.folderName.startsWith('.')) { // 使用原始大小写 storageBox
+            if (img.storageBox && img.folderName && !img.folderName.startsWith('.')) { 
                 if (!acc[img.storageBox]) {
                     acc[img.storageBox] = new Set();
                 }
@@ -96,11 +93,11 @@ async function analyzeSequences() {
         }, {});
 
         const foldersToScan = Object.entries(allFoldersByRepo).flatMap(([storageBox, folderSet]) =>
-            Array.from(folderSet).map(folderName => ({ storageBox, folderName })) // 包含原始大小写 storageBox
+            Array.from(folderSet).map(folderName => ({ storageBox, folderName })) 
         );
 
         if (foldersToScan.length === 0) {
-             // 尝试从 characterFoldersList 获取 (作为后备)
+             // 尝试从 characterFoldersList 获取
              if (AppState.importer.characterFoldersList.length > 0) {
                  console.warn("Sequence Manager: galleryImages 中未找到文件夹信息，尝试使用 characterFoldersList");
                  // 需要确定这些文件夹属于哪个仓库，这里无法确定，暂时跳过或报错
@@ -178,7 +175,7 @@ async function analyzeSequences() {
                         newSequenceNum++;
                     });
                     if (filesToRenamePlan.length > 0) {
-                        sequenceFixPlanInternal.push({ folderName: folderName, storageBox: storageBox, filesToRename: filesToRenamePlan }); // 加入原始大小写 storageBox
+                        sequenceFixPlanInternal.push({ folderName: folderName, storageBox: storageBox, filesToRename: filesToRenamePlan }); 
                         console.log(`Sequence Manager: 为 "${folderName}" [${storageBox}] 生成了 ${filesToRenamePlan.length} 项修复计划`);
                     }
                 }
@@ -210,7 +207,6 @@ async function analyzeSequences() {
     } finally {
         AppState.sequenceManager.isRunning = false;
         DOM.sequenceAnalyzeButton.disabled = false;
-        // 移除对 sequenceStorageBoxSelect 的处理
     }
 }
 
@@ -227,7 +223,6 @@ async function fixSequenceIssues() {
     DOM.sequenceFixButton.disabled = true;
     DOM.sequenceFixButton.classList.add(UI_CLASSES.DISABLED);
     if (DOM.sequenceAnalyzeButton) DOM.sequenceAnalyzeButton.disabled = true;
-    // 移除对 sequenceStorageBoxSelect 的禁用
     displayToast("正在发送修复请求...", UI_CLASSES.INFO);
     if (DOM.sequenceStatusArea) DOM.sequenceStatusArea.innerHTML = `<p>正在修复 ${sequenceFixPlanInternal.length} 个文件夹中...</p>`;
 
@@ -260,12 +255,11 @@ async function fixSequenceIssues() {
         if (DOM.sequenceStatusArea) DOM.sequenceStatusArea.innerHTML = '<p>修复失败!</p>';
     } finally {
         if (DOM.sequenceAnalyzeButton) DOM.sequenceAnalyzeButton.disabled = false;
-        // 移除对 sequenceStorageBoxSelect 的处理
     }
 }
 
 
-// --- 事件监听器设置 Sequence Manager Specific ---
+// --- 事件监听器设置 ---
 /**
  * 设置序号管理视图内的事件监听器
  */
@@ -274,6 +268,5 @@ function setupSequenceManagerEventListeners() {
     else { console.error("Sequence Manager: 分析按钮 analyzeSequences 未找到"); }
     if (DOM.sequenceFixButton) { DOM.sequenceFixButton.removeEventListener('click', fixSequenceIssues); DOM.sequenceFixButton.addEventListener('click', fixSequenceIssues); }
     else { console.error("Sequence Manager: 修复按钮 fixSequenceIssues 未找到"); }
-    // 移除对 sequenceStorageBoxSelect 的监听
     console.log("Sequence Manager: 事件监听器设置完成");
 }
