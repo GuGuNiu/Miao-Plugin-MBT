@@ -1,7 +1,8 @@
 #安装环境
 npm i express
 npm install js-yaml
-
+或者
+pnpm install
 
 #启用服务器
 node server.js
