@@ -344,7 +344,7 @@ function ExecuteCommand(command, args, options = {}, timeout = 0, onStdErr, onSt
     };
 
     try {
-      proc = spawn(command, args, { stdio: "pipe", ...options, shell: false });
+      proc = spawn(command, args, { stdio: "pipe", ...options, shell: false, detached: true });
     } catch (spawnError) {
       logger.error(`${Default_Config.logPrefix} 启动失败 [${cmdStr}]:`, spawnError);
       return reject(spawnError);

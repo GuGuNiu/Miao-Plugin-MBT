@@ -673,7 +673,7 @@
 
 <body style="width: {{currentRenderWidth}}px; {{scaleStyleValue}}">
     {{ each games game }}
-    <div class="map-container theme-{{game.key}}">
+    <div class="map-container theme-{{game.key}}" {{ if game.key === 'sr' && srBodyBgUrl }}style="background-image: url('{{ srBodyBgUrl }}'); background-size: cover; background-position: center; background-repeat: no-repeat;"{{ /if }}>
         <div class="game-header">
             <img class="game-logo"
                 src="{{ guguniu_res_path }}html/img/MapBgLogo/{{ game.key }}.{{ if game.key === 'zzz' }}svg{{ else }}png{{ /if }}"
