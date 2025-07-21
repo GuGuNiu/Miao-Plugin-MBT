@@ -3389,14 +3389,14 @@
             "parentFolder": "茜特菈莉",
             "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "d8441417803583ff0cf0ab05816067a3",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-19T07:29:05.800Z",
+        "timestamp": "2025-07-19T09:08:08.909Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -11049,14 +11049,14 @@
             "parentFolder": "坎蒂丝",
             "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "b15694c19fabdf38014000b97ecbfb46",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-19T07:29:05.800Z",
+        "timestamp": "2025-07-19T09:08:36.462Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -22409,14 +22409,14 @@
             "parentFolder": "夜兰",
             "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "edd782e3a9faa7db4b31134161d7402c",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-19T07:29:05.801Z",
+        "timestamp": "2025-07-19T09:08:15.391Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -22467,16 +22467,16 @@
         "attributes": {
             "filename": "夜兰Gu14.webp",
             "parentFolder": "夜兰",
-            "isPx18": true,
+            "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "a581523422ed5743ec1d2fab9db87b1b",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-19T07:29:05.801Z",
+        "timestamp": "2025-07-19T09:08:23.894Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -23729,14 +23729,14 @@
             "parentFolder": "钟离",
             "isPx18": false,
             "isRx18": false,
-            "layout": "normal",
+            "layout": "fullscreen",
             "isEasterEgg": false,
             "isAiImage": false,
             "isBan": false,
             "md5": "9d62d0076c3627fe3f52bbecd8e5c8c9",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-07-19T07:29:05.801Z",
+        "timestamp": "2025-07-19T09:07:58.286Z",
         "sourceGallery": "gs-character"
     },
     {
