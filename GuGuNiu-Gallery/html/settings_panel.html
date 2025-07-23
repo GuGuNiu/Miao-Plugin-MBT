@@ -361,6 +361,11 @@
       opacity: 0.9;
     }
 
+    .setting-row-group .setting-item.item-tuku::before,
+    .setting-row-group .setting-item.item-pfl::before {
+      display: none;
+    }
+
     .feature-toggle-group {
       display: flex;
       flex-wrap: wrap;
@@ -564,7 +569,10 @@
     .item-intercept {
       --item-color: #ff38de;
     }
-
+    
+    .item-official-splash {
+      --item-color: #00bcd4;
+    }
 
     .item-left {
       display: flex;
@@ -797,6 +805,16 @@
             </div>
             <div class="item-right">
               <span class="value value-level-custom">{{ renderScale.value }}%</span>
+            </div>
+          </div>
+          <div class="setting-item item-official-splash">
+            <div class="item-left">
+              <span class="label">官方立绘同步</span>
+              <div class="value-description">同步原神内角色的新皮肤立绘</div>
+              <div class="command-example">#咕咕牛设置官方立绘[开启/关闭]</div>
+            </div>
+            <div class="item-right">
+              <span class="value {{ officialSplashArtStatus.class }}">{{ officialSplashArtStatus.text }}</span>
             </div>
           </div>
           <div class="setting-item item-intercept">

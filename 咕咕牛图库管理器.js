@@ -108,6 +108,7 @@ const Default_Config = {
   Ai: true,
   EasterEgg: true,
   layout: true,
+  OfficialSplashArt: false,
   Execution_Mode: 'Batch',
   Load_Level: 1,
   SleeperAgent_switch: false,
@@ -1098,6 +1099,7 @@ class MiaoPluginMBT extends plugin {
       Ai: parseBoolLike(configData.Ai, Default_Config.Ai),
       EasterEgg: parseBoolLike(configData.EasterEgg, Default_Config.EasterEgg),
       layout: parseBoolLike(configData.layout, Default_Config.layout),
+      OfficialSplashArt: parseBoolLike(configData.OfficialSplashArt, Default_Config.OfficialSplashArt),
       cronUpdate: configData.cronUpdate || Default_Config.cronUpdate,
       Execution_Mode: configData.Execution_Mode || Default_Config.Execution_Mode,
       Load_Level: configData.Load_Level ?? Default_Config.Load_Level,
@@ -1128,6 +1130,7 @@ class MiaoPluginMBT extends plugin {
         Ai: configData.Ai ? 1 : 0,
         EasterEgg: configData.EasterEgg ? 1 : 0,
         layout: configData.layout ? 1 : 0,
+        OfficialSplashArt: configData.OfficialSplashArt ? 1 : 0,
         cronUpdate: configData.cronUpdate,
         Execution_Mode: configData.Execution_Mode,
         Load_Level: configData.Load_Level,
@@ -2174,6 +2177,44 @@ class MiaoPluginMBT extends plugin {
       } else noTarget++;
     }
     await Promise.all(promises);
+    
+    if (MiaoPluginMBT.MBTConfig.OfficialSplashArt) {
+      //logger.info(`${Default_Config.logPrefix}检测到官方立绘同步已开启，开始同步...`);
+      let copiedOfficialCount = 0;
+      const sourceBaseDir = MiaoPluginMBT.paths.target.miaoGsAliasDir;
+      const targetBaseDir = MiaoPluginMBT.paths.target.miaoChar;
+      try {
+        const charDirs = await fsPromises.readdir(sourceBaseDir, { withFileTypes: true });
+        for (const charDir of charDirs) {
+          if (charDir.isDirectory()) {
+            const characterName = charDir.name;
+            const imgsPath = path.join(sourceBaseDir, characterName, 'imgs');
+            try {
+              const imgFiles = await fsPromises.readdir(imgsPath);
+              for (const imgFile of imgFiles) {
+                if (imgFile.toLowerCase().startsWith('splash') && imgFile.toLowerCase().endsWith('.webp')) {
+                  const sourceFile = path.join(imgsPath, imgFile);
+                  const destDir = path.join(targetBaseDir, characterName);
+                  const destFile = path.join(destDir, imgFile);
+                  await fsPromises.mkdir(destDir, { recursive: true });
+                  await fsPromises.copyFile(sourceFile, destFile);
+                  copiedOfficialCount++;
+                }
+              }
+            } catch (imgReadError) {
+              if (imgReadError.code !== 'ENOENT') {
+                 logger.warn(`${Default_Config.logPrefix}读取官方立绘目录 ${imgsPath} 失败:`, imgReadError.code);
+              }
+            }
+          }
+        }
+        //logger.info(`${Default_Config.logPrefix}官方立绘同步完成，共同步 ${copiedOfficialCount} 张。`);
+      } catch (baseReadError) {
+        if (baseReadError.code !== 'ENOENT') {
+           logger.error(`${Default_Config.logPrefix}读取官方立绘根目录 ${sourceBaseDir} 失败:`, baseReadError);
+        }
+      }
+    }
   }
 
   static async CleanTargetCharacterDirs(targetPluginDir, logger = global.logger || console) {
@@ -2188,7 +2229,7 @@ class MiaoPluginMBT extends plugin {
           const characterPath = entryPath;
           try {
             const files = await fsPromises.readdir(characterPath);
-            const filesToDelete = files.filter((f) => f.toLowerCase().includes("gu") && f.toLowerCase().endsWith(".webp"));
+            const filesToDelete = files.filter((f) => (f.toLowerCase().includes("gu") || f.toLowerCase().startsWith("splash")) && f.toLowerCase().endsWith(".webp"));
             for (const fileToDelete of filesToDelete) {
               const filePath = path.join(characterPath, fileToDelete);
               try { await fsPromises.unlink(filePath); cleanedCount++; }
@@ -6731,6 +6772,7 @@ class MiaoPluginMBT extends plugin {
         aiStatus: { text: (config?.Ai ?? true) ? "已开启" : "已关闭", class: (config?.Ai ?? true) ? "value-enabled" : "value-disabled", },
         easterEggStatus: { text: (config?.EasterEgg ?? true) ? "已开启" : "已关闭", class: (config?.EasterEgg ?? true) ? "value-enabled" : "value-disabled", },
         layoutStatus: { text: (config?.layout ?? true) ? "已开启" : "已关闭", class: (config?.layout ?? true) ? "value-enabled" : "value-disabled", },
+        officialSplashArtStatus: { text: (config?.OfficialSplashArt ?? false) ? "已开启" : "已关闭", class: (config?.OfficialSplashArt ?? false) ? "value-enabled" : "value-disabled",},
         executionMode: { text: isSerialMode ? "已开启" : "已关闭", class: isSerialMode ? 'value-enabled' : 'value-disabled', },
         loadLevel: {
           containerClass: isSerialMode ? '' : 'item-disabled',
@@ -6782,7 +6824,7 @@ class MiaoPluginMBT extends plugin {
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${Default_Config.logPrefix}只有主人才能使用设置命令哦~`);
 
-    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|低负载|负载等级|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i);
+    const match = e.msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|官方立绘|净化等级|低负载|负载等级|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i);
     if (!match) return false;
 
     const featureKey = match[1].toLowerCase();
@@ -6792,6 +6834,7 @@ class MiaoPluginMBT extends plugin {
       case 'ai':
       case '彩蛋':
       case '横屏':
+      case '官方立绘':
         if (valueRaw !== '开启' && valueRaw !== '关闭') {
           return e.reply(`无效操作: [${featureKey}] 只能用 '开启' 或 '关闭'。`, true);
         }
@@ -6800,6 +6843,7 @@ class MiaoPluginMBT extends plugin {
         if (featureKey === 'ai') { configKey = "Ai"; featureName = "Ai 图"; }
         else if (featureKey === '彩蛋') { configKey = "EasterEgg"; featureName = "彩蛋图"; }
         else if (featureKey === '横屏') { configKey = "layout"; featureName = "横屏图"; }
+        else if (featureKey === '官方立绘') { configKey = "OfficialSplashArt"; featureName = "官方立绘同步"; }
         await this.handleSwitchCommand(e, configKey, featureName, enable);
         break;
 
@@ -7878,7 +7922,7 @@ const GUGUNIU_RULES = [
   { reg: /^#咕咕牛测速$/i, fnc: "ManualTestProxies" },
   { reg: /^#执行咕咕牛更新$/i, fnc: "ManualRunUpdateTask", permission: "master" },
   { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: "ShowSettingsPanel" },
-  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|净化等级|低负载|负载等级|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
+  { reg: /^#咕咕牛设置(ai|彩蛋|横屏|官方立绘|净化等级|低负载|负载等级|原图拦截|渲染精度)(开启|关闭|[0-9]+)$/i, fnc: "HandleSettingsCommand", permission: "master" },
 ];
 
 
