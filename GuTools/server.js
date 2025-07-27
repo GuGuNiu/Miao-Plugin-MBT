@@ -325,16 +325,26 @@ const safelyReadJsonFile = async (filePath, fileDesc) => {
 };
 
 /**
- * 安全地写入 JSON 文件
+ * 写入SON 文件并自定义数组序列化格式
  * @param {string} filePath 要写入的文件路径
- * @param {any} data 要写入的数据 通常是数组或对象
- * @param {string} fileDesc 文件描述 用于日志
- * @returns {Promise<void>}
- * @throws {Error} 如果写入失败
+ * @param {any} data 要写入的数据
+ * @param {string} fileDesc 文件描述
  */
 const safelyWriteJsonFile = async (filePath, data, fileDesc) => {
   try {
-    const jsonString = JSON.stringify(data, null, 4);
+    const replacer = (key, value) => {
+      if (key === 'secondaryTags' && Array.isArray(value)) {
+        if (value.length === 0) return [];
+        return `__ONE_LINE_ARRAY_START__${JSON.stringify(value)}__ONE_LINE_ARRAY_END__`;
+      }
+      return value;
+    };
+
+    let jsonString = JSON.stringify(data, replacer, 4);
+    jsonString = jsonString.replace(/"__ONE_LINE_ARRAY_START__(.*?)__ONE_LINE_ARRAY_END__"/g, (match, arrayContent) => {
+        return arrayContent.replace(/\\"/g, '"');
+    });
+
     const dir = path.dirname(filePath);
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(filePath, jsonString, "utf-8");
@@ -1056,8 +1066,9 @@ app.post("/api/import-image", async (req, res) => {
         isEasterEgg: attributes.isEasterEgg || false,
         isAiImage: attributes.isAiImage || false,
         isBan: false,
-        md5: null, // MD5 应由后端计算或后续校准
+        md5: null,
         Downloaded_From: attributes.Downloaded_From || "none",
+        secondaryTags: Array.isArray(attributes.secondaryTags) ? attributes.secondaryTags : [],
       },
       timestamp: new Date().toISOString(),
       sourceGallery: determinedGallery,

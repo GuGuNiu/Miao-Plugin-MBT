@@ -54,6 +54,32 @@ const UI_CLASSES = {
   LOADING: "loading",
 };
 
+const SECONDARY_TAGS_LIST = [
+
+  // 🧑‍💼 职业制服类
+  "制服", "女仆装", "护士", "教师", "情趣内衣", "连身裙", "超短裙",
+
+  // 🎓 校园类服装
+  "JK", "体操服", "死库水", "和服", "运动服", "校服",
+  
+  // 👗 礼服/特殊场景服饰类
+  "兔女郎", "旗袍", "泳装", "花嫁", "礼服", "婚纱",
+ 
+  // 🧦 装饰与配件类
+  "过膝袜", "白丝", "黑丝", "网袜", "小腿袜", "吊带袜", "半身袜",  "高跟", "眼镜", "颈环", "猫耳", "兔耳",
+ 
+  // 🔥 身体特征类
+  "巨乳", "贫乳", "酥胸", "翘臀", "美腿", "绝对领域", "腋下", "肚脐", "腹肌", "裸足", "美背",
+  "脚底", "洁白肌肤", "乳晕", "乳沟", "露出", "生殖器",
+  
+  // 🧒 人物类型类
+  "萝莉", "猫娘", "少女", "御姐", "熟女", "魅魔", "大小姐", "男娘", "正太", "TS", "扶她", "沃尔玛购物袋",
+
+  // ❤  情绪/表情/行为类
+  "发情", "淫纹", "挑逗"
+
+];
+
 const PAGINATION = {
   PLUGIN_GALLERY_ITEMS_PER_PAGE: 8,
   FILE_SIZE_ITEMS_PER_PAGE: 8,
@@ -343,6 +369,21 @@ function cacheDomElements() {
   DOM.fsPrevPageBtn = document.getElementById('fsPrevPageBtn');
   DOM.fsNextPageBtn = document.getElementById('fsNextPageBtn');
   DOM.fsPageInfo = document.getElementById('fsPageInfo');
+
+  // --- GuTools - 二级标签编辑器视图 ---
+  DOM.secondaryTagEditorPaneView = document.getElementById('secondaryTagEditorPaneView');
+  DOM.stePreviewImage = document.getElementById('stePreviewImage');
+  DOM.stePreviewPlaceholder = document.getElementById('stePreviewPlaceholder');
+  DOM.steImageInfo = document.getElementById('steImageInfo');
+  DOM.steSearchInput = document.getElementById('steSearchInput');
+  DOM.steSearchWrapper = document.getElementById('steSearchWrapper');
+  DOM.steProgressDisplay = document.getElementById('steProgressDisplay');
+  DOM.stePredefinedTags = document.getElementById('stePredefinedTags');
+  DOM.steManualTags = document.getElementById('steManualTags');
+  DOM.steTagList = document.getElementById('steTagList');
+  DOM.steTagInput = document.getElementById('steTagInput');
+  DOM.steSkipButton = document.getElementById('steSkipButton');
+  DOM.steSaveButton = document.getElementById('steSaveButton');
 
   // --- Data List 面板 ---
   DOM.dataListPane = document.getElementById("dataListPane");
@@ -869,7 +910,6 @@ function populateStorageBoxSelect(
     selectElement.appendChild(allOption);
   }
   AppState.availableStorageBoxes.forEach((boxName) => {
-    // 使用原始大小写
     const option = document.createElement("option");
     option.value = boxName; // 值和显示都用原始大小写
     option.textContent = boxName;
@@ -972,9 +1012,8 @@ async function initializeApplication() {
       imagesResult.status === "fulfilled" &&
       Array.isArray(imagesResult.value)
     ) {
-      // --- 处理 galleryImages 保留原始大小写 storageBox 存储相对路径 ---
       AppState.galleryImages = imagesResult.value.map((img, index) => {
-        let currentStorageBox = img.storageBox || img.storagebox; // 优先驼峰 兼容小写
+        let currentStorageBox = img.storageBox || img.storagebox; 
         let originalUrlPath = img.urlPath || "";
         let relativePath = "";
 
@@ -985,7 +1024,6 @@ async function initializeApplication() {
           );
           currentStorageBox = "unknown";
         }
-        // 保留原始大小写
 
         let pathWithoutRepo = originalUrlPath;
         if (typeof pathWithoutRepo !== "string") pathWithoutRepo = "";
@@ -1022,7 +1060,6 @@ async function initializeApplication() {
           storagebox: undefined, // 移除小写字段
         };
       });
-      // --- 处理结束 ---
 
       galleryImagesLoaded = true;
       AppState.availableStorageBoxes = [
@@ -1067,13 +1104,11 @@ async function initializeApplication() {
       Array.isArray(userdataResult.value)
     ) {
       AppState.userData = userdataResult.value;
-      // --- 正确构建 userDataPaths (使用原始大小写 storageBox) ---
       console.log(
         "Core: 开始构建 userDataPaths (包含原始大小写 storageBox 的完整 Web 路径)..."
       );
       AppState.userDataPaths = new Set();
       AppState.userData.forEach((e, index) => {
-        // 假设 JSON 中存的是小写 storagebox 需要找到对应的大小写
         const originalCaseStorageBox = AppState.availableStorageBoxes.find(
           (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
         );
@@ -1083,7 +1118,6 @@ async function initializeApplication() {
             .replace(/\/{2,}/g, "/");
           AppState.userDataPaths.add(fullPath);
         } else if (e.path && e.storagebox) {
-          // 后备：如果找不到原始大小写 用小写
           const fullPath = `/${e.storagebox}/${e.path}`
             .replace(/\\/g, "/")
             .replace(/\/{2,}/g, "/");
@@ -1098,7 +1132,6 @@ async function initializeApplication() {
           );
         }
       });
-      // --- 构建结束 ---
       userDataLoaded = true;
       console.log(
         `核心数据: 加载 ${AppState.userData.length} 用户数据 已缓存 ${AppState.userDataPaths.size} 个有效路径`
@@ -1199,6 +1232,7 @@ async function initializeApplication() {
       { name: 'setupStockroomGoEventListeners', file: 'GuTools_StockroomGo.js' },
       { name: 'setupStorageboxCalibratorEventListeners', file: 'GuTools_StorageboxCal.js' }, 
       { name: 'setupFileSizeCheckerEventListeners', file: 'GuTools_FileSize.js' },
+      { name: 'setupSecondaryTagEditorEventListeners', file: 'GuTools_SecondaryTagEditor.js' },
       { name: "setupDataListEventListeners", file: "Data_List.js" },
       { name: "setupPluginGalleryEventListeners", file: "Plugin_Gallery.js" },
       { name: "setupGlobalEventListeners", file: "Ui_Controls.js" },
@@ -1214,6 +1248,9 @@ async function initializeApplication() {
       }
     }
     console.log("核心: 事件监听器设置调用完成");
+    if (typeof initializeImageViewer === 'function') {
+      initializeImageViewer();
+  }
 
     if (typeof updateGalleryStatusDisplay === "function")
       updateGalleryStatusDisplay();
@@ -1247,6 +1284,100 @@ async function initializeApplication() {
     );
     document.body.classList.add("initialization-error");
   }
+}
+
+// 图片放大镜 
+function initializeImageViewer() {
+  let currentZoom = 1;
+  const ZOOM_SPEED = 0.1;
+  let isPanning = false;
+  let startPos = { x: 0, y: 0 };
+  let currentTranslate = { x: 0, y: 0 };
+
+  const viewer = DOM.modalImageViewer;
+  const overlay = DOM.imageModalOverlay;
+  const closeButton = DOM.modalCloseButton;
+
+  if (!viewer || !overlay || !closeButton) {
+      console.warn("图片放大镜核心DOM元素缺失，功能将不可用。");
+      return;
+  }
+
+  // 重置缩放和平移状态
+  const resetZoomState = () => {
+      currentZoom = 1;
+      currentTranslate = { x: 0, y: 0 };
+      viewer.style.transform = 'translate(0px, 0px) scale(1)';
+      viewer.style.cursor = 'grab';
+  };
+
+  // 打开放大镜
+  window.openImageViewer = (imageSrc) => {
+      resetZoomState();
+      viewer.src = imageSrc;
+      overlay.classList.remove('hidden');
+  };
+  
+  // 关闭放大镜
+  const closeImageViewer = () => {
+      overlay.classList.add('hidden');
+  };
+
+  // 滚轮缩放事件
+  overlay.addEventListener('wheel', (e) => {
+      if (overlay.classList.contains('hidden')) return;
+      e.preventDefault();
+      
+      const rect = viewer.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      
+      const delta = e.deltaY > 0 ? -ZOOM_SPEED : ZOOM_SPEED;
+      const oldZoom = currentZoom;
+      currentZoom = Math.max(0.5, Math.min(currentZoom + delta, 5));
+      
+      const zoomRatio = currentZoom / oldZoom;
+      
+      currentTranslate.x = offsetX - (offsetX - currentTranslate.x) * zoomRatio;
+      currentTranslate.y = offsetY - (offsetY - currentTranslate.y) * zoomRatio;
+
+      viewer.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentZoom})`;
+  }, { passive: false });
+
+  // 鼠标拖动平移事件
+  viewer.addEventListener('mousedown', (e) => {
+      if (overlay.classList.contains('hidden')) return;
+      e.preventDefault();
+      isPanning = true;
+      startPos = { x: e.clientX - currentTranslate.x, y: e.clientY - currentTranslate.y };
+      viewer.style.cursor = 'grabbing';
+  });
+
+  const stopPanning = () => {
+      isPanning = false;
+      if (viewer) viewer.style.cursor = 'grab';
+  };
+
+  overlay.addEventListener('mousemove', (e) => {
+      if (!isPanning || overlay.classList.contains('hidden')) return;
+      e.preventDefault();
+      currentTranslate.x = e.clientX - startPos.x;
+      currentTranslate.y = e.clientY - startPos.y;
+      viewer.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentZoom})`;
+  });
+  
+  overlay.addEventListener('mouseup', stopPanning);
+  overlay.addEventListener('mouseleave', stopPanning);
+
+  // 关闭事件
+  closeButton.addEventListener('click', closeImageViewer);
+  overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+          closeImageViewer();
+      }
+  });
+
+  console.log("图片放大镜功能已初始化。");
 }
 
 // --- DOMContentLoaded 监听器 ---

@@ -57,9 +57,35 @@ class ProcessManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.2";
+const Version = "5.0.3";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
+const SECONDARY_TAGS_LIST = [
+
+  // 🧑‍💼 职业制服类
+  "制服", "女仆装", "护士", "教师", "情趣内衣", "连身裙", "超短裙",
+
+  // 🎓 校园类服装
+  "JK", "体操服", "死库水", "和服", "运动服", "校服",
+  
+  // 👗 礼服/特殊场景服饰类
+  "兔女郎", "旗袍", "泳装", "花嫁", "礼服", "婚纱",
+ 
+  // 🧦 装饰与配件类
+  "过膝袜", "白丝", "黑丝", "网袜", "小腿袜", "吊带袜", "半身袜",  "高跟", "眼镜", "颈环", "猫耳", "兔耳",
+ 
+  // 🔥 身体特征类
+  "巨乳", "贫乳", "酥胸", "翘臀", "美腿", "绝对领域", "腋下", "肚脐", "腹肌", "裸足", "美背",
+  "脚底", "洁白肌肤", "乳晕", "乳沟", "露出", "生殖器",
+  
+  // 🧒 人物类型类
+  "萝莉", "猫娘", "少女", "御姐", "熟女", "魅魔", "大小姐", "男娘", "正太", "TS", "扶她", "沃尔玛购物袋",
+
+  // ❤  情绪/表情/行为类
+  "发情", "淫纹", "挑逗"
+
+];
+
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
 const Default_Config = {
   Main_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT/",    // 一号库 (热门五星)
@@ -78,7 +104,6 @@ const Default_Config = {
     { name: "UiGhproxy", priority: 28, testUrlPrefix: `https://ui.ghproxy.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ui.ghproxy.cc/" },
     { name: "GhApi999", priority: 30, testUrlPrefix: `https://gh.api.99988866.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.api.99988866.xyz/" },
     { name: "GhproxyGo", priority: 35, testUrlPrefix: `https://ghproxy.1888866.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.1888866.xyz/" },
-    { name: "CrazyForksProxy", priority: 38, testUrlPrefix: `https://ghproxy-go.example/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy-go.example/" },
     { name: "KGitHub", priority: 42, testUrlPrefix: `https://kgithub.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://kgithub.com/" },
     { name: "HubNUAA", priority: 45, testUrlPrefix: `https://hub.nuaa.cf/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.nuaa.cf/" },
     { name: "HubFGit", priority: 48, testUrlPrefix: `https://hub.fgit.ml/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.fgit.ml/" },
@@ -5295,7 +5320,62 @@ class MiaoPluginMBT extends plugin {
       const targetIdentifierRaw = (isAdding ? addMatch[1] : delMatch[1]).trim();
       const actionVerb = isAdding ? "封禁" : "解禁";
 
-      if (!targetIdentifierRaw) return e.reply(`要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb}角色名+编号`, true);
+      if (!targetIdentifierRaw) return e.reply(`要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb} 角色名+编号 或 #咕咕牛封禁 <二级标签>`, true);
+
+      if (isAdding && SECONDARY_TAGS_LIST.includes(targetIdentifierRaw)) {
+        const tagToBan = targetIdentifierRaw;
+        const imagesToBan = MiaoPluginMBT._imgDataCache.filter(item =>
+          item.attributes?.secondaryTags?.includes(tagToBan)
+        );
+
+        if (imagesToBan.length === 0) {
+          return e.reply(`图库里没有带 [${tagToBan}] 标签的图片，啥也没封禁。`, true);
+        }
+
+        let alreadyBannedCount = 0;
+        let newlyBannedCount = 0;
+        
+        imagesToBan.forEach(item => {
+          const relativePath = item.path.replace(/\\/g, "/");
+          if (MiaoPluginMBT._userBanSet.has(relativePath)) {
+            alreadyBannedCount++;
+          } else {
+            MiaoPluginMBT._userBanSet.add(relativePath);
+            newlyBannedCount++;
+          }
+        });
+
+        if (newlyBannedCount > 0) {
+          const saved = await MiaoPluginMBT.SaveUserBans(this.logger);
+          if (!saved) {
+            imagesToBan.forEach(item => {
+              const relativePath = item.path.replace(/\\/g, "/");
+              if (!MiaoPluginMBT._userBanSet.has(relativePath)) { // 确保只移除本次新加的
+                 MiaoPluginMBT._userBanSet.delete(relativePath);
+              }
+            });
+            await this.ReportError(e, `封禁二级标签 ${tagToBan}`, new Error("保存封禁列表失败"));
+            return true;
+          }
+          
+          setImmediate(async () => {
+            await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, this.logger);
+            if (MiaoPluginMBT.MBTConfig.TuKuOP) {
+              await MiaoPluginMBT.SyncCharacterFolders(this.logger);
+            }
+          });
+          
+          let replyMsg = `操作完成！\n成功封禁了 ${newlyBannedCount} 张带有 [${tagToBan}] 标签的图片。`;
+          if (alreadyBannedCount > 0) {
+            replyMsg += `\n另外有 ${alreadyBannedCount} 张之前已经被封禁了。`;
+          }
+          await e.reply(replyMsg, true);
+          
+        } else {
+          await e.reply(`所有带 [${tagToBan}] 标签的图片（共 ${alreadyBannedCount} 张）之前都已经被封禁啦。`, true);
+        }
+        return true; 
+      }
 
       const parsedId = MiaoPluginMBT.ParseRoleIdentifier(targetIdentifierRaw);
       if (!parsedId) return e.reply("格式好像不对哦，应该是 角色名+编号 (例如：花火1)", true);
@@ -5454,6 +5534,7 @@ class MiaoPluginMBT extends plugin {
         scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
         gameData: finalGameData,
         tags: allTags,
+        secondaryTags: SECONDARY_TAGS_LIST,
       };
 
       try {
@@ -5550,6 +5631,57 @@ class MiaoPluginMBT extends plugin {
         }
       }
 
+    } else if (SECONDARY_TAGS_LIST.includes(inputName)) {
+      // 逻辑分支1.1：处理二级标签查询
+      const tagName = inputName;
+      const filteredImages = MiaoPluginMBT._imgDataCache.filter(item => 
+        item.attributes?.secondaryTags?.includes(tagName)
+      );
+
+      if (filteredImages.length === 0) {
+        return e.reply(`没有找到任何带 [${tagName}] 二级标签的图片哦。`, true);
+      }
+      
+      const ITEMS_PER_BATCH = 28;
+      const totalItems = filteredImages.length;
+      const totalBatches = Math.ceil(totalItems / ITEMS_PER_BATCH);
+
+      let waitMessage = `收到！正在查找 [${tagName}] 二级标签的图片，共 ${totalItems} 张...`;
+      if (totalBatches > 1) {
+        waitMessage = `带 [${tagName}] 二级标签 (共 ${totalItems} 张)，将分 ${totalBatches} 批发送，请稍候...`;
+      }
+      await e.reply(waitMessage, true);
+
+      for (let batchNum = 1; batchNum <= totalBatches; batchNum++) {
+        await checkSystemHealth(e, logger);
+
+        const startIndex = (batchNum - 1) * ITEMS_PER_BATCH;
+        const currentBatchData = filteredImages.slice(startIndex, startIndex + ITEMS_PER_BATCH);
+        const makeForwardMsgTitle = `[${tagName}]标签图库 (${batchNum}/${totalBatches})`;
+        const forwardListBatch = [];
+        const firstNodeText = batchNum === 1
+          ? `[查看]${tagName}]标签 (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`
+          : `[查看]${tagName}]标签(续) (${startIndex + 1}-${Math.min(startIndex + currentBatchData.length, totalItems)} / ${totalItems} 张)`;
+        forwardListBatch.push(firstNodeText);
+
+        for (const item of currentBatchData) {
+          const relativePath = item.path.replace(/\\/g, "/");
+          const fileName = path.basename(relativePath);
+          const absolutePath = await MiaoPluginMBT.FindImageAbsolutePath(relativePath);
+          const messageNode = [];
+          if (absolutePath) {
+            try { await fsPromises.access(absolutePath, fs.constants.R_OK); messageNode.push(segment.image(`file://${absolutePath}`)); }
+            catch (accessErr) { messageNode.push(`[图片无法加载: ${fileName}]`); }
+          } else { messageNode.push(`[图片文件丢失: ${fileName}]`); }
+          messageNode.push(`${item.characterName} - ${fileName}`);
+          forwardListBatch.push(messageNode);
+        }
+
+        if (forwardListBatch.length > 1) {
+          const forwardMsg = await common.makeForwardMsg(e, forwardListBatch, makeForwardMsgTitle);
+          allForwardMessages.push(forwardMsg);
+        }
+      }
     } else if (gameNameKeys.includes(inputName)) {
       // 逻辑分支2：处理游戏名查询
       const gameNameCN = inputName;

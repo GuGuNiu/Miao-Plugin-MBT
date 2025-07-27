@@ -84,6 +84,10 @@
             --games-section-bg: #fff0e0;
             --games-section-title: #ff9838;
             --games-section-deco: #ff7b00;
+
+            --secondary-tag-bg: #e0f2f1;
+            --secondary-tag-text: #00796b;
+            --secondary-tag-deco: #004d40;
         }
 
         * {
@@ -317,6 +321,11 @@
             --title-color: #8e24aa;
             --deco-color: #ab47bc;
         }
+        
+        .secondary-tags .title-wrapper {
+            --title-color: var(--secondary-tag-deco);
+            --deco-color: var(--secondary-tag-text);
+        }
 
         .example-text {
             font-size: 13px;
@@ -380,6 +389,11 @@
         .tags .item {
             background-color: var(--misc-tag-bg);
             color: var(--misc-tag-text);
+        }
+        
+        .secondary-tags .item {
+            background-color: var(--secondary-tag-bg);
+            color: var(--secondary-tag-text);
         }
 
         .footer {
@@ -488,6 +502,23 @@
                         {{ /each }}
                     </div>
                 </div>
+                
+                {{ if secondaryTags && secondaryTags.length > 0 }}
+                <div class="section secondary-tags">
+                    <div class="section-header">
+                        <div class="title-wrapper">
+                            <div class="title-deco"></div>
+                            <h2>二级标签</h2>
+                        </div>
+                        <span class="example-text">#咕咕牛查看<二级标签></span>
+                    </div>
+                    <div class="item-list">
+                        {{ each secondaryTags tagName }}
+                        <span class="item">{{ tagName }}</span>
+                        {{ /each }}
+                    </div>
+                </div>
+                {{ /if }}
             </main>
 
             <footer class="footer">Miao-Plugin-MBT v{{ pluginVersion }}</footer>

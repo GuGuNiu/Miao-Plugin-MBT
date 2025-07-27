@@ -7,7 +7,7 @@
  * @param {'generator' | 'import' | 'md5' | 'sequence' | 'json_calibration' | 'stockroom_go' | 'storagebox_calibration'} targetMode 要切换到的目标模式
  */
 async function switchGuToolMode(targetMode) {
-  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check"];
+  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check", "secondary_tag_editor"];
   if (!validModes.includes(targetMode)) {
     console.error(`无效的 GuTools 模式: ${targetMode}`);
     return;
@@ -22,6 +22,7 @@ async function switchGuToolMode(targetMode) {
     stockroom_go: DOM.stockroomGoPaneView,
     storagebox_calibration: DOM.storageboxCalibrationPaneView,
     file_size_check: DOM.fileSizePaneView,
+    secondary_tag_editor: DOM.secondaryTagEditorPaneView,
   };
 
   const targetView = views[targetMode];
@@ -168,11 +169,20 @@ async function switchGuToolMode(targetMode) {
           await fetchUserData();
         }
         break;
+
       case "file_size_check":
         if (typeof initializeFileSizeView === "function") {
           initializeFileSizeView();
         } else {
           console.error("GuTools FileSize: initializeFileSizeView 未定义！");
+        }
+        break;
+        
+      case "secondary_tag_editor":
+        if (typeof initializeSecondaryTagEditorView === "function") {
+          initializeSecondaryTagEditorView();
+        } else {
+          console.error("GuTools SecondaryTagEditor: initializeSecondaryTagEditorView 未定义！");
         }
         break;
       default:
