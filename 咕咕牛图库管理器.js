@@ -60,32 +60,6 @@ const YunzaiPath = path.resolve(__dirname, "..", "..");
 const Version = "5.0.3";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
-const SECONDARY_TAGS_LIST = [
-
-  // 🧑‍💼 职业制服类
-  "制服", "女仆装", "护士", "教师", "情趣内衣", "连身裙", "超短裙",
-
-  // 🎓 校园类服装
-  "JK", "体操服", "死库水", "和服", "运动服", "校服",
-  
-  // 👗 礼服/特殊场景服饰类
-  "兔女郎", "旗袍", "泳装", "花嫁", "礼服", "婚纱",
- 
-  // 🧦 装饰与配件类
-  "过膝袜", "白丝", "黑丝", "网袜", "小腿袜", "吊带袜", "半身袜",  "高跟", "眼镜", "颈环", "猫耳", "兔耳",
- 
-  // 🔥 身体特征类
-  "巨乳", "贫乳", "酥胸", "翘臀", "美腿", "绝对领域", "腋下", "肚脐", "腹肌", "裸足", "美背",
-  "脚底", "洁白肌肤", "乳晕", "乳沟", "露出", "生殖器",
-  
-  // 🧒 人物类型类
-  "萝莉", "猫娘", "少女", "御姐", "熟女", "魅魔", "大小姐", "男娘", "正太", "TS", "扶她", "沃尔玛购物袋",
-
-  // ❤  情绪/表情/行为类
-  "发情", "淫纹", "挑逗"
-
-];
-
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
 const Default_Config = {
   Main_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT/",    // 一号库 (热门五星)
@@ -711,6 +685,7 @@ class MiaoPluginMBT extends plugin {
     isLocked: false,
     resolver: null,
   };
+  static _secondaryTagsCache = []; 
 
   static paths = {
     YunzaiPath: YunzaiPath,
@@ -727,6 +702,7 @@ class MiaoPluginMBT extends plugin {
     configFilePath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "GalleryConfig.yaml"),
     imageDataPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "ImageData.json"),
     banListPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "banlist.json"),
+    secondaryTagsPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "SecondTags.json"),
 
     tempPath: path.join(YunzaiPath, "temp", "html", "GuGuNiu"),
 
@@ -1014,6 +990,7 @@ class MiaoPluginMBT extends plugin {
         }
 
         const aliasLoaded = await MiaoPluginMBT.LoadAliasData(true, logger);
+        await MiaoPluginMBT.LoadSecondaryTags(true, logger);
         await MiaoPluginMBT.LoadWavesRoleData(true, logger);
         if (!MiaoPluginMBT._aliasData?.combined) {
           logger.warn(`${Default_Config.logPrefix}[警告] 加载别名数据失败`);
@@ -1182,6 +1159,33 @@ class MiaoPluginMBT extends plugin {
       }
       MiaoPluginMBT._configSaveLock.isLocked = false;
       MiaoPluginMBT._configSaveLock.resolver = null;
+    }
+  }
+
+  static async LoadSecondaryTags(forceReload = false, logger = global.logger || console) {
+    if (MiaoPluginMBT._secondaryTagsCache?.length > 0 && !forceReload) return true;
+  
+    const tagsPath = MiaoPluginMBT.paths.secondaryTagsPath;
+    try {
+      const content = await fsPromises.readFile(tagsPath, "utf8");
+      const jsonData = JSON.parse(content);
+      if (typeof jsonData === 'object' && jsonData !== null) {
+        // 将所有分类的标签合并成一个扁平的数组
+        const allTags = Object.values(jsonData).flat();
+        MiaoPluginMBT._secondaryTagsCache = Object.freeze(allTags);
+        logger.info(`${Default_Config.logPrefix}成功加载 ${allTags.length} 个二级标签。`);
+        return true;
+      } else {
+        throw new Error("JSON data is not a valid object.");
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        logger.warn(`${Default_Config.logPrefix}SecondTags.json 未找到，二级标签相关功能将受限。`);
+      } else {
+        logger.error(`${Default_Config.logPrefix}读取或解析 SecondTags.json 失败:`, error);
+      }
+      MiaoPluginMBT._secondaryTagsCache = Object.freeze([]);
+      return false;
     }
   }
 
@@ -5322,7 +5326,7 @@ class MiaoPluginMBT extends plugin {
 
       if (!targetIdentifierRaw) return e.reply(`要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb} 角色名+编号 或 #咕咕牛封禁 <二级标签>`, true);
 
-      if (isAdding && SECONDARY_TAGS_LIST.includes(targetIdentifierRaw)) {
+      if (isAdding && MiaoPluginMBT._secondaryTagsCache.includes(targetIdentifierRaw)) {
         const tagToBan = targetIdentifierRaw;
         const imagesToBan = MiaoPluginMBT._imgDataCache.filter(item =>
           item.attributes?.secondaryTags?.includes(tagToBan)
@@ -5534,7 +5538,7 @@ class MiaoPluginMBT extends plugin {
         scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
         gameData: finalGameData,
         tags: allTags,
-        secondaryTags: SECONDARY_TAGS_LIST,
+        secondaryTags: MiaoPluginMBT._secondaryTagsCache, 
       };
 
       try {
@@ -5547,8 +5551,8 @@ class MiaoPluginMBT extends plugin {
         if (imageBuffer) await e.reply(imageBuffer);
         else throw new Error("生成帮助图片失败");
       } catch (err) {
-        //logger.error(` 生成图片失败:`, err);
-        //await e.reply("生成查看助手图片时遇到问题，请稍后再试。");
+        logger.error(` 生成图片失败:`, err);
+        await e.reply("生成查看助手图片时遇到问题，请稍后再试。");
       }
       return true;
     }

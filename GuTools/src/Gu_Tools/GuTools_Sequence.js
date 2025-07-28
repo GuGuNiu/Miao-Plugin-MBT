@@ -23,7 +23,7 @@ function resetSequenceManagerUI() {
 
 /**
  * 获取指定仓库 指定文件夹的文件列表 用于序号分析
- * @param {string} storageBox 仓库名称 (原始大小写)
+ * @param {string} storageBox 仓库名称 
  * @param {string} folderName 要获取内容的文件夹名称
  * @returns {Promise<Array<string>>} 文件名数组
  * @throws {Error} 如果无法获取文件列表
@@ -116,7 +116,7 @@ async function analyzeSequences() {
 
         // 遍历所有仓库的所有文件夹进行分析
         for (let i = 0; i < totalFolders; i++) {
-            const { storageBox, folderName } = foldersToScan[i]; // 获取仓库和文件夹名 (原始大小写)
+            const { storageBox, folderName } = foldersToScan[i]; // 获取仓库和文件夹名 
             DOM.sequenceStatusArea.innerHTML = `<p>检查 (${i + 1}/${totalFolders}): ${folderName} <br> [${storageBox}]</p>`;
 
             let filesInFolder = [];

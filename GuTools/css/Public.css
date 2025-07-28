@@ -171,9 +171,9 @@ body {
 
 #app-logo {
   display: block;
-  max-width: 85%;
+  max-width: 100%;
   height: auto;
-  margin: 0 auto 35px auto;
+  margin: 0 auto 30px auto;
   flex-shrink: 0;
   filter: drop-shadow(2px 3px 3px rgba(0, 0, 0, 0.1));
 }

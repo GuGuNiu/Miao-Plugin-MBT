@@ -8,6 +8,8 @@ const fs = require("fs").promises;
 const path = require("path");
 const yaml = require("js-yaml");
 const crypto = require("crypto");
+const sharp = require("sharp");
+const favicon = require('serve-favicon');
 
 const app = express();
 const port = 3000;
@@ -22,6 +24,8 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set([
 ]);
 const IMGTEMP_DIRECTORY_NAME = "imgtemp";
 const USER_DATA_FOLDER_NAME = "GuGuNiu-Gallery";
+const THUMBNAIL_DIRECTORY_NAME = "thumbnails";
+const THUMBNAIL_WIDTH = 200;
 const DEFAULT_GALLERY_CONFIG = { TuKuOP: 1, PFL: 0 };
 const MAIN_GALLERY_FOLDERS = [
   "gs-character",
@@ -29,6 +33,15 @@ const MAIN_GALLERY_FOLDERS = [
   "zzz-character",
   "waves-character",
 ];
+
+// --- 全局缓存与索引 ---
+const _physicalPathIndex = new Map();
+const _preScannedData = {
+  galleryImages: [],
+  pluginImages: [],
+  tempImages: [],
+  characterFolders: new Set(),
+};
 
 // --- 环境检测与路径设置 ---
 console.log("🐂 GuGuNiu Tools Backend: 环境检测启动...");
@@ -72,6 +85,9 @@ const USER_DATA_DIRECTORY = path.join(
   USER_DATA_FOLDER_NAME
 );
 const IMGTEMP_DIRECTORY = path.join(GU_TOOLS_DIR, IMGTEMP_DIRECTORY_NAME);
+const THUMBNAIL_DIRECTORY = ENV_MODE === 'local' 
+    ? path.join(GU_TOOLS_DIR, THUMBNAIL_DIRECTORY_NAME) 
+    : path.join(USER_DATA_DIRECTORY, THUMBNAIL_DIRECTORY_NAME);
 const IMG_DIRECTORY = path.join(GU_TOOLS_DIR, "img");
 const INTERNAL_USER_DATA_FILE = path.join(
   USER_DATA_DIRECTORY,
@@ -116,6 +132,7 @@ console.log(`主数据文件: ${INTERNAL_USER_DATA_FILE}`);
 console.log(`外数据文件: ${EXTERNAL_USER_DATA_FILE}`);
 console.log(`配置文件: ${GALLERY_CONFIG_FILE}`);
 console.log(`临时图片目录: ${IMGTEMP_DIRECTORY}`);
+console.log(`缩略图缓存目录: ${THUMBNAIL_DIRECTORY}`);
 console.log("扫描仓库列表:");
 REPO_ROOTS.forEach((repo) => console.log(`  - ${repo.name}: ${repo.path}`));
 console.log("外部插件扫描路径:");
@@ -498,6 +515,42 @@ Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS).forEach(
 console.log("--- 静态服务配置完毕 ---");
 
 // --- API 端点 ---
+
+// [GET] /api/thumbnail/* - 动态生成并缓存缩略图
+app.get('/api/thumbnail/*', async (req, res) => {
+  const imageWebPath = req.params[0];
+  if (!imageWebPath || imageWebPath.includes('..')) {
+    return res.status(400).send('无效的图片路径');
+  }
+
+  const sourcePhysicalPath = await resolvePhysicalPath(imageWebPath);
+
+  if (!sourcePhysicalPath) {
+    return res.status(404).send('原始图片未找到');
+  }
+  
+  const cacheKey = crypto.createHash('md5').update(sourcePhysicalPath).digest('hex') + '.webp';
+  const thumbnailPath = path.join(THUMBNAIL_DIRECTORY, cacheKey);
+
+  try {
+    // 尝试直接从缓存提供文件
+    await fs.access(thumbnailPath);
+    return res.sendFile(thumbnailPath);
+  } catch {
+    // 缓存未命中
+    try {
+      await sharp(sourcePhysicalPath)
+        .resize({ width: THUMBNAIL_WIDTH })
+        .webp({ quality: 100 })
+        .toFile(thumbnailPath);
+      
+      res.sendFile(thumbnailPath);
+    } catch (generationError) {
+      console.error(`[缩略图] 生成 ${imageWebPath} 的缩略图失败:`, generationError);
+      res.status(500).send('缩略图生成失败');
+    }
+  }
+});
 
 // [GET] 获取主图库图片列表
 app.get("/api/images", async (req, res) => {
@@ -1592,19 +1645,13 @@ app.get("/api/image-md5", async (req, res) => {
       .json({ error: `文件未找到或路径无法解析: ${imageWebPath}` });
   }
   console.log(`  > 物理路径: ${physicalPath}`);
-  if (!(await isFile(physicalPath))) {
-    console.error(`  > 错误: 路径不是文件: ${physicalPath}`);
-    return res.status(400).json({ error: `路径不是有效文件: ${physicalPath}` });
-  }
-  const calculateMd5 = (filePath) => {
-    return new Promise((resolve, reject) => {
-      const hash = crypto.createHash("md5");
-      const stream = require("fs").createReadStream(filePath);
-      stream.on("data", (data) => hash.update(data));
-      stream.on("end", () => resolve(hash.digest("hex")));
-      stream.on("error", (err) => reject(err));
-    });
+  
+  const calculateMd5 = async (filePath) => {
+      // 直接读取文件到缓冲区，然后计算哈希，避免流处理问题
+      const fileBuffer = await fs.readFile(filePath);
+      return crypto.createHash('md5').update(fileBuffer).digest('hex');
   };
+  
   try {
     const md5 = await calculateMd5(physicalPath);
     console.log(`  > MD5 计算成功: ${md5}`);
@@ -1616,13 +1663,65 @@ app.get("/api/image-md5", async (req, res) => {
       .json({ success: false, error: `计算 MD5 出错: ${error.message}` });
   }
 });
+// [GET] 获取二级标签列表
+app.get("/api/secondary-tags", async (req, res) => {
+  console.log("请求: [GET] /api/secondary-tags");
+  const tagsFilePath = path.join(USER_DATA_DIRECTORY, "SecondTags.json"); 
+  try {
+    const content = await fs.readFile(tagsFilePath, "utf-8");
+    res.json(JSON.parse(content));
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.warn("[API 二级标签] SecondTags.json 文件未找到。", `路径: ${tagsFilePath}`);
+      res.status(404).json({ error: `二级标签配置文件未找到。` });
+    } else {
+      console.error("[API 二级标签] 读取或解析文件出错:", error);
+      res.status(500).json({ error: "服务器读取二级标签配置时出错。" });
+    }
+  }
+});
+
+// [GET] 更新二级标签
+app.post("/api/update-secondary-tags", async (req, res) => {
+  console.log("请求: [POST] /api/update-secondary-tags");
+  const newTagsData = req.body;
+
+  if (typeof newTagsData !== 'object' || newTagsData === null) {
+    return res.status(400).json({ success: false, error: "请求数据格式无效。" });
+  }
+
+  const tagsFilePath = path.join(USER_DATA_DIRECTORY, "SecondTags.json");
+  const backupFilePath = path.join(USER_DATA_DIRECTORY, "SecondTags.json.bak");
+
+  try {
+    // 安全起见，先备份
+    try {
+      await fs.copyFile(tagsFilePath, backupFilePath);
+      console.log(`  > 已成功备份 SecondTags.json 到 ${backupFilePath}`);
+    } catch (backupError) {
+      if (backupError.code !== 'ENOENT') { // 如果源文件不存在，则无需备份
+        console.warn(`  > 备份 SecondTags.json 失败:`, backupError);
+      }
+    }
+
+    // 写入新数据
+    const jsonString = JSON.stringify(newTagsData, null, 2);
+    await fs.writeFile(tagsFilePath, jsonString, "utf-8");
+    console.log(`  > 成功更新 SecondTags.json`);
+
+    res.json({ success: true, message: "二级标签更新成功！" });
+  } catch (error) {
+    console.error("[API 二级标签] 更新文件时出错:", error);
+    res.status(500).json({ success: false, error: "服务器写入二级标签配置时出错。" });
+  }
+});
 
 // --- 服务前端页面和脚本 ---
-console.log(`[静态服务] 根路径 '/' -> ${GU_TOOLS_DIR}`);
+app.use(favicon(path.join(GU_TOOLS_DIR, 'favicon.ico')));
 app.use("/", express.static(GU_TOOLS_DIR));
 
 app.get("/", async (req, res) => {
-  const htmlPath = path.join(GU_TOOLS_DIR, "JSON生成器.html");
+  const htmlPath = path.join(GU_TOOLS_DIR, "咕咕牛Web管理.html");
   if (await pathExists(htmlPath)) {
     res.sendFile(htmlPath);
   } else {
@@ -1641,7 +1740,106 @@ app.get("/searchworker.js", async (req, res) => {
   }
 });
 
-// --- 服务器启动前的最后检查和准备 ---
+// --- 启动前检查和索引构建 ---
+const buildFileSystemIndex = async () => {
+    console.log("--- [索引服务] 开始构建文件系统索引... ---");
+    const startTime = Date.now();
+    
+    // 索引主图库
+    for (const repo of REPO_ROOTS) {
+        if (!(await pathExists(repo.path)) || !(await isDirectory(repo.path))) continue;
+        for (const gallery of MAIN_GALLERY_FOLDERS) {
+            const galleryBasePath = path.join(repo.path, gallery);
+            const images = await findGalleryImagesRecursively(repo.name, repo.path, gallery, galleryBasePath);
+            for (const img of images) {
+                _preScannedData.galleryImages.push(img);
+                _preScannedData.characterFolders.add(img.folderName);
+                const physicalPath = path.join(repo.path, img.urlPath);
+                // 新格式: /Miao-Plugin-MBT/gs-character/...
+                _physicalPathIndex.set(`${img.storageBox}/${img.urlPath}`, physicalPath);
+                // 旧格式: /gs-character/...
+                _physicalPathIndex.set(img.urlPath, physicalPath);
+            }
+        }
+    }
+    _preScannedData.galleryImages.sort((a, b) => (a.storageBox + a.urlPath).localeCompare(b.storageBox + a.urlPath));
+
+    // 索引插件图片
+    for (const [key, basePath] of Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS)) {
+      const pluginImages = await findPluginImages(key, basePath);
+      for(const img of pluginImages) {
+        _preScannedData.pluginImages.push(img);
+        const physicalPath = path.join(basePath, img.relativePath);
+        const webPathKey = img.webPath.substring(1); // 移除开头的 /
+        _physicalPathIndex.set(webPathKey, physicalPath);
+      }
+    }
+    _preScannedData.pluginImages.sort((a, b) => (a.webPath || "").localeCompare(b.webPath || ""));
+
+    // 索引临时图片
+    if ((await pathExists(IMGTEMP_DIRECTORY)) && (await isDirectory(IMGTEMP_DIRECTORY))) {
+        const entries = await fs.readdir(IMGTEMP_DIRECTORY, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.isFile() && ALLOWED_IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+                const webPath = `${IMGTEMP_DIRECTORY_NAME}/${entry.name}`;
+                _preScannedData.tempImages.push({ filename: entry.name, path: webPath });
+                _physicalPathIndex.set(webPath, path.join(IMGTEMP_DIRECTORY, entry.name));
+            }
+        }
+    }
+    
+    const duration = Date.now() - startTime;
+    console.log(`--- [索引服务] 索引构建完成！耗时 ${duration}ms ---`);
+    console.log(`  - 主图库: ${_preScannedData.galleryImages.length} 张图片`);
+    console.log(`  - 插件图库: ${_preScannedData.pluginImages.length} 张图片`);
+    console.log(`  - 临时目录: ${_preScannedData.tempImages.length} 张图片`);
+    console.log(`  - 路径索引: ${_physicalPathIndex.size} 条记录`);
+};
+
+const pregenerateThumbnails = async () => {
+  console.log("--- [缩略图服务] 开始后台预生成缩略图... ---");
+  const startTime = Date.now();
+  let generatedCount = 0;
+  let skippedCount = 0;
+  
+  // 使用 Set 确保我们只为每个唯一的物理路径处理一次
+  const uniquePhysicalPaths = new Set(_physicalPathIndex.values());
+  const totalUniqueFiles = uniquePhysicalPaths.size;
+  let processedCount = 0;
+
+  for (const physicalPath of uniquePhysicalPaths) {
+      processedCount++;
+      const cacheKey = crypto.createHash('md5').update(physicalPath).digest('hex') + '.webp';
+      const thumbnailPath = path.join(THUMBNAIL_DIRECTORY, cacheKey);
+
+      try {
+          await fs.access(thumbnailPath);
+          skippedCount++;
+      } catch {
+          try {
+              // 文件不存在，生成它
+              await sharp(physicalPath)
+                  .resize({ width: THUMBNAIL_WIDTH })
+                  .webp({ quality: 90 })
+                  .toFile(thumbnailPath);
+              generatedCount++;
+          } catch (genError) {
+              // 忽略单个文件的生成错误，避免中断整个过程
+              console.error(`[缩略图预生成] 无法为 ${physicalPath} 生成缩略图: ${genError.message}`);
+          }
+      }
+      
+      if (processedCount % 200 === 0) {
+          console.log(`[缩略图预生成] 进度: ${processedCount} / ${totalUniqueFiles}`);
+      }
+  }
+
+  const duration = Date.now() - startTime;
+  console.log(`--- [缩略图服务] 预生成完成！耗时 ${duration}ms ---`);
+  console.log(`  - 新生成: ${generatedCount} 张`);
+  console.log(`  - 已跳过: ${skippedCount} 张 (已缓存)`);
+};
+
 const initializeServer = async () => {
   console.log("--- 服务器启动前检查 ---");
   try {
@@ -1649,6 +1847,8 @@ const initializeServer = async () => {
     console.log(`[启动检查] 用户数据目录 OK: ${USER_DATA_DIRECTORY}`);
     await fs.mkdir(IMGTEMP_DIRECTORY, { recursive: true });
     console.log(`[启动检查] 临时图片目录 OK: ${IMGTEMP_DIRECTORY}`);
+    await fs.mkdir(THUMBNAIL_DIRECTORY, { recursive: true });
+    console.log(`[启动检查] 缩略图缓存目录 OK: ${THUMBNAIL_DIRECTORY}`);
     if (!(await pathExists(EXTERNAL_USER_DATA_FILE))) {
       await fs.writeFile(EXTERNAL_USER_DATA_FILE, "[]", "utf-8");
       console.log(
@@ -1674,6 +1874,9 @@ const initializeServer = async () => {
     } else {
       console.log(`[启动检查] 图库配置文件 OK.`);
     }
+    
+    await buildFileSystemIndex(); // 在此执行索引构建
+
     console.log("--- 启动前检查完毕 ---");
     return true;
   } catch (error) {
@@ -1703,5 +1906,9 @@ app.use((err, req, res, next) => {
     console.log(`👂 正在监听 http://localhost:${port}`);
     console.log(`✨ 服务运行中... 按 Ctrl+C 停止。 ✨`);
     console.log(`====================================================\n`);
+
+    pregenerateThumbnails().catch(err => {
+        console.error("!!! 缩略图预生成过程中发生未捕获的错误:", err);
+    });
   });
 })();

@@ -11,9 +11,7 @@
     padding: 20px;
     height: 100%;
     overflow: hidden;
-    /* 底部圆角与面板视觉统一 */
     border-radius: 0 0 16px 16px;
-    /* 顶部边框颜色匹配背景 */
     border-top: 2px solid #fce7f3;
     box-sizing: border-box;
 }
@@ -199,14 +197,15 @@
 }
 
 /* --- 仓库信息列表 --- */
-
 #stockroomInfoContainer {
     padding: 15px;
     overflow-y: auto;
-    /* height: 100%; */ /* 通常由 flex-grow 控制，避免固定高度 */
+    /* height: 100%; */ /* 由 flex-grow 控制，避免固定高度 */
     flex-grow: 1; /* 确保列表区域填满剩余空间 */
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
     gap: 15px;
     scrollbar-width: thin;
     scrollbar-color: #f472b6 #fdf2f8;
@@ -242,7 +241,7 @@
     cursor: default;
     box-shadow: 0 3px 5px rgba(219, 39, 119, 0.08);
     margin: 0;
-    width: 100%;
+    flex: 0 1 280px;
     box-sizing: border-box;
     overflow: hidden;
 }

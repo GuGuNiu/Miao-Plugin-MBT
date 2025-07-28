@@ -11,9 +11,7 @@
     padding: 20px;
     height: 100%;
     overflow: hidden;
-    /* 底部圆角与面板视觉统一 */
     border-radius: 0 0 16px 16px;
-    /* 顶部边框颜色匹配背景 */
     border-top: 2px solid #d1f7ea;
 }
 
@@ -141,7 +139,6 @@
     font-family: 'Consolas', 'Courier New', monospace;
     white-space: pre-wrap;
     word-break: break-all;
-    /* 禁止用户手动调整文本区域大小 */
     resize: none;
     box-sizing: border-box;
     border: 1px solid;

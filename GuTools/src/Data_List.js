@@ -1,5 +1,5 @@
 // ==========================================================================
-// 数据列表: 管理 "云端Json数据" 页面的功能 包括过滤 虚拟滚动 列表渲染
+// 数据列表: 管理云端Json数据页面的功能 包括过滤 虚拟滚动 列表渲染
 //       和属性编辑模态框
 // ==========================================================================
 
@@ -156,7 +156,7 @@ function setupVirtualScroll(containerElement, data) {
     // 重置样式
     vsInfo.innerSpacer.style.height = '0px';
     vsInfo.visibleItemsContainer.innerHTML = '';
-    vsInfo.visibleItemsContainer.style.transform = 'translateY(0px)';
+    vsInfo.visibleItemsContainer.style.transform = ''; // 移除 transform
 
     // 处理 "无结果" 提示
     let noResultsElement = containerElement.querySelector('.no-results');
@@ -188,9 +188,10 @@ function setupVirtualScroll(containerElement, data) {
         return;
     }
     // 计算并设置总高度
-    const totalHeight = vsInfo.filteredData.length * vsInfo.itemHeight;
+    const totalRows = Math.ceil(vsInfo.filteredData.length / vsInfo.itemsPerRow);
+    const totalHeight = totalRows * vsInfo.itemHeight;
     vsInfo.innerSpacer.style.height = `${totalHeight}px`;
-    console.log(`虚拟滚动: 设置总高度 ${totalHeight}px`);
+    console.log(`虚拟滚动: 设置总高度 ${totalHeight}px for ${totalRows} 行`);
 
     // 异步添加滚动监听并渲染初始项
     requestAnimationFrame(() => {
@@ -215,56 +216,64 @@ function renderVisibleItems() {
     const scrollTop = vsInfo.scrollTop;
     const totalItems = vsInfo.filteredData.length;
     const itemHeight = vsInfo.itemHeight;
-    const buffer = vsInfo.bufferItems;
+    const itemsPerRow = vsInfo.itemsPerRow;
+    const bufferRows = vsInfo.bufferItems;
 
     if (containerHeight <= 0 || totalItems === 0) {
-        vsInfo.visibleItemsContainer.innerHTML = ''; // 清空可见项
+        vsInfo.visibleItemsContainer.innerHTML = '';
         return;
     }
 
-    // 计算需要渲染的起始和结束索引
-    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer);
-    const endIndex = Math.min(totalItems - 1, Math.ceil((scrollTop + containerHeight) / itemHeight) + buffer);
-    const offsetY = startIndex * itemHeight; // 计算 Y 轴偏移
-    vsInfo.visibleItemsContainer.style.transform = `translateY(${offsetY}px)`; // 应用偏移
+    const startRow = Math.max(0, Math.floor(scrollTop / itemHeight) - bufferRows);
+    const endRow = Math.min(
+        Math.ceil(totalItems / itemsPerRow) - 1,
+        Math.ceil((scrollTop + containerHeight) / itemHeight) -1 + bufferRows
+    );
+    
+    const startIndex = startRow * itemsPerRow;
+    const endIndex = Math.min(totalItems - 1, (endRow + 1) * itemsPerRow - 1);
 
-    const visibleData = vsInfo.filteredData.slice(startIndex, endIndex + 1); // 获取可见数据片段
-    const fragment = document.createDocumentFragment(); // 使用文档片段优化性能
+    vsInfo.visibleItemsContainer.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
-    // 为每个可见数据项创建卡片元素
-    visibleData.forEach(entryData => {
-        // 路径和属性是必须的
+    for (let i = startIndex; i <= endIndex; i++) {
+        const entryData = vsInfo.filteredData[i];
         if (!entryData?.path || !entryData.attributes) {
-            console.warn("虚拟滚动: 跳过无效条目:", entryData);
-            return;
+            continue;
         }
+
         const card = document.createElement('div');
         card.className = 'data-item-card';
-        card.dataset.path = entryData.path; // 存储路径 用于事件处理
+        card.dataset.path = entryData.path;
 
-        // 缩略图容器和图片元素
+        const row = Math.floor(i / itemsPerRow);
+        const col = i % itemsPerRow;
+        
+        card.style.position = 'absolute';
+        card.style.top = `${row * itemHeight}px`;
+        card.style.left = `calc(${(100 / itemsPerRow) * col}% + ${col > 0 ? (15 / itemsPerRow) : 0}px)`;
+        card.style.width = `calc(${(100 / itemsPerRow)}% - ${15 * (itemsPerRow - 1) / itemsPerRow}px)`;
+        card.style.height = `${itemHeight - 15}px`;
+
+
         const thumbnailCont = document.createElement('div');
         thumbnailCont.className = 'data-item-thumbnail-container';
         const thumbnailImg = document.createElement('img');
         thumbnailImg.className = 'data-item-thumbnail';
-        thumbnailImg.loading = 'lazy'; // 使用浏览器原生懒加载
+        thumbnailImg.loading = 'lazy';
         thumbnailImg.alt = entryData.attributes.filename || '图片';
         thumbnailCont.appendChild(thumbnailImg);
 
-        // 内容区域容器
         const contentDiv = document.createElement('div');
         contentDiv.className = 'data-item-content';
 
         card.appendChild(thumbnailCont);
         card.appendChild(contentDiv);
 
-        populateCardContent(card, entryData); // 填充卡片内容
+        populateCardContent(card, entryData);
 
         fragment.appendChild(card);
-    });
-
-    // 一次性更新 DOM
-    vsInfo.visibleItemsContainer.innerHTML = '';
+    }
     vsInfo.visibleItemsContainer.appendChild(fragment);
 }
 
@@ -274,7 +283,7 @@ function renderVisibleItems() {
  * @param {object} entryData 该卡片对应的数据条目
  */
 function populateCardContent(cardElement, entryData) {
-    if (!cardElement || !entryData?.attributes) return;
+   if (!cardElement || !entryData?.attributes) return;
 
    const contentContainer = cardElement.querySelector('.data-item-content');
    const thumbnail = cardElement.querySelector('.data-item-thumbnail');
@@ -286,40 +295,37 @@ function populateCardContent(cardElement, entryData) {
 
    const storagebox = entryData.storagebox; 
    const relativePath = entryData.path || '';
-   let imagePath = '/placeholder.png'; 
+   let fullResImagePath = '/placeholder.png'; 
+   let thumbnailPath = '/placeholder.png';
 
    if (storagebox && relativePath) { 
        const originalCaseStorageBox = AppState.availableStorageBoxes.find(
           (box) => box.toLowerCase() === storagebox.toLowerCase() 
        );
        if (originalCaseStorageBox) {
-           imagePath = buildFullWebPath(originalCaseStorageBox, relativePath);
+           fullResImagePath = buildFullWebPath(originalCaseStorageBox, relativePath);
        } else {
-           imagePath = buildFullWebPath(storagebox, relativePath); 
+           fullResImagePath = buildFullWebPath(storagebox, relativePath); 
            console.warn("DataList: populateCardContent - 未找到原始大小写仓库名，使用JSON中的:", storagebox);
        }
-       imagePath = imagePath.replace(/\\/g, '/');
+       fullResImagePath = fullResImagePath.replace(/\\/g, '/');
+       thumbnailPath = `/api/thumbnail${fullResImagePath}`;
    } else {
        console.warn("DataList: 缺少 storagebox 或 path 无法生成缩略图路径:", entryData);
    }
+
+   cardElement.dataset.fullSrc = fullResImagePath;
    
    thumbnail.alt = entryData.attributes.filename || '图片';
-   thumbnail.style.opacity = '1'; // 直接可见
-   thumbnail.style.display = 'block'; // 确保是block，占据空间
-   thumbnailContainer.style.backgroundColor = 'transparent'; 
-   thumbnail.removeAttribute('data-src'); // 移除data-src
-
-//    console.log(`[DIRECT LOAD DEBUG] Setting src for ${entryData.attributes?.filename} to: ${imagePath}`);
-   thumbnail.src = imagePath; 
+   thumbnail.src = thumbnailPath;
 
    thumbnail.onload = function() {
        this.classList.remove('load-error'); 
-       console.log("[DIRECT LOAD DEBUG] Thumbnail onload triggered for:", this.src);
    };
    thumbnail.onerror = function() {
        thumbnailContainer.style.backgroundColor = '#fdd'; 
-       console.error("[DIRECT LOAD DEBUG] Thumbnail onerror triggered for:", this.src); // 注意这里用 this.src
-       this.alt = '图片加载失败';
+       console.error("缩略图加载失败:", this.src);
+       this.alt = '缩略图加载失败';
        this.classList.add('load-error');
    };
    
@@ -340,7 +346,7 @@ function populateCardContent(cardElement, entryData) {
    if (attrs.isAiImage) tagsHtml += '<span class="attr-tag tag-ai">AI</span>';
    if (attrs.isBan) tagsHtml += '<span class="attr-tag tag-ban">⛔封禁</span>';
 
-   const editButtonHtml = `<button class="data-item-edit-btn" data-path="${entryData.path}" data-storagebox="${entryData.storagebox}" title="修改属性">修改</button>`;
+   const editButtonHtml = `<button class="data-item-edit-btn" data-path="${entryData.path}" data-storagebox="${entryData.storagebox}" title="修改属性"></button>`;
 
    const filenameDiv = document.createElement('div');
    filenameDiv.className = 'filename';
@@ -359,7 +365,6 @@ function populateCardContent(cardElement, entryData) {
    sourceGallerySpan.title = '游戏来源';
    sourceGallerySpan.textContent = getGameName(entryData.sourceGallery);
    detailsDiv.appendChild(timestampSpan);
-   detailsDiv.appendChild(document.createTextNode(' ')); 
    detailsDiv.appendChild(sourceGallerySpan);
    contentContainer.appendChild(detailsDiv);
 
@@ -568,6 +573,9 @@ function closeImageModal() {
     if (DOM.imageModalOverlay) {
         DOM.imageModalOverlay.classList.add(UI_CLASSES.HIDDEN); // 隐藏模态框
         if (DOM.modalImageViewer) DOM.modalImageViewer.src = ''; // 清空图片 src
+        if (typeof window.resetImageViewer === 'function') {
+            window.resetImageViewer();
+        }
         document.body.style.overflow = ''; // 恢复背景滚动
         console.log("DataList: 图片放大模态框已关闭");
     }
@@ -576,7 +584,7 @@ function closeImageModal() {
 //  事件监听器设置 Data List Pane 
 
 /**
- * 设置 "云端Json数据" 页面的事件监听器
+ * 设置云端Json数据页面的事件监听器
  */
 function setupDataListEventListeners() {
     // 定义过滤器控件和对应的互斥组 
@@ -657,20 +665,15 @@ function handleDataListItemClick(event) {
         return; 
     }
 
-    const thumbnail = target.closest('.data-item-thumbnail');
-    if (thumbnail && (thumbnail.src || thumbnail.dataset.src) && !thumbnail.classList.contains('load-error')) {
-        let imageUrlToOpen = thumbnail.src;
-        if (!imageUrlToOpen || imageUrlToOpen.endsWith('/placeholder.png') || imageUrlToOpen === window.location.href) { // 防止src是空字符串或当前页面URL
-            imageUrlToOpen = thumbnail.dataset.src;
-        }
-        
-        if (imageUrlToOpen && !imageUrlToOpen.endsWith('/placeholder.png')) {
-            //console.log("[Click Zoom] Attempting to open image modal for:", imageUrlToOpen); // 调试日志
-            openImageModal(imageUrlToOpen);
+    // 检查是否点击了缩略图
+    const card = target.closest('.data-item-card');
+    if (card && card.dataset.fullSrc && !target.closest('.data-item-edit-btn')) {
+        const fullSrc = card.dataset.fullSrc;
+        if (fullSrc && !fullSrc.endsWith('/placeholder.png')) {
+            openImageModal(fullSrc);
         } else {
-           // console.warn("[Click Zoom] Thumbnail clicked, but image URL is invalid or placeholder:", thumbnail.src, thumbnail.dataset.src);
+            console.warn("卡片点击 但完整图片源无效:", fullSrc);
         }
-        return; 
     }
 }
 

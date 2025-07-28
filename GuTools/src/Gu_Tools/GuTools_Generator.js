@@ -106,7 +106,7 @@ function highlightGameTag(galleryCode) {
 
 /**
  * 构建标准化的完整 Web 路径 (使用原始大小写仓库名)
- * @param {string|null|undefined} storageBox 仓库名 (原始大小写)
+ * @param {string|null|undefined} storageBox 仓库名 
  * @param {string|null|undefined} relativePath 相对路径
  * @returns {string|null} 完整路径或 null
  */
@@ -160,7 +160,7 @@ function updateGeneratorSaveButtonState() {
 
 /**
  * 显示选定的图片及其信息 并准备保存
- * @param {object} imageInfo 包含图片信息的对象 { ..., urlPath(相对), storageBox(原始大小写) }
+ * @param {object} imageInfo 包含图片信息的对象 { ..., urlPath(相对), storageBox }
  */
 async function displaySelectedImage(imageInfo) {
   console.log("Generator: displaySelectedImage 接收到:", imageInfo);
@@ -536,7 +536,7 @@ async function saveGeneratedEntry() {
 
 /**
  * 在当前文件夹中查找并显示下一张未保存的图片
- * @param {object} lastSavedImageInfo 刚刚保存的图片信息对象 {..., storageBox(原始大小写), urlPath(相对)}
+ * @param {object} lastSavedImageInfo 刚刚保存的图片信息对象 {..., storageBox, urlPath(相对)}
  */
 function findAndDisplayNextUnsavedImage(lastSavedImageInfo) {
   if (
@@ -779,7 +779,7 @@ function displaySuggestions(results, isFolderList = false) {
                 imgElement.onerror = function() { this.style.display='none'; item.classList.add('load-error'); };
 
                 // --- 修改：直接设置 src，不再使用懒加载 ---
-                imgElement.src = imageWebPath;
+                imgElement.src = `/api/thumbnail${imageWebPath}`;
                 imgElement.loading = 'lazy'; // 仍然可以使用浏览器原生懒加载
                 // --- 结束修改 ---
             }
@@ -860,7 +860,7 @@ function findTopUnsavedFolders(limit = 5) {
 
 /**
  * 显示文件夹建议列表
- * @param {Array<string>} folderIdentifiers "仓库/文件夹" 格式的数组 (原始大小写)
+ * @param {Array<string>} folderIdentifiers "仓库/文件夹" 格式的数组 
  */
 function displayFolderSuggestions(folderIdentifiers) {
   displaySuggestions(folderIdentifiers, true);

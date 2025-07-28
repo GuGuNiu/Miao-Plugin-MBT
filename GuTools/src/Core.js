@@ -57,7 +57,7 @@ const UI_CLASSES = {
 const SECONDARY_TAGS_LIST = [
 
   // 🧑‍💼 职业制服类
-  "制服", "女仆装", "护士", "教师", "情趣内衣", "连身裙", "超短裙",
+  "制服", "女仆装", "护士", "教师", "情趣内衣",
 
   // 🎓 校园类服装
   "JK", "体操服", "死库水", "和服", "运动服", "校服",
@@ -65,6 +65,9 @@ const SECONDARY_TAGS_LIST = [
   // 👗 礼服/特殊场景服饰类
   "兔女郎", "旗袍", "泳装", "花嫁", "礼服", "婚纱",
  
+  // 💧 裙子类
+  "连身裙", "超短裙", "睡裙", "泳裙",
+
   // 🧦 装饰与配件类
   "过膝袜", "白丝", "黑丝", "网袜", "小腿袜", "吊带袜", "半身袜",  "高跟", "眼镜", "颈环", "猫耳", "兔耳",
  
@@ -147,8 +150,9 @@ const AppState = {
       container: null,
       innerSpacer: null,
       visibleItemsContainer: null,
-      itemHeight: 155,
-      bufferItems: 5,
+      itemHeight: 180,
+      itemsPerRow: 3, 
+      bufferItems: 1,
       scrollTop: 0,
       filteredData: [],
       throttleDelay: 16,
@@ -158,10 +162,10 @@ const AppState = {
   isSwitchingTabs: false,
   messageClearTimer: null,
   currentGuToolMode: "generator",
-  galleryImages: [], // 存储所有仓库的主图库图片列表 {..., storageBox(原始大小写), urlPath(相对)}
-  userData: [], // 存储 ImageData.json 内容 {..., storagebox(小写), path(相对)}
-  userDataPaths: new Set(), // 存储 ImageData.json 中图片的完整 Web 路径 (含原始大小写 storageBox)
-  availableStorageBoxes: [], // 存储检测到的可用仓库名称列表 (原始大小写)
+  galleryImages: [], // 存储所有仓库的主图库图片列表
+  userData: [], // 存储 ImageData.json 内容
+  userDataPaths: new Set(), // 存储 ImageData.json 中图片的完整 Web 路径
+  availableStorageBoxes: [], // 存储检测到的可用仓库名称列表
 };
 
 // --- DOM 元素引用缓存 DOM ---
@@ -377,6 +381,7 @@ function cacheDomElements() {
   DOM.steImageInfo = document.getElementById('steImageInfo');
   DOM.steSearchInput = document.getElementById('steSearchInput');
   DOM.steSearchWrapper = document.getElementById('steSearchWrapper');
+  DOM.steSuggestions = document.getElementById('steSuggestions');
   DOM.steProgressDisplay = document.getElementById('steProgressDisplay');
   DOM.stePredefinedTags = document.getElementById('stePredefinedTags');
   DOM.steManualTags = document.getElementById('steManualTags');
@@ -934,7 +939,7 @@ async function initializeApplication() {
   cacheDomElements();
 
   if (DOM.appVersionElement) {
-    DOM.appVersionElement.textContent = "咕咕牛Web管理器 v2.5";
+    DOM.appVersionElement.textContent = "咕咕牛Web管理器 v2.8";
   }
 
   try {
@@ -1310,6 +1315,8 @@ function initializeImageViewer() {
       viewer.style.transform = 'translate(0px, 0px) scale(1)';
       viewer.style.cursor = 'grab';
   };
+  
+  window.resetImageViewer = resetZoomState;
 
   // 打开放大镜
   window.openImageViewer = (imageSrc) => {

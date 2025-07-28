@@ -1,7 +1,6 @@
 /* ===================================== */
-/* == GuTools - 二级标签编辑器样式 v5 == */
+/* == GuTools - 二级标签编辑器样式     == */
 /* ===================================== */
-
 :root {
     --ste-bg: #f0fdfa;
     --ste-border-light: #bbf7d0;
@@ -14,6 +13,9 @@
     --ste-skip-text: #475569;
     --ste-skip-border: #94a3b8;
     --ste-skip-shadow: #64748b;
+    --ste-char-tag-bg: #e0e7ff;
+    --ste-char-tag-text: #3730a3;
+    --ste-char-tag-selected-bg: #4f46e5;
 }
 
 #secondaryTagEditorPaneView {
@@ -85,12 +87,34 @@
 
 #secondaryTagEditorPaneView .ste-image-info {
     flex-shrink: 0;
-    padding: 12px;
+    padding: 10px 12px;
     background-color: #f0fdf4;
     border: 1px solid var(--ste-border-light);
     border-radius: 8px;
     font-size: 0.9em;
     color: var(--ste-text-medium);
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+#secondaryTagEditorPaneView .info-left-content {
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-right: 15px;
+    min-width: 0;
+}
+
+#secondaryTagEditorPaneView .info-right-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-grow: 1;
+    justify-content: flex-end;
+    align-content: flex-start;
+    max-height: 75px;
+    overflow-y: hidden;
 }
 
 #secondaryTagEditorPaneView .ste-info-line {
@@ -104,6 +128,33 @@
     font-weight: 700;
 }
 
+#secondaryTagEditorPaneView #steImageInfo .char-tag-pill {
+    background-color: var(--ste-char-tag-bg);
+    color: var(--ste-char-tag-text);
+    border: 1px solid #c7d2fe;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+#secondaryTagEditorPaneView #steImageInfo .char-tag-pill:hover {
+    background-color: #c7d2fe;
+    border-color: #a5b4fc;
+    transform: translateY(-1px);
+}
+
+#secondaryTagEditorPaneView #steImageInfo .char-tag-pill.selected {
+    background-color: var(--ste-char-tag-selected-bg);
+    color: white;
+    font-weight: 700;
+    border-color: #4338ca;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    transform: scale(1.05);
+    transform-origin: right center;
+}
+
 #secondaryTagEditorPaneView .ste-controls-bar {
     display: flex;
     align-items: center;
@@ -113,7 +164,6 @@
     flex-wrap: wrap;
 }
 
-/* 模式选择器样式 */
 #secondaryTagEditorPaneView .ste-mode-selector {
     position: relative;
     display: flex;
@@ -152,10 +202,11 @@
     z-index: 0;
 }
 
-#secondaryTagEditorPaneView .ste-mode-selector input[id="steModeFill"]:checked ~ .slider {
+#secondaryTagEditorPaneView .ste-mode-selector input[id="steModeFill"]:checked~.slider {
     transform: translateX(0%);
 }
-#secondaryTagEditorPaneView .ste-mode-selector input[id="steModeAll"]:checked ~ .slider {
+
+#secondaryTagEditorPaneView .ste-mode-selector input[id="steModeAll"]:checked~.slider {
     transform: translateX(100%);
 }
 
@@ -165,7 +216,7 @@
 
 .ste-search-wrapper {
     flex-grow: 1;
-    position: relative; 
+    position: relative;
 }
 
 #steSearchInput {
@@ -184,6 +235,7 @@
     outline: none;
     background-color: #fff;
 }
+
 #steSearchInput:disabled {
     background-color: #f1f5f9;
     border-color: #e2e8f0;
@@ -196,8 +248,8 @@
     top: calc(100% + 4px);
     left: 0;
     width: 100%;
-    max-height: 240px; 
-    overflow-y: auto; 
+    max-height: 240px;
+    overflow-y: auto;
     background-color: #ffffff;
     border: 2px solid var(--ste-border-light);
     border-radius: 12px;
@@ -207,10 +259,24 @@
     scrollbar-color: var(--ste-accent) var(--ste-bg);
 }
 
-#steSuggestions::-webkit-scrollbar { width: 8px; }
-#steSuggestions::-webkit-scrollbar-track { background: var(--ste-bg); border-radius: 4px; }
-#steSuggestions::-webkit-scrollbar-thumb { background-color: var(--ste-accent); border-radius: 4px; border: 2px solid var(--ste-bg); }
-#steSuggestions::-webkit-scrollbar-thumb:hover { background-color: var(--ste-text-dark); }
+#steSuggestions::-webkit-scrollbar {
+    width: 8px;
+}
+
+#steSuggestions::-webkit-scrollbar-track {
+    background: var(--ste-bg);
+    border-radius: 4px;
+}
+
+#steSuggestions::-webkit-scrollbar-thumb {
+    background-color: var(--ste-accent);
+    border-radius: 4px;
+    border: 2px solid var(--ste-bg);
+}
+
+#steSuggestions::-webkit-scrollbar-thumb:hover {
+    background-color: var(--ste-text-dark);
+}
 
 #steSuggestions .suggestion-item {
     display: flex;
@@ -261,16 +327,6 @@
 }
 
 .ste-tags-area {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.ste-tags-area:nth-of-type(1) {
-    flex-grow: 1;
-}
-
-.ste-tags-area:nth-of-type(2) {
     flex-shrink: 0;
 }
 
@@ -280,26 +336,70 @@
     color: var(--ste-text-dark);
 }
 
-.ste-predefined-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+.ste-categorized-tags {
+    flex-grow: 1;
     overflow-y: auto;
-    padding: 10px;
-    background-color: #f0fdf4;
-    border-radius: 8px;
-    border: 1px solid var(--ste-border-light);
-    height: 140px;
-    align-content: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 10px;
     scrollbar-width: thin;
     scrollbar-color: var(--ste-accent) var(--ste-bg);
 }
-.ste-predefined-tags::-webkit-scrollbar { width: 8px; }
-.ste-predefined-tags::-webkit-scrollbar-track { background: var(--ste-bg); border-radius: 4px; }
-.ste-predefined-tags::-webkit-scrollbar-thumb { background-color: var(--ste-accent); border-radius: 4px; border: 2px solid var(--ste-bg); }
+
+.ste-categorized-tags::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ste-categorized-tags::-webkit-scrollbar-track {
+    background: var(--ste-bg);
+    border-radius: 4px;
+}
+
+.ste-categorized-tags::-webkit-scrollbar-thumb {
+    background-color: var(--ste-accent);
+    border-radius: 4px;
+    border: 2px solid var(--ste-bg);
+}
+
+.ste-tag-category {
+    margin-bottom: 5px;
+}
+
+.ste-category-title {
+    font-size: 0.9em;
+    font-weight: 700;
+    color: var(--ste-text-medium);
+    margin-bottom: 8px;
+    padding-left: 5px;
+}
+
+.ste-category-tags-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ste-border-dark) var(--ste-border-light);
+}
+
+.ste-category-tags-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.ste-category-tags-wrapper::-webkit-scrollbar-track {
+    background: #ecfdf5;
+    border-radius: 3px;
+}
+
+.ste-category-tags-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--ste-border-dark);
+    border-radius: 3px;
+}
 
 .ste-predefined-tag {
-    padding: 5px 12px;
+    display: inline-block;
+    padding: 5px 14px;
     background-color: #dcfce7;
     color: var(--ste-text-medium);
     border-radius: 15px;
@@ -307,7 +407,7 @@
     transition: all 0.2s ease;
     font-size: 0.9em;
     border: 1px solid transparent;
-    text-align: center;
+    margin-right: 8px;
 }
 
 .ste-predefined-tag:hover {
@@ -369,6 +469,38 @@
     color: var(--ste-text-dark);
 }
 
+.ste-character-tags-container {
+    padding: 10px;
+    background-color: #f0fdf4;
+    border: 1px solid var(--ste-border-light);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ste-character-tag {
+    padding: 5px 12px;
+    background-color: #dcfce7;
+    color: var(--ste-text-medium);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    border: 1px solid transparent;
+}
+
+.ste-character-tag:hover {
+    background-color: #bbf7d0;
+}
+
+.ste-character-tag.selected {
+    background-color: var(--ste-accent);
+    color: white;
+    font-weight: 700;
+    border-color: #059669;
+}
+
 .ste-actions {
     display: flex;
     gap: 15px;
@@ -423,4 +555,178 @@
     transform: none !important;
     cursor: not-allowed !important;
     opacity: 0.8 !important;
+}
+
+
+/* 标签管理 */
+#secondaryTagEditorPaneView .ste-actions .manage-button {
+    flex: 2;
+    background-color: var(--ste-char-tag-bg);
+    color: var(--ste-char-tag-text);
+    border-color: #c7d2fe;
+    box-shadow: 2px 2px 0px #a5b4fc;
+}
+
+#secondaryTagEditorPaneView .ste-actions .manage-button:hover:not(:disabled) {
+    background-color: #c7d2fe;
+    box-shadow: 3px 3px 0px #818cf8;
+    transform: translate(-1px, -1px);
+}
+
+#secondaryTagEditorPaneView .ste-actions .abort-button {
+    flex: 4;
+}
+
+#secondaryTagEditorPaneView .ste-actions .fix-button {
+    flex: 4;
+}
+
+/* 模态框整体布局 */
+#steTagManagementModal .modal-content {
+    max-width: 900px;
+}
+
+#steTagManagementModal .dual-column {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+}
+
+#steTagManagementModal .modal-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#steTagManagementModal .modal-form-section {
+    padding: 20px;
+    border: 1px solid var(--ste-border-light);
+    border-radius: 8px;
+    background-color: var(--ste-bg);
+}
+
+#steTagManagementModal h5 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--ste-text-dark);
+    border-bottom: 2px solid var(--ste-border-light);
+    padding-bottom: 8px;
+}
+
+#steTagManagementModal .modal-form-group {
+    margin-bottom: 12px;
+}
+
+#steTagManagementModal .modal-form-group:last-child {
+    margin-bottom: 0;
+}
+
+#steTagManagementModal label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--ste-text-medium);
+    font-size: 0.9em;
+}
+
+#steTagManagementModal .tool-button-adv {
+    width: 100%;
+    padding: 8px 16px;
+    font-size: 0.95em;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid;
+    transition: all 0.2s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#steTagManagementModal .tool-button-adv.primary {
+    background-color: var(--ste-accent);
+    color: white;
+    border-color: #059669;
+}
+
+#steTagManagementModal .tool-button-adv.primary:hover {
+    background-color: #059669;
+}
+
+#steTagManagementModal #steModalSaveChangesBtn {
+    margin-top: auto;
+}
+
+#steTagManagementModal .delete-section {
+    margin-top: 0;
+    padding-top: 15px;
+    border-top: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#steTagManagementModal .delete-section h5 {
+    color: #c62828;
+    border-bottom-color: #ef9a9a;
+}
+
+#steTagManagementModal .tags-to-delete-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    padding-top: 5px;
+    flex-grow: 1;
+    max-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #fca5a5 #fffbeb;
+}
+
+#steTagManagementModal .tags-to-delete-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#steTagManagementModal .tags-to-delete-container::-webkit-scrollbar-thumb {
+    background-color: #fca5a5;
+    border-radius: 3px;
+}
+
+.ste-deletable-tag-item {
+    display: inline-flex;
+    align-items: center;
+    background-color: #fffbeb;
+    color: #b45309;
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: 1px solid #fcd34d;
+    cursor: grab;
+}
+
+.ste-deletable-tag-item:active {
+    cursor: grabbing;
+}
+
+.ste-deletable-tag-item .ste-tag-remove {
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.ste-deletable-tag-item .ste-tag-remove:hover {
+    color: #f59e0b;
+}
+
+/* SortableJS 拖拽动画样式 */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #a7f3d0;
 }

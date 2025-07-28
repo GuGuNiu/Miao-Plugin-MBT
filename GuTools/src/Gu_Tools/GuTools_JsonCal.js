@@ -4,7 +4,7 @@
 
 // 模块内部状态
 let jsonMissingEntriesInternal = []; // 存储 JSON 中存在但文件缺失的完整条目 {..., storagebox, path}
-let jsonMissingPathsInternal = [];   // 仅存储缺失文件的完整 Web 路径 用于移除操作 /仓库(原始大小写)/分类/...
+let jsonMissingPathsInternal = [];   // 仅存储缺失文件的完整 Web 路径 用于移除操作 /仓库/分类/...
 
 /**
  * 重置 JSON 校准界面的显示状态
