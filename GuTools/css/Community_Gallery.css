@@ -1,0 +1,319 @@
+/* ===================================== */
+/* == 社区图库 (#communityGalleryPane) == */
+/* ===================================== */
+:root {
+    --cgp-bg: #f0fdfa;
+    --cgp-primary-light: #a7f3d0;
+    --cgp-primary-mid: #4db6ac;
+    --cgp-primary-dark: #00695c;
+    --cgp-text: #004d40;
+    --cgp-border: #b2dfdb;
+    --cgp-shadow: rgba(0, 121, 107, 0.4);
+}
+
+#communityGalleryPane {
+    background-color: var(--cgp-bg);
+    padding: 20px;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* --- 主布局容器 --- */
+.cgp-container {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* --- 左侧面板：添加与监控 --- */
+.cgp-left-panel {
+    flex: 0 0 400px; /* 固定宽度 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 350px;
+}
+
+/* --- 右侧面板：已安装列表 --- */
+.cgp-right-panel {
+    flex-grow: 1; /* 占据剩余空间 */
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #ffffff;
+    border: 2px solid var(--cgp-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* --- 添加图库区域 --- */
+.cgp-add-section {
+    flex-shrink: 0;
+    padding: 20px;
+    background-color: #ffffff;
+    border: 2px solid var(--cgp-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cgp-add-section h3 {
+    font-size: 1.3em;
+    color: var(--cgp-text);
+    margin: 0 0 15px 0;
+}
+
+.cgp-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.cgp-input-wrapper::before {
+    content: '🔗';
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5em;
+    color: var(--cgp-primary-mid);
+}
+
+#cgp-repo-input {
+    flex-grow: 1;
+    height: 48px;
+    padding: 10px 18px 10px 50px;
+    border: 2px solid var(--cgp-border);
+    border-radius: 12px;
+    font-size: 1em;
+    background-color: #fafffe;
+}
+
+#cgp-repo-input:focus {
+    border-color: var(--cgp-primary-mid);
+    box-shadow: 0 0 0 3px rgba(77, 182, 172, 0.3);
+    outline: none;
+}
+
+#cgp-add-button {
+    height: 48px;
+    padding: 0 25px;
+    border: none;
+    background: linear-gradient(135deg, var(--cgp-primary-mid), var(--cgp-primary-dark));
+    color: white;
+    font-size: 1em;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.cgp-add-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8em;
+    margin-top: 10px;
+}
+
+.cgp-security-note {
+    color: #5f7a77;
+}
+
+.cgp-discover-link {
+    color: var(--cgp-primary-dark);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* --- 状态与日志区域 --- */
+.cgp-status-panel {
+    flex-grow: 1; /* 占据左侧面板剩余高度 */
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 15px;
+    border: 2px solid var(--cgp-border);
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cgp-status-panel h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+    color: var(--cgp-text);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+#cgp-status-text {
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--cgp-text);
+    text-align: center;
+    min-height: 1.5em;
+    flex-shrink: 0;
+}
+
+#cgp-progress-bar-container {
+    width: 100%;
+    height: 12px;
+    background-color: #dcfce7;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+#cgp-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--cgp-primary-light), var(--cgp-primary-mid));
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+#cgp-log-output {
+    flex-grow: 1;
+    background-color: #f8fdfc;
+    border: 1px solid var(--cgp-border);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.85em;
+    color: #3e5e5a;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    resize: none;
+}
+
+/* --- 已安装图库列表 --- */
+.cgp-right-panel h3 {
+    flex-shrink: 0;
+    font-size: 1.3em;
+    color: var(--cgp-text);
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--cgp-border);
+}
+
+.cgp-gallery-grid {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 5px;
+    align-content: flex-start; /* 确保卡片从顶部开始排列 */
+}
+
+/* --- 图库卡片样式 --- */
+.cgp-gallery-card {
+    background-color: #f8fdfc;
+    border: 1px solid var(--cgp-border);
+    border-radius: 12px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--cgp-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-header::before {
+    content: '';
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cgp-gallery-card[data-status="installed"] .card-header::before { background-color: #2ecc71; }
+.cgp-gallery-card[data-status="update-available"] .card-header::before { background-color: #f1c40f; }
+.cgp-gallery-card[data-status="error"] .card-header::before { background-color: #e74c3c; }
+
+.card-title {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--cgp-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-content {
+    padding: 15px;
+    font-size: 0.9em;
+    color: #3e5e5a;
+    flex-grow: 1;
+}
+
+.card-description {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.card-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85em;
+    color: var(--cgp-primary-dark);
+}
+
+.card-actions {
+    padding: 10px 15px;
+    border-top: 1px solid var(--cgp-border);
+    background-color: #f0fdfa;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.card-action-btn {
+    padding: 6px 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.card-action-btn.primary {
+    background-color: var(--cgp-primary-light);
+    color: var(--cgp-text);
+    border-color: var(--cgp-border);
+}
+
+.card-action-btn.danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+/* --- 空状态占位符 --- */
+.cgp-placeholder {
+    margin: auto;
+    text-align: center;
+    color: var(--cgp-primary-mid);
+}
+
+.cgp-placeholder-icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+}
+
+.cgp-placeholder p {
+    font-size: 1.1em;
+    font-weight: 600;
+}

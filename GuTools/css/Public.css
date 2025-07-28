@@ -84,6 +84,120 @@ body {
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
+  position: relative; /* 为伪元素提供定位上下文 */
+}
+
+/* ===================================== */
+/* == 全局背景幻灯片 == */
+/* ===================================== */
+
+.slideshow-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* --- 图片与动画延迟设置基于每张10秒 --- */
+.slide:nth-child(1) {
+  background-image: url('/img/bg1.jpg');
+  animation-name: crossfade, kenburns-1;
+  animation-duration: 60s, 65s;
+  animation-delay: 0s, 0s;
+}
+
+.slide:nth-child(2) {
+  background-image: url('/img/bg2.jpg');
+  animation-name: crossfade, kenburns-2;
+  animation-duration: 60s, 65s;
+  animation-delay: 10s, 10s;
+}
+
+.slide:nth-child(3) {
+  background-image: url('/img/bg3.jpg');
+  animation-name: crossfade, kenburns-3;
+  animation-duration: 60s, 65s;
+  animation-delay: 20s, 20s;
+}
+
+.slide:nth-child(4) {
+  background-image: url('/img/bg4.jpg');
+  animation-name: crossfade, kenburns-4;
+  animation-duration: 60s, 65s;
+  animation-delay: 30s, 30s;
+}
+
+.slide:nth-child(5) {
+  background-image: url('/img/bg5.jpg');
+  animation-name: crossfade, kenburns-5;
+  animation-duration: 60s, 65s;
+  animation-delay: 40s, 40s;
+}
+
+.slide:nth-child(6) {
+  background-image: url('/img/bg6.jpg');
+  animation-name: crossfade, kenburns-6;
+  animation-duration: 60s, 65s;
+  animation-delay: 50s, 50s;
+}
+
+/* --- 动画关键帧基于60秒总时长--- */
+@keyframes crossfade {
+  0%      { opacity: 0; }
+  /* 淡入 (2秒 / 60秒 ≈ 3.33%) */
+  3.33%   { opacity: 1; }
+  /* 保持显示 (10秒 / 60秒 ≈ 16.67% 的周期) */
+  16.67%  { opacity: 1; }
+  /* 淡出 (2秒 / 60秒 ≈ 3.33%) */
+  20%     { opacity: 0; }
+  100%    { opacity: 0; }
+}
+
+@keyframes kenburns-1 {
+  0%   { transform: scale(1.1) translate(-2%, -2%); }
+  100% { transform: scale(1.25) translate(5%, 5%); }
+}
+
+@keyframes kenburns-2 {
+  0%   { transform: scale(1.1) translate(3%, 3%); }
+  100% { transform: scale(1.25) translate(-4%, -4%); }
+}
+
+@keyframes kenburns-3 {
+  0%   { transform: scale(1.2) translate(0%, 5%); }
+  100% { transform: scale(1.35) translate(0%, -5%); }
+}
+
+@keyframes kenburns-4 {
+  0%   { transform: scale(1.1) translate(-5%, 0%); }
+  100% { transform: scale(1.25) translate(5%, 0%); }
+}
+
+@keyframes kenburns-5 {
+  0%   { transform: scale(1.2) translate(4%, -2%); }
+  100% { transform: scale(1.35) translate(-4%, 2%); }
+}
+
+@keyframes kenburns-6 {
+  0%   { transform: scale(1.1) translate(2%, -5%); }
+  100% { transform: scale(1.25) translate(-2%, 5%); }
 }
 
 /* ===================================== */
@@ -98,7 +212,7 @@ body {
 
 .container {
   width: 100%;
-  max-width: 90%;
+  max-width: 95%;
   min-width: 900px;
   background-color: rgba(255, 255, 255, 0.95);
   padding: 30px;
@@ -108,7 +222,7 @@ body {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   overflow: hidden;
-  min-height: 88vh;
+  min-height: 90vh;
   display: flex;
   position: relative;
 }
@@ -708,6 +822,50 @@ label {
   cursor: not-allowed;
   opacity: 0.6;
   filter: grayscale(50%);
+}
+
+/* --- 高级管理按钮特殊样式 --- */
+#advanced-mgmt-button {
+  background-color: #fff5f5;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+#advanced-mgmt-button:hover {
+  background-color: #fee2e2;
+  border-color: #f87171;
+  color: #991b1b;
+}
+
+#advanced-mgmt-button.active {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  color: white;
+  border-color: #b91c1c;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
+}
+
+/* --- 社区图库按钮特殊样式 --- */
+[data-tab="communityGalleryPane"] {
+  background-color: #e0f2f1;
+  border-color: #b2dfdb;
+  color: #00695c;
+  font-weight: 700;
+}
+
+[data-tab="communityGalleryPane"]:hover {
+  background-color: #c8edea;
+  border-color: #80cbc4;
+  color: #004d40;
+}
+
+[data-tab="communityGalleryPane"].active {
+  background: linear-gradient(135deg, #4db6ac 0%, #00796b 100%);
+  color: white;
+  border-color: #004d40;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(0, 150, 136, 0.4);
 }
 
 /* ===================================== */

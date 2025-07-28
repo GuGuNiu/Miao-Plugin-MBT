@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛图库Web面板</title>
+    <title>咕咕牛图库的Web面板</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,19 +24,29 @@
     <link rel="stylesheet" href="css/Gu_Tools/GuTools_SecondaryTagEditor.css">
     <link rel="stylesheet" href="css/Data_List.css">
     <link rel="stylesheet" href="css/Plugin_Gallery.css">
+    <link rel="stylesheet" href="css/Community_Gallery.css">
     <link rel="stylesheet" href="css/Advanced_Management.css">
     <link rel="stylesheet" href="css/Other.css">
 </head>
 
 <body>
+    <div class="slideshow-container">
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+    </div>
 
     <div class="container">
         <div class="tab-navigation">
             <img id="app-logo" src="/logo.png" alt="App Logo">
             <button class="tab-button active" data-tab="homePane">🐂</button>
             <button class="tab-button" data-tab="GuTools">咕咕牛工具</button>
-            <button class="tab-button" data-tab="dataListPane">云端Json数据</button>
-            <button class="tab-button" data-tab="pluginGalleryPane">插件图片管理</button>
+            <button class="tab-button" data-tab="dataListPane">云端数据</button>
+            <button class="tab-button" data-tab="pluginGalleryPane">面板图管理</button>
+            <button class="tab-button" data-tab="communityGalleryPane">社区图库</button>
             <button class="tab-button" data-tab="advancedManagementPane" id="advanced-mgmt-button">高级管理</button>
             <div id="navFooterInfo">
                 <div id="appVersion">咕咕牛 v?.?.?</div>
@@ -602,19 +612,26 @@
             <div id="dataListPane" class="tab-pane">
                 <div class="data-list-controls">
                     <div class="top-controls-row">
-                        <div class="select-wrapper">
-                            <select id="filterGame" class="cartoon-select">
-                                <option value="">——所有游戏——</option>
-                                <option value="gs-character">原神</option>
-                                <option value="sr-character">星铁</option>
-                                <option value="zzz-character">绝区零</option>
-                                <option value="waves-character">鸣潮</option>
-                                <option value="unknown">未知</option>
-                            </select>
+                        <div class="select-wrapper custom-select-wrapper">
+                            <button id="filterGameBtn" class="cartoon-select">——所有游戏——</button>
+                            <div id="filterGameDropdown" class="custom-select-dropdown hidden">
+                            </div>
                         </div>
                         <div class="search-input-wrapper">
                             <input type="search" id="dataListSearchInput" class="cartoon-input search-input"
-                                placeholder=" 搜索角色/GID/角色别名/模糊查找......">
+                            placeholder=" 搜索角色/GID/角色别名/模糊查找......" autocomplete="off">
+                        </div>
+                        <div class="select-wrapper secondary-tags-filter-container">
+                            <button id="secondaryTagsFilterBtn" class="cartoon-select">二级标签筛选</button>
+                            <div id="secondaryTagsDropdown" class="hidden">
+                                <div class="tags-dropdown-header">按二级标签筛选</div>
+                                <div class="tags-dropdown-content">
+                                    <p>正在加载标签...</p>
+                                </div>
+                                <div class="tags-dropdown-footer">
+                                    <button id="clearSecondaryTagsBtn" class="tool-button-adv abort-button">清空选择</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="filter-controls">
@@ -651,6 +668,9 @@
                             style="position: absolute; top: 0px; left: 0px; width: 100%; transform: translateY(0px);">
                         </div>
                     </div>
+                </div>
+                <div class="data-list-footer-notice">
+                    <p>该页面为咕咕牛图库专用，任何操作均无效。仅用于可视化展示imagedata.json数据。</p>
                 </div>
             </div>
 
@@ -691,6 +711,89 @@
                         <h4 class="panel-title">图片属性 & 编辑</h4>
                         <div id="pluginAttributeInfoArea">
                             <p id="pluginEditorPlaceholder" class="panel-placeholder">请在中间选择一张图片查看属性</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="communityGalleryPane" class="tab-pane">
+                <div class="cgp-container">
+                    <div class="cgp-left-panel">
+                        <div class="cgp-add-section">
+                            <h3>添加新的社区图库</h3>
+                            <div class="cgp-input-wrapper">
+                                <input type="text" id="cgp-repo-input" placeholder="输入 Git 仓库地址...">
+                                <button id="cgp-add-button">添加</button>
+                            </div>
+                            <div class="cgp-add-footer">
+                                <span class="cgp-security-note">💡 仅支持信任来源。</span>
+                                <a href="#" class="cgp-discover-link">发现更多 →</a>
+                            </div>
+                        </div>
+                        <div class="cgp-status-panel">
+                            <h4>当前状态</h4>
+                            <span id="cgp-status-text">等待操作...</span>
+                            <div id="cgp-progress-bar-container">
+                                <div id="cgp-progress-bar"></div>
+                            </div>
+                            <textarea id="cgp-log-output" readonly placeholder="操作日志将显示在这里..."></textarea>
+                        </div>
+                    </div>
+                    <div class="cgp-right-panel">
+                        <h3>已安装的图库</h3>
+                        <div class="cgp-gallery-grid">
+                            <div class="cgp-gallery-card" data-status="installed">
+                                <div class="card-header">
+                                    <span class="card-title">Miao-Plugin-MBT 扩展包</span>
+                                </div>
+                                <div class="card-content">
+                                    <p class="card-description">为Miao-Plugin的 #MBT 功能提供更多高质量的二次元图片。</p>
+                                    <div class="card-stats">
+                                        <span>🖼️ 2500+</span>
+                                        <span>👤 150+</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="card-action-btn primary">检查更新</button>
+                                    <button class="card-action-btn danger">移除</button>
+                                </div>
+                            </div>
+                            <div class="cgp-gallery-card" data-status="update-available">
+                                <div class="card-header">
+                                    <span class="card-title">原神愚人众图库</span>
+                                </div>
+                                <div class="card-content">
+                                    <p class="card-description">专注于原神愚人众执行官角色的高质量同人图集。</p>
+                                    <div class="card-stats">
+                                        <span>🖼️ 320+</span>
+                                        <span>👤 11+</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="card-action-btn primary">立即更新</button>
+                                    <button class="card-action-btn danger">移除</button>
+                                </div>
+                            </div>
+                            <div class="cgp-gallery-card" data-status="error">
+                                <div class="card-header">
+                                    <span class="card-title">鸣潮角色精选</span>
+                                </div>
+                                <div class="card-content">
+                                    <p class="card-description">同步失败：无法连接到远程仓库。请检查网络或地址。</p>
+                                    <div class="card-stats">
+                                        <span>🖼️ 0</span>
+                                        <span>👤 0</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="card-action-btn primary">重试</button>
+                                    <button class="card-action-btn danger">移除</button>
+                                </div>
+                            </div>
+                            <div class="cgp-placeholder" style="grid-column: 1 / -1;">
+                                <div class="cgp-placeholder-icon">🎨</div>
+                                <p>还没有添加任何社区图库哦！<br>从左侧开始吧。</p>
+                            </div>
                         </div>
                     </div>
                 </div>

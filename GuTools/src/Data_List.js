@@ -4,6 +4,48 @@
 // ==========================================================================
 
 /**
+ * 切换自定义游戏筛选下拉框的显示/隐藏状态
+ * @param {MouseEvent} event
+ */
+function toggleGameFilterDropdown(event) {
+    event.stopPropagation();
+    DOM.filterGameDropdown?.classList.toggle('hidden');
+}
+
+/**
+ * 动态填充并处理自定义游戏筛选下拉框
+ */
+function setupCustomGameFilter() {
+    const gameOptions = [
+        { value: '', text: '——所有游戏——' },
+        { value: 'gs-character', text: '原神' },
+        { value: 'sr-character', text: '星铁' },
+        { value: 'zzz-character', text: '绝区零' },
+        { value: 'waves-character', text: '鸣潮' },
+        { value: 'unknown', text: '未知' }
+    ];
+
+    if (!DOM.filterGameBtn || !DOM.filterGameDropdown) return;
+    DOM.filterGameDropdown.innerHTML = '';
+
+    gameOptions.forEach(opt => {
+        const item = document.createElement('div');
+        item.className = 'custom-select-option';
+        item.dataset.value = opt.value;
+        item.textContent = opt.text;
+        item.addEventListener('click', () => {
+            DOM.filterGameBtn.textContent = opt.text;
+            DOM.filterGameBtn.dataset.value = opt.value;
+            DOM.filterGameDropdown.classList.add('hidden');
+            applyFiltersAndRenderDataList();
+        });
+        DOM.filterGameDropdown.appendChild(item);
+    });
+
+    DOM.filterGameBtn.addEventListener('click', toggleGameFilterDropdown);
+}
+
+/**
  * 更新单个过滤切换按钮的显示文本 e.g., "Px18 开" / "Px18 关"
  * @param {string} checkboxId 复选框元素的 ID
  */
@@ -22,6 +64,163 @@ function updateFilterToggleButtonText(checkboxId) {
     }
 }
 
+/**
+ * 获取并存储用于筛选的二级标签
+ */
+async function fetchSecondaryTagsForFilter() {
+    const filterState = AppState.dataList.secondaryTagsFilter;
+    if (Object.keys(filterState.availableTags).length > 0) {
+        console.log("DataList: 二级标签已加载 跳过获取");
+        return;
+    }
+    try {
+        const response = await fetch('/api/secondary-tags');
+        if (!response.ok) throw new Error(`无法获取标签配置 (HTTP ${response.status})`);
+        const allTagsData = await response.json();
+        filterState.availableTags = allTagsData;
+        console.log("DataList: 成功获取并存储二级标签用于筛选");
+        populateSecondaryTagsDropdown();
+    } catch (error) {
+        console.error("DataList: 加载二级标签用于筛选时失败:", error);
+        displayToast("加载筛选标签失败！", "error");
+    }
+}
+
+/**
+ * 根据已获取的标签数据 动态填充二级标签筛选下拉框
+ */
+function populateSecondaryTagsDropdown() {
+    const dropdown = DOM.secondaryTagsDropdown;
+    if (!dropdown) return;
+    const filterState = AppState.dataList.secondaryTagsFilter;
+    const contentArea = dropdown.querySelector('.tags-dropdown-content');
+    if (!contentArea) {
+        console.error("DataList: 找不到 .tags-dropdown-content 元素");
+        return;
+    }
+
+    contentArea.innerHTML = ''; 
+    const fragment = document.createDocumentFragment();
+
+    for (const [category, tags] of Object.entries(filterState.availableTags)) {
+        if (!Array.isArray(tags) || tags.length === 0) continue;
+
+        const categoryEl = document.createElement('div');
+        categoryEl.className = 'tags-dropdown-category';
+
+        const titleEl = document.createElement('h6');
+        titleEl.className = 'tags-dropdown-category-title';
+        titleEl.textContent = category;
+        categoryEl.appendChild(titleEl);
+
+        const wrapperEl = document.createElement('div');
+        wrapperEl.className = 'tags-dropdown-tags-wrapper';
+
+        tags.forEach(tag => {
+            const tagEl = document.createElement('span');
+            tagEl.className = 'tags-dropdown-tag-item';
+            tagEl.textContent = tag;
+            tagEl.dataset.tag = tag;
+            wrapperEl.appendChild(tagEl);
+        });
+        
+        categoryEl.appendChild(wrapperEl);
+        fragment.appendChild(categoryEl);
+    }
+    contentArea.appendChild(fragment);
+}
+
+/**
+ * 切换二级标签筛选下拉框的显示/隐藏状态
+ * @param {MouseEvent} [event] - The click event, used to stop propagation.
+ */
+function toggleSecondaryTagsDropdown(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    if (DOM.secondaryTagsDropdown) {
+        DOM.secondaryTagsDropdown.classList.toggle(UI_CLASSES.HIDDEN);
+    }
+}
+
+/**
+ * 关闭二级标签筛选下拉框
+ */
+function closeSecondaryTagsDropdown() {
+    if (DOM.secondaryTagsDropdown && !DOM.secondaryTagsDropdown.classList.contains(UI_CLASSES.HIDDEN)) {
+        DOM.secondaryTagsDropdown.classList.add(UI_CLASSES.HIDDEN);
+    }
+}
+
+/**
+ * 更新二级标签筛选按钮的 UI (文本和状态)
+ */
+function updateSecondaryTagsFilterUI() {
+    const button = DOM.secondaryTagsFilterBtn;
+    const selectedCount = AppState.dataList.secondaryTagsFilter.selectedTags.size;
+    if (!button) return;
+
+    if (selectedCount > 0) {
+        button.textContent = `二级标签 (${selectedCount})`;
+        button.classList.add('active-filter');
+    } else {
+        button.textContent = '二级标签筛选';
+        button.classList.remove('active-filter');
+    }
+}
+
+/**
+ * 为 dataListSearchInput 显示搜索建议
+ * @param {string[]} suggestions - 要显示的建议字符串数组
+ */
+function showDataListSuggestions(suggestions) {
+    const wrapper = DOM.dataListSearchInput?.closest('.search-input-wrapper');
+    if (!wrapper) return;
+
+    let suggestionsContainer = wrapper.querySelector('#dataListSuggestions');
+    if (!suggestionsContainer) {
+        suggestionsContainer = document.createElement('div');
+        suggestionsContainer.id = 'dataListSuggestions';
+        suggestionsContainer.className = 'suggestions hidden';
+        wrapper.appendChild(suggestionsContainer);
+    }
+
+    suggestionsContainer.innerHTML = '';
+
+    if (suggestions.length === 0) {
+        suggestionsContainer.classList.add(UI_CLASSES.HIDDEN);
+        return;
+    }
+
+    const inputWidth = DOM.dataListSearchInput.offsetWidth;
+    suggestionsContainer.style.width = `${inputWidth}px`;
+
+    suggestions.forEach(itemText => {
+        const item = document.createElement('div');
+        item.textContent = itemText;
+        item.addEventListener('mousedown', () => { // mousedown 在 blur 之前触发
+            DOM.dataListSearchInput.value = itemText;
+            hideDataListSuggestions();
+            applyFiltersAndRenderDataList();
+        });
+        suggestionsContainer.appendChild(item);
+    });
+
+    suggestionsContainer.classList.remove(UI_CLASSES.HIDDEN);
+}
+
+/**
+ * 隐藏 dataListSearchInput 的搜索建议
+ */
+function hideDataListSuggestions() {
+    const wrapper = DOM.dataListSearchInput?.closest('.search-input-wrapper');
+    const suggestionsContainer = wrapper?.querySelector('#dataListSuggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.classList.add(UI_CLASSES.HIDDEN);
+    }
+}
+
+
 //  数据过滤与渲染 
 
 /**
@@ -38,7 +237,8 @@ function filterUserDataEntries() {
     const showNormal = DOM.dataListFilterNormal?.checked ?? false;
     const showFullscreen = DOM.dataListFilterFullscreen?.checked ?? false;
     const showEasterEgg = DOM.dataListFilterEasterEgg?.checked ?? false;
-    const selectedGame = DOM.dataListFilterGame?.value || ''; // '' 表示所有游戏
+    const selectedGame = DOM.filterGameBtn?.dataset.value || '';
+    const selectedTags = AppState.dataList.secondaryTagsFilter?.selectedTags ?? new Set();
 
     // 使用 AppState.userData
     const filteredEntries = AppState.userData.filter(entry => {
@@ -71,6 +271,19 @@ function filterUserDataEntries() {
             }
         }
 
+        // 二级标签过滤
+        if (selectedTags.size > 0) {
+            const entryTags = entry.attributes.secondaryTags;
+            if (!Array.isArray(entryTags) || entryTags.length === 0) {
+                return false;
+            }
+            for (const selectedTag of selectedTags) {
+                if (!entryTags.includes(selectedTag)) {
+                    return false;
+                }
+            }
+        }
+
         return true; // 通过所有检查
     });
 
@@ -96,7 +309,7 @@ function applyFiltersAndRenderDataList() {
         dataListFilterFullscreen: DOM.dataListFilterFullscreen,
         dataListFilterEasterEgg: DOM.dataListFilterEasterEgg,
         dataListFilterAiImage: DOM.dataListFilterAiImage,
-        dataListFilterGame: DOM.dataListFilterGame,
+        filterGameBtn: DOM.filterGameBtn,
         dataListContainer: DOM.dataListContainer,
         dataListCountDisplay: DOM.dataListCountDisplay
     };
@@ -584,13 +797,65 @@ function closeImageModal() {
 //  事件监听器设置 Data List Pane 
 
 /**
+ * 处理二级标签下拉框内的点击事件
+ * @param {MouseEvent} event 
+ */
+function handleTagDropdownClick(event) {
+    const target = event.target;
+    const filterState = AppState.dataList.secondaryTagsFilter;
+
+    // 点击标签项
+    if (target.classList.contains('tags-dropdown-tag-item')) {
+        const tag = target.dataset.tag;
+        if (filterState.selectedTags.has(tag)) {
+            filterState.selectedTags.delete(tag);
+            target.classList.remove('selected');
+        } else {
+            filterState.selectedTags.add(tag);
+            target.classList.add('selected');
+        }
+        updateSecondaryTagsFilterUI();
+        // 实时应用筛选
+        applyFiltersAndRenderDataList();
+    }
+
+    // 点击清除按钮
+    const clearButton = target.closest('#clearSecondaryTagsBtn');
+    if (clearButton) {
+        filterState.selectedTags.clear();
+        DOM.secondaryTagsDropdown.querySelectorAll('.tags-dropdown-tag-item.selected').forEach(el => {
+            el.classList.remove('selected');
+        });
+        updateSecondaryTagsFilterUI();
+        applyFiltersAndRenderDataList();
+        closeSecondaryTagsDropdown(); // 清空后关闭
+    }
+}
+
+/**
+ * 处理点击页面其他区域时关闭二级标签下拉框
+ * @param {MouseEvent} event 
+ */
+function handleOutsideTagDropdownClick(event) {
+    if (!DOM.secondaryTagsFilterBtn || !DOM.secondaryTagsDropdown) return;
+    if (DOM.secondaryTagsDropdown.classList.contains(UI_CLASSES.HIDDEN)) return;
+
+    // 如果点击的目标是按钮本身，或在下拉框内部，则不作处理
+    const isClickOnButton = DOM.secondaryTagsFilterBtn.contains(event.target);
+    const isClickInDropdown = DOM.secondaryTagsDropdown.contains(event.target);
+
+    if (!isClickOnButton && !isClickInDropdown) {
+        closeSecondaryTagsDropdown();
+    }
+}
+
+/**
  * 设置云端Json数据页面的事件监听器
  */
 function setupDataListEventListeners() {
     // 定义过滤器控件和对应的互斥组 
     const filterControlsConfig = [
         { element: DOM.dataListSearchInput, event: 'input', group: null, debounce: true },
-        { element: DOM.dataListFilterGame, event: 'change', group: null },
         { element: DOM.dataListFilterPx18, event: 'change', group: 'rating' },
         { element: DOM.dataListFilterRx18, event: 'change', group: 'rating' },
         { element: DOM.dataListFilterNormal, event: 'change', group: 'layout' },
@@ -599,6 +864,14 @@ function setupDataListEventListeners() {
         { element: DOM.dataListFilterAiImage, event: 'change', group: null },
         { element: DOM.dataListFilterIsBan, event: 'change', group: null }
     ];
+
+    // 初始化二级标签筛选状态
+    if (!AppState.dataList.secondaryTagsFilter) {
+        AppState.dataList.secondaryTagsFilter = {
+            availableTags: {},
+            selectedTags: new Set()
+        };
+    }
 
     filterControlsConfig.forEach(config => {
         if (config.element) {
@@ -636,6 +909,39 @@ function setupDataListEventListeners() {
             // console.warn(`DataList: 过滤控件 ${config.element} 假设的 未找到`);
         }
     });
+    
+    // 为搜索框添加额外的 focus 和 blur 监听器用于建议列表
+    if (DOM.dataListSearchInput) {
+        DOM.dataListSearchInput.addEventListener('focus', () => {
+            // 示例：显示历史记录
+            const history = ["玛薇卡", "胡桃", "丝柯"]; // 此处应从 localStorage 或其他地方获取
+            showDataListSuggestions(history);
+        });
+        DOM.dataListSearchInput.addEventListener('blur', () => {
+            // 延迟隐藏，以便点击建议项的操作能够被响应
+            setTimeout(hideDataListSuggestions, 150);
+        });
+    }
+
+    // 二级标签筛选功能
+    if (DOM.secondaryTagsFilterBtn && DOM.secondaryTagsDropdown) {
+        // 初始化
+        fetchSecondaryTagsForFilter();
+
+        // 按钮点击事件
+        DOM.secondaryTagsFilterBtn.removeEventListener('click', toggleSecondaryTagsDropdown);
+        DOM.secondaryTagsFilterBtn.addEventListener('click', toggleSecondaryTagsDropdown);
+
+        // 下拉框内标签点击事件 (事件委托)
+        DOM.secondaryTagsDropdown.removeEventListener('click', handleTagDropdownClick);
+        DOM.secondaryTagsDropdown.addEventListener('click', handleTagDropdownClick);
+
+        // 点击外部关闭下拉框
+        document.removeEventListener('click', handleOutsideTagDropdownClick);
+        document.addEventListener('click', handleOutsideTagDropdownClick);
+    } else {
+        console.warn("DataList: 二级标签筛选按钮或下拉框未找到");
+    }
 
     // 列表项点击事件 使用事件代理
     if (DOM.dataListContainer) {
@@ -647,6 +953,17 @@ function setupDataListEventListeners() {
              console.error("DataList: 未找到 #visibleItemsContainer 无法设置列表项点击事件");
         }
     } else { console.error("DataList: 列表容器 dataListContainer 未找到"); }
+
+    setupCustomGameFilter();
+    
+    // 全局点击，关闭自定义下拉框
+    document.addEventListener('click', (event) => {
+        if (DOM.filterGameDropdown && !DOM.filterGameDropdown.classList.contains('hidden')) {
+            if (!DOM.filterGameBtn.contains(event.target)) {
+                DOM.filterGameDropdown.classList.add('hidden');
+            }
+        }
+    });
 
     console.log("DataList: 事件监听器设置完成");
 }

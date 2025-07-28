@@ -392,7 +392,8 @@ function cacheDomElements() {
 
   // --- Data List 面板 ---
   DOM.dataListPane = document.getElementById("dataListPane");
-  DOM.dataListFilterGame = document.getElementById("filterGame");
+  DOM.filterGameBtn = document.getElementById("filterGameBtn");
+  DOM.filterGameDropdown = document.getElementById("filterGameDropdown");
   DOM.dataListSearchInput = document.getElementById("dataListSearchInput");
   DOM.dataListFilterPx18 = document.getElementById("filterPx18");
   DOM.dataListFilterRx18 = document.getElementById("filterRx18");
@@ -403,6 +404,8 @@ function cacheDomElements() {
   DOM.dataListFilterIsBan = document.getElementById("filterisBan");
   DOM.dataListCountDisplay = document.getElementById("dataListCountDisplay");
   DOM.dataListContainer = document.getElementById("dataListContainer");
+  DOM.secondaryTagsFilterBtn = document.getElementById("secondaryTagsFilterBtn");
+  DOM.secondaryTagsDropdown = document.getElementById("secondaryTagsDropdown");
 
   // --- Plugin Gallery 面板 ---
   DOM.pluginGalleryPane = document.getElementById("pluginGalleryPane");

@@ -307,6 +307,7 @@
   display: flex;
   align-items: flex-start; /* 确保网格从顶部开始 */
   justify-content: center;
+  align-items: center;
 }
 
 #pluginImageGridPreview {
