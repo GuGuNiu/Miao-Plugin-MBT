@@ -202,14 +202,13 @@ app.use(express.json({ limit: "10mb" }));
 
 // --- 令牌验证中间件 ---
 const tokenAuthMiddleware = async (req, res, next) => {
-  // 对 favicon.ico 和 API 请求放行
-  if (req.path === '/favicon.ico' || req.path.startsWith('/api/') || req.path.startsWith('/external/')) {
+  if (req.path.startsWith('/api/') || req.path.startsWith('/external/') || path.extname(req.path)) {
     return next();
   }
   
-  // 检查根路径是否有令牌
-  const token = req.path.substring(1); // 移除开头的 '/'
-  if (!token || token.length !== 6) {
+  // 检查主页面的访问令牌
+  const token = req.path.substring(1); 
+  if (!token || !/^[A-Za-z0-9]{6}$/.test(token)) {
     return res.status(403).send("<h1>访问令牌无效或缺失</h1><p>请通过机器人获取有效的临时登录链接。</p>");
   }
 
@@ -219,8 +218,6 @@ const tokenAuthMiddleware = async (req, res, next) => {
     const userId = await redis.get(redisKey);
     if (userId) {
       // 验证成功，放行
-      // 令牌用过一次后立即销毁，防止重复使用
-      await redis.del(redisKey); 
       return next();
     } else {
       return res.status(403).send("<h1>访问令牌无效或已过期</h1><p>请通过机器人重新获取登录链接。</p>");
@@ -233,7 +230,7 @@ const tokenAuthMiddleware = async (req, res, next) => {
 
 app.use(tokenAuthMiddleware);
 
-// 静态文件服务 (必须在所有API路由之前)
+// 静态文件服务
 app.use(express.static(GU_TOOLS_DIR));
 
 // --- 核心工具函数 ---
@@ -255,13 +252,13 @@ const isFile = async (p) => {
 };
 
 /**
- * 递归扫描主图库文件夹收集图片信息 (支持多仓库)
- * @param {string} storageBox 仓库名称 (原始大小写)
+ * 递归扫描主图库文件夹收集图片信息
+ * @param {string} storageBox 仓库名称
  * @param {string} repoBasePath 仓库的物理根路径
- * @param {string} galleryName 图库名称 (e.g., 'gs-character')
+ * @param {string} galleryName 图库名称
  * @param {string} galleryBasePath 图库的物理基础目录 (相对于仓库根)
  * @param {string} [currentRelativePath=''] 当前相对于 galleryBasePath 的路径
- * @returns {Promise<Array<object>>} 图片信息对象数组 {..., storageBox(原始大小写), urlPath(相对路径)}
+ * @returns {Promise<Array<object>>} 图片信息对象数组
  */
 const findGalleryImagesRecursively = async (
   storageBox,
@@ -327,7 +324,7 @@ const findGalleryImagesRecursively = async (
 
 /**
  * 扫描指定的外部插件图片目录
- * @param {string} sourceKey 来源标识 (e.g., 'miao')
+ * @param {string} sourceKey 来源标识 
  * @param {string} basePath 要扫描的插件图片目录的物理路径
  * @returns {Promise<Array<object>>} 外部图片信息对象数组
  */
@@ -392,7 +389,7 @@ const findPluginImages = async (sourceKey, basePath) => {
 };
 
 /**
- * 安全地读取 JSON 文件
+ * 安全读取 JSON 文件
  * @param {string} filePath JSON 文件路径
  * @param {string} fileDesc 文件描述 用于日志
  * @returns {Promise<Array<object>>} 解析后的数组 失败则返回空数组
@@ -2201,16 +2198,17 @@ function ExecuteCommandForCheck(command, args, options, timeout, pm, conlog) {
 const initializeServer = async () => {
   const checkGitAvailability = async () => {
     try {
-        await ExecuteCommand("git", ["--version"], {}, 5000, new ProcessManager(console), console);
+        await ExecuteCommandForCheck("git", ["--version"], {}, 5000, new TempProcessManager(), console);
         console.log("[启动检查] Git 命令 OK.");
         return true;
     } catch (error) {
-        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        console.error("!!! 严重错误: Git 命令不可用。");
-        console.error("!!! 请确保服务器已正确安装 Git 并且其 'bin' 目录");
-        console.error("!!! 已被添加至系统环境变量 PATH 中。");
-        console.error("!!! 社区图库功能将无法使用。");
-        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      console.warn("==============『咕咕牛🐂』Web启动警告==============");
+      console.warn("  [问题] 未能检测到有效的 Git 命令。");
+      console.warn("  [影响] Web管理面板中的社区图库功能（用于安装/更新第三方图库）将无法使用。");
+      console.warn("  [解决] 1. 请确保您的服务器已正确安装 Git。");
+      console.warn("         2. 请将 Git 的 'bin' 目录完整路径添加到系统的 PATH 环境变量中。");
+      console.warn("  (此警告不影响图库的核心图片查看与管理功能)");
+      console.warn("=======================================================");
         if (error.code === 'ENOENT') {
             console.error("错误详情: spawn git ENOENT");
         } else {

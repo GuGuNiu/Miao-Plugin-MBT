@@ -39,13 +39,14 @@ class ProcessManager {
     this.processes.forEach(proc => {
       if (proc && proc.pid && !proc.killed) {
         try {
-          if (process.platform !== "win32") {
-            process.kill(-proc.pid, signal);
+          if (process.platform === "win32") {
+            const { spawn } = require('node:child_process');
+            spawn('taskkill', ['/pid', proc.pid, '/f', '/t']);
           } else {
             process.kill(proc.pid, signal);
           }
         } catch (killError) {
-          if (killError.code !== 'ESRCH') {
+          if (killError.code !== 'ESRCH') { 
             this.logger.error(`『咕咕牛🐂进程管理器』 终止进程失败 ${proc.pid}:`, killError);
           }
         }
@@ -974,7 +975,7 @@ class MiaoPluginMBT extends plugin {
     }
 
     const env = { ...process.env, GUGUNIU_PORT: port, GUGUNIU_HOST: host };
-    const options = { cwd: path.dirname(serverScriptPath), detached: true, stdio: ['ignore', 'pipe', 'pipe'], env: env };
+    const options = { cwd: path.dirname(serverScriptPath), stdio: ['ignore', 'pipe', 'pipe'], env: env };
 
     return new Promise((resolve, reject) => {
       //logger.info(`${Default_Config.logPrefix}正在后台启动 GuTools 服务...`);
@@ -983,7 +984,6 @@ class MiaoPluginMBT extends plugin {
       child.on('spawn', () => {
         this._guToolsProcess = child;
         this.processManager.register(child);
-        child.unref();
         logger.info(`${Default_Config.logPrefix}GuTools Web面板启动，进程PID: ${child.pid}`);
         resolve(true); // 启动成功
       });
@@ -1000,6 +1000,7 @@ class MiaoPluginMBT extends plugin {
       child.on('exit', (code, signal) => {
         if (this._guToolsProcess && this._guToolsProcess.pid === child.pid) {
             logger.warn(`${Default_Config.logPrefix}GuTools Web面板已退出，退出码: ${code}, 信号: ${signal}`);
+            this.processManager.unregister(child);
             this._guToolsProcess = null;
         }
       });
@@ -2184,7 +2185,7 @@ class MiaoPluginMBT extends plugin {
 
       try {
         await redis.set(redisKey, e.user_id, { EX: expireSeconds });
-        this.logger.info(`${this.logPrefix}为后台登录生成临时令牌: ${token}，有效期3分钟。`);
+        this.logger.info(`${this.logPrefix}Web登录生成临时令牌: ${token}，有效期3分钟。`);
       } catch (redisError) {
         this.logger.error(`${this.logPrefix}存储登录令牌到Redis失败:`, redisError);
         await this.ReportError(e, "生成登录令牌", redisError, "无法连接到Redis或写入失败");
