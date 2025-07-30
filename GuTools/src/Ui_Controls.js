@@ -40,9 +40,9 @@ async function switchTab(targetTabId) {
         currentActivePane.classList.remove(UI_CLASSES.ACTIVE);
         // 移除特定面板的事件监听器
         if (currentActivePane.id === 'dataListPane' && AppState.dataList.virtualScrollInfo.container) {
-             // handleScroll 在 Data_List.js
-             AppState.dataList.virtualScrollInfo.container.removeEventListener('scroll', handleScroll);
-             console.debug("UI控件: 移除 dataListPane 滚动监听");
+            // handleScroll 在 Data_List.js
+            AppState.dataList.virtualScrollInfo.container.removeEventListener('scroll', handleScroll);
+            console.debug("UI控件: 移除 dataListPane 滚动监听");
         }
         // 动画结束后清理类
         const paneToRemove = currentActivePane;
@@ -66,77 +66,85 @@ async function switchTab(targetTabId) {
                 // 切换到 GuTools 时 根据当前子模式决定是否加载数据
                 if (AppState.currentGuToolMode === 'import') {
                     if (typeof ensureImportDataLoaded === "function") {
-                         console.log("UI控件: 切换到 GuTools Import 按需加载数据...");
-                         await ensureImportDataLoaded(); // 使用 Importer 模块的函数
+                        console.log("UI控件: 切换到 GuTools Import 按需加载数据...");
+                        await ensureImportDataLoaded(); // 使用 Importer 模块的函数
                     } else { console.warn("UI控件: ensureImportDataLoaded 未定义 GuTools_Import.js"); }
                 }
                 // 其他 GuTools 子模式的按需加载逻辑在 GuTools_Main.js 的 switchGuToolMode 中处理
                 break;
 
             case 'dataListPane':
-                 if (typeof applyFiltersAndRenderDataList === "function") {
-                     applyFiltersAndRenderDataList(); // 应用过滤器并渲染
-                     // 重新添加滚动监听
-                     if (AppState.dataList.virtualScrollInfo.container && AppState.dataList.virtualScrollInfo.filteredData.length > 0) {
-                         // handleScroll 在 Data_List.js
-                         AppState.dataList.virtualScrollInfo.container.removeEventListener('scroll', handleScroll); // 确保移除旧的
-                         AppState.dataList.virtualScrollInfo.container.addEventListener('scroll', handleScroll);
-                         console.debug("UI控件: 添加 dataListPane 滚动监听");
-                     }
-                 } else { console.warn("UI控件: applyFiltersAndRenderDataList 未定义 Data_List.js"); }
+                if (typeof applyFiltersAndRenderDataList === "function") {
+                    applyFiltersAndRenderDataList(); // 应用过滤器并渲染
+                    // 重新添加滚动监听
+                    if (AppState.dataList.virtualScrollInfo.container && AppState.dataList.virtualScrollInfo.filteredData.length > 0) {
+                        // handleScroll 在 Data_List.js
+                        AppState.dataList.virtualScrollInfo.container.removeEventListener('scroll', handleScroll);
+                        AppState.dataList.virtualScrollInfo.container.addEventListener('scroll', handleScroll);
+                        console.debug("UI控件: 添加 dataListPane 滚动监听");
+                    }
+                } else { console.warn("UI控件: applyFiltersAndRenderDataList 未定义 Data_List.js"); }
                 break;
 
-            case 'pluginGalleryPane': // HTML ID 保持 pluginGalleryPane
-                 // 使用 Plugin Gallery 的状态和函数名
+            case 'pluginGalleryPane':
+                // 使用 Plugin Gallery 的状态和函数名
                 if (!AppState.pluginGallery.dataLoaded) {
-                     console.log("UI控件: 首次进入插件图片管理 加载数据...");
-                     if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.remove(UI_CLASSES.HIDDEN);
-                     if (DOM.pluginGalleryFolderNoResults) DOM.pluginGalleryFolderNoResults.classList.add(UI_CLASSES.HIDDEN);
-                     if (DOM.pluginGalleryFolderListContainer) DOM.pluginGalleryFolderListContainer.innerHTML = '';
-                     if (DOM.pluginGalleryImageGrid) DOM.pluginGalleryImageGrid.classList.add(UI_CLASSES.HIDDEN);
-                     if (DOM.pluginGalleryPreviewPlaceholder) DOM.pluginGalleryPreviewPlaceholder.classList.remove(UI_CLASSES.HIDDEN);
-                     if (DOM.pluginGalleryPaginationControls) DOM.pluginGalleryPaginationControls.classList.add(UI_CLASSES.HIDDEN);
+                    console.log("UI控件: 首次进入插件图片管理 加载数据...");
+                    if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.remove(UI_CLASSES.HIDDEN);
+                    if (DOM.pluginGalleryFolderNoResults) DOM.pluginGalleryFolderNoResults.classList.add(UI_CLASSES.HIDDEN);
+                    if (DOM.pluginGalleryFolderListContainer) DOM.pluginGalleryFolderListContainer.innerHTML = '';
+                    if (DOM.pluginGalleryImageGrid) DOM.pluginGalleryImageGrid.classList.add(UI_CLASSES.HIDDEN);
+                    if (DOM.pluginGalleryPreviewPlaceholder) DOM.pluginGalleryPreviewPlaceholder.classList.remove(UI_CLASSES.HIDDEN);
+                    if (DOM.pluginGalleryPaginationControls) DOM.pluginGalleryPaginationControls.classList.add(UI_CLASSES.HIDDEN);
 
-                     if (typeof fetchPluginImages === "function" && typeof fetchPluginUserData === "function") {
-                         const [imagesResult, userDataResult] = await Promise.allSettled([
-                             fetchPluginImages(),
-                             fetchPluginUserData()
-                         ]);
-                         const imagesOk = imagesResult.status === 'fulfilled' && imagesResult.value === true;
-                         const userdataOk = userDataResult.status === 'fulfilled' && userDataResult.value === true;
+                    if (typeof fetchPluginImages === "function" && typeof fetchPluginUserData === "function") {
+                        const [imagesResult, userDataResult] = await Promise.allSettled([
+                            fetchPluginImages(),
+                            fetchPluginUserData()
+                        ]);
+                        const imagesOk = imagesResult.status === 'fulfilled' && imagesResult.value === true;
+                        const userdataOk = userDataResult.status === 'fulfilled' && userDataResult.value === true;
 
-                         if (imagesOk) {
-                             AppState.pluginGallery.dataLoaded = true;
-                             if (typeof renderPluginFolderList === "function") renderPluginFolderList();
-                             else console.warn("UI控件: renderPluginFolderList 未定义 Plugin_Gallery.js");
-                         } else {
-                              if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.add(UI_CLASSES.HIDDEN);
-                              if (DOM.pluginGalleryFolderNoResults) {
-                                   DOM.pluginGalleryFolderNoResults.textContent = "加载插件图片列表失败";
-                                   DOM.pluginGalleryFolderNoResults.classList.remove(UI_CLASSES.HIDDEN);
-                              }
-                         }
-                         if (!userdataOk) displayToast("加载插件元数据失败", UI_CLASSES.WARNING);
+                        if (imagesOk) {
+                            AppState.pluginGallery.dataLoaded = true;
+                            if (typeof renderPluginFolderList === "function") renderPluginFolderList();
+                            else console.warn("UI控件: renderPluginFolderList 未定义 Plugin_Gallery.js");
+                        } else {
+                            if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.add(UI_CLASSES.HIDDEN);
+                            if (DOM.pluginGalleryFolderNoResults) {
+                                DOM.pluginGalleryFolderNoResults.textContent = "加载插件图片列表失败";
+                                DOM.pluginGalleryFolderNoResults.classList.remove(UI_CLASSES.HIDDEN);
+                            }
+                        }
+                        if (!userdataOk) displayToast("加载插件元数据失败", UI_CLASSES.WARNING);
 
-                     } else {
-                         console.warn("UI控件: fetchPluginImages 或 fetchPluginUserData 未定义 Plugin_Gallery.js");
-                          if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.add(UI_CLASSES.HIDDEN);
-                          if (DOM.pluginGalleryFolderNoResults) {
-                               DOM.pluginGalleryFolderNoResults.textContent = "错误：无法加载插件图片数据";
-                               DOM.pluginGalleryFolderNoResults.classList.remove(UI_CLASSES.HIDDEN);
-                          }
-                     }
-                 } else {
-                     console.log("UI控件: 插件图片管理数据已加载 刷新文件夹列表...");
-                     if (typeof renderPluginFolderList === "function") renderPluginFolderList();
-                     else console.warn("UI控件: renderPluginFolderList 未定义 Plugin_Gallery.js");
-                 }
-                 // 清除右侧编辑器
-                 if (typeof clearPluginEditor === "function") clearPluginEditor();
-                 else console.warn("UI控件: clearPluginEditor 未定义 Plugin_Gallery.js");
+                    } else {
+                        console.warn("UI控件: fetchPluginImages 或 fetchPluginUserData 未定义 Plugin_Gallery.js");
+                        if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.add(UI_CLASSES.HIDDEN);
+                        if (DOM.pluginGalleryFolderNoResults) {
+                            DOM.pluginGalleryFolderNoResults.textContent = "错误：无法加载插件图片数据";
+                            DOM.pluginGalleryFolderNoResults.classList.remove(UI_CLASSES.HIDDEN);
+                        }
+                    }
+                } else {
+                    console.log("UI控件: 插件图片管理数据已加载 刷新文件夹列表...");
+                    if (typeof renderPluginFolderList === "function") renderPluginFolderList();
+                    else console.warn("UI控件: renderPluginFolderList 未定义 Plugin_Gallery.js");
+                }
+                // 清除右侧编辑器
+                if (typeof clearPluginEditor === "function") clearPluginEditor();
+                else console.warn("UI控件: clearPluginEditor 未定义 Plugin_Gallery.js");
                 break;
 
-             case 'advancedManagementPane':
+            case 'banManagementPane':
+                if (typeof initializeBanManagement === "function") {
+                    initializeBanManagement();
+                } else {
+                    console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
+                }
+                break;
+
+            case 'advancedManagementPane':
                 console.log("UI控件: 切换到高级管理面板");
                 // 无特殊加载逻辑
                 break;
@@ -145,8 +153,8 @@ async function switchTab(targetTabId) {
                 console.warn("UI控件: 未知的标签页 ID:", targetTabId);
         }
     } catch (error) {
-         console.error(`UI控件: 切换到标签页 ${targetTabId} 时出错:`, error);
-         displayToast(`加载 ${targetTabId} 出错`, UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
+        console.error(`UI控件: 切换到标签页 ${targetTabId} 时出错:`, error);
+        displayToast(`加载 ${targetTabId} 出错`, UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
     } finally {
         // 动画结束后解除锁定
         setTimeout(() => {
@@ -199,10 +207,10 @@ async function updateGalleryStatusDisplay() {
         pflContainer: document.querySelector('.tri-state-switch-container') // 直接获取
     };
 
-   // 确认这里的检查逻辑是正确的
-   if (!elements.tuKuOPText || !elements.pflText || !elements.tuKuOPSwitch || !elements.pflRadio0 || !elements.pflRadio1 || !elements.pflRadio2 || !elements.pflContainer) {
-    console.error("UI控件: Home 面板部分状态元素未找到"); // 报错来源
-}
+    // 确认这里的检查逻辑是正确的
+    if (!elements.tuKuOPText || !elements.pflText || !elements.tuKuOPSwitch || !elements.pflRadio0 || !elements.pflRadio1 || !elements.pflRadio2 || !elements.pflContainer) {
+        console.error("UI控件: Home 面板部分状态元素未找到"); // 报错来源
+    }
 
     // 设置加载中状态
     if (elements.tuKuOPText) elements.tuKuOPText.textContent = '加载中...';
@@ -324,8 +332,8 @@ async function handleGalleryControlChange(event) {
         // 更新成功
         console.log(`UI控件: 配置更新成功: ${configKey}=${newValue}`);
         if (statusElement) {
-             const statusText = valueMap[newValue] ?? `值 ${newValue}`;
-             statusElement.textContent = configKey === 'PFL' ? `当前: ${statusText}` : statusText;
+            const statusText = valueMap[newValue] ?? `值 ${newValue}`;
+            statusElement.textContent = configKey === 'PFL' ? `当前: ${statusText}` : statusText;
         }
         displayToast(`${controlName} 更新成功`, UI_CLASSES.SUCCESS);
 
@@ -342,7 +350,7 @@ async function handleGalleryControlChange(event) {
         } else if (controlElement.type === 'checkbox') {
             // 尝试恢复 Checkbox
             controlElement.checked = !controlElement.checked; // 反转回来
-             if (statusElement) statusElement.textContent = previousValueText; // 恢复旧文本
+            if (statusElement) statusElement.textContent = previousValueText; // 恢复旧文本
             console.log(`UI控件: ${controlName} UI 已尝试恢复到之前的状态`);
         }
 
@@ -375,7 +383,7 @@ function setupHomePaneEventListeners() {
             controlElement.addEventListener('change', handleGalleryControlChange);
             listenerCount++;
         } else {
-            const missingId = controls.indexOf(controlElement) === 0 ? 'tuKuOPToggleSwitch' : `pflRadio${controls.indexOf(controlElement)-1}`;
+            const missingId = controls.indexOf(controlElement) === 0 ? 'tuKuOPToggleSwitch' : `pflRadio${controls.indexOf(controlElement) - 1}`;
             console.warn(`UI控件: Home 面板控件元素 #${missingId} 未找到`);
         }
     });

@@ -245,7 +245,7 @@
 }
 
 #generatorPaneView #attributesPanel h4 {
-  /* TODO: 审视下方 !important 标记的必要性 */
+  
   font-size: 1.3em !important;
   font-weight: 700 !important;
   margin-bottom: 15px !important;
@@ -921,7 +921,7 @@
 #md5PaneView .column-title,
 #sequencePaneView .column-title,
 #jsonCalibrationPaneView .column-title {
-  /* TODO: 审视下方 !important 标记的必要性 */
+  
   font-size: 1.4em !important;
   font-weight: 700 !important;
   color: #495057 !important;

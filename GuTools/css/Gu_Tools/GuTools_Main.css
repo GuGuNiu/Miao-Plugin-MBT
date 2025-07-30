@@ -71,7 +71,6 @@
      transform: none !important;
      cursor: not-allowed !important;
      opacity: 0.7 !important;
-     /* TODO: 审视 !important 标记的必要性 */
 }
 
 .gu-tools-view {

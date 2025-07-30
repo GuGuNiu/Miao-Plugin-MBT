@@ -40,7 +40,7 @@
 }
 
 #sequencePaneView .column-title {
-    /* TODO: 审视下方 !important 标记的必要性 */
+    
     font-size: 1.4em !important;
     font-weight: 700 !important;
     color: #1b5e20 !important;
@@ -48,7 +48,7 @@
     padding-bottom: 12px !important;
     border-bottom: 3px solid #a5d6a7 !important;
     text-align: center;
-    /* TODO: 审视下方 !important 标记的必要性 */
+    
     background: none !important;
     -webkit-background-clip: initial !important;
     -webkit-text-fill-color: initial !important;

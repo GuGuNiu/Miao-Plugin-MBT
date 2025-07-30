@@ -27,7 +27,9 @@
   width: 100%;
   flex-grow: 1;
   overflow: hidden;
-  padding: 15px;
+  padding-top: 15px;
+  padding-right: 5px;
+  padding-left: 5px;
   box-sizing: border-box;
 }
 
@@ -77,7 +79,7 @@
   caret-color: #388e3c;
   font-size: 0.9em;
   min-height: 38px;
-  padding-left: 35px;
+  padding-left: 40px;
 }
 
 .plugin-left-panel .cartoon-input.search-input::placeholder {
@@ -160,69 +162,69 @@
 }
 
 .plugin-folder-item {
-  display: flex !important; /* TODO: 审视 !important 标记的必要性 */
-  align-items: center !important; /* TODO: 审视 !important 标记的必要性 */
-  gap: 8px !important; /* TODO: 审视 !important 标记的必要性 */
-  padding: 8px 12px !important; /* TODO: 审视 !important 标记的必要性 */
-  margin-bottom: 6px !important; /* TODO: 审视 !important 标记的必要性 */
-  background-color: #ffffff !important; /* TODO: 审视 !important 标记的必要性 */
-  border: 1px solid #e0e0e0 !important; /* TODO: 审视 !important 标记的必要性 */
-  border-radius: 6px !important; /* TODO: 审视 !important 标记的必要性 */
-  cursor: pointer !important; /* TODO: 审视 !important 标记的必要性 */
-  transition: background-color 0.2s ease, border-color 0.2s ease !important; /* TODO: 审视 !important 标记的必要性 */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important; /* TODO: 审视 !important 标记的必要性 */
-  font-size: 0.9em !important; /* TODO: 审视 !important 标记的必要性 */
+  display: flex !important; 
+  align-items: center !important; 
+  gap: 8px !important; 
+  padding: 8px 12px !important; 
+  margin-bottom: 6px !important; 
+  background-color: #ffffff !important; 
+  border: 1px solid #e0e0e0 !important; 
+  border-radius: 6px !important; 
+  cursor: pointer !important; 
+  transition: background-color 0.2s ease, border-color 0.2s ease !important; 
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important; 
+  font-size: 0.9em !important; 
 }
 
 .plugin-folder-item:hover {
-  background-color: #e0f7fa !important; /* TODO: 审视 !important 标记的必要性 */
-  border-color: #81cfe0 !important; /* TODO: 审视 !important 标记的必要性 */
+  background-color: #e0f7fa !important; 
+  border-color: #81cfe0 !important; 
 }
 
 .plugin-folder-item.selected {
-  background-color: #b3e5fc !important; /* TODO: 审视 !important 标记的必要性 */
-  border-color: #4fc3f7 !important; /* TODO: 审视 !important 标记的必要性 */
-  font-weight: 600 !important; /* TODO: 审视 !important 标记的必要性 */
+  background-color: #b3e5fc !important; 
+  border-color: #4fc3f7 !important; 
+  font-weight: 600 !important; 
 }
 
 .plugin-folder-item.selected .folder-item-count {
-  background-color: #4fc3f7 !important; /* TODO: 审视 !important 标记的必要性 */
-  color: white !important; /* TODO: 审视 !important 标记的必要性 */
+  background-color: #4fc3f7 !important; 
+  color: white !important; 
 }
 
 .plugin-folder-item .folder-name-wrapper {
-  display: flex !important; /* TODO: 审视 !important 标记的必要性 */
-  align-items: center !important; /* TODO: 审视 !important 标记的必要性 */
-  gap: 6px !important; /* TODO: 审视 !important 标记的必要性 */
-  overflow: hidden !important; /* TODO: 审视 !important 标记的必要性 */
-  flex-grow: 1 !important; /* TODO: 审视 !important 标记的必要性 */
+  display: flex !important; 
+  align-items: center !important; 
+  gap: 6px !important; 
+  overflow: hidden !important; 
+  flex-grow: 1 !important; 
 }
 
 .plugin-folder-item .folder-icon {
-  font-size: 1.1em !important; /* TODO: 审视 !important 标记的必要性 */
-  color: var(--sky-blue-dark) !important; /* TODO: 审视 !important 标记的必要性 */
-  flex-shrink: 0 !important; /* TODO: 审视 !important 标记的必要性 */
+  font-size: 1.1em !important; 
+  color: var(--sky-blue-dark) !important; 
+  flex-shrink: 0 !important; 
 }
 
 .plugin-folder-item .folder-name-text {
-  white-space: nowrap !important; /* TODO: 审视 !important 标记的必要性 */
-  overflow: hidden !important; /* TODO: 审视 !important 标记的必要性 */
-  text-overflow: ellipsis !important; /* TODO: 审视 !important 标记的必要性 */
-  flex-shrink: 1 !important; /* TODO: 审视 !important 标记的必要性 */
-  color: var(--text-color) !important; /* TODO: 审视 !important 标记的必要性 */
+  white-space: nowrap !important; 
+  overflow: hidden !important; 
+  text-overflow: ellipsis !important; 
+  flex-shrink: 1 !important; 
+  color: var(--text-color) !important; 
 }
 
 .plugin-folder-item .folder-source-tag {
-  font-size: 0.65em !important; /* TODO: 审视 !important 标记的必要性 */
-  font-weight: 700 !important; /* TODO: 审视 !important 标记的必要性 */
-  padding: 2px 4px !important; /* TODO: 审视 !important 标记的必要性 */
-  border-radius: 3px !important; /* TODO: 审视 !important 标记的必要性 */
-  border: 1px solid !important; /* TODO: 审视 !important 标记的必要性 */
-  text-transform: uppercase !important; /* TODO: 审视 !important 标记的必要性 */
-  white-space: nowrap !important; /* TODO: 审视 !important 标记的必要性 */
-  margin-left: 4px !important; /* TODO: 审视 !important 标记的必要性 */
-  line-height: 1 !important; /* TODO: 审视 !important 标记的必要性 */
-  flex-shrink: 0 !important; /* TODO: 审视 !important 标记的必要性 */
+  font-size: 0.65em !important; 
+  font-weight: 700 !important; 
+  padding: 2px 4px !important; 
+  border-radius: 3px !important; 
+  border: 1px solid !important; 
+  text-transform: uppercase !important; 
+  white-space: nowrap !important; 
+  margin-left: 4px !important; 
+  line-height: 1 !important; 
+  flex-shrink: 0 !important; 
 }
 
 .plugin-folder-item .folder-source-tag.source-miao {
@@ -250,14 +252,14 @@
 }
 
 .plugin-folder-item .folder-item-count {
-  font-size: 0.75em !important; /* TODO: 审视 !important 标记的必要性 */
-  padding: 2px 6px !important; /* TODO: 审视 !important 标记的必要性 */
-  background-color: #f0f0f0 !important; /* TODO: 审视 !important 标记的必要性 */
-  border-radius: 4px !important; /* TODO: 审视 !important 标记的必要性 */
-  white-space: nowrap !important; /* TODO: 审视 !important 标记的必要性 */
-  flex-shrink: 0 !important; /* TODO: 审视 !important 标记的必要性 */
-  margin-left: auto !important; /* TODO: 审视 !important 标记的必要性 */
-  color: var(--secondary-text-color) !important; /* TODO: 审视 !important 标记的必要性 */
+  font-size: 0.75em !important; 
+  padding: 2px 6px !important; 
+  background-color: #f0f0f0 !important; 
+  border-radius: 4px !important; 
+  white-space: nowrap !important; 
+  flex-shrink: 0 !important; 
+  margin-left: auto !important; 
+  color: var(--secondary-text-color) !important; 
 }
 
 /* --- 中间预览面板 --- */

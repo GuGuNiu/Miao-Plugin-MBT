@@ -8,17 +8,19 @@
     --cgp-primary-dark: #00695c;
     --cgp-text: #004d40;
     --cgp-border: #b2dfdb;
-    --cgp-shadow: rgba(0, 121, 107, 0.4);
+    --cgp-shadow-color: #10b981;
+    --cgp-ste-border-light: #bbf7d0;
+    --cgp-ste-border-dark: #34d399;
+    --cgp-ste-text-dark: #064e3b;
 }
 
 #communityGalleryPane {
-    background-color: var(--cgp-bg);
     padding: 20px;
     height: 100%;
     overflow: hidden;
+    /*background-color: var(--cgp-bg);*/
 }
 
-/* --- 主布局容器 --- */
 .cgp-container {
     display: flex;
     gap: 20px;
@@ -26,73 +28,87 @@
     overflow: hidden;
 }
 
-/* --- 左侧面板：添加与监控 --- */
 .cgp-left-panel {
-    flex: 0 0 400px; /* 固定宽度 */
+    flex: 0 0 420px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    min-width: 350px;
+    min-width: 380px;
 }
 
-/* --- 右侧面板：已安装列表 --- */
 .cgp-right-panel {
-    flex-grow: 1; /* 占据剩余空间 */
+    flex-grow: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
     padding: 20px;
     background-color: #ffffff;
-    border: 2px solid var(--cgp-border);
+    border: 2px solid var(--cgp-ste-border-light);
     border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: 4px 4px 0px var(--cgp-ste-border-dark);
 }
 
-/* --- 添加图库区域 --- */
+/* --- 添加图库区域 (参考 STE 样式) --- */
 .cgp-add-section {
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* STE 样式引用 */
     padding: 20px;
     background-color: #ffffff;
-    border: 2px solid var(--cgp-border);
+    border: 2px solid var(--cgp-ste-border-light);
     border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: 4px 4px 0px var(--cgp-ste-border-dark);
 }
 
-.cgp-add-section h3 {
-    font-size: 1.3em;
-    color: var(--cgp-text);
-    margin: 0 0 15px 0;
+.cgp-add-section .column-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--cgp-ste-text-dark);
+    margin-bottom: 10px;
+    padding-bottom: 12px;
+    border-bottom: 3px solid var(--cgp-ste-border-light);
+    text-align: center;
 }
 
-.cgp-input-wrapper {
+.cgp-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cgp-input-group label {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: var(--cgp-primary-dark);
+    padding-left: 4px;
+}
+
+.cgp-input-row {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+.cgp-input-wrapper {
     position: relative;
-    margin-bottom: 10px;
-}
-
-.cgp-input-wrapper::before {
-    content: '🔗';
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.5em;
-    color: var(--cgp-primary-mid);
-}
-
-#cgp-repo-input {
     flex-grow: 1;
+}
+
+#cgp-repo-url-input,
+#cgp-repo-alias-input {
+    width: 100%;
     height: 48px;
-    padding: 10px 18px 10px 50px;
+    padding: 10px 18px;
     border: 2px solid var(--cgp-border);
     border-radius: 12px;
     font-size: 1em;
     background-color: #fafffe;
 }
 
-#cgp-repo-input:focus {
+#cgp-repo-url-input:focus,
+#cgp-repo-alias-input:focus {
     border-color: var(--cgp-primary-mid);
     box-shadow: 0 0 0 3px rgba(77, 182, 172, 0.3);
     outline: none;
@@ -108,29 +124,32 @@
     font-weight: 700;
     border-radius: 12px;
     cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, filter 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 105, 92, 0.3);
 }
 
-.cgp-add-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.8em;
-    margin-top: 10px;
+#cgp-add-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 105, 92, 0.4);
+    filter: brightness(1.1);
 }
 
-.cgp-security-note {
-    color: #5f7a77;
+#cgp-add-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 105, 92, 0.3);
+    filter: brightness(0.95);
 }
 
-.cgp-discover-link {
-    color: var(--cgp-primary-dark);
-    font-weight: 600;
-    text-decoration: none;
+#cgp-add-button:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 /* --- 状态与日志区域 --- */
 .cgp-status-panel {
-    flex-grow: 1; /* 占据左侧面板剩余高度 */
+    flex-grow: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -195,10 +214,10 @@
 .cgp-right-panel h3 {
     flex-shrink: 0;
     font-size: 1.3em;
-    color: var(--cgp-text);
+    color: var(--cgp-ste-text-dark);
     margin: 0 0 15px 0;
     padding-bottom: 10px;
-    border-bottom: 2px solid var(--cgp-border);
+    border-bottom: 3px solid var(--cgp-ste-border-light);
 }
 
 .cgp-gallery-grid {
@@ -208,10 +227,9 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     padding: 5px;
-    align-content: flex-start; /* 确保卡片从顶部开始排列 */
+    align-content: flex-start;
 }
 
-/* --- 图库卡片样式 --- */
 .cgp-gallery-card {
     background-color: #f8fdfc;
     border: 1px solid var(--cgp-border);
@@ -301,7 +319,6 @@
     border-color: #fca5a5;
 }
 
-/* --- 空状态占位符 --- */
 .cgp-placeholder {
     margin: auto;
     text-align: center;
@@ -317,3 +334,114 @@
     font-size: 1.1em;
     font-weight: 600;
 }
+
+/* --- 卡片悬停动画 --- */
+.cgp-gallery-card {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.cgp-gallery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 105, 92, 0.15);
+}
+
+/* --- 自定义确认弹窗样式 --- */
+#cgpCustomConfirmModal .cgp-modal-content {
+    max-width: 450px;
+    text-align: center;
+    border: 2px solid var(--cgp-primary-mid);
+}
+
+#cgpCustomConfirmModal h4 {
+    color: var(--cgp-primary-dark);
+    border-bottom-color: var(--cgp-border);
+}
+
+#cgpCustomConfirmModal p {
+    font-size: 1.1em;
+    color: var(--cgp-text);
+    margin: 25px 0;
+}
+
+#cgpCustomConfirmModal .cgp-modal-actions {
+    justify-content: center;
+    border-top-color: var(--cgp-border);
+}
+
+/* --- 浮动测速窗口 --- */
+.cgp-floater {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* 水平居中 */
+    width: 680px; /* 加宽以容纳两列 */
+    max-height: 400px;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--cgp-border);
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.cgp-floater.hidden {
+    opacity: 0;
+    transform: translate(-50%, 20px); /* 居中动画 */
+    pointer-events: none;
+}
+
+.cgp-floater-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #f0fdfa;
+    border-bottom: 1px solid var(--cgp-border);
+    font-weight: 600;
+    color: var(--cgp-text);
+    flex-shrink: 0;
+}
+
+.cgp-floater-close {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--cgp-primary-mid);
+}
+
+.cgp-floater-content {
+    overflow-y: auto;
+    padding: 10px;
+    font-size: 0.9em;
+    scrollbar-width: thin;
+    /* 新增：网格布局 */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px; /* 列间距 */
+}
+
+.cgp-speed-item {
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.cgp-speed-item .name {
+    font-weight: 500;
+}
+
+.cgp-speed-item .speed {
+    font-weight: 600;
+}
+
+.cgp-speed-item .speed.ok { color: #27ae60; }
+.cgp-speed-item .speed.slow { color: #f39c12; }
+.cgp-speed-item .speed.timeout { color: #c0392b; }

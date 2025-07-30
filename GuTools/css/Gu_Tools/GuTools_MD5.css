@@ -45,7 +45,7 @@
 }
 
 #md5PaneView .column-title {
-  /* TODO: 审视下方 !important 标记的必要性 */
+  
   font-size: 1.4em !important;
   font-weight: 700 !important;
   color: #495057 !important;
@@ -53,7 +53,7 @@
   padding-bottom: 12px !important;
   border-bottom: 3px solid #dee2e6 !important;
   text-align: center;
-  /* TODO: 审视下方 !important 标记的必要性 */
+  
   background: none !important;
   -webkit-background-clip: initial !important;
   -webkit-text-fill-color: initial !important;
@@ -201,7 +201,7 @@
 
 #md5PaneView .calibration-status #mismatchedMD5Count,
 #md5PaneView .calibration-status #mismatchedCountDisplay {
-  color: #d9480f !important; /* TODO: 审视 !important 标记的必要性 */
+  color: #d9480f !important; 
 }
 
 #md5PaneView #md5CalibrationProgress {
@@ -285,12 +285,12 @@
 }
 
 #md5PaneView .md5-middle-column .tool-button#abortMD5Calibration.hidden {
-  display: none !important; /* TODO: 审视 !important 标记的必要性 */
+  display: none !important; 
 }
 
 #md5PaneView .md5-middle-column .tool-button:disabled,
 #md5PaneView .md5-middle-column .tool-button.disabled {
-  /* TODO: 审视下方 !important 标记的必要性 */
+  
   background-color: #f1f3f5 !important;
   color: #adb5bd !important;
   border-color: #e9ecef !important;

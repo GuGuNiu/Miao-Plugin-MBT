@@ -1,6 +1,6 @@
 #advancedManagementPane {
     padding: 20px;
-    background-color: #fdf2f2;
+    /*background-color: #fdf2f2;*/
     overflow-y: auto;
     height: 100%;
     box-sizing: border-box;

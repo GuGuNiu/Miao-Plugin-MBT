@@ -10,9 +10,59 @@ const yaml = require("js-yaml");
 const crypto = require("crypto");
 const sharp = require("sharp");
 const favicon = require('serve-favicon');
+const http = require('http');
+const ws = require('ws'); 
+const { WebSocketServer } = ws;
+const { GitManager } = require('./src/Git.js');
+const Redis = require('ioredis');
+
+const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
+const DEFAULT_CONFIG_FOR_SERVER = {
+  proxies: [
+    { name: "Moeyy", priority: 0, testUrlPrefix: `https://github.moeyy.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://github.moeyy.xyz/" },
+    { name: "Ghfast", priority: 10, testUrlPrefix: `https://ghfast.top/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghfast.top/" },
+    { name: "FastGit", priority: 12, testUrlPrefix: `https://hub.fastgit.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.fastgit.xyz/" },
+    { name: "GhLLKK", priority: 15, testUrlPrefix: `https://gh.llkk.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.llkk.cc/" },
+    { name: "GhproxyCom", priority: 18, testUrlPrefix: `https://ghproxy.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.com/" },
+    { name: "MirrorGhproxy", priority: 22, testUrlPrefix: `https://mirror.ghproxy.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://mirror.ghproxy.com/" },
+    { name: "GhproxyNet", priority: 25, testUrlPrefix: `https://gh-proxy.net/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh-proxy.net/" },
+    { name: "UiGhproxy", priority: 28, testUrlPrefix: `https://ui.ghproxy.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ui.ghproxy.cc/" },
+    { name: "GhApi999", priority: 30, testUrlPrefix: `https://gh.api.99988866.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.api.99988866.xyz/" },
+    { name: "GhproxyGo", priority: 35, testUrlPrefix: `https://ghproxy.1888866.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.1888866.xyz/" },
+    { name: "KGitHub", priority: 42, testUrlPrefix: `https://kgithub.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://kgithub.com/" },
+    { name: "HubNUAA", priority: 45, testUrlPrefix: `https://hub.nuaa.cf/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.nuaa.cf/" },
+    { name: "HubFGit", priority: 48, testUrlPrefix: `https://hub.fgit.ml/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.fgit.ml/" },
+    { name: "Ghp", priority: 60, testUrlPrefix: `https://ghp.ci/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghp.ci/" },
+    { name: "Ghgo", priority: 60, testUrlPrefix: `https://ghgo.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghgo.xyz/" },
+    { name: "Yumenaka", priority: 70, testUrlPrefix: `https://git.yumenaka.net/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://git.yumenaka.net/" },
+    { name: "GhConSh", priority: 75, testUrlPrefix: `https://gh.con.sh/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.con.sh/" },
+    { name: "GhddlcTop", priority: 80, testUrlPrefix: `https://gh.ddlc.top/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.ddlc.top/" },
+    { name: "SdutGit", priority: 90, testUrlPrefix: `https://git.sdut.me/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://git.sdut.me/" },
+    { name: "GhpsCc", priority: 300, testUrlPrefix: `https://ghps.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghps.cc/" },
+    { name: "Mirror", priority: 310, testUrlPrefix: `https://raw.gitmirror.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://hub.gitmirror.com/" },
+    { name: "GitHub", priority: 500, testUrlPrefix: RAW_URL_Repo1, cloneUrlPrefix: "https://github.com/" },
+    { name: "GitClone", priority: 520, testUrlPrefix: null, cloneUrlPrefix: "https://gitclone.com/" },
+  ],
+  proxyTestFile: "/README.md",
+  proxyTestTimeout: 5000,
+  gitCloneTimeout: 900000,
+};
 
 const app = express();
-const port = 3000;
+const port = process.env.GUGUNIU_PORT || 31540;
+const host = process.env.GUGUNIU_HOST || '0.0.0.0'; 
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
+const broadcast = (data) => {
+  const message = JSON.stringify(data);
+  wss.clients.forEach(client => {
+      if (client.readyState === ws.OPEN) {
+          client.send(message);
+      }
+  });
+};
+console.log('[WebSocket] 服务已启动并附加到 HTTP 服务器。');
 
 // --- 核心常量与配置 ---
 const ALLOWED_IMAGE_EXTENSIONS = new Set([
@@ -90,7 +140,8 @@ const THUMBNAIL_DIRECTORY = ENV_MODE === 'local'
     : path.join(USER_DATA_DIRECTORY, THUMBNAIL_DIRECTORY_NAME);
 const IMG_DIRECTORY = path.join(GU_TOOLS_DIR, "img");
 const INTERNAL_USER_DATA_FILE = path.join(
-  USER_DATA_DIRECTORY,
+  MAIN_REPO_DIR,
+  "GuGuNiu-Gallery",
   "ImageData.json"
 );
 const EXTERNAL_USER_DATA_FILE = path.join(
@@ -101,6 +152,11 @@ const GALLERY_CONFIG_FILE = path.join(
   USER_DATA_DIRECTORY,
   "GalleryConfig.yaml"
 );
+const BAN_LIST_FILE = path.join(
+  USER_DATA_DIRECTORY, 
+  "banlist.json"
+);
+const redis = new Redis();
 
 // 外部插件图片资源路径
 const PLUGIN_IMAGE_PATHS = {
@@ -143,6 +199,39 @@ console.log("----------------------");
 
 // --- 中间件设置 ---
 app.use(express.json({ limit: "10mb" }));
+
+// --- 令牌验证中间件 ---
+const tokenAuthMiddleware = async (req, res, next) => {
+  // 对 favicon.ico 和 API 请求放行
+  if (req.path === '/favicon.ico' || req.path.startsWith('/api/') || req.path.startsWith('/external/')) {
+    return next();
+  }
+  
+  // 检查根路径是否有令牌
+  const token = req.path.substring(1); // 移除开头的 '/'
+  if (!token || token.length !== 6) {
+    return res.status(403).send("<h1>访问令牌无效或缺失</h1><p>请通过机器人获取有效的临时登录链接。</p>");
+  }
+
+  const redisKey = `Yz:GuGuNiu:GuTools:LoginToken:${token}`;
+  
+  try {
+    const userId = await redis.get(redisKey);
+    if (userId) {
+      // 验证成功，放行
+      // 令牌用过一次后立即销毁，防止重复使用
+      await redis.del(redisKey); 
+      return next();
+    } else {
+      return res.status(403).send("<h1>访问令牌无效或已过期</h1><p>请通过机器人重新获取登录链接。</p>");
+    }
+  } catch (error) {
+    console.error('[Token Auth] Redis 验证出错:', error);
+    return res.status(500).send("<h1>服务器验证时出错</h1><p>无法连接到 Redis 服务进行令牌验证。</p>");
+  }
+};
+
+app.use(tokenAuthMiddleware);
 
 // 静态文件服务 (必须在所有API路由之前)
 app.use(express.static(GU_TOOLS_DIR));
@@ -534,6 +623,239 @@ Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS).forEach(
 console.log("--- 静态服务配置完毕 ---");
 
 // --- API 端点 ---
+
+// ==========================================================
+// 社区图库 API
+// ==========================================================
+const gitManager = new GitManager(DEFAULT_CONFIG_FOR_SERVER, console, broadcast);
+const thirdPartyBasePath = path.join(YUNZAI_ROOT_DIR, "resources", "GuGuNiu_third_party");
+const thirdPartyConfigPath = path.join(thirdPartyBasePath, "config.json");
+
+async function _fetchRepoOwnerInfo(repoUrl, logger) {
+  const fetch = (await import('node-fetch')).default;
+  try {
+    const urlMatch = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitee\.com|gitcode\.net)\/([^/]+)\/([^/]+)/);
+    if (!urlMatch) return null; 
+
+    const platform = urlMatch[1];
+    const owner = urlMatch[2];
+    const repo = urlMatch[3].replace(/\.git$/, '');
+    let apiUrl;
+    let ownerInfo = null;
+
+    if (platform === 'github.com') apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
+    else if (platform === 'gitee.com') apiUrl = `https://gitee.com/api/v5/repos/${owner}/${repo}`;
+    else if (platform === 'gitcode.net') apiUrl = `https://gitcode.net/api/v4/projects/${encodeURIComponent(`${owner}/${repo}`)}`;
+    else return null;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const response = await fetch(apiUrl, { signal: controller.signal, headers: { 'User-Agent': 'GuGuNiu-Tuku-Manager' } });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`API 请求失败，状态码: ${response.status}`);
+    const data = await response.json();
+    ownerInfo = (platform === 'gitcode.net') ? data.namespace : data.owner;
+
+    if (ownerInfo) return { ownerName: ownerInfo.name || ownerInfo.login, ownerAvatarUrl: ownerInfo.avatar_url };
+
+  } catch (error) {
+    logger.warn(`获取仓库所有者信息失败 (${repoUrl}):`, error.message);
+  }
+  return null;
+}
+
+const communityGalleryManager = {
+    async getConfig() {
+        try {
+            await fs.access(thirdPartyConfigPath);
+            const content = await fs.readFile(thirdPartyConfigPath, "utf-8");
+            return JSON.parse(content);
+        } catch (e) {
+            return {};
+        }
+    },
+    async saveConfig(config) {
+        await fs.mkdir(thirdPartyBasePath, { recursive: true });
+        await fs.writeFile(thirdPartyConfigPath, JSON.stringify(config, null, 2), "utf-8");
+    },
+    extractOwnerAndRepo(url) {
+      const match = url.match(/(?:github\.com|gitee\.com|gitcode\.com)\/([^/]+)\/([^/]+)/i);
+      return match ? { owner: match[1], repo: match[2].replace(/\.git$/, '') } : null;
+  }
+};
+
+// API: 获取已安装的图库列表
+app.get('/api/community-galleries', async (req, res) => {
+    console.log("请求: [GET] /api/community-galleries");
+    try {
+        const config = await communityGalleryManager.getConfig();
+        res.json(Object.entries(config).map(([alias, data]) => ({ alias, ...data })));
+    } catch (error) {
+        console.error('[API 社区图库] 获取列表失败:', error);
+        res.status(500).json({ success: false, message: '无法读取配置文件' });
+    }
+});
+
+// API: 添加新的社区图库
+app.post('/api/community-galleries/add', async (req, res) => {
+  console.log("请求: [POST] /api/community-galleries/add");
+  const { url, alias } = req.body;
+  if (!url || !alias) {
+      return res.status(400).json({ success: false, message: 'URL 和别名不能为空' });
+  }
+  const repoInfo = communityGalleryManager.extractOwnerAndRepo(url);
+  if (!repoInfo) {
+      return res.status(400).json({ success: false, message: '无效的 Git URL 格式' });
+  }
+  const folderName = `${repoInfo.owner}-${repoInfo.repo}`;
+  const targetPath = path.join(thirdPartyBasePath, folderName);
+
+  // 立即响应前端，告知任务已开始
+  res.status(202).json({ success: true, message: '已接收安装请求' });
+
+  // 现在，后台任务在同一个 async 上下文中执行，await 会生效
+  try {
+      broadcast({ type: 'progress', payload: { status: '开始任务...', progress: 0 } });
+      const config = await communityGalleryManager.getConfig();
+      if (config[alias]) {
+          throw new Error(`别名 "${alias}" 已存在`);
+      }
+      if ((await isDirectory(targetPath))) {
+          await fs.rm(targetPath, { recursive: true, force: true });
+      }
+      
+      // 现在 await 会阻塞后续代码，直到下载完成或失败 
+      const downloadResult = await gitManager.downloadRepo(url, targetPath, alias);
+
+      const ownerInfo = await _fetchRepoOwnerInfo(url, console);
+
+      broadcast({ type: 'log', message: '分析仓库内容...' });
+      
+      config[alias] = {
+          url,
+          repoName: repoInfo.repo,
+          folderName: folderName,
+          ownerName: ownerInfo?.ownerName || repoInfo.owner,
+          ownerAvatarUrl: ownerInfo?.ownerAvatarUrl || null,
+          installDate: new Date().toISOString(),
+          lastSync: new Date().toISOString(),
+      };
+      await communityGalleryManager.saveConfig(config);
+
+      broadcast({ type: 'complete', payload: { success: true, message: `图库 "${alias}" 安装成功!` } });
+
+  } catch (error) {
+      const errorMessage = error.friendlyMessage || error.message || '未知安装错误';
+      broadcast({ type: 'error', payload: { message: errorMessage } });
+      console.error(`安装社区图库 ${alias} 失败:`, error);
+      // 清理失败的下载
+      await fs.rm(targetPath, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
+// API: 更新图库
+app.post('/api/community-galleries/update', async (req, res) => {
+    console.log("请求: [POST] /api/community-galleries/update");
+    const { alias } = req.body;
+    const config = await communityGalleryManager.getConfig();
+    const repoInfo = config[alias];
+    if (!repoInfo) return res.status(404).json({ success: false, message: '未找到图库' });
+    res.status(202).json({ success: true, message: '已接收更新请求' });
+    (async () => {
+        try {
+            const repoPath = path.join(thirdPartyBasePath, repoInfo.folderName);
+            await gitManager.updateRepo(repoPath);
+            broadcast({ type: 'complete', payload: { success: true, message: `图库 "${alias}" 更新成功!` } });
+        } catch (error) {
+            broadcast({ type: 'error', payload: { message: `更新失败: ${error.message}` } });
+        }
+    })();
+});
+
+// API: 移除图库
+app.delete('/api/community-galleries/remove/:alias', async (req, res) => {
+    console.log(`请求: [DELETE] /api/community-galleries/remove/${req.params.alias}`);
+    const { alias } = req.params;
+    const config = await communityGalleryManager.getConfig();
+    const repoInfo = config[alias];
+    if (!repoInfo) return res.status(404).json({ success: false, message: '未找到图库' });
+    try {
+        const repoPath = path.join(thirdPartyBasePath, repoInfo.folderName);
+        await fs.rm(repoPath, { recursive: true, force: true });
+        delete config[alias];
+        await communityGalleryManager.saveConfig(config);
+        res.json({ success: true, message: '移除成功' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: '移除失败' });
+    }
+});
+
+// [GET] /api/ban-list - 获取封禁列表
+app.get('/api/ban-list', async (req, res) => {
+  console.log("请求: [GET] /api/ban-list");
+  try {
+    let banData = [];
+    try {
+      const fileContent = await fs.readFile(BAN_LIST_FILE, 'utf-8');
+      banData = JSON.parse(fileContent);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.log(`  > 封禁列表文件 ${BAN_LIST_FILE} 不存在, 返回空列表。`);
+        return res.json([]);
+      }
+      throw err;
+    }
+
+    if (!Array.isArray(banData)) {
+      console.error(`  > 错误: 封禁列表文件格式无效 (不是数组)。`);
+      return res.status(500).json({ error: "封禁列表文件格式无效。" });
+    }
+
+    // 兼容性处理：如果还是旧的字符串数组格式，则转换为新的对象格式
+    if (banData.length > 0 && typeof banData[0] === 'string') {
+      console.log(`  > 检测到旧版封禁列表格式，正在转换为新格式...`);
+      const imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
+      const pathGidMap = new Map(imageData.map(item => [item.path, item.gid]));
+      
+      const convertedData = banData.map(pathStr => ({
+        gid: pathGidMap.get(pathStr) || "unknown", // 找不到对应 GID 则标记
+        path: pathStr,
+        timestamp: new Date(0).toISOString() // 使用一个默认的旧时间戳
+      }));
+      console.log(`  > 转换完成，返回 ${convertedData.length} 条记录。`);
+      return res.json(convertedData);
+    }
+
+    console.log(`  > 成功读取 ${banData.length} 条封禁记录。`);
+    res.json(banData);
+
+  } catch (error) {
+    console.error('[API 封禁列表] 获取数据出错:', error);
+    res.status(500).json({ error: `读取封禁列表出错: ${error.message}` });
+  }
+});
+
+// [POST] /api/update-ban-list - 更新封禁列表
+app.post('/api/update-ban-list', async (req, res) => {
+  console.log("请求: [POST] /api/update-ban-list");
+  const newBanList = req.body;
+
+  if (!Array.isArray(newBanList)) {
+    return res.status(400).json({ success: false, error: "请求体必须是 JSON 数组。" });
+  }
+
+  console.log(`  > 收到 ${newBanList.length} 条封禁记录，准备保存...`);
+
+  try {
+    const jsonString = JSON.stringify(newBanList, null, 2);
+    await fs.writeFile(BAN_LIST_FILE, jsonString, 'utf-8');
+    res.json({ success: true, message: "封禁列表保存成功！" });
+  } catch (error) {
+    console.error('[API 封禁列表] 保存数据出错:', error);
+    res.status(500).json({ success: false, error: `保存封禁列表出错: ${error.message}` });
+  }
+});
 
 // [GET] /api/thumbnail/* - 动态生成并缓存缩略图
 app.get('/api/thumbnail/*', async (req, res) => {
@@ -1689,7 +2011,7 @@ app.get("/api/image-md5", async (req, res) => {
 // [GET] 获取二级标签列表
 app.get("/api/secondary-tags", async (req, res) => {
   console.log("请求: [GET] /api/secondary-tags");
-  const tagsFilePath = path.join(USER_DATA_DIRECTORY, "SecondTags.json"); 
+  const tagsFilePath = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "SecondTags.json"); 
   try {
     const content = await fs.readFile(tagsFilePath, "utf-8");
     res.json(JSON.parse(content));
@@ -1713,8 +2035,8 @@ app.post("/api/update-secondary-tags", async (req, res) => {
     return res.status(400).json({ success: false, error: "请求数据格式无效。" });
   }
 
-  const tagsFilePath = path.join(USER_DATA_DIRECTORY, "SecondTags.json");
-  const backupFilePath = path.join(USER_DATA_DIRECTORY, "SecondTags.json.bak");
+  const tagsFilePath = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "SecondTags.json");
+  const backupFilePath = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "SecondTags.json.bak"); 
 
   try {
     // 安全起见，先备份
@@ -1742,7 +2064,7 @@ app.post("/api/update-secondary-tags", async (req, res) => {
 // --- 服务前端页面和脚本 ---
 app.use(favicon(path.join(GU_TOOLS_DIR, 'favicon.ico')));
 
-app.get("/", async (req, res) => {
+app.get("/:token([A-Za-z0-9]{6})", async (req, res) => {
   const htmlPath = path.join(GU_TOOLS_DIR, "咕咕牛Web管理.html");
   try {
     await fs.access(htmlPath);
@@ -1865,7 +2187,39 @@ const pregenerateThumbnails = async () => {
   console.log(`  - 已跳过: ${skippedCount} 张 (已缓存)`);
 };
 
+// 为启动检查提供临时的 ExecuteCommand
+const { spawn: spawnForCheck } = require("child_process");
+class TempProcessManager { constructor() { this.processes = new Set(); } register(p) {} unregister(p) {} }
+function ExecuteCommandForCheck(command, args, options, timeout, pm, conlog) {
+    return new Promise((resolve, reject) => {
+        const proc = spawnForCheck(command, args, { ...options, shell: process.platform === 'win32' });
+        proc.on("error", reject);
+        proc.on("close", code => code === 0 ? resolve() : reject(new Error(`Code ${code}`)));
+    });
+}
+
 const initializeServer = async () => {
+  const checkGitAvailability = async () => {
+    try {
+        await ExecuteCommand("git", ["--version"], {}, 5000, new ProcessManager(console), console);
+        console.log("[启动检查] Git 命令 OK.");
+        return true;
+    } catch (error) {
+        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        console.error("!!! 严重错误: Git 命令不可用。");
+        console.error("!!! 请确保服务器已正确安装 Git 并且其 'bin' 目录");
+        console.error("!!! 已被添加至系统环境变量 PATH 中。");
+        console.error("!!! 社区图库功能将无法使用。");
+        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        if (error.code === 'ENOENT') {
+            console.error("错误详情: spawn git ENOENT");
+        } else {
+            console.error("错误详情:", error.message);
+        }
+        return false;
+    }
+};
+await checkGitAvailability();
   console.log("--- 服务器启动前检查 ---");
   try {
     await fs.mkdir(USER_DATA_DIRECTORY, { recursive: true });
@@ -1922,10 +2276,11 @@ app.use((err, req, res, next) => {
   if (!initOk) {
     process.exit(1);
   }
-  app.listen(port, "localhost", () => {
+    server.listen(port, host, () => {
     console.log(`\n====================================================`);
     console.log(`🎉 咕咕牛图库工具 后台服务启动成功！ 🎉`);
-    console.log(`👂 正在监听 http://localhost:${port}`);
+    const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+    console.log(`👂 正在监听 http://${displayHost}:${port} `);
     console.log(`✨ 服务运行中... 按 Ctrl+C 停止。 ✨`);
     console.log(`====================================================\n`);
 
