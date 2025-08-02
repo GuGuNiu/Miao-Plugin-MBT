@@ -6,10 +6,12 @@
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-v3-blue.svg" alt="Miao-Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3  -green.svg" alt="Trss-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3-green.svg" alt="Trss-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
+  <img src="https://img.shields.io/badge/许可证-非商业-brightgreen?style=flat-square" alt="非商业" />
 </p>
+
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
@@ -40,18 +42,17 @@
 
 <br>
 
-**咕咕牛图库** 是 Yunzai 下的角色面板图扩展，提供**很多的超清角色面板图资源**及**围绕面板图的智能化管理功能**，图库自2023年12月起创建至今，希望能有一个稳定、高效、安全的图库体验给到各位。管理器是多类协作 + 静态状态集中管理的混合架构设计，耦合度较高模块间环环相扣，有问题还是反馈吧。
+**咕咕牛图库** 是基于 **Yunzai** 的角色面板图扩展，提供大量超清晰的角色面板图资源及围绕面板图的智能化管理功能。自 **2023年12月** 创建以来，不断在打磨稳定、高效且安全的图库体验。管理器采用多类协作与静态状态集中管理相结合的混合架构设计，模块间高度耦合、环环相扣，使用过程中如有问题欢迎反馈。
 
-- ✅ 已完美兼容 **`Miao-Plugin`**、**`ZZZ-Plugin`**、**`Waves-Plugin`** 插件
-- ✅ 提供[**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图
-- ✅ 高性能模糊角色名匹配 + 多层内存索引，**秒级响应大部分功能**
-- **高自动化的管理系统**：95% 场景支持无人值守，流程、异常处理全自动化。
-- **GitHub智能访问加速**：多节点 Git+HTTP 双通道测速 / 故障自动切换 / 多节点并行下载 / 失效代理重试 / 双层下载容灾机制
-- **完全付费的自动抠图方案**：
-  - 采用 **[Liblib 工作流 + Adobe 云]** 全流程自动抠图
-  - 部分图采用 **Midjourney** 扩图 + 后期调色处理
-  - 保证每张图的视觉适配度和美感
-    
+- ✅ 完美兼容 **Miao-Plugin**、**ZZZ-Plugin**、**Waves-Plugin** 插件
+- ✅ 覆盖[**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图资源
+- ✅ 采用高性能模糊角色名匹配及多层内存索引，实现大部分功能**秒级响应**
+- ✅ 高度自动化的管理系统，支持**95%以上**场景无人值守，流程及异常处理全自动化
+- ✅ GitHub智能访问加速，具备多节点 Git+HTTP 双通道测速、故障自动切换、多节点并行下载、失效代理重试及双层下载容灾机制
+- ✅ 完全付费的自动抠图方案：
+  - 通过 **[Liblib 工作流 + Adobe 云]** 实现全流程自动抠图  
+  - 部分图片采用 **Midjourney** 扩图并进行后期调色，确保每张图在视觉上的适配度和美感
+
 本图库完全由咕咕牛自费维护，**无任何商业化或赞助**。
 
 ## ⚠️ 使用须知 · 请务必仔细阅读
