@@ -9,7 +9,6 @@
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3-green.svg" alt="Trss-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
-  <img src="https://img.shields.io/badge/许可证-非商业-brightgreen?style=flat-square" alt="非商业" />
 </p>
 
 
@@ -35,14 +34,14 @@
       transition: background 0.3s ease;
     " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'" 
        onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-      💬 点击加入QQ群：原神星铁鸣潮绝区零交流群
+      💬 点击加入QQ群：原神/星铁/鸣潮/绝区零/三角洲/王者/小米汽车/特斯拉交流群
     </button>
   </a>
 </div>
 
 <br>
 
-**咕咕牛图库** 是基于 **Yunzai** 的角色面板图扩展，提供大量超清晰的角色面板图资源及围绕面板图的智能化管理功能。自 **2023年12月** 创建以来，不断在打磨稳定、高效且安全的图库体验。管理器采用多类协作与静态状态集中管理相结合的混合架构设计，模块间高度耦合、环环相扣，使用过程中如有问题欢迎反馈。
+**咕咕牛图库** 是基于 **Yunzai** 的角色面板图扩展，提供角色面板图资源及围绕面板图的智能化管理。 **2023年12月** 创建以来，不断在打磨稳定、高效且安全的图库体验。管理器采用多类协作与静态状态集中管理相结合的混合架构设计，模块间高度耦合、环环相扣，使用过程中如有问题欢迎反馈。
 
 - ✅ 完美兼容 **Miao-Plugin**、**ZZZ-Plugin**、**Waves-Plugin** 插件
 - ✅ 覆盖[**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图资源
@@ -52,8 +51,6 @@
 - ✅ 完全付费的自动抠图方案：
   - 通过 **[Liblib 工作流 + Adobe 云]** 实现全流程自动抠图  
   - 部分图片采用 **Midjourney** 扩图并进行后期调色，确保每张图在视觉上的适配度和美感
-
-本图库完全由咕咕牛自费维护，**无任何商业化或赞助**。
 
 ## ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -154,6 +151,12 @@
      
 -   **Q: 更新图库后，看不到新面板图？**
     -   **A:** 索引数据未更新导致的，所有操作都会依据imagedata.json，索引数据不会及时更新。
+-   **Q: 更新图库后，看不到新面板图？**
+    -   **A:** 索引数据未更新导致的，所有操作都会依据imagedata.json，索引数据不会及时更新。
+
+-   **Q: 第三方/社区图库管理混乱？**
+    -   **A:** 仅保证能用。
+
 
 ---
 
