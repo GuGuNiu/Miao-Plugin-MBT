@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import lodash from "lodash";
+import { Worker } from 'node:worker_threads';
 import os from "node:os";
 import fsPromises from "node:fs/promises";
 import { statfs } from 'node:fs/promises';
@@ -59,7 +60,7 @@ class ProcessManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.4";
+const Version = "5.0.5";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -127,10 +128,18 @@ async function getBackgroundFiles(logger) {
   const bgDir = path.join(MiaoPluginMBT.paths.backgroundImgPath, "bg");
   try {
     const entries = await fsPromises.readdir(bgDir);
-    backgroundCache.files = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
-    backgroundCache.lastScan = now;
-    return backgroundCache.files;
+    const newFiles = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
+    if (newFiles.length > 0) {
+        backgroundCache.files = newFiles;
+        backgroundCache.lastScan = now;
+    } else {
+        backgroundCache.files = [];
+        backgroundCache.lastScan = 0; 
+    }
+    return newFiles;
   } catch (err) {
+    backgroundCache.files = [];
+    backgroundCache.lastScan = 0;
     if (err.code !== 'ENOENT') {
       //logger.error(`${Default_Config.logPrefix}扫描 bg 目录失败:`, err);
     }
@@ -149,10 +158,18 @@ async function getPictureFiles(logger) {
   const pictureDir = path.join(MiaoPluginMBT.paths.backgroundImgPath, "picture");
   try {
     const entries = await fsPromises.readdir(pictureDir);
-    pictureCache.files = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
-    pictureCache.lastScan = now;
-    return pictureCache.files;
+    const newFiles = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
+    if (newFiles.length > 0) {
+        pictureCache.files = newFiles;
+        pictureCache.lastScan = now;
+    } else {
+        pictureCache.files = [];
+        pictureCache.lastScan = 0;
+    }
+    return newFiles;
   } catch (err) {
+    pictureCache.files = [];
+    pictureCache.lastScan = 0;
     if (err.code !== 'ENOENT') {
       // logger.error(`${Default_Config.logPrefix}扫描 picture 目录失败:`, err);
     }
@@ -824,41 +841,46 @@ class MiaoPluginMBT extends plugin {
   async accept(old_this) {
     //this.logger.info("『咕咕牛🐂』检测到管理器热重载，开始处理...");
     if (old_this && typeof old_this.destroy === 'function') {
-      this.logger.info("『咕咕牛🐂』检测到管理器正在热重载...");
+      this.logger.info("『咕咕牛🐂』检测到管理器正在热重载，正在执行销毁旧实例...");
       await old_this.destroy();
-      this.logger.info("『咕咕牛🐂』管理器已热重载。");
+      this.logger.info("『咕咕牛🐂』旧实例已销毁，新实例将重新初始化。");
     } else {
       //this.logger.warn("『咕咕牛🐂』未发现正在运行的旧实例。这可能是首次加载或插件处于休眠状态被更新。");
     }
   }
 
   async destroy() {
-    //this.logger.info("『咕咕牛🐂』开始销毁插件资源...");
+    this.logger.warn(`${this.logPrefix}开始销毁插件资源并重置所有静态状态...`);
 
-    //清理定时器
-    if (MiaoPluginMBT._loadMonitorInterval) {
-      clearInterval(MiaoPluginMBT._loadMonitorInterval);
-      MiaoPluginMBT._loadMonitorInterval = null;
-      //this.logger.info("『咕咕牛🐂 负载监控定时器已清理。");
+    //  停止所有定时任务
+    if (this.task) {
+        this.task.forEach(t => {
+            if (t.cron) {
+                const scheduler = require('node-schedule');
+                scheduler.cancelJob(t.name);
+            }
+        });
+        this.task = null;
     }
-
-    //关闭文件监听器
-    if (MiaoPluginMBT._configWatcher) {
-      MiaoPluginMBT._configWatcher.close();
-      MiaoPluginMBT._configWatcher = null;
-      //this.logger.info("『咕咕牛🐂』配置文件监听器已关闭。");
-    }
-
-    MiaoPluginMBT.processManager.killAll('SIGKILL', '插件销毁'); 
-    // 使用 SIGKILL 强制杀死
+    
+    //  停止所有由该插件实例启动的子进程
+    MiaoPluginMBT.processManager.killAll('SIGKILL', '插件热重载或销毁');
     if (MiaoPluginMBT._guToolsProcess) {
         MiaoPluginMBT._guToolsProcess.removeAllListeners();
         MiaoPluginMBT._guToolsProcess = null;
     }
 
-    //重置所有静态缓存和状态
+    //  停止所有监控器
+    if (MiaoPluginMBT._loadMonitorInterval) {
+      clearInterval(MiaoPluginMBT._loadMonitorInterval);
+      MiaoPluginMBT._loadMonitorInterval = null;
+      this.logger.info(`${this.logPrefix}负载监控定时器已清理。`);
+    }
+
+    //  重置所有静态缓存和状态变量
     MiaoPluginMBT.isGloballyInitialized = false;
     MiaoPluginMBT.initializationPromise = null;
+    MiaoPluginMBT.isInitializing = false;
     MiaoPluginMBT.MBTConfig = {};
     MiaoPluginMBT._imgDataCache = Object.freeze([]);
     MiaoPluginMBT._userBanSet = new Set();
@@ -870,7 +892,13 @@ class MiaoPluginMBT extends plugin {
     MiaoPluginMBT._indexByGid.clear();
     MiaoPluginMBT._indexByCharacter.clear();
     MiaoPluginMBT._indexByTag.clear();
-    this.logger.info("『咕咕牛🐂』所有静态缓存和索引已重置。");
+    MiaoPluginMBT._characterGameMap.clear();
+    MiaoPluginMBT._systemLoadState = { level: 'NORMAL', lastCheck: 0, autoSwitchLock: false };
+    MiaoPluginMBT._secondaryTagsCache = [];
+    
+    this.isPluginInited = false;
+
+    this.logger.warn(`${this.logPrefix}所有静态缓存、索引和状态已强制重置。`);
   }
 
   static async _installGuToolsDependencies(logger = global.logger || console) {
@@ -881,7 +909,7 @@ class MiaoPluginMBT extends plugin {
     try {
       await fsPromises.access(packageJsonPath);
     } catch (error) {
-      logger.warn(`${Default_Config.logPrefix}[GuTools] 未找到 package.json 文件，跳过依赖安装。`);
+      logger.warn(`${Default_Config.logPrefix}[GuTools Web] 未找到 package.json 文件，跳过依赖安装。`);
       return true;
     }
 
@@ -893,22 +921,22 @@ class MiaoPluginMBT extends plugin {
             packageName = pkg.name;
         }
     } catch (pkgError) {
-        logger.warn(`${Default_Config.logPrefix}[GuTools] 读取 package.json 名称失败，将使用默认值 'gutools'。`);
+        logger.warn(`${Default_Config.logPrefix}[GuTools Web] 读取 package.json 名称失败，将使用默认值 'gutools'。`);
     }
 
-    logger.info(`${Default_Config.logPrefix}[GuTools] 正在工作区模式下为 [${packageName}] 安装后台服务依赖...`);
+    logger.info(`${Default_Config.logPrefix}[GuTools Web] 正在工作区模式下为 [${packageName}] 安装后台服务依赖...`);
 
     try {
       // 在Yunzai根目录执行，并使用 --filter
       const result = await ExecuteCommand("pnpm", ["install", "--filter", packageName], { cwd: yunzaiRootDir }, 300000); // 5分钟超时
       
       if (result.stderr && !result.stderr.includes('Peer dependency issues')) {
-        logger.warn(`${Default_Config.logPrefix}[GuTools] 依赖安装过程中的输出:\n${result.stderr}`);
+        logger.warn(`${Default_Config.logPrefix}[GuTools Web] 依赖安装过程中的输出:\n${result.stderr}`);
       }
-      logger.info(`${Default_Config.logPrefix}[GuTools] 依赖安装完成。`);
+      logger.info(`${Default_Config.logPrefix}[GuTools Web] 依赖安装完成。`);
       return true;
     } catch (error) {
-      logger.error(`${Default_Config.logPrefix}[GuTools] 依赖安装失败!`);
+      logger.error(`${Default_Config.logPrefix}[GuTools Web] 依赖安装失败!`);
       logger.error(error.stderr || error.message);
       throw new Error("GuTools 后台服务依赖安装失败，请检查日志。");
     }
@@ -1761,54 +1789,209 @@ class MiaoPluginMBT extends plugin {
     return downloadedRepoPaths;
   }
 
-  static async ScanLocalImagesToBuildCache(logger = global.logger || console) {
+  static async _scanWithWorkers(logger) {
+    const logPrefix = Default_Config.logPrefix;
+    return new Promise(async (resolve, reject) => {
+        logger.info(`${logPrefix}[Worker] 开始使用多线程并行扫描...`);
+        const startTime = Date.now();
+        
+        // --- Worker 脚本代码内联 ---
+        const workerCode = `
+            import { parentPort, workerData } from 'node:worker_threads';
+            import fs from 'node:fs/promises';
+            import path from 'node:path';
+            
+            const ERROR_CODES = { NotFound: "ENOENT", Access: "EACCES" };
 
-    const fallbackCache = []; const ReposToScan = [];
-    const repoPathsMap = {
-      "Miao-Plugin-MBT": { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 },
-      "Miao-Plugin-MBT-2": { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
-      "Miao-Plugin-MBT-3": { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 },
-      "Miao-Plugin-MBT-4": { path: MiaoPluginMBT.paths.LocalTuKuPath4, num: 4 },
-    };
-    for (const storageBoxName in repoPathsMap) {
-      const repoInfo = repoPathsMap[storageBoxName];
-      if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) {
-        ReposToScan.push({ path: repoInfo.path, name: storageBoxName });
-      }
-    }
-    //if (ReposToScan.length === 0) { logger.warn(`${Default_Config.logPrefix}没有找到本地图库仓库目录（1-4号），无法扫描。`); return []; }
-    //logger.info(`${Default_Config.logPrefix}开始扫描本地仓库: ${ReposToScan.map(r => r.name).join(", ")}...`);
-    const imagePathsFound = new Set();
-    for (const Repo of ReposToScan) {
-      for (const gameFolderKey in MiaoPluginMBT.paths.sourceFolders) {
-        if (gameFolderKey === "gallery") continue;
-        const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[gameFolderKey]; if (!sourceFolderName) continue;
-        const gameFolderPath = path.join(Repo.path, sourceFolderName);
-        try {
-          await fsPromises.access(gameFolderPath);
-          const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true });
-          for (const charDir of characterDirs) {
-            if (charDir.isDirectory()) {
-              const characterName = charDir.name; const charFolderPath = path.join(gameFolderPath, characterName);
-              try {
-                const imageFiles = await fsPromises.readdir(charFolderPath);
-                for (const imageFile of imageFiles) {
-                  if (imageFile.toLowerCase().endsWith(".webp")) {
-                    const relativePath = path.join(sourceFolderName, characterName, imageFile).replace(/\\/g, "/");
-                    if (!imagePathsFound.has(relativePath)) {
-                      fallbackCache.push({ storagebox: Repo.name, path: relativePath, characterName: characterName, attributes: {} });
-                      imagePathsFound.add(relativePath);
-                    }
-                  }
+            function logToParent(level, message, ...args) {
+                if (parentPort) {
+                    parentPort.postMessage({ type: 'log', payload: { level, message, args } });
                 }
-              } catch (readCharErr) { if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) logger.warn(`${Default_Config.logPrefix}读取角色目录 ${charFolderPath} 失败:`, readCharErr.code); }
             }
+
+            async function scanAssignedDirectories(repoInfo) {
+                const { path: repoPath, name: repoName } = repoInfo;
+                const results = [];
+                const sourceFolders = { gs: "gs-character", sr: "sr-character", zzz: "zzz-character", waves: "waves-character" };
+
+                for (const gameKey in sourceFolders) {
+                    const sourceFolderName = sourceFolders[gameKey];
+                    if (!sourceFolderName) continue;
+                    const gameFolderPath = path.join(repoPath, sourceFolderName);
+                    try {
+                        await fs.access(gameFolderPath);
+                        const characterDirs = await fs.readdir(gameFolderPath, { withFileTypes: true });
+                        for (const charDir of characterDirs) {
+                            if (charDir.isDirectory()) {
+                                const characterName = charDir.name;
+                                const charFolderPath = path.join(gameFolderPath, characterName);
+                                try {
+                                    const imageFiles = await fs.readdir(charFolderPath);
+                                    for (const imageFile of imageFiles) {
+                                        if (imageFile.toLowerCase().endsWith(".webp")) {
+                                            const relativePath = path.join(sourceFolderName, characterName, imageFile).replace(/\\\\/g, "/");
+                                            results.push({ storagebox: repoName, path: relativePath, characterName: characterName, attributes: {} });
+                                        }
+                                    }
+                                } catch (readCharErr) {
+                                    if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) {
+                                        logToParent('warn', \`读取角色目录 \${charFolderPath} 失败:\`, readCharErr.code);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (readGameErr) {
+                        if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) {
+                            logToParent('warn', \`访问或读取游戏目录 \${gameFolderPath} 失败:\`, readGameErr.code);
+                        }
+                    }
+                }
+                return results;
+            }
+
+            (async () => {
+                if (!parentPort) return;
+                try {
+                    const { reposToScan } = workerData;
+                    let allFoundImages = [];
+                    for (const repo of reposToScan) {
+                        const images = await scanAssignedDirectories(repo);
+                        allFoundImages.push(...images);
+                    }
+                    parentPort.postMessage({ status: 'success', data: allFoundImages });
+                } catch (error) {
+                    parentPort.postMessage({ status: 'error', error: error.message });
+                } finally {
+                    process.exit(0);
+                }
+            })();
+        `;
+
+        const reposToScan = [];
+        const repoPathsMap = {
+            "Miao-Plugin-MBT": { path: this.paths.LocalTuKuPath, num: 1 },
+            "Miao-Plugin-MBT-2": { path: this.paths.LocalTuKuPath2, num: 2 },
+            "Miao-Plugin-MBT-3": { path: this.paths.LocalTuKuPath3, num: 3 },
+            "Miao-Plugin-MBT-4": { path: this.paths.LocalTuKuPath4, num: 4 },
+        };
+
+        for (const repoName in repoPathsMap) {
+            const repoInfo = repoPathsMap[repoName];
+            if (repoInfo.path && (await this.IsTuKuDownloaded(repoInfo.num))) {
+                reposToScan.push({ path: repoInfo.path, name: repoName });
+            }
+        }
+        
+        if (reposToScan.length === 0) {
+             logger.warn(`${logPrefix}[Worker] 未找到任何已下载的本地仓库，扫描结束。`);
+             return resolve([]);
+        }
+
+        const numCores = os.cpus().length;
+        const numWorkers = Math.max(1, Math.min(reposToScan.length, numCores - 1));
+        const chunks = Array.from({ length: numWorkers }, () => []);
+        reposToScan.forEach((repo, index) => chunks[index % numWorkers].push(repo));
+
+        //logger.info(`${logPrefix}[Worker] 已启动 ${numWorkers} 个工作线程处理 ${reposToScan.length} 个仓库任务。`);
+
+        const workerPromises = chunks.map((chunk, i) => {
+            if (chunk.length === 0) return Promise.resolve([]);
+            return new Promise((res, rej) => {
+                const worker = new Worker(workerCode, { eval: true, workerData: { reposToScan: chunk } });
+                
+                worker.on('message', (message) => {
+                    if (message.type === 'log') {
+                        const { level, message: msg, args } = message.payload;
+                        logger[level](`${logPrefix}[Worker ${i}] ${msg}`, ...args);
+                    } else if (message.status === 'success') {
+                        res(message.data);
+                    } else {
+                        rej(new Error(message.error));
+                    }
+                });
+
+                worker.on('error', rej);
+                worker.on('exit', (code) => {
+                    if (code !== 0) rej(new Error(`工作线程 ${i} 异常退出，退出码: ${code}`));
+                });
+            });
+        });
+
+        try {
+            const resultsFromWorkers = await Promise.all(workerPromises);
+            const allImages = resultsFromWorkers.flat();
+            const duration = Date.now() - startTime;
+            //logger.info(`${logPrefix}[Worker] 所有线程扫描完成，共找到 ${allImages.length} 个图片文件，耗时 ${duration}ms。`);
+            resolve(allImages);
+        } catch (error) {
+            logger.error(`${logPrefix}[Worker] 并行扫描过程中发生错误:`, error);
+            reject(error);
+        }
+    });
+  }
+
+
+  static async ScanLocalImagesToBuildCache(logger = global.logger || console) {
+    const logPrefix = Default_Config.logPrefix;
+    try {
+        const workerResults = await this._scanWithWorkers(logger);
+        const imagePathsFound = new Set();
+        const uniqueResults = [];
+        for (const item of workerResults) {
+            if (!imagePathsFound.has(item.path)) {
+                uniqueResults.push(item);
+                imagePathsFound.add(item.path);
+            }
+        }
+        return uniqueResults;
+    } catch (workerError) {
+        //logger.warn(`${logPrefix}[Worker] 并行扫描失败，已自动切换回传统的单线程扫描模式。错误详情: ${workerError.message}`);
+        
+        const fallbackCache = []; const ReposToScan = [];
+        const repoPathsMap = {
+          "Miao-Plugin-MBT": { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 },
+          "Miao-Plugin-MBT-2": { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
+          "Miao-Plugin-MBT-3": { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 },
+          "Miao-Plugin-MBT-4": { path: MiaoPluginMBT.paths.LocalTuKuPath4, num: 4 },
+        };
+        for (const storageBoxName in repoPathsMap) {
+          const repoInfo = repoPathsMap[storageBoxName];
+          if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) {
+            ReposToScan.push({ path: repoInfo.path, name: storageBoxName });
           }
-        } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.warn(`${Default_Config.logPrefix}读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
-      }
+        }
+        const imagePathsFound = new Set();
+        for (const Repo of ReposToScan) {
+          for (const gameFolderKey in MiaoPluginMBT.paths.sourceFolders) {
+            if (gameFolderKey === "gallery") continue;
+            const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[gameFolderKey]; if (!sourceFolderName) continue;
+            const gameFolderPath = path.join(Repo.path, sourceFolderName);
+            try {
+              await fsPromises.access(gameFolderPath);
+              const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true });
+              for (const charDir of characterDirs) {
+                if (charDir.isDirectory()) {
+                  const characterName = charDir.name; const charFolderPath = path.join(gameFolderPath, characterName);
+                  try {
+                    const imageFiles = await fsPromises.readdir(charFolderPath);
+                    for (const imageFile of imageFiles) {
+                      if (imageFile.toLowerCase().endsWith(".webp")) {
+                        const relativePath = path.join(sourceFolderName, characterName, imageFile).replace(/\\/g, "/");
+                        if (!imagePathsFound.has(relativePath)) {
+                          fallbackCache.push({ storagebox: Repo.name, path: relativePath, characterName: characterName, attributes: {} });
+                          imagePathsFound.add(relativePath);
+                        }
+                      }
+                    }
+                  } catch (readCharErr) { if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) logger.warn(`${Default_Config.logPrefix}读取角色目录 ${charFolderPath} 失败:`, readCharErr.code); }
+                }
+              }
+            } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.warn(`${Default_Config.logPrefix}读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
+          }
+        }
+        //logger.info(`${logPrefix} 单线程扫描完成，共找到 ${fallbackCache.length} 个 .webp 图片文件。`);
+        return fallbackCache;
     }
-    //logger.info(`${Default_Config.logPrefix}扫描完成，共找到 ${fallbackCache.length} 个 .webp 图片文件。`);
-    return fallbackCache;
   }
 
   static async LoadUserBans(forceReload = false, logger = global.logger || console) {
@@ -2140,6 +2323,76 @@ class MiaoPluginMBT extends plugin {
 
     logger.error(`${Default_Config.logPrefix}尝试了所有 API，均未能获取到公网IP。`);
     return null;
+  }
+
+  static async _getIPGeolocation(logger = global.logger || console) {
+    const logPrefix = Default_Config.logPrefix;
+    const publicIp = await this._getPublicIP(logger);
+    if (!publicIp) {
+        logger.warn(`${logPrefix}未能获取公网IP，无法进行地理位置判断。`);
+        return null;
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const response = await fetch(`http://ip-api.com/json/${publicIp}?lang=zh-CN`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`API请求失败，状态码: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.status === 'success' && data.countryCode) {
+            logger.info(`${logPrefix}地理位置识别成功: ${data.country || '未知'}(${data.countryCode})`);
+            return data;
+        } else {
+            logger.warn(`${logPrefix}地理位置API返回状态失败:`, data.message || '未知错误');
+            return null;
+        }
+    } catch (error) {
+        logger.error(`${logPrefix}查询IP地理位置时出错:`, error.name === 'AbortError' ? '请求超时' : error.message);
+        return null;
+    }
+  }
+
+  static async GitLsRemoteTest(repoUrl, cloneUrlPrefix, nodeName, logger) {
+    const logPrefix = Default_Config.logPrefix;
+    let actualRepoUrl = "";
+
+    try {
+      const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+      let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
+      if (!userAndRepoPath) {
+        throw new Error(`无法从 repoUrl (${repoUrl}) 提取路径`);
+      }
+
+      if (!cloneUrlPrefix || nodeName === "GitHub") {
+        actualRepoUrl = `https://github.com/${userAndRepoPath}.git`;
+      } else {
+        const cleanPrefix = cloneUrlPrefix.replace(/\/$/, "");
+        if (nodeName === "GitClone") {
+             actualRepoUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
+        } else if (nodeName === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
+             actualRepoUrl = `${cleanPrefix}/${userAndRepoPath}`;
+        }
+        else {
+            actualRepoUrl = `${cleanPrefix}/${repoUrl}`;
+        }
+      }
+
+      const startTime = Date.now();
+      await ExecuteCommand("git", ["ls-remote", "--heads", actualRepoUrl], {}, 20000);
+      const duration = Date.now() - startTime;
+
+      return { success: true, duration: duration };
+
+    } catch (error) {
+      // logger.debug(`${logPrefix}[ls-remote][${nodeName}] 测试失败:`, error.message);
+      return { success: false, duration: Infinity, error: error };
+    }
   }
 
   async LoginGuTools(e) {
@@ -3035,7 +3288,7 @@ class MiaoPluginMBT extends plugin {
     }
   }
 
-  static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, e, logger, sortedNodes = [], isRaceMode = false, processManager) {
+  static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, e, logger, sortedNodes = [], processManager) {
     const logPrefix = Default_Config.logPrefix;
     let lastError = null;
     let repoTypeName;
@@ -3044,105 +3297,86 @@ class MiaoPluginMBT extends plugin {
       case 2: repoTypeName = "二号仓库"; break;
       case 3: repoTypeName = "三号仓库"; break;
       case 4: repoTypeName = "四号仓库"; break;
-      default: repoTypeName = `附属仓库(${repoNum}号)`;
+      default: repoTypeName = `仓库(${repoNum})`;
     }
 
     const tempDownloadsBaseDir = path.join(MiaoPluginMBT.paths.tempPath, "guguniu-downloads");
 
     if (!sortedNodes || sortedNodes.length === 0) {
-      return { success: false, nodeName: "无可用源", error: new Error("没有可用的下载节点列表") };
+        return { success: false, nodeName: "无可用源", error: new Error("没有可用的下载节点列表") };
     }
 
-    // 竞速下载逻辑
-    if (isRaceMode) {
-      const raceCandidates = sortedNodes.filter(n => n.gitResult && n.gitResult.success).slice(0, 2);
-      if (raceCandidates.length > 0) {
-        //logger.info(`${logPrefix}[${repoTypeName}] 开始并行竞速下载，节点: ${raceCandidates.map(n => n.name).join(', ')}`);
-
-        const raceProcessManager = new ProcessManager(logger);
-        const downloadPromises = raceCandidates.map(node =>
-          MiaoPluginMBT.DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, null, logger, [node], false, raceProcessManager)
-        );
-
-        try {
-          const winnerResult = await Promise.any(downloadPromises.map(p => p.then(res => {
-            if (res.success) return res;
-            throw new Error(`节点失败: ${res.nodeName || '未知'}`);
-          })));
-
-          //logger.info(`${logPrefix}[${repoTypeName}] 竞速成功优胜节点: ${winnerResult.nodeName}。`);
-          return winnerResult;
-        } catch (aggregateError) {
-          //logger.warn(`${logPrefix}[${repoTypeName}] 并行竞速全部失败，将降级为稳定模式逐一尝试...`);
-          // 竞速失败，不立即返回，让后续的稳定模式接管
-        }
-      }
-    }
-
-    // 稳定模式 或 竞速降级后的稳定模式
     for (const node of sortedNodes) {
-      if (!node.gitResult || !node.gitResult.success) continue;
-      const maxAttempts = (node.name === "Ghfast" || node.name === "Moeyy") ? 2 : 1;
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const nodeName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(代理)`;
-        const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${node.name.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}`;
-        const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
+        if (!((node.gitResult && node.gitResult.success) || (node.gitResult.isFallback))) continue;
 
-        try {
-          await fsPromises.mkdir(tempRepoPath, { recursive: true });
-          if (attempt > 1) {
-            //logger.info(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试...`);
-            await common.sleep(1500);
-          }
+        const maxAttempts = (node.name === "Ghfast" || node.name === "Moeyy") ? 2 : 1;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const nodeName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(${node.protocol})`;
+            const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${node.name.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}`;
+            const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
 
-          let actualCloneUrl = "";
-          const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-          let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
-          if (!userAndRepoPath) { throw new Error(`无法提取仓库路径`); }
-          if (node.name === "GitHub") actualCloneUrl = repoUrl;
-          else if (node.cloneUrlPrefix) {
-            const cleanPrefix = node.cloneUrlPrefix.replace(/\/$/, "");
-            if (node.name === "GitClone") actualCloneUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
-            else if (node.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) actualCloneUrl = `${cleanPrefix}/${userAndRepoPath}`;
-            else actualCloneUrl = `${cleanPrefix}/${repoUrl}`;
-          } else { throw new Error(`源 ${node.name} 配置缺少 cloneUrlPrefix`); }
+            try {
+                await fsPromises.mkdir(tempRepoPath, { recursive: true });
+                if (attempt > 1) {
+                    logger.info(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试...`);
+                    await common.sleep(1500);
+                }
 
-          const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", "-b", branch, actualCloneUrl, tempRepoPath];
-          const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
-          let cloneTimeout = Default_Config.gitCloneTimeout;
-          if (repoNum === 1 && node.name === "GitHub") {
-            cloneTimeout = 60000;
-            //logger.info(`${logPrefix}[${repoTypeName}][${nodeName}] 检测到核心库直连，超时特殊设置为: 60s`);
-          } else {
-            //logger.info(`${logPrefix}[${repoTypeName}][${nodeName}] 第 ${attempt} 次尝试，超时设置为: ${cloneTimeout / 1000}s`);
-          }
+                let actualCloneUrl = "";
+                const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+                let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
+                if (!userAndRepoPath) { throw new Error(`无法提取仓库路径`); }
+                
+                if (node.name === "GitHub") {
+                    actualCloneUrl = repoUrl;
+                } else if (node.cloneUrlPrefix) {
+                    const cleanPrefix = node.cloneUrlPrefix.replace(/\/$/, "");
+                     if (node.name === "GitClone") {
+                         actualCloneUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
+                    } else if (node.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
+                         actualCloneUrl = `${cleanPrefix}/${userAndRepoPath}`;
+                    } else {
+                        actualCloneUrl = `${cleanPrefix}/${repoUrl}`;
+                    }
+                } else { throw new Error(`源 ${node.name} 配置缺少 cloneUrlPrefix`); }
 
-          await ExecuteCommand("git", cloneArgs, gitOptions, cloneTimeout, null, null, null, processManager);
+                const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", "-b", branch, actualCloneUrl, tempRepoPath];
+                const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+                
+                let cloneTimeout = Default_Config.gitCloneTimeout;
+                if (repoNum === 1 && node.name === "GitHub") {
+                    cloneTimeout = 60000; 
+                }
 
-          if (repoNum === 1) {
-            const requiredPath = "GuGuNiu-Gallery/html";
-            try { await fsPromises.access(path.join(tempRepoPath, requiredPath)); }
-            catch (accessError) { throw new Error(`仓库下载不完整，缺少关键目录: ${requiredPath}`); }
-          }
+                await ExecuteCommand("git", cloneArgs, gitOptions, cloneTimeout, null, null, null, processManager);
 
-          await safeDelete(finalLocalPath);
-          await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
-          await fsPromises.rename(tempRepoPath, finalLocalPath);
-          const gitLog = await MiaoPluginMBT.GetTuKuLog(1, finalLocalPath, logger);
-          return { success: true, nodeName, error: null, gitLog };
-        } catch (error) {
-          lastError = error;
-          //logger.warn(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试失败:`, error.message);
-          const stderr = (error.stderr || "").toLowerCase();
-          if (stderr.includes("could not read from remote repository") || stderr.includes("authentication failed")) {
-            //logger.error(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 遭遇认证/权限错误，将不再重试此节点。`);
-            break;
-          }
-        } finally {
-          await safeDelete(tempRepoPath);
+                if (repoNum === 1) {
+                    const requiredPath = "GuGuNiu-Gallery/html";
+                    try { await fsPromises.access(path.join(tempRepoPath, requiredPath)); }
+                    catch (accessError) { throw new Error(`仓库下载不完整，缺少关键目录: ${requiredPath}`); }
+                }
+
+                await safeDelete(finalLocalPath);
+                await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
+                await fsPromises.rename(tempRepoPath, finalLocalPath);
+                const gitLog = await MiaoPluginMBT.GetTuKuLog(1, finalLocalPath, logger);
+                
+                return { success: true, nodeName, error: null, gitLog };
+
+            } catch (error) {
+                lastError = error;
+                //logger.warn(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试失败:`, error.message);
+                const stderr = (error.stderr || "").toLowerCase();
+                if (stderr.includes("could not read from remote repository") || stderr.includes("authentication failed")) {
+                    logger.error(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 遭遇认证/权限错误，将不再重试此节点。`);
+                    break;
+                }
+            } finally {
+                await safeDelete(tempRepoPath);
+            }
         }
-      }
     }
+
     return { success: false, nodeName: "所有节点失败", error: lastError || new Error("所有可用节点下载尝试均失败") };
   }
 
@@ -3627,70 +3861,79 @@ class MiaoPluginMBT extends plugin {
     return results;
   }
 
-  static async applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger = global.logger || console) {
+  static async applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger = global.logger || console, forceDirect = false) {
     const logPrefix = Default_Config.logPrefix;
 
-    if (!Array.isArray(gitTestResults)) {
-      logger.error(`${logPrefix}CRITICAL: applySmartSelectionStrategy 接收到的 gitTestResults 不是一个数组！`);
-      gitTestResults = [];
+    if (forceDirect) {
+        const githubNode = allHttpTestResults.find(n => n.name === 'GitHub');
+        if (githubNode && githubNode.speed !== Infinity) {
+            //logger.info(`${logPrefix}已强制启用 GitHub 直连优先策略。`);
+            const otherNodes = allHttpTestResults.filter(n => n.name !== 'GitHub');
+            const sortedOthers = await this.applySmartSelectionStrategy(otherNodes, gitTestResults, logger, false);
+            return [ { ...githubNode, gitResult: { success: true, isFallback: false }, protocol: 'GIT', latency: githubNode.speed }, ...sortedOthers ];
+        }
+        //logger.warn(`${logPrefix}强制直连失败，GitHub 节点 HTTP 测试不通，将回退至常规策略。`);
     }
-
+    
+    if (!Array.isArray(gitTestResults)) {
+        logger.error(`${logPrefix}CRITICAL: applySmartSelectionStrategy 接收到的 gitTestResults 不是一个数组！`);
+        gitTestResults = [];
+    }
+    
     const gitEliteNodesMap = new Map(gitTestResults.filter(n => n.gitResult && n.gitResult.success).map(n => [n.name, n.gitResult]));
+    
     if (gitEliteNodesMap.size === 0) {
-      //logger.error(`${logPrefix}Git轻量级探测失败，所有节点的Git通道均不可用。将仅基于HTTP延迟进行排序作为备用策略。`);
+        //logger.warn(`${logPrefix}Git轻量级探测失败，所有节点的Git通道均不可用。将仅基于HTTP延迟进行排序作为备用策略。`);
 
-      const fallbackNodes = allHttpTestResults
-        .filter(r => r.speed !== Infinity)
-        .sort((a, b) => a.speed - b.speed);
+        const fallbackNodes = allHttpTestResults
+            .filter(r => r.speed !== Infinity)
+            .sort((a, b) => a.speed - b.speed);
 
-      if (fallbackNodes.length === 0) {
-        logger.error(`${logPrefix}CRITICAL: Git探测和HTTP测速均全部失败，无法确定任何可用节点！`);
-        return [];
-      }
-
-      //logger.warn(`${logPrefix}备用下载顺序 (仅HTTP): ${fallbackNodes.map(n => n.name).join(' -> ')}`);
-      return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
+        if (fallbackNodes.length === 0) {
+            logger.error(`${logPrefix}CRITICAL: Git探测和HTTP测速均全部失败，无法确定任何可用节点！`);
+            return [];
+        }
+        
+        //logger.warn(`${logPrefix}备用下载顺序 (仅HTTP): ${fallbackNodes.map(n => n.name).join(' -> ')}`);
+        return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
     }
 
     const finalNodeList = allHttpTestResults.map(node => {
-      const gitResult = gitEliteNodesMap.get(node.name) || { success: false, duration: Infinity };
-      const isGitPreferred = gitResult.success;
-      return {
-        ...node,
-        gitResult,
-        protocol: isGitPreferred ? 'GIT' : 'HTTP',
-        latency: isGitPreferred ? gitResult.duration : node.speed
-      }
+        const gitResult = gitEliteNodesMap.get(node.name) || { success: false, duration: Infinity };
+        const isGitPreferred = gitResult.success;
+        const latency = isGitPreferred ? gitResult.duration : node.speed;
+        
+        return {
+            ...node,
+            gitResult,
+            protocol: isGitPreferred ? 'GIT' : 'HTTP',
+            latency: latency
+        };
     });
 
     finalNodeList.sort((a, b) => {
-      const aGitSuccess = a.gitResult.success;
-      const bGitSuccess = b.gitResult.success;
-      if (aGitSuccess && !bGitSuccess) return -1;
-      if (!aGitSuccess && bGitSuccess) return 1;
-      if (aGitSuccess && bGitSuccess) {
-        if (a.gitResult.duration !== b.gitResult.duration) return a.gitResult.duration - b.gitResult.duration;
-      }
-      if (a.speed !== b.speed) return a.speed - b.speed;
-      return (a.priority ?? 999) - (b.priority ?? 999);
+        const aGitSuccess = a.gitResult.success;
+        const bGitSuccess = b.gitResult.success;
+
+        if (aGitSuccess && !bGitSuccess) return -1;
+        if (!aGitSuccess && bGitSuccess) return 1;
+
+        if (a.latency !== b.latency) {
+            return a.latency - b.latency;
+        }
+
+        return (a.priority ?? 999) - (b.priority ?? 999);
     });
 
-    const nodesToTry = finalNodeList.filter(n => n.gitResult.success);
+    const nodesToTry = finalNodeList.filter(n => n.gitResult.success || n.speed !== Infinity);
 
     if (nodesToTry.length === 0) {
-      //logger.warn(`${logPrefix}虽然有Git探测成功，但排序后无可用节点，强制启用HTTP备用策略。`);
-      const fallbackNodes = allHttpTestResults
-        .filter(r => r.speed !== Infinity)
-        .sort((a, b) => a.speed - b.speed);
-      if (fallbackNodes.length > 0) {
-        return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
-      }
+         logger.error(`${logPrefix}CRITICAL: 智能排序后无任何可用节点！`);
     }
 
-    //logger.info(`${logPrefix}最终下载顺序: ${nodesToTry.map(n => n.name).join(' -> ')}`);
+    //logger.info(`${logPrefix}最终下载顺序: ${nodesToTry.map(n => `${n.name}(${n.protocol}:${n.latency < Infinity ? n.latency + 'ms' : 'N/A'})`).join(' -> ')}`);
     return nodesToTry;
   }
-
   //旧版网络测速排序逻辑
   // static GetSortedAvailableSources(speeds, includeUntestable = false, logger = global.logger || console) {
   //   if (!speeds || speeds.length === 0) return [];
@@ -4018,12 +4261,22 @@ class MiaoPluginMBT extends plugin {
       allRepoStatus.push(shouldCheckRepo4 ? (Repo4Exists ? { repo: 4, success: true, nodeName: '本地' } : { repo: 4, toDownload: true }) : { repo: 4, nodeName: '未配置', success: true });
       //await e.reply("环境检查通过，开始进行网络节点测速...", true);
 
+        let forceDirect = false;
+      const geoInfo = await MiaoPluginMBT._getIPGeolocation(logger);
+      if (geoInfo && geoInfo.countryCode !== 'CN') {
+          logger.info(`${logPrefix}检测到非中国大陆IP (${geoInfo.countryCode})，将优先尝试 GitHub 直连。`);
+          forceDirect = true;
+      }
+
       const allHttpTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, logger);
       const httpSurvivors = allHttpTestResults.filter(r => r.speed !== Infinity);
       if (httpSurvivors.length === 0) throw new Error("无可用下载源 (所有节点HTTP测试均失败)");
+
       const gitTestPromises = httpSurvivors.map(node => MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, logger).then(gitResult => ({ name: node.name, gitResult })));
       const gitTestResults = await Promise.all(gitTestPromises);
-      const sortedNodes = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger);
+      
+      const sortedNodes = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger, forceDirect);
+      
       if (!sortedNodes || sortedNodes.length === 0) throw new Error("无可用下载源 (所有测速和Git探测均失败)");
 
       try {
@@ -4117,7 +4370,7 @@ class MiaoPluginMBT extends plugin {
           const imageBuffer = await renderPageToImage("download-progress-core-done", { htmlContent, data: renderData, imgType: "png", pageBoundingRect: { selector: ".container" } }, logger);
           if (imageBuffer) await e.reply(imageBuffer); else throw new Error("渲染中场报告返回空Buffer");
         } catch (renderError) {
-          logger.error(`${logPrefix}渲染“中场报告”失败:`, renderError);
+          //logger.error(`${logPrefix}渲染“中场报告”失败:`, renderError);
           await e.reply("--『咕咕牛🐂』--\n核心仓已部署✅️\n开始聚合下载附属仓库...");
         }
       }
@@ -4136,49 +4389,48 @@ class MiaoPluginMBT extends plugin {
         4: MiaoPluginMBT.paths.LocalTuKuPath4,
       };
 
-      const reposToDownload = allRepoStatus.filter(s => s.toDownload && s.repo > 1);
-      reposToDownload.forEach(repo => {
-        const repoInfo = {
-          repoNum: repo.repo,
-          url: repoUrlMap[repo.repo],
-          path: repoPathMap[repo.repo],
-        };
-        if (repo.repo === 2 || repo.repo === 3) {
-          largeReposToDownload.push(repoInfo);
-        } else {
-          smallReposToDownload.push(repoInfo);
-        }
-      });
-
+      const reposToProcess = allRepoStatus.filter(s => s.toDownload && s.repo > 1);
       const downloadResults = [];
-      const createDownloadTask = (repoInfo) => {
-        return MiaoPluginMBT.DownloadRepoWithFallback(
-          repoInfo.repoNum,
-          repoInfo.url,
-          MiaoPluginMBT.MBTConfig.SepositoryBranch,
-          repoInfo.path,
-          null,
-          logger,
-          sortedNodes,
-          true,
-          processManager
-        ).then(result => ({ repo: repoInfo.repoNum, ...result }));
+
+      const createDownloadTask = (repoNum) => {
+          const repoInfo = {
+              repoNum: repoNum,
+              url: repoUrlMap[repoNum],
+              path: repoPathMap[repoNum],
+          };
+          //logger.info(`${logPrefix}已将 [${repoNum}号仓库] 添加到下载队列。`);
+          // 这里的 processManager 应该从 DownloadTuKu 的作用域传入
+          return MiaoPluginMBT.DownloadRepoWithFallback(
+              repoInfo.repoNum, repoInfo.url, MiaoPluginMBT.MBTConfig.SepositoryBranch,
+              repoInfo.path, null, logger, sortedNodes, processManager
+          ).then(result => ({ repo: repoInfo.repoNum, ...result }));
       };
+      
+      const repo2Needed = reposToProcess.some(r => r.repo === 2);
+      const repo3Needed = reposToProcess.some(r => r.repo === 3);
+      const repo4Needed = reposToProcess.some(r => r.repo === 4);
 
-      const firstBatchPromises = [];
-      smallReposToDownload.forEach(repo => firstBatchPromises.push(createDownloadTask(repo)));
-      if (largeReposToDownload.length > 0) {
-        firstBatchPromises.push(createDownloadTask(largeReposToDownload[0]));
+      if (repo2Needed || repo3Needed || repo4Needed) {
+          //logger.info(`${logPrefix}开始处理附属仓库下载...`);
       }
 
-      if (firstBatchPromises.length > 0) {
-        const firstBatchResults = await Promise.all(firstBatchPromises);
-        downloadResults.push(...firstBatchResults);
+      const secondStepPromises = [];
+      if (repo2Needed) {
+          secondStepPromises.push(createDownloadTask(2));
       }
 
-      if (largeReposToDownload.length > 1) {
-        const secondBatchResult = await createDownloadTask(largeReposToDownload[1]);
-        downloadResults.push(secondBatchResult);
+      if (repo4Needed) {
+          secondStepPromises.push(createDownloadTask(4));
+      }
+      
+      if (secondStepPromises.length > 0) {
+          const secondStepResults = await Promise.all(secondStepPromises);
+          downloadResults.push(...secondStepResults);
+      }
+
+      if (repo3Needed) {
+          const repo3Result = await createDownloadTask(3);
+          downloadResults.push(repo3Result);
       }
 
       downloadResults.forEach(result => {
