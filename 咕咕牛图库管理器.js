@@ -47,13 +47,85 @@ class ProcessManager {
             process.kill(proc.pid, signal);
           }
         } catch (killError) {
-          if (killError.code !== 'ESRCH') { 
+          if (killError.code !== 'ESRCH') {
             this.logger.error(`『咕咕牛🐂进程管理器』 终止进程失败 ${proc.pid}:`, killError);
           }
         }
       }
     });
     this.processes.clear();
+  }
+}
+
+class ProcessHookManager {
+  static #instance = null;
+  
+  // 构造函数设为私有，强制使用 getInstance
+  constructor(logger) {
+    this.logger = logger || console;
+    this.shutdownCallbacks = new Set();
+    this.exceptionCallbacks = new Set();
+    
+    this._registerHooks();
+  }
+
+  static getInstance(logger) {
+    if (!this.#instance) {
+      if (!logger) {
+          // 理论上首次调用必须传入 logger，这里做一个兼容处理
+          console.warn("[ProcessHookManager] Warning: Initializing without a logger.");
+      }
+      this.#instance = new ProcessHookManager(logger);
+    }
+    return this.#instance;
+  }
+
+  _registerHooks() {
+    // 使用箭头函数绑定 this 上下文
+    const shutdownHandler = (signal) => this._handleShutdown(signal);
+    const exceptionHandler = (err) => this._handleException(err);
+
+    process.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGTERM');
+    process.removeAllListeners('uncaughtException');
+
+    process.once('SIGINT', shutdownHandler);
+    process.once('SIGTERM', shutdownHandler);
+    process.once('uncaughtException', exceptionHandler);
+  }
+  
+  _handleShutdown(signal) {
+    //this.logger.info(`[ProcessHookManager] 捕获到全局关闭信号: ${signal}`);
+    this.shutdownCallbacks.forEach(callback => {
+      try { callback(signal); } catch (e) {
+        //this.logger.error('[ProcessHookManager] 执行关机回调时出错:', e);
+      }
+    });
+  }
+  
+  _handleException(err) {
+    //this.logger.fatal('[ProcessHookManager] 捕获到未处理的致命异常:', err);
+    this.exceptionCallbacks.forEach(callback => {
+      try { callback(err); } catch (e) {
+        //this.logger.error('[ProcessHookManager] 执行异常回调时出错:', e);
+      }
+    });
+  }
+
+  registerShutdownCallback(callback) {
+    if (typeof callback === 'function') this.shutdownCallbacks.add(callback);
+  }
+
+  unregisterShutdownCallback(callback) {
+    this.shutdownCallbacks.delete(callback);
+  }
+
+  registerExceptionCallback(callback) {
+      if (typeof callback === 'function') this.exceptionCallbacks.add(callback);
+  }
+
+  unregisterExceptionCallback(callback) {
+      this.exceptionCallbacks.delete(callback);
   }
 }
 
@@ -131,11 +203,11 @@ async function getBackgroundFiles(logger) {
     const entries = await fsPromises.readdir(bgDir);
     const newFiles = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
     if (newFiles.length > 0) {
-        backgroundCache.files = newFiles;
-        backgroundCache.lastScan = now;
+      backgroundCache.files = newFiles;
+      backgroundCache.lastScan = now;
     } else {
-        backgroundCache.files = [];
-        backgroundCache.lastScan = 0; 
+      backgroundCache.files = [];
+      backgroundCache.lastScan = 0;
     }
     return newFiles;
   } catch (err) {
@@ -163,11 +235,11 @@ async function getPictureFiles(logger) {
     const entries = await fsPromises.readdir(pictureDir);
     const newFiles = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
     if (newFiles.length > 0) {
-        pictureCache.files = newFiles;
-        pictureCache.lastScan = now;
+      pictureCache.files = newFiles;
+      pictureCache.lastScan = now;
     } else {
-        pictureCache.files = [];
-        pictureCache.lastScan = 0;
+      pictureCache.files = [];
+      pictureCache.lastScan = 0;
     }
     return newFiles;
   } catch (err) {
@@ -685,7 +757,7 @@ async function renderPageToImage(rendererName, options, pluginInstanceOrLogger) 
 class MiaoPluginMBT extends plugin {
   static initializationPromise = null;
   static _guToolsProcess = null;
-  static processManager = new ProcessManager(global.logger || console); 
+  static processManager = new ProcessManager(global.logger || console);
   static isGloballyInitialized = false;
   static MBTConfig = {};
   static _imgDataCache = Object.freeze([]);
@@ -803,20 +875,20 @@ class MiaoPluginMBT extends plugin {
       }
     ];
 
-    const shutdownHandler = (signal) => {
+    this.shutdownHandler = (signal) => {
       MiaoPluginMBT.processManager.killAll('SIGKILL', `接收到系统信号 ${signal}`);
       setTimeout(() => process.exit(0), 500); 
     };
-    
-    process.once('SIGINT', shutdownHandler);
-    process.once('SIGTERM', shutdownHandler);
-    process.once('uncaughtException', (err) => {
+    this.uncaughtExceptionHandler = (err) => {
         //this.logger.fatal(`${this.logPrefix}发生未捕获的致命异常，将强制清理服务后退出。`, err);
         MiaoPluginMBT.processManager.killAll('SIGKILL', '未捕获的致命异常');
         setTimeout(() => process.exit(1), 1000);
+    };
+    // 在 InitializePlugin 中进行一次性的钩子注册，构造函数只负责定义处理函数
+    MiaoPluginMBT.InitializePlugin(this.logger, {
+        shutdownHandler: this.shutdownHandler,
+        uncaughtExceptionHandler: this.uncaughtExceptionHandler
     });
-
-    MiaoPluginMBT.InitializePlugin(this.logger);
   }
 
   async accept(old_this) {
@@ -829,15 +901,19 @@ class MiaoPluginMBT extends plugin {
   async destroy() {
     //this.logger.warn(`${this.logPrefix}开始销毁插件资源并重置所有静态状态...`);
 
+    const hookManager = ProcessHookManager.getInstance();
+    hookManager.unregisterShutdownCallback(this.shutdownHandler);
+    hookManager.unregisterExceptionCallback(this.uncaughtExceptionHandler);
+
     if (this.task) {
-        this.task.forEach(t => { if (t.cron) { try { require('node-schedule').cancelJob(t.name); } catch(e) {} } });
-        this.task = null;
+      this.task.forEach(t => { if (t.cron) { try { require('node-schedule').cancelJob(t.name); } catch (e) { } } });
+      this.task = null;
     }
-    
+
     MiaoPluginMBT.processManager.killAll('SIGKILL', '插件热重载或销毁');
     if (MiaoPluginMBT._guToolsProcess) {
-        MiaoPluginMBT._guToolsProcess.removeAllListeners();
-        MiaoPluginMBT._guToolsProcess = null;
+      MiaoPluginMBT._guToolsProcess.removeAllListeners();
+      MiaoPluginMBT._guToolsProcess = null;
     }
 
     if (MiaoPluginMBT._loadMonitorInterval) {
@@ -862,14 +938,14 @@ class MiaoPluginMBT extends plugin {
     MiaoPluginMBT._characterGameMap.clear();
     MiaoPluginMBT._systemLoadState = { level: 'NORMAL', lastCheck: 0, autoSwitchLock: false };
     MiaoPluginMBT._secondaryTagsCache = [];
-    
+
     this.isPluginInited = false;
   }
 
   static async _installGuToolsDependencies(logger = global.logger || console) {
     const guToolsDir = this.paths.guToolsPath;
     const packageJsonPath = path.join(guToolsDir, 'package.json');
-    const yunzaiRootDir = this.paths.YunzaiPath; 
+    const yunzaiRootDir = this.paths.YunzaiPath;
 
     try {
       await fsPromises.access(packageJsonPath);
@@ -880,13 +956,13 @@ class MiaoPluginMBT extends plugin {
 
     let packageName = 'gutools';
     try {
-        const pkgContent = await fsPromises.readFile(packageJsonPath, 'utf-8');
-        const pkg = JSON.parse(pkgContent);
-        if (pkg.name) {
-            packageName = pkg.name;
-        }
+      const pkgContent = await fsPromises.readFile(packageJsonPath, 'utf-8');
+      const pkg = JSON.parse(pkgContent);
+      if (pkg.name) {
+        packageName = pkg.name;
+      }
     } catch (pkgError) {
-        logger.warn(`${Default_Config.logPrefix}[GuTools Web] 读取 package.json 名称失败，将使用默认值 'gutools'。`);
+      logger.warn(`${Default_Config.logPrefix}[GuTools Web] 读取 package.json 名称失败，将使用默认值 'gutools'。`);
     }
 
     logger.info(`${Default_Config.logPrefix}[GuTools Web] 正在工作区模式下为 [${packageName}] 安装后台服务依赖...`);
@@ -894,7 +970,7 @@ class MiaoPluginMBT extends plugin {
     try {
       // 在Yunzai根目录执行，并使用 --filter
       const result = await ExecuteCommand("pnpm", ["install", "--filter", packageName], { cwd: yunzaiRootDir }, 300000); // 5分钟超时
-      
+
       if (result.stderr && !result.stderr.includes('Peer dependency issues')) {
         logger.warn(`${Default_Config.logPrefix}[GuTools Web] 依赖安装过程中的输出:\n${result.stderr}`);
       }
@@ -929,7 +1005,7 @@ class MiaoPluginMBT extends plugin {
   static async startGuToolsServer(logger = global.logger || console) {
     if (this._guToolsProcess && !this._guToolsProcess.killed) {
       logger.info(`${Default_Config.logPrefix}GuTools 服务已在运行 (PID: ${this._guToolsProcess.pid})。`);
-      return true; 
+      return true;
     }
 
     const config = this.MBTConfig;
@@ -938,7 +1014,7 @@ class MiaoPluginMBT extends plugin {
 
     try {
       let isPortInUse = await this.checkPort(port, host);
-      
+
       if (isPortInUse) {
         logger.warn(`${Default_Config.logPrefix}端口 ${port} 已被占用，可能是旧服务正在关闭。`);
         await common.sleep(3000);
@@ -958,7 +1034,7 @@ class MiaoPluginMBT extends plugin {
       logger.error(`${Default_Config.logPrefix}检查端口时发生错误:`, checkError);
       throw new Error(`检查端口时发生未知错误: ${checkError.message}`);
     }
-    
+
     const serverScriptPath = path.join(this.paths.LocalTuKuPath, "GuTools", "server.js");
     try {
       await fsPromises.access(serverScriptPath);
@@ -980,10 +1056,10 @@ class MiaoPluginMBT extends plugin {
         logger.info(`${Default_Config.logPrefix}GuTools Web面板启动，进程PID: ${child.pid}`);
         resolve(true); // 启动成功
       });
-      
+
       child.stdout.on('data', (data) => { /* 忽略 */ });
       child.stderr.on('data', (data) => { logger.error(`${Default_Config.logPrefix}[GuTools Server ERR]: ${data.toString().trim()}`); });
-      
+
       child.on('error', (err) => {
         logger.error(`${Default_Config.logPrefix}GuTools Web面板启动失败:`, err);
         this._guToolsProcess = null;
@@ -992,9 +1068,9 @@ class MiaoPluginMBT extends plugin {
 
       child.on('exit', (code, signal) => {
         if (this._guToolsProcess && this._guToolsProcess.pid === child.pid) {
-            logger.warn(`${Default_Config.logPrefix}GuTools Web面板已退出，退出码: ${code}, 信号: ${signal}`);
-            this.processManager.unregister(child);
-            this._guToolsProcess = null;
+          logger.warn(`${Default_Config.logPrefix}GuTools Web面板已退出，退出码: ${code}, 信号: ${signal}`);
+          this.processManager.unregister(child);
+          this._guToolsProcess = null;
         }
       });
     });
@@ -1105,27 +1181,35 @@ class MiaoPluginMBT extends plugin {
     }
   }
 
-  static async InitializePlugin(logger = global.logger || console) {
+  static async InitializePlugin(logger = global.logger || console, handlers = {}) {
     if (MiaoPluginMBT.initializationPromise) return MiaoPluginMBT.initializationPromise;
+
+    // 在这里进行一次性的全局钩子注册，因为 InitializePlugin 在整个进程生命周期中只会被成功执行一次
+    const hookManager = ProcessHookManager.getInstance(logger);
+    if (handlers.shutdownHandler) {
+        hookManager.registerShutdownCallback(handlers.shutdownHandler);
+    }
+    if (handlers.uncaughtExceptionHandler) {
+        hookManager.registerExceptionCallback(handlers.uncaughtExceptionHandler);
+    }
 
     MiaoPluginMBT.isInitializing = true;
     MiaoPluginMBT.isGloballyInitialized = false;
-    
     MiaoPluginMBT.initializationPromise = (async () => {
       let hasCoreData = true;
       try {
         await MiaoPluginMBT._checkAndCleanPendingOperations(logger);
-        
+
         try {
-            await fsPromises.access(MiaoPluginMBT.paths.commonResPath);
-            await MiaoPluginMBT.LoadTuKuConfig(true, logger);
-        } catch(e) {
-            MiaoPluginMBT.MBTConfig = { ...Default_Config }; // 目录不存在，直接使用默认配置
+          await fsPromises.access(MiaoPluginMBT.paths.commonResPath);
+          await MiaoPluginMBT.LoadTuKuConfig(true, logger);
+        } catch (e) {
+          MiaoPluginMBT.MBTConfig = { ...Default_Config }; // 目录不存在，直接使用默认配置
         }
-        
+
         const localImgDataCache = await MiaoPluginMBT.LoadImageData(true, logger);
         if (!Array.isArray(localImgDataCache) || (localImgDataCache.length === 0 && await MiaoPluginMBT.IsTuKuDownloaded(1))) {
-            hasCoreData = false;
+          hasCoreData = false;
         }
 
         await MiaoPluginMBT.LoadUserBans(true, logger);
@@ -1138,29 +1222,29 @@ class MiaoPluginMBT extends plugin {
 
         MiaoPluginMBT.isGloballyInitialized = true;
 
-        if(hasCoreData) {
-            logger.info(`${Default_Config.logPrefix}全局初始化成功 版本号：v${Version}`);
+        if (hasCoreData) {
+          logger.info(`${Default_Config.logPrefix}全局初始化成功 版本号：v${Version}`);
         } else {
-            // 在首次安装、核心数据缺失时，保持静默，不打印日志
+          // 在首次安装、核心数据缺失时，保持静默，不打印日志
         }
 
         MiaoPluginMBT.startLoadMonitor(logger);
 
         if (await MiaoPluginMBT.IsTuKuDownloaded(1)) {
-            MiaoPluginMBT.startGuToolsServer(logger).catch(err => {
-                logger.error(`${Default_Config.logPrefix}后台 GuTools 服务启动失败:`, err);
-            });
+          MiaoPluginMBT.startGuToolsServer(logger).catch(err => {
+            logger.error(`${Default_Config.logPrefix}后台 GuTools 服务启动失败:`, err);
+          });
         }
-    
+
         if (!MiaoPluginMBT.oldFileDeletionScheduled) {
           MiaoPluginMBT.oldFileDeletionScheduled = true;
           setTimeout(async () => {
             const oldPluginPath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库下载器.js");
             try {
-                await fsPromises.access(oldPluginPath);
-                await safeDelete(oldPluginPath);
-            } catch(err) {
-                if (err.code !== 'ENOENT') logger.error(`${Default_Config.logPrefix}删除旧插件文件失败:`, err);
+              await fsPromises.access(oldPluginPath);
+              await safeDelete(oldPluginPath);
+            } catch (err) {
+              if (err.code !== 'ENOENT') logger.error(`${Default_Config.logPrefix}删除旧插件文件失败:`, err);
             }
           }, 15000);
         }
@@ -1173,9 +1257,9 @@ class MiaoPluginMBT extends plugin {
         MiaoPluginMBT.isInitializing = false;
       }
     })();
-    
+
     MiaoPluginMBT.initializationPromise.catch(err => {
-         logger.error(`${Default_Config.logPrefix}初始化 Promise 最终被拒绝:`, err.message);
+      logger.error(`${Default_Config.logPrefix}初始化 Promise 最终被拒绝:`, err.message);
     });
 
     return MiaoPluginMBT.initializationPromise;
@@ -1319,8 +1403,8 @@ class MiaoPluginMBT extends plugin {
     } catch (error) {
       if (error.code === 'ENOENT') {
         if (isAlreadyInstalled) {
-             // 仅在确认已安装过的情况下，才将文件不存在视为一个需要关注的问题
-             logger.warn(`${Default_Config.logPrefix}SecondTags.json 未找到，二级标签相关功能将受限。`);
+          // 仅在确认已安装过的情况下，才将文件不存在视为一个需要关注的问题
+          logger.warn(`${Default_Config.logPrefix}SecondTags.json 未找到，二级标签相关功能将受限。`);
         }
       } else {
         logger.error(`${Default_Config.logPrefix}读取或解析 SecondTags.json 失败:`, error);
@@ -1522,7 +1606,7 @@ class MiaoPluginMBT extends plugin {
         // 仅在确认已安装过的情况下，才将文件不存在视为一个错误
         logger.error(`${Default_Config.logPrefix}错误：核心元数据文件 ImageData.json 丢失！ (${imageDataPath})`);
       }
-      finalData = []; 
+      finalData = [];
     }
 
     const originalCount = finalData.length;
@@ -1737,9 +1821,9 @@ class MiaoPluginMBT extends plugin {
   static async _scanWithWorkers(logger) {
     const logPrefix = Default_Config.logPrefix;
     return new Promise(async (resolve, reject) => {
-        const startTime = Date.now();
-        
-        const workerCode = `
+      const startTime = Date.now();
+
+      const workerCode = `
             import { parentPort, workerData } from 'node:worker_threads';
             import fs from 'node:fs/promises';
             import path from 'node:path';
@@ -1791,118 +1875,118 @@ class MiaoPluginMBT extends plugin {
             })();
         `;
 
-        const reposToScan = [];
-        const repoPathsMap = {
-            "Miao-Plugin-MBT": { path: this.paths.LocalTuKuPath, num: 1 }, "Miao-Plugin-MBT-2": { path: this.paths.LocalTuKuPath2, num: 2 },
-            "Miao-Plugin-MBT-3": { path: this.paths.LocalTuKuPath3, num: 3 }, "Miao-Plugin-MBT-4": { path: this.paths.LocalTuKuPath4, num: 4 },
-        };
-        for (const repoName in repoPathsMap) {
-            const repoInfo = repoPathsMap[repoName];
-            if (repoInfo.path && (await this.IsTuKuDownloaded(repoInfo.num))) { reposToScan.push({ path: repoInfo.path, name: repoName }); }
-        }
-        if (reposToScan.length === 0) { return resolve([]); }
+      const reposToScan = [];
+      const repoPathsMap = {
+        "Miao-Plugin-MBT": { path: this.paths.LocalTuKuPath, num: 1 }, "Miao-Plugin-MBT-2": { path: this.paths.LocalTuKuPath2, num: 2 },
+        "Miao-Plugin-MBT-3": { path: this.paths.LocalTuKuPath3, num: 3 }, "Miao-Plugin-MBT-4": { path: this.paths.LocalTuKuPath4, num: 4 },
+      };
+      for (const repoName in repoPathsMap) {
+        const repoInfo = repoPathsMap[repoName];
+        if (repoInfo.path && (await this.IsTuKuDownloaded(repoInfo.num))) { reposToScan.push({ path: repoInfo.path, name: repoName }); }
+      }
+      if (reposToScan.length === 0) { return resolve([]); }
 
-        const numCores = os.cpus().length;
-        const numWorkers = Math.max(1, Math.min(reposToScan.length, numCores - 1));
-        const chunks = Array.from({ length: numWorkers }, () => []);
-        reposToScan.forEach((repo, index) => chunks[index % numWorkers].push(repo));
+      const numCores = os.cpus().length;
+      const numWorkers = Math.max(1, Math.min(reposToScan.length, numCores - 1));
+      const chunks = Array.from({ length: numWorkers }, () => []);
+      reposToScan.forEach((repo, index) => chunks[index % numWorkers].push(repo));
 
-        const workerPromises = chunks.map((chunk, i) => {
-            if (chunk.length === 0) return Promise.resolve([]);
-            return new Promise((res, rej) => {
-                const worker = new Worker(workerCode, { eval: true, workerData: { reposToScan: chunk } });
-                worker.on('message', (message) => {
-                    if (message.type === 'log') {
-                        const { level, message: msg, args } = message.payload;
-                        if (level !== 'info') { // 只记录警告和错误
-                            logger[level](`${logPrefix}[Worker ${i}] ${msg}`, ...args);
-                        }
-                    } else if (message.status === 'success') {
-                        res(message.data);
-                    } else {
-                        rej(new Error(message.error));
-                    }
-                });
-                worker.on('error', rej);
-                worker.on('exit', (code) => { if (code !== 0) rej(new Error(`工作线程 ${i} 异常退出，退出码: ${code}`)); });
-            });
+      const workerPromises = chunks.map((chunk, i) => {
+        if (chunk.length === 0) return Promise.resolve([]);
+        return new Promise((res, rej) => {
+          const worker = new Worker(workerCode, { eval: true, workerData: { reposToScan: chunk } });
+          worker.on('message', (message) => {
+            if (message.type === 'log') {
+              const { level, message: msg, args } = message.payload;
+              if (level !== 'info') { // 只记录警告和错误
+                logger[level](`${logPrefix}[Worker ${i}] ${msg}`, ...args);
+              }
+            } else if (message.status === 'success') {
+              res(message.data);
+            } else {
+              rej(new Error(message.error));
+            }
+          });
+          worker.on('error', rej);
+          worker.on('exit', (code) => { if (code !== 0) rej(new Error(`工作线程 ${i} 异常退出，退出码: ${code}`)); });
         });
+      });
 
-        try {
-            const resultsFromWorkers = await Promise.all(workerPromises);
-            const allImages = resultsFromWorkers.flat();
-            resolve(allImages);
-        } catch (error) {
-            logger.error(`${logPrefix}[Worker] 并行扫描过程中发生错误:`, error);
-            reject(error);
-        }
+      try {
+        const resultsFromWorkers = await Promise.all(workerPromises);
+        const allImages = resultsFromWorkers.flat();
+        resolve(allImages);
+      } catch (error) {
+        logger.error(`${logPrefix}[Worker] 并行扫描过程中发生错误:`, error);
+        reject(error);
+      }
     });
   }
-  
+
   static async ScanLocalImagesToBuildCache(logger = global.logger || console) {
     const logPrefix = Default_Config.logPrefix;
     try {
-        const workerResults = await this._scanWithWorkers(logger);
-        const imagePathsFound = new Set();
-        const uniqueResults = [];
-        for (const item of workerResults) {
-            if (!imagePathsFound.has(item.path)) {
-                uniqueResults.push(item);
-                imagePathsFound.add(item.path);
-            }
+      const workerResults = await this._scanWithWorkers(logger);
+      const imagePathsFound = new Set();
+      const uniqueResults = [];
+      for (const item of workerResults) {
+        if (!imagePathsFound.has(item.path)) {
+          uniqueResults.push(item);
+          imagePathsFound.add(item.path);
         }
-        return uniqueResults;
+      }
+      return uniqueResults;
     } catch (workerError) {
-        //logger.error(`${logPrefix}[Worker] 并行扫描失败，已自动切换单线程扫描模式。错误详情: ${workerError.message}`);
-        
-        const fallbackCache = []; const ReposToScan = [];
-        const repoPathsMap = {
-          "Miao-Plugin-MBT": { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 }, "Miao-Plugin-MBT-2": { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
-          "Miao-Plugin-MBT-3": { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 }, "Miao-Plugin-MBT-4": { path: MiaoPluginMBT.paths.LocalTuKuPath4, num: 4 },
-        };
-        for (const storageBoxName in repoPathsMap) {
-          const repoInfo = repoPathsMap[storageBoxName];
-          if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) { ReposToScan.push({ path: repoInfo.path, name: storageBoxName }); }
-        }
-        const imagePathsFound = new Set();
-        for (const Repo of ReposToScan) {
-          for (const gameFolderKey in MiaoPluginMBT.paths.sourceFolders) {
-            if (gameFolderKey === "gallery") continue;
-            const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[gameFolderKey]; if (!sourceFolderName) continue;
-            const gameFolderPath = path.join(Repo.path, sourceFolderName);
-            try {
-              await fsPromises.access(gameFolderPath);
-              const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true });
-              for (const charDir of characterDirs) {
-                if (charDir.isDirectory()) {
-                  const characterName = charDir.name; const charFolderPath = path.join(gameFolderPath, characterName);
-                  try {
-                    const imageFiles = await fsPromises.readdir(charFolderPath);
-                    for (const imageFile of imageFiles) {
-                      if (imageFile.toLowerCase().endsWith(".webp")) {
-                        const relativePath = path.join(sourceFolderName, characterName, imageFile).replace(/\\/g, "/");
-                        if (!imagePathsFound.has(relativePath)) {
-                          fallbackCache.push({ storagebox: Repo.name, path: relativePath, characterName: characterName, attributes: {} });
-                          imagePathsFound.add(relativePath);
-                        }
+      //logger.error(`${logPrefix}[Worker] 并行扫描失败，已自动切换单线程扫描模式。错误详情: ${workerError.message}`);
+
+      const fallbackCache = []; const ReposToScan = [];
+      const repoPathsMap = {
+        "Miao-Plugin-MBT": { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 }, "Miao-Plugin-MBT-2": { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
+        "Miao-Plugin-MBT-3": { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 }, "Miao-Plugin-MBT-4": { path: MiaoPluginMBT.paths.LocalTuKuPath4, num: 4 },
+      };
+      for (const storageBoxName in repoPathsMap) {
+        const repoInfo = repoPathsMap[storageBoxName];
+        if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) { ReposToScan.push({ path: repoInfo.path, name: storageBoxName }); }
+      }
+      const imagePathsFound = new Set();
+      for (const Repo of ReposToScan) {
+        for (const gameFolderKey in MiaoPluginMBT.paths.sourceFolders) {
+          if (gameFolderKey === "gallery") continue;
+          const sourceFolderName = MiaoPluginMBT.paths.sourceFolders[gameFolderKey]; if (!sourceFolderName) continue;
+          const gameFolderPath = path.join(Repo.path, sourceFolderName);
+          try {
+            await fsPromises.access(gameFolderPath);
+            const characterDirs = await fsPromises.readdir(gameFolderPath, { withFileTypes: true });
+            for (const charDir of characterDirs) {
+              if (charDir.isDirectory()) {
+                const characterName = charDir.name; const charFolderPath = path.join(gameFolderPath, characterName);
+                try {
+                  const imageFiles = await fsPromises.readdir(charFolderPath);
+                  for (const imageFile of imageFiles) {
+                    if (imageFile.toLowerCase().endsWith(".webp")) {
+                      const relativePath = path.join(sourceFolderName, characterName, imageFile).replace(/\\/g, "/");
+                      if (!imagePathsFound.has(relativePath)) {
+                        fallbackCache.push({ storagebox: Repo.name, path: relativePath, characterName: characterName, attributes: {} });
+                        imagePathsFound.add(relativePath);
                       }
                     }
-                  } catch (readCharErr) { if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) logger.error(`${Default_Config.logPrefix}读取角色目录 ${charFolderPath} 失败:`, readCharErr.code); }
-                }
+                  }
+                } catch (readCharErr) { if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) logger.error(`${Default_Config.logPrefix}读取角色目录 ${charFolderPath} 失败:`, readCharErr.code); }
               }
-            } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.error(`${Default_Config.logPrefix}读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
-          }
+            }
+          } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.error(`${Default_Config.logPrefix}读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
         }
-        return fallbackCache;
+      }
+      return fallbackCache;
     }
   }
 
   static async LoadUserBans(forceReload = false, logger = global.logger || console, isAlreadyInstalled = false) {
     if (MiaoPluginMBT._userBanSet instanceof Set && MiaoPluginMBT._userBanSet.size > 0 && !forceReload) return true;
-    
+
     let data = [];
     let success = false;
-    
+
     try {
       const content = await fsPromises.readFile(MiaoPluginMBT.paths.banListPath, "utf8");
       data = JSON.parse(content);
@@ -1952,12 +2036,12 @@ class MiaoPluginMBT extends plugin {
     const banListPath = MiaoPluginMBT.paths.banListPath;
     try {
       const sortedBansPaths = Array.from(MiaoPluginMBT._userBanSet).sort();
-      
+
       // 构建新的统一格式数据
       const dataToSave = sortedBansPaths.map(banPath => {
         const item = MiaoPluginMBT._indexByGid.get(banPath);
         return {
-          gid: item ? item.gid : 'unknown', 
+          gid: item ? item.gid : 'unknown',
           path: banPath,
           timestamp: new Date().toISOString()
         };
@@ -1965,14 +2049,14 @@ class MiaoPluginMBT extends plugin {
 
       const jsonString = JSON.stringify(dataToSave, null, 2);
       const dirPath = path.dirname(banListPath);
-      
+
       try {
         await fsPromises.mkdir(dirPath, { recursive: true });
       } catch (mkdirError) {
         logger.error(`${Default_Config.logPrefix}创建目录 ${dirPath} 失败:`, mkdirError);
         return false;
       }
-      
+
       await fsPromises.writeFile(banListPath, jsonString, "utf8");
       return true;
     } catch (error) {
@@ -2152,11 +2236,11 @@ class MiaoPluginMBT extends plugin {
         const alias = iface[i];
         // 过滤掉本地回环、非IPv4/IPv6地址、虚拟网卡等
         if (!alias.internal && ['IPv4', 'IPv6'].includes(alias.family)) {
-           // 进一步过滤掉docker和特定的本地链接IPv6地址
-           if (devName.includes('docker') || alias.address.startsWith('fe80')) {
-               continue;
-           }
-           ips.push(alias.address);
+          // 进一步过滤掉docker和特定的本地链接IPv6地址
+          if (devName.includes('docker') || alias.address.startsWith('fe80')) {
+            continue;
+          }
+          ips.push(alias.address);
         }
       }
     }
@@ -2230,32 +2314,32 @@ class MiaoPluginMBT extends plugin {
     const logPrefix = Default_Config.logPrefix;
     const publicIp = await this._getPublicIP(logger);
     if (!publicIp) {
-        logger.warn(`${logPrefix}未能获取公网IP，无法进行地理位置判断。`);
-        return null;
+      logger.warn(`${logPrefix}未能获取公网IP，无法进行地理位置判断。`);
+      return null;
     }
 
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const response = await fetch(`http://ip-api.com/json/${publicIp}?lang=zh-CN`, {
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const response = await fetch(`http://ip-api.com/json/${publicIp}?lang=zh-CN`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-        if (!response.ok) {
-            throw new Error(`API请求失败，状态码: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.status === 'success' && data.countryCode) {
-            logger.info(`${logPrefix}地理位置识别成功: ${data.country || '未知'}(${data.countryCode})`);
-            return data;
-        } else {
-            logger.warn(`${logPrefix}地理位置API返回状态失败:`, data.message || '未知错误');
-            return null;
-        }
-    } catch (error) {
-        logger.error(`${logPrefix}查询IP地理位置时出错:`, error.name === 'AbortError' ? '请求超时' : error.message);
+      if (!response.ok) {
+        throw new Error(`API请求失败，状态码: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.status === 'success' && data.countryCode) {
+        logger.info(`${logPrefix}地理位置识别成功: ${data.country || '未知'}(${data.countryCode})`);
+        return data;
+      } else {
+        logger.warn(`${logPrefix}地理位置API返回状态失败:`, data.message || '未知错误');
         return null;
+      }
+    } catch (error) {
+      logger.error(`${logPrefix}查询IP地理位置时出错:`, error.name === 'AbortError' ? '请求超时' : error.message);
+      return null;
     }
   }
 
@@ -2275,12 +2359,12 @@ class MiaoPluginMBT extends plugin {
       } else {
         const cleanPrefix = cloneUrlPrefix.replace(/\/$/, "");
         if (nodeName === "GitClone") {
-             actualRepoUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
+          actualRepoUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
         } else if (nodeName === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
-             actualRepoUrl = `${cleanPrefix}/${userAndRepoPath}`;
+          actualRepoUrl = `${cleanPrefix}/${userAndRepoPath}`;
         }
         else {
-            actualRepoUrl = `${cleanPrefix}/${repoUrl}`;
+          actualRepoUrl = `${cleanPrefix}/${repoUrl}`;
         }
       }
 
@@ -2300,7 +2384,7 @@ class MiaoPluginMBT extends plugin {
     if (!e.isMaster) {
       return e.reply("此操作仅限主人使用。", true);
     }
-    
+
     try {
       if (!MiaoPluginMBT._guToolsProcess || MiaoPluginMBT._guToolsProcess.killed) {
         await e.reply(`${this.logPrefix}登录服务未运行，正在尝试启动...`, true);
@@ -2326,13 +2410,13 @@ class MiaoPluginMBT extends plugin {
         // 其他启动错误
         await this.ReportError(e, "启动登录服务", startError);
       }
-      return true; 
+      return true;
     }
 
     try {
       const config = MiaoPluginMBT.MBTConfig;
       const port = config.guToolsPort;
-      
+
       const token = MiaoPluginMBT._generateRandomToken();
       const redisKey = `Yz:GuGuNiu:GuTools:LoginToken:${token}`;
       const expireSeconds = 180; // 3分钟
@@ -2345,11 +2429,11 @@ class MiaoPluginMBT extends plugin {
         await this.ReportError(e, "生成登录令牌", redisError, "无法连接到Redis或写入失败");
         return true;
       }
-      
+
       const loginPath = `/${token}`;
 
       let urlMsgs = [];
-      
+
       const localIPs = MiaoPluginMBT._getLocalIPs();
       if (localIPs && localIPs.length > 0) {
         urlMsgs.push('内网地址：');
@@ -2359,7 +2443,7 @@ class MiaoPluginMBT extends plugin {
         });
       }
       urlMsgs.push(`http://localhost:${port}${loginPath}`);
-      
+
       if (e.isPrivate && e.isMaster) {
         const publicIp = await MiaoPluginMBT._getPublicIP(this.logger);
         if (publicIp) {
@@ -2375,11 +2459,11 @@ class MiaoPluginMBT extends plugin {
       const welcomeMsg = "咕咕牛Web管理后台已准备就绪，请使用以下地址访问：";
       const tipsMsg = "服务已在后台运行，登录链接3分钟内有效，过期请重新获取。";
 
-      const forwardList = [ welcomeMsg, ...urlMsgs, tipsMsg ];
-      
+      const forwardList = [welcomeMsg, ...urlMsgs, tipsMsg];
+
       const forwardMsg = await common.makeForwardMsg(e, forwardList, "咕咕牛Web管理后台");
       await e.reply(forwardMsg);
-      
+
     } catch (error) {
       this.logger.error(`${this.logPrefix}发送登录地址时出错:`, error);
       await this.ReportError(e, "发送登录地址", error);
@@ -3204,78 +3288,78 @@ class MiaoPluginMBT extends plugin {
     const tempDownloadsBaseDir = path.join(MiaoPluginMBT.paths.tempPath, "guguniu-downloads");
 
     if (!sortedNodes || sortedNodes.length === 0) {
-        return { success: false, nodeName: "无可用源", error: new Error("没有可用的下载节点列表") };
+      return { success: false, nodeName: "无可用源", error: new Error("没有可用的下载节点列表") };
     }
 
     for (const node of sortedNodes) {
-        if (!((node.gitResult && node.gitResult.success) || (node.gitResult.isFallback))) continue;
+      if (!((node.gitResult && node.gitResult.success) || (node.gitResult.isFallback))) continue;
 
-        const maxAttempts = (node.name === "Ghfast" || node.name === "Moeyy") ? 2 : 1;
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            const nodeName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(${node.protocol})`;
-            const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${node.name.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}`;
-            const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
+      const maxAttempts = (node.name === "Ghfast" || node.name === "Moeyy") ? 2 : 1;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const nodeName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(${node.protocol})`;
+        const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${node.name.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}`;
+        const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
 
-            try {
-                await fsPromises.mkdir(tempRepoPath, { recursive: true });
-                if (attempt > 1) {
-                    logger.info(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试...`);
-                    await common.sleep(1500);
-                }
+        try {
+          await fsPromises.mkdir(tempRepoPath, { recursive: true });
+          if (attempt > 1) {
+            logger.info(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试...`);
+            await common.sleep(1500);
+          }
 
-                let actualCloneUrl = "";
-                const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-                let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
-                if (!userAndRepoPath) { throw new Error(`无法提取仓库路径`); }
-                
-                if (node.name === "GitHub") {
-                    actualCloneUrl = repoUrl;
-                } else if (node.cloneUrlPrefix) {
-                    const cleanPrefix = node.cloneUrlPrefix.replace(/\/$/, "");
-                     if (node.name === "GitClone") {
-                         actualCloneUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
-                    } else if (node.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
-                         actualCloneUrl = `${cleanPrefix}/${userAndRepoPath}`;
-                    } else {
-                        actualCloneUrl = `${cleanPrefix}/${repoUrl}`;
-                    }
-                } else { throw new Error(`源 ${node.name} 配置缺少 cloneUrlPrefix`); }
+          let actualCloneUrl = "";
+          const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+          let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
+          if (!userAndRepoPath) { throw new Error(`无法提取仓库路径`); }
 
-                const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", "-b", branch, actualCloneUrl, tempRepoPath];
-                const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
-                
-                let cloneTimeout = Default_Config.gitCloneTimeout;
-                if (repoNum === 1 && node.name === "GitHub") {
-                    cloneTimeout = 60000; 
-                }
-
-                await ExecuteCommand("git", cloneArgs, gitOptions, cloneTimeout, null, null, null, processManager);
-
-                if (repoNum === 1) {
-                    const requiredPath = "GuGuNiu-Gallery/html";
-                    try { await fsPromises.access(path.join(tempRepoPath, requiredPath)); }
-                    catch (accessError) { throw new Error(`仓库下载不完整，缺少关键目录: ${requiredPath}`); }
-                }
-
-                await safeDelete(finalLocalPath);
-                await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
-                await fsPromises.rename(tempRepoPath, finalLocalPath);
-                const gitLog = await MiaoPluginMBT.GetTuKuLog(1, finalLocalPath, logger);
-                
-                return { success: true, nodeName, error: null, gitLog };
-
-            } catch (error) {
-                lastError = error;
-                //logger.warn(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试失败:`, error.message);
-                const stderr = (error.stderr || "").toLowerCase();
-                if (stderr.includes("could not read from remote repository") || stderr.includes("authentication failed")) {
-                    logger.error(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 遭遇认证/权限错误，将不再重试此节点。`);
-                    break;
-                }
-            } finally {
-                await safeDelete(tempRepoPath);
+          if (node.name === "GitHub") {
+            actualCloneUrl = repoUrl;
+          } else if (node.cloneUrlPrefix) {
+            const cleanPrefix = node.cloneUrlPrefix.replace(/\/$/, "");
+            if (node.name === "GitClone") {
+              actualCloneUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
+            } else if (node.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
+              actualCloneUrl = `${cleanPrefix}/${userAndRepoPath}`;
+            } else {
+              actualCloneUrl = `${cleanPrefix}/${repoUrl}`;
             }
+          } else { throw new Error(`源 ${node.name} 配置缺少 cloneUrlPrefix`); }
+
+          const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", "-b", branch, actualCloneUrl, tempRepoPath];
+          const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+
+          let cloneTimeout = Default_Config.gitCloneTimeout;
+          if (repoNum === 1 && node.name === "GitHub") {
+            cloneTimeout = 60000;
+          }
+
+          await ExecuteCommand("git", cloneArgs, gitOptions, cloneTimeout, null, null, null, processManager);
+
+          if (repoNum === 1) {
+            const requiredPath = "GuGuNiu-Gallery/html";
+            try { await fsPromises.access(path.join(tempRepoPath, requiredPath)); }
+            catch (accessError) { throw new Error(`仓库下载不完整，缺少关键目录: ${requiredPath}`); }
+          }
+
+          await safeDelete(finalLocalPath);
+          await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
+          await fsPromises.rename(tempRepoPath, finalLocalPath);
+          const gitLog = await MiaoPluginMBT.GetTuKuLog(1, finalLocalPath, logger);
+
+          return { success: true, nodeName, error: null, gitLog };
+
+        } catch (error) {
+          lastError = error;
+          //logger.warn(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试失败:`, error.message);
+          const stderr = (error.stderr || "").toLowerCase();
+          if (stderr.includes("could not read from remote repository") || stderr.includes("authentication failed")) {
+            logger.error(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 遭遇认证/权限错误，将不再重试此节点。`);
+            break;
+          }
+        } finally {
+          await safeDelete(tempRepoPath);
         }
+      }
     }
 
     return { success: false, nodeName: "所有节点失败", error: lastError || new Error("所有可用节点下载尝试均失败") };
@@ -3675,12 +3759,12 @@ class MiaoPluginMBT extends plugin {
       // logger.info(`${logPrefix} [诊断] 完整部署成功完成所有步骤。`);
       // -创建安装锁文件 
       if (stage === 'full') {
-          try {
-              await fsPromises.writeFile(MiaoPluginMBT.paths.installLockPath, new Date().toISOString());
-              // logger.info(`${logPrefix} 已成功创建安装状态标记文件。`);
-          } catch (lockError) {
-              logger.error(`${logPrefix} 创建状态标记文件失败:`, lockError);
-          }
+        try {
+          await fsPromises.writeFile(MiaoPluginMBT.paths.installLockPath, new Date().toISOString());
+          // logger.info(`${logPrefix} 已成功创建安装状态标记文件。`);
+        } catch (lockError) {
+          logger.error(`${logPrefix} 创建状态标记文件失败:`, lockError);
+        }
       }
     } catch (error) {
       logger.error(`${logPrefix} [诊断] RunPostDownloadSetup (阶段: ${stage}) 内部发生致命错误:`, error);
@@ -3774,70 +3858,70 @@ class MiaoPluginMBT extends plugin {
     const logPrefix = Default_Config.logPrefix;
 
     if (forceDirect) {
-        const githubNode = allHttpTestResults.find(n => n.name === 'GitHub');
-        if (githubNode && githubNode.speed !== Infinity) {
-            //logger.info(`${logPrefix}已强制启用 GitHub 直连优先策略。`);
-            const otherNodes = allHttpTestResults.filter(n => n.name !== 'GitHub');
-            const sortedOthers = await this.applySmartSelectionStrategy(otherNodes, gitTestResults, logger, false);
-            return [ { ...githubNode, gitResult: { success: true, isFallback: false }, protocol: 'GIT', latency: githubNode.speed }, ...sortedOthers ];
-        }
-        //logger.warn(`${logPrefix}强制直连失败，GitHub 节点 HTTP 测试不通，将回退至常规策略。`);
+      const githubNode = allHttpTestResults.find(n => n.name === 'GitHub');
+      if (githubNode && githubNode.speed !== Infinity) {
+        //logger.info(`${logPrefix}已强制启用 GitHub 直连优先策略。`);
+        const otherNodes = allHttpTestResults.filter(n => n.name !== 'GitHub');
+        const sortedOthers = await this.applySmartSelectionStrategy(otherNodes, gitTestResults, logger, false);
+        return [{ ...githubNode, gitResult: { success: true, isFallback: false }, protocol: 'GIT', latency: githubNode.speed }, ...sortedOthers];
+      }
+      //logger.warn(`${logPrefix}强制直连失败，GitHub 节点 HTTP 测试不通，将回退至常规策略。`);
     }
-    
+
     if (!Array.isArray(gitTestResults)) {
-        logger.error(`${logPrefix}CRITICAL: applySmartSelectionStrategy 接收到的 gitTestResults 不是一个数组！`);
-        gitTestResults = [];
+      logger.error(`${logPrefix}CRITICAL: applySmartSelectionStrategy 接收到的 gitTestResults 不是一个数组！`);
+      gitTestResults = [];
     }
-    
+
     const gitEliteNodesMap = new Map(gitTestResults.filter(n => n.gitResult && n.gitResult.success).map(n => [n.name, n.gitResult]));
-    
+
     if (gitEliteNodesMap.size === 0) {
-        //logger.warn(`${logPrefix}Git轻量级探测失败，所有节点的Git通道均不可用。将仅基于HTTP延迟进行排序作为备用策略。`);
+      //logger.warn(`${logPrefix}Git轻量级探测失败，所有节点的Git通道均不可用。将仅基于HTTP延迟进行排序作为备用策略。`);
 
-        const fallbackNodes = allHttpTestResults
-            .filter(r => r.speed !== Infinity)
-            .sort((a, b) => a.speed - b.speed);
+      const fallbackNodes = allHttpTestResults
+        .filter(r => r.speed !== Infinity)
+        .sort((a, b) => a.speed - b.speed);
 
-        if (fallbackNodes.length === 0) {
-            logger.error(`${logPrefix}CRITICAL: Git探测和HTTP测速均全部失败，无法确定任何可用节点！`);
-            return [];
-        }
-        
-        //logger.warn(`${logPrefix}备用下载顺序 (仅HTTP): ${fallbackNodes.map(n => n.name).join(' -> ')}`);
-        return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
+      if (fallbackNodes.length === 0) {
+        logger.error(`${logPrefix}CRITICAL: Git探测和HTTP测速均全部失败，无法确定任何可用节点！`);
+        return [];
+      }
+
+      //logger.warn(`${logPrefix}备用下载顺序 (仅HTTP): ${fallbackNodes.map(n => n.name).join(' -> ')}`);
+      return fallbackNodes.map(node => ({ ...node, gitResult: { success: true, isFallback: true }, protocol: 'HTTP', latency: node.speed }));
     }
 
     const finalNodeList = allHttpTestResults.map(node => {
-        const gitResult = gitEliteNodesMap.get(node.name) || { success: false, duration: Infinity };
-        const isGitPreferred = gitResult.success;
-        const latency = isGitPreferred ? gitResult.duration : node.speed;
-        
-        return {
-            ...node,
-            gitResult,
-            protocol: isGitPreferred ? 'GIT' : 'HTTP',
-            latency: latency
-        };
+      const gitResult = gitEliteNodesMap.get(node.name) || { success: false, duration: Infinity };
+      const isGitPreferred = gitResult.success;
+      const latency = isGitPreferred ? gitResult.duration : node.speed;
+
+      return {
+        ...node,
+        gitResult,
+        protocol: isGitPreferred ? 'GIT' : 'HTTP',
+        latency: latency
+      };
     });
 
     finalNodeList.sort((a, b) => {
-        const aGitSuccess = a.gitResult.success;
-        const bGitSuccess = b.gitResult.success;
+      const aGitSuccess = a.gitResult.success;
+      const bGitSuccess = b.gitResult.success;
 
-        if (aGitSuccess && !bGitSuccess) return -1;
-        if (!aGitSuccess && bGitSuccess) return 1;
+      if (aGitSuccess && !bGitSuccess) return -1;
+      if (!aGitSuccess && bGitSuccess) return 1;
 
-        if (a.latency !== b.latency) {
-            return a.latency - b.latency;
-        }
+      if (a.latency !== b.latency) {
+        return a.latency - b.latency;
+      }
 
-        return (a.priority ?? 999) - (b.priority ?? 999);
+      return (a.priority ?? 999) - (b.priority ?? 999);
     });
 
     const nodesToTry = finalNodeList.filter(n => n.gitResult.success || n.speed !== Infinity);
 
     if (nodesToTry.length === 0) {
-         logger.error(`${logPrefix}CRITICAL: 智能排序后无任何可用节点！`);
+      logger.error(`${logPrefix}CRITICAL: 智能排序后无任何可用节点！`);
     }
 
     //logger.info(`${logPrefix}最终下载顺序: ${nodesToTry.map(n => `${n.name}(${n.protocol}:${n.latency < Infinity ? n.latency + 'ms' : 'N/A'})`).join(' -> ')}`);
@@ -4047,16 +4131,16 @@ class MiaoPluginMBT extends plugin {
 
   async CheckInit(e) {
     if (!MiaoPluginMBT.initializationPromise) {
-        logger.error(`${this.logPrefix}CRITICAL_ERROR: CheckInit 被调用时 initializationPromise 仍为 null！`);
-        await e.reply('『咕咕牛🐂』插件遇到严重的生命周期错误，请重启机器人。', true);
-        return false;
+      logger.error(`${this.logPrefix}CRITICAL_ERROR: CheckInit 被调用时 initializationPromise 仍为 null！`);
+      await e.reply('『咕咕牛🐂』插件遇到严重的生命周期错误，请重启机器人。', true);
+      return false;
     }
-    
+
     try {
-        await MiaoPluginMBT.initializationPromise;
-        this.isPluginInited = MiaoPluginMBT.isGloballyInitialized;
+      await MiaoPluginMBT.initializationPromise;
+      this.isPluginInited = MiaoPluginMBT.isGloballyInitialized;
     } catch (error) {
-        this.isPluginInited = false;
+      this.isPluginInited = false;
     }
 
     if (!this.isPluginInited) {
@@ -4068,7 +4152,7 @@ class MiaoPluginMBT extends plugin {
       await e.reply("『咕咕牛🐂』警告：图片元数据为空，#咕咕牛查看 等功能可能无法正常工作。请尝试 #更新咕咕牛 修复。", true);
       return false;
     }
-    
+
     return true;
   }
 
@@ -4142,11 +4226,11 @@ class MiaoPluginMBT extends plugin {
       allRepoStatus.push(shouldCheckRepo4 ? (Repo4Exists ? { repo: 4, success: true, nodeName: '本地' } : { repo: 4, toDownload: true }) : { repo: 4, nodeName: '未配置', success: true });
       //await e.reply("环境检查通过，开始进行网络节点测速...", true);
 
-        let forceDirect = false;
+      let forceDirect = false;
       const geoInfo = await MiaoPluginMBT._getIPGeolocation(logger);
       if (geoInfo && geoInfo.countryCode !== 'CN') {
-          logger.info(`${logPrefix}检测到非中国大陆IP (${geoInfo.countryCode})，将优先尝试 GitHub 直连。`);
-          forceDirect = true;
+        logger.info(`${logPrefix}检测到非中国大陆IP (${geoInfo.countryCode})，将优先尝试 GitHub 直连。`);
+        forceDirect = true;
       }
 
       const allHttpTestResults = await MiaoPluginMBT.TestProxies(RAW_URL_Repo1, logger);
@@ -4155,9 +4239,9 @@ class MiaoPluginMBT extends plugin {
 
       const gitTestPromises = httpSurvivors.map(node => MiaoPluginMBT.GitLsRemoteTest(Default_Config.Main_Github_URL, node.cloneUrlPrefix, node.name, logger).then(gitResult => ({ name: node.name, gitResult })));
       const gitTestResults = await Promise.all(gitTestPromises);
-      
+
       const sortedNodes = await MiaoPluginMBT.applySmartSelectionStrategy(allHttpTestResults, gitTestResults, logger, forceDirect);
-      
+
       if (!sortedNodes || sortedNodes.length === 0) throw new Error("无可用下载源 (所有测速和Git探测均失败)");
 
       try {
@@ -4274,44 +4358,44 @@ class MiaoPluginMBT extends plugin {
       const downloadResults = [];
 
       const createDownloadTask = (repoNum) => {
-          const repoInfo = {
-              repoNum: repoNum,
-              url: repoUrlMap[repoNum],
-              path: repoPathMap[repoNum],
-          };
-          //logger.info(`${logPrefix}已将 [${repoNum}号仓库] 添加到下载队列。`);
-          // 这里的 processManager 应该从 DownloadTuKu 的作用域传入
-          return MiaoPluginMBT.DownloadRepoWithFallback(
-              repoInfo.repoNum, repoInfo.url, MiaoPluginMBT.MBTConfig.SepositoryBranch,
-              repoInfo.path, null, logger, sortedNodes, processManager
-          ).then(result => ({ repo: repoInfo.repoNum, ...result }));
+        const repoInfo = {
+          repoNum: repoNum,
+          url: repoUrlMap[repoNum],
+          path: repoPathMap[repoNum],
+        };
+        //logger.info(`${logPrefix}已将 [${repoNum}号仓库] 添加到下载队列。`);
+        // 这里的 processManager 应该从 DownloadTuKu 的作用域传入
+        return MiaoPluginMBT.DownloadRepoWithFallback(
+          repoInfo.repoNum, repoInfo.url, MiaoPluginMBT.MBTConfig.SepositoryBranch,
+          repoInfo.path, null, logger, sortedNodes, processManager
+        ).then(result => ({ repo: repoInfo.repoNum, ...result }));
       };
-      
+
       const repo2Needed = reposToProcess.some(r => r.repo === 2);
       const repo3Needed = reposToProcess.some(r => r.repo === 3);
       const repo4Needed = reposToProcess.some(r => r.repo === 4);
 
       if (repo2Needed || repo3Needed || repo4Needed) {
-          //logger.info(`${logPrefix}开始处理附属仓库下载...`);
+        //logger.info(`${logPrefix}开始处理附属仓库下载...`);
       }
 
       const secondStepPromises = [];
       if (repo2Needed) {
-          secondStepPromises.push(createDownloadTask(2));
+        secondStepPromises.push(createDownloadTask(2));
       }
 
       if (repo4Needed) {
-          secondStepPromises.push(createDownloadTask(4));
+        secondStepPromises.push(createDownloadTask(4));
       }
-      
+
       if (secondStepPromises.length > 0) {
-          const secondStepResults = await Promise.all(secondStepPromises);
-          downloadResults.push(...secondStepResults);
+        const secondStepResults = await Promise.all(secondStepPromises);
+        downloadResults.push(...secondStepResults);
       }
 
       if (repo3Needed) {
-          const repo3Result = await createDownloadTask(3);
-          downloadResults.push(repo3Result);
+        const repo3Result = await createDownloadTask(3);
+        downloadResults.push(repo3Result);
       }
 
       downloadResults.forEach(result => {
@@ -4670,9 +4754,9 @@ class MiaoPluginMBT extends plugin {
     }
 
     try {
-        await safeDelete(MiaoPluginMBT.paths.installLockPath);
+      await safeDelete(MiaoPluginMBT.paths.installLockPath);
     } catch (err) {
-        // 即使删除失败也继续，因为主目录已被删除
+      // 即使删除失败也继续，因为主目录已被删除
     }
 
     const tempHtmlBasePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "temp", "html");
@@ -6589,119 +6673,79 @@ class MiaoPluginMBT extends plugin {
   }
 
   async Help(e) {
-    const localHelpTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "help.html");
-    const remoteHelpTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/help.html";
     let templateHtml = "";
+    let isRemote = false;
 
     try {
-      templateHtml = await fsPromises.readFile(localHelpTemplatePath, 'utf-8');
-      //this.logger.info(`${this.logPrefix}已成功从本地加载帮助模板。`);
-    } catch (localError) {
-      //this.logger.warn(`${this.logPrefix}本地帮助模板加载失败 (${localError.code})，尝试从Gitee获取在线版本...`);
-      try {
-        const response = await fetch(remoteHelpTemplateUrl, { timeout: 10000 });
-        if (!response.ok) {
-          throw new Error(`请求在线模板失败，状态码: ${response.status}`);
-        }
-        templateHtml = await response.text();
-        if (!templateHtml) {
-          throw new Error("获取到的在线帮助模板内容为空。");
-        }
-        //this.logger.info(`${this.logPrefix}已成功从Gitee获取在线帮助模板作为备用。`);
-      } catch (remoteError) {
-        this.logger.error(`${this.logPrefix}CRITICAL: 本地和在线帮助模板均无法加载！`, remoteError);
-        templateHtml = "";
-      }
-    }
-
-    if (templateHtml) {
-      try {
-        let installedDays = null;
-        try {
-          const stats = await fsPromises.stat(MiaoPluginMBT.paths.LocalTuKuPath);
-          const diffMs = Date.now() - stats.birthtimeMs;
-          installedDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        } catch (statError) {
+        if (await MiaoPluginMBT.IsTuKuDownloaded(1)) {
+            const localHelpTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "help.html");
+            templateHtml = await fsPromises.readFile(localHelpTemplatePath, 'utf-8');
+        } else {
+            const remoteHelpTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/help.html";
+            const response = await fetch(remoteHelpTemplateUrl, { timeout: 10000 });
+            if (!response.ok) throw new Error(`请求在线模板失败，状态码: ${response.status}`);
+            templateHtml = await response.text();
+            isRemote = true;
         }
 
-        const pictureDirPath = path.join(MiaoPluginMBT.paths.repoGalleryPath, 'html', 'img', 'picture');
-        let availablePictureFiles = [];
-        try {
-          const files = await fsPromises.readdir(pictureDirPath);
-          availablePictureFiles = files.filter(file => /\.(png|webp)$/i.test(file));
-        } catch (err) {
-          this.logger.error(`${this.logPrefix}读取图片目录失败: ${pictureDirPath}`, err);
-        }
+        if (!templateHtml) throw new Error("获取到的模板内容为空");
 
-        const numberOfIcons = 15;
-        const randomIconPaths = [];
-        if (availablePictureFiles.length > 0) {
-          const shuffledIcons = lodash.shuffle(availablePictureFiles);
-          for (let i = 0; i < numberOfIcons; i++) {
-            const iconFilename = shuffledIcons[i % shuffledIcons.length];
-            randomIconPaths.push(iconFilename);
-          }
-        } else { }
-
+        const renderData = {
+            pluginVersion: Version,
+            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+            guguniu_res_path: isRemote 
+                ? "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/main/GuGuNiu-Gallery/" 
+                : `file://${path.join(MiaoPluginMBT.paths.LocalTuKuPath, "GuGuNiu-Gallery")}/`.replace(/\\/g, '/')
+        };
+        
         const imageBuffer = await renderPageToImage(
           "help-panel", {
           htmlContent: templateHtml,
-          data: {
-            pluginVersion: Version,
-            randomIconPaths: randomIconPaths,
-            installedDays: installedDays !== null ? String(installedDays) : null,
-            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue()
-          },
+          data: renderData,
           imgType: "png",
           pageGotoParams: { waitUntil: "networkidle0" },
           screenshotOptions: { fullPage: true }
         }, this);
 
-        if (imageBuffer) {
-          await e.reply(imageBuffer);
-        } else {
-          throw new Error("生成帮助图片失败 (返回空 Buffer)");
-        }
-      } catch (renderError) {
-        this.logger.error(`${this.logPrefix}生成帮助图片时出错:`, renderError);
-        templateHtml = "";
-      }
+        if (!imageBuffer) throw new Error("生成帮助图片失败 (返回空 Buffer)");
+        
+        await e.reply(imageBuffer);
+
+    } catch (error) {
+        this.logger.error(`${this.logPrefix}生成帮助时出错:`, error);
+        
+        let fallbackText = "『咕咕牛帮助手册』(图片生成失败，转为纯文本)\n";
+        fallbackText += "--------------------\n";
+        fallbackText += "【图库安装】\n";
+        fallbackText += "  #下载咕咕牛: 自动测速选择合适节点下载\n";
+        fallbackText += "  #更新咕咕牛: 手动执行更新\n";
+        fallbackText += "\n";
+        fallbackText += "【图库操作】\n";
+        fallbackText += "  #启/禁用咕咕牛: 管理图库同步\n";
+        fallbackText += "  #咕咕牛状态: 查看本地参数\n";
+        fallbackText += "  #咕咕牛查看[角色名]: 查看角色图片\n";
+        fallbackText += "  #咕咕牛导出[角色名+编号]: 导出图片文件\n";
+        fallbackText += "  #可视化[角色名]: 显示面板图\n";
+        fallbackText += "  #重置咕咕牛: 清理图库文件\n";
+        fallbackText += "\n";
+        fallbackText += "【封禁与设置】\n";
+        fallbackText += "  #咕咕牛封/解禁[角色名+编号]: 管理单张图片\n";
+        fallbackText += "  #咕咕牛封禁列表: 显示封禁图片\n";
+        fallbackText += "  #咕咕牛设置净化等级[0-2]: 过滤敏感内容\n";
+        fallbackText += "  #咕咕牛面板: 查看设置状态\n";
+        fallbackText += "  #咕咕牛设置[xx][开启/关闭]: Ai/彩蛋/横屏等\n";
+        fallbackText += "\n";
+        fallbackText += "【测试工具】\n";
+        fallbackText += "  #咕咕牛测速: 测速全部节点\n";
+        fallbackText += "  #咕咕牛触发: 只显示用于开发者测试\n";
+        fallbackText += "--------------------\n";
+        fallbackText += `Miao-Plugin-MBT v${Version}`;
+        await e.reply(fallbackText, true);
     }
-
-    if (!templateHtml) {
-      let fallbackText = "『咕咕牛帮助手册』(图片生成失败，转为纯文本)\n";
-      fallbackText += "--------------------\n";
-      fallbackText += "【图库安装】\n";
-      fallbackText += "  #下载咕咕牛: 自动测速选择合适节点下载\n";
-      fallbackText += "  #更新咕咕牛: 手动执行更新\n";
-      fallbackText += "\n";
-      fallbackText += "【图库操作】\n";
-      fallbackText += "  #启/禁用咕咕牛: 管理图库同步\n";
-      fallbackText += "  #咕咕牛状态: 查看本地参数\n";
-      fallbackText += "  #咕咕牛查看[角色名]: 查看角色图片\n";
-      fallbackText += "  #咕咕牛导出[角色名+编号]: 导出图片文件\n";
-      fallbackText += "  #可视化[角色名]: 显示面板图\n";
-      fallbackText += "  #重置咕咕牛: 清理图库文件\n";
-      fallbackText += "\n";
-      fallbackText += "【封禁与设置】\n";
-      fallbackText += "  #咕咕牛封/解禁[角色名+编号]: 管理单张图片\n";
-      fallbackText += "  #咕咕牛封禁列表: 显示封禁图片\n";
-      fallbackText += "  #咕咕牛设置净化等级[0-2]: 过滤敏感内容\n";
-      fallbackText += "  #咕咕牛面板: 查看设置状态\n";
-      fallbackText += "  #咕咕牛设置[xx][开启/关闭]: Ai/彩蛋/横屏等\n";
-      fallbackText += "\n";
-      fallbackText += "【测试工具】\n";
-      fallbackText += "  #咕咕牛测速: 测速全部节点\n";
-      fallbackText += "  #咕咕牛触发: 只显示用于开发者测试\n";
-      fallbackText += "--------------------\n";
-      fallbackText += `Miao-Plugin-MBT v${Version}`;
-
-      await e.reply(fallbackText, true);
-    }
-
+    
     return true;
   }
-
+  
   async TriggerError(e) {
     if (!e.isMaster) return e.reply("仅限主人测试。", true);
     const match = e.msg.match(/#咕咕牛触发(?:\s*([a-zA-Z0-9_-]+))?/i);
