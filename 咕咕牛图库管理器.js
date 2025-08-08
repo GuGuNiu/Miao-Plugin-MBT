@@ -60,7 +60,7 @@ class ProcessManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.5";
+const Version = "5.0.6";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -127,6 +127,7 @@ async function getBackgroundFiles(logger) {
 
   const bgDir = path.join(MiaoPluginMBT.paths.backgroundImgPath, "bg");
   try {
+    await fsPromises.access(MiaoPluginMBT.paths.backgroundImgPath);
     const entries = await fsPromises.readdir(bgDir);
     const newFiles = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
     if (newFiles.length > 0) {
@@ -141,7 +142,8 @@ async function getBackgroundFiles(logger) {
     backgroundCache.files = [];
     backgroundCache.lastScan = 0;
     if (err.code !== 'ENOENT') {
-      //logger.error(`${Default_Config.logPrefix}扫描 bg 目录失败:`, err);
+      // 只有在不是文件未找到的其它错误时，才记录错误日志
+      logger.error(`${Default_Config.logPrefix}扫描 bg 目录失败:`, err);
     }
     return [];
   }
@@ -157,6 +159,7 @@ async function getPictureFiles(logger) {
 
   const pictureDir = path.join(MiaoPluginMBT.paths.backgroundImgPath, "picture");
   try {
+    await fsPromises.access(MiaoPluginMBT.paths.backgroundImgPath);
     const entries = await fsPromises.readdir(pictureDir);
     const newFiles = entries.filter(file => /\.(webp|png|jpg|jpeg)$/i.test(file));
     if (newFiles.length > 0) {
@@ -168,10 +171,10 @@ async function getPictureFiles(logger) {
     }
     return newFiles;
   } catch (err) {
-    pictureCache.files = [];
-    pictureCache.lastScan = 0;
+    backgroundCache.files = [];
+    backgroundCache.lastScan = 0;
     if (err.code !== 'ENOENT') {
-      // logger.error(`${Default_Config.logPrefix}扫描 picture 目录失败:`, err);
+      logger.error(`${Default_Config.logPrefix}扫描 picture 目录失败:`, err);
     }
     return [];
   }
@@ -740,6 +743,7 @@ class MiaoPluginMBT extends plugin {
     commonResPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery"),
     configFilePath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "GalleryConfig.yaml"),
     banListPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", "banlist.json"),
+    installLockPath: path.join(YunzaiPath, "resources", "GuGuNiu-Gallery", ".install_lock"),
 
     // --- 临时文件路径 ---
     tempPath: path.join(YunzaiPath, "temp", "html", "GuGuNiu"),
@@ -800,7 +804,6 @@ class MiaoPluginMBT extends plugin {
     ];
 
     const shutdownHandler = (signal) => {
-      //this.logger.warn(`${this.logPrefix}接收到退出信号 [${signal}]，正在清理 GuTools 服务...`);
       MiaoPluginMBT.processManager.killAll('SIGKILL', `接收到系统信号 ${signal}`);
       setTimeout(() => process.exit(0), 500); 
     };
@@ -813,71 +816,35 @@ class MiaoPluginMBT extends plugin {
         setTimeout(() => process.exit(1), 1000);
     });
 
-    this._initializeInstance();
-  }
-
-  async _initializeInstance() {
-    if (!MiaoPluginMBT.initializationPromise && !MiaoPluginMBT.isGloballyInitialized) {
-      MiaoPluginMBT.InitializePlugin(this.logger);
-    }
-    try {
-      await MiaoPluginMBT.initializationPromise;
-      this.isPluginInited = MiaoPluginMBT.isGloballyInitialized;
-
-      if (this.isPluginInited && Array.isArray(this.task)) {
-        const mainUpdateTask = this.task.find(t => t.name.includes('定时更新'));
-        if (mainUpdateTask && MiaoPluginMBT.MBTConfig.cronUpdate && mainUpdateTask.cron !== MiaoPluginMBT.MBTConfig.cronUpdate) {
-          this.logger.info(`${this.logPrefix} 更新 Cron 表达式: ${mainUpdateTask.cron} -> ${MiaoPluginMBT.MBTConfig.cronUpdate}`);
-          mainUpdateTask.cron = MiaoPluginMBT.MBTConfig.cronUpdate;
-        }
-      }
-
-    } catch (initError) {
-      this.logger.error(`${this.logPrefix} 实例等待全局初始化失败: ${initError.message}`);
-      this.isPluginInited = false;
-    }
+    MiaoPluginMBT.InitializePlugin(this.logger);
   }
 
   async accept(old_this) {
     //this.logger.info("『咕咕牛🐂』检测到管理器热重载，开始处理...");
     if (old_this && typeof old_this.destroy === 'function') {
-      this.logger.info("『咕咕牛🐂』检测到管理器正在热重载，正在执行销毁旧实例...");
       await old_this.destroy();
-      this.logger.info("『咕咕牛🐂』旧实例已销毁，新实例将重新初始化。");
-    } else {
-      //this.logger.warn("『咕咕牛🐂』未发现正在运行的旧实例。这可能是首次加载或插件处于休眠状态被更新。");
     }
   }
 
   async destroy() {
-    this.logger.warn(`${this.logPrefix}开始销毁插件资源并重置所有静态状态...`);
+    //this.logger.warn(`${this.logPrefix}开始销毁插件资源并重置所有静态状态...`);
 
-    //  停止所有定时任务
     if (this.task) {
-        this.task.forEach(t => {
-            if (t.cron) {
-                const scheduler = require('node-schedule');
-                scheduler.cancelJob(t.name);
-            }
-        });
+        this.task.forEach(t => { if (t.cron) { try { require('node-schedule').cancelJob(t.name); } catch(e) {} } });
         this.task = null;
     }
     
-    //  停止所有由该插件实例启动的子进程
     MiaoPluginMBT.processManager.killAll('SIGKILL', '插件热重载或销毁');
     if (MiaoPluginMBT._guToolsProcess) {
         MiaoPluginMBT._guToolsProcess.removeAllListeners();
         MiaoPluginMBT._guToolsProcess = null;
     }
 
-    //  停止所有监控器
     if (MiaoPluginMBT._loadMonitorInterval) {
       clearInterval(MiaoPluginMBT._loadMonitorInterval);
       MiaoPluginMBT._loadMonitorInterval = null;
-      this.logger.info(`${this.logPrefix}负载监控定时器已清理。`);
     }
 
-    //  重置所有静态缓存和状态变量
     MiaoPluginMBT.isGloballyInitialized = false;
     MiaoPluginMBT.initializationPromise = null;
     MiaoPluginMBT.isInitializing = false;
@@ -897,8 +864,6 @@ class MiaoPluginMBT extends plugin {
     MiaoPluginMBT._secondaryTagsCache = [];
     
     this.isPluginInited = false;
-
-    this.logger.warn(`${this.logPrefix}所有静态缓存、索引和状态已强制重置。`);
   }
 
   static async _installGuToolsDependencies(logger = global.logger || console) {
@@ -1141,97 +1106,78 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async InitializePlugin(logger = global.logger || console) {
-
-    if (MiaoPluginMBT.isInitializing) {
-      logger.warn(`${Default_Config.logPrefix}检测到初始化正在进行中，等待完成...`);
-      try { await MiaoPluginMBT.initializationPromise; } catch (waitError) { }
-      return MiaoPluginMBT.initializationPromise;
-    }
     if (MiaoPluginMBT.initializationPromise) return MiaoPluginMBT.initializationPromise;
-    if (MiaoPluginMBT.isGloballyInitialized) return Promise.resolve();
 
     MiaoPluginMBT.isInitializing = true;
-    //logger.info(`${Default_Config.logPrefix}开始全局初始化(v${Version})...`); //调式日志
     MiaoPluginMBT.isGloballyInitialized = false;
+    
     MiaoPluginMBT.initializationPromise = (async () => {
-      await MiaoPluginMBT._checkAndCleanPendingOperations(logger);
-      let fatalError = null;
-      let localImgDataCache = [];
+      let hasCoreData = true;
       try {
-        const config = await MiaoPluginMBT.LoadTuKuConfig(true, logger);
-        if (!config || Object.keys(config).length === 0) throw new Error("无法加载图库配置");
-
-        localImgDataCache = await MiaoPluginMBT.LoadImageData(true, logger);
-        if (!Array.isArray(localImgDataCache)) {
-          logger.error(`${Default_Config.logPrefix}[警告] CRITICAL: 元数据加载失败或格式错误!`);
-          localImgDataCache = [];
-          throw new Error("加载图片元数据失败");
-        } else if (localImgDataCache.length === 0 && (await MiaoPluginMBT.IsTuKuDownloaded(1))) {
-          logger.warn(`${Default_Config.logPrefix}[警告] 元数据为空 (核心库已下载)`);
+        await MiaoPluginMBT._checkAndCleanPendingOperations(logger);
+        
+        try {
+            await fsPromises.access(MiaoPluginMBT.paths.commonResPath);
+            await MiaoPluginMBT.LoadTuKuConfig(true, logger);
+        } catch(e) {
+            MiaoPluginMBT.MBTConfig = { ...Default_Config }; // 目录不存在，直接使用默认配置
+        }
+        
+        const localImgDataCache = await MiaoPluginMBT.LoadImageData(true, logger);
+        if (!Array.isArray(localImgDataCache) || (localImgDataCache.length === 0 && await MiaoPluginMBT.IsTuKuDownloaded(1))) {
+            hasCoreData = false;
         }
 
-        const bansLoaded = await MiaoPluginMBT.LoadUserBans(true, logger);
-        if (!bansLoaded) {
-          logger.warn(`${Default_Config.logPrefix}[警告] 加载用户封禁列表失败`);
-        }
-
-        const aliasLoaded = await MiaoPluginMBT.LoadAliasData(true, logger);
-        await MiaoPluginMBT.LoadSecondaryTags(true, logger);
+        await MiaoPluginMBT.LoadUserBans(true, logger);
+        await MiaoPluginMBT.LoadAliasData(true, logger);
         await MiaoPluginMBT.LoadWavesRoleData(true, logger);
-        if (!MiaoPluginMBT._aliasData?.combined) {
-          logger.warn(`${Default_Config.logPrefix}[警告] 加载别名数据失败`);
-          MiaoPluginMBT._aliasData = { combined: {} };
-        } else if (!aliasLoaded) {
-          logger.warn(`${Default_Config.logPrefix}[警告] 部分别名加载失败`);
-        } else if (Object.keys(MiaoPluginMBT._aliasData.combined).length === 0) {
-          logger.warn(`${Default_Config.logPrefix}[警告] 别名数据为空`);
-        }
+        await MiaoPluginMBT.LoadSecondaryTags(true, logger);
 
         await MiaoPluginMBT.GenerateAndApplyBanList(localImgDataCache, logger);
         MiaoPluginMBT._imgDataCache = Object.freeze(localImgDataCache);
 
         MiaoPluginMBT.isGloballyInitialized = true;
-        logger.info(`${Default_Config.logPrefix}全局初始化成功 版本号：v${Version}`);
-        const configDir = path.dirname(MiaoPluginMBT.paths.configFilePath);
-        // if (fs.existsSync(configDir)) {
-        //     //MiaoPluginMBT._startConfigWatcher(logger);
-        // } else {
-        //     //logger.warn(`${Default_Config.logPrefix} 配置文件目录不存在，暂不启动监控。将在下载/更新后启动。`);
-        // }
-        this.processManager.killAll('SIGKILL', '插件初始化前的清理');
-        MiaoPluginMBT.startLoadMonitor(logger);
-        this.startGuToolsServer(logger);
-        //MiaoPluginMBT._startConfigWatcher(logger);
 
+        if(hasCoreData) {
+            logger.info(`${Default_Config.logPrefix}全局初始化成功 版本号：v${Version}`);
+        } else {
+            // 在首次安装、核心数据缺失时，保持静默，不打印日志
+        }
+
+        MiaoPluginMBT.startLoadMonitor(logger);
+
+        if (await MiaoPluginMBT.IsTuKuDownloaded(1)) {
+            MiaoPluginMBT.startGuToolsServer(logger).catch(err => {
+                logger.error(`${Default_Config.logPrefix}后台 GuTools 服务启动失败:`, err);
+            });
+        }
+    
         if (!MiaoPluginMBT.oldFileDeletionScheduled) {
           MiaoPluginMBT.oldFileDeletionScheduled = true;
-          const delaySeconds = 15;
-          //logger.info(`${Default_Config.logPrefix}已调度延迟 ${delaySeconds} 秒后清理旧文件任务。`); //调式日志
           setTimeout(async () => {
-            const oldPluginFileName = "咕咕牛图库下载器.js";
-            const oldPluginPath = path.join(MiaoPluginMBT.paths.target.exampleJs, oldPluginFileName);
+            const oldPluginPath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库下载器.js");
             try {
-              await fsPromises.access(oldPluginPath);
-              //logger.warn(`${Default_Config.logPrefix}检测到旧插件文件 (${oldPluginFileName})，将尝试删除...`); //调式日志
-              await fsPromises.unlink(oldPluginPath);
-              //logger.info(`${Default_Config.logPrefix}旧插件文件 (${oldPluginFileName}) 已成功删除。`);   //调式日志
-            } catch (err) {
-              if (err.code !== ERROR_CODES.NotFound) logger.error(`${Default_Config.logPrefix}删除旧插件文件 (${oldPluginPath}) 时出错:`, err);
+                await fsPromises.access(oldPluginPath);
+                await safeDelete(oldPluginPath);
+            } catch(err) {
+                if (err.code !== 'ENOENT') logger.error(`${Default_Config.logPrefix}删除旧插件文件失败:`, err);
             }
-          }, delaySeconds * 1000);
+          }, 15000);
         }
       } catch (error) {
-        fatalError = error;
         MiaoPluginMBT.isGloballyInitialized = false;
-        logger.error(`${Default_Config.logPrefix}!!! 全局初始化失败: ${fatalError.message} !!!`);
-        logger.error(fatalError.stack);
-        MiaoPluginMBT._imgDataCache = Object.freeze([]); MiaoPluginMBT._userBanSet = new Set();
-        MiaoPluginMBT._activeBanSet = new Set(); MiaoPluginMBT._aliasData = null;
-        MiaoPluginMBT._remoteBanCount = 0;
-        throw fatalError;
-      } finally { MiaoPluginMBT.isInitializing = false; }
+        logger.error(`${Default_Config.logPrefix}!!! 全局初始化失败: ${error.message} !!!`);
+        logger.error(error.stack);
+        throw error;
+      } finally {
+        MiaoPluginMBT.isInitializing = false;
+      }
     })();
-    MiaoPluginMBT.initializationPromise.catch((err) => { });
+    
+    MiaoPluginMBT.initializationPromise.catch(err => {
+         logger.error(`${Default_Config.logPrefix}初始化 Promise 最终被拒绝:`, err.message);
+    });
+
     return MiaoPluginMBT.initializationPromise;
   }
 
@@ -1354,7 +1300,7 @@ class MiaoPluginMBT extends plugin {
     }
   }
 
-  static async LoadSecondaryTags(forceReload = false, logger = global.logger || console) {
+  static async LoadSecondaryTags(forceReload = false, logger = global.logger || console, isAlreadyInstalled = false) {
     if (MiaoPluginMBT._secondaryTagsCache?.length > 0 && !forceReload) return true;
 
     const tagsPath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "SecondTags.json");
@@ -1372,7 +1318,10 @@ class MiaoPluginMBT extends plugin {
       }
     } catch (error) {
       if (error.code === 'ENOENT') {
-        logger.warn(`${Default_Config.logPrefix}SecondTags.json 未找到，二级标签相关功能将受限。`);
+        if (isAlreadyInstalled) {
+             // 仅在确认已安装过的情况下，才将文件不存在视为一个需要关注的问题
+             logger.warn(`${Default_Config.logPrefix}SecondTags.json 未找到，二级标签相关功能将受限。`);
+        }
       } else {
         logger.error(`${Default_Config.logPrefix}读取或解析 SecondTags.json 失败:`, error);
       }
@@ -1550,10 +1499,10 @@ class MiaoPluginMBT extends plugin {
     // logger.info(`${Default_Config.logPrefix}完成。GIDs: ${this._indexByGid.size}, 角色: ${this._indexByCharacter.size}, 标签类别: ${this._indexByTag.size}`);
   }
 
-  static async LoadImageData(forceReload = false, logger = global.logger || console) {
+  static async LoadImageData(forceReload = false, logger = global.logger || console, isAlreadyInstalled = false) {
     if (MiaoPluginMBT._imgDataCache?.length > 0 && !forceReload) return MiaoPluginMBT._imgDataCache;
 
-    const imageDataPath = path.join(MiaoPluginMBT.paths.LocalTuKuPath, "GuGuNiu-Gallery", "ImageData.json");
+    const imageDataPath = path.join(this.paths.LocalTuKuPath, "GuGuNiu-Gallery", "ImageData.json");
     let finalData = [];
     let remoteBanCounterTemp = 0;
 
@@ -1561,13 +1510,19 @@ class MiaoPluginMBT extends plugin {
       const content = await fsPromises.readFile(imageDataPath, "utf8");
       const parsedData = JSON.parse(content);
       if (!Array.isArray(parsedData)) {
-        throw new Error("元数据文件内容不是一个有效的数组");
+        logger.error(`${Default_Config.logPrefix}核心元数据文件 ImageData.json 内容不是一个有效的数组，将被视为空。`);
+        finalData = [];
+      } else {
+        finalData = parsedData;
       }
-      finalData = parsedData;
     } catch (error) {
-      logger.error(`${Default_Config.logPrefix}读取或解析核心元数据文件失败 (${imageDataPath})!`);
-      logger.error(error);
-      throw new Error(`核心元数据文件 ImageData.json 丢失或损坏，请尝试使用 #更新咕咕牛 修复。`);
+      if (error.code !== 'ENOENT') {
+        logger.error(`${Default_Config.logPrefix}读取或解析核心元数据文件失败 (${imageDataPath})!`, error);
+      } else if (isAlreadyInstalled) {
+        // 仅在确认已安装过的情况下，才将文件不存在视为一个错误
+        logger.error(`${Default_Config.logPrefix}错误：核心元数据文件 ImageData.json 丢失！ (${imageDataPath})`);
+      }
+      finalData = []; 
     }
 
     const originalCount = finalData.length;
@@ -1585,24 +1540,14 @@ class MiaoPluginMBT extends plugin {
       const normalizedPath = item.path.replace(/\\/g, "/");
       const pathIsValid = pathRegex.test(normalizedPath);
       if (!pathIsValid) {
-        logger.warn(`${Default_Config.logPrefix}过滤掉格式错误的图片路径: ${item.path}`);
+        // logger.warn(`${Default_Config.logPrefix}过滤掉格式错误的图片路径: ${item.path}`);
       }
       return pathIsValid;
     }).map(item => ({ ...item, path: item.path.replace(/\\/g, "/") }));
 
-    const validCount = validData.length;
-    const filteredCount = originalCount - validCount;
-    if (filteredCount > 0) {
-      logger.info(`${Default_Config.logPrefix}共过滤掉 ${filteredCount} 条无效、格式错误或远程封禁的元数据。`);
-    }
-
     await MiaoPluginMBT._buildIndexes(validData, logger);
     MiaoPluginMBT._imgDataCache = Object.freeze(validData);
     MiaoPluginMBT._remoteBanCount = remoteBanCounterTemp;
-
-    if (validData.length === 0 && (await MiaoPluginMBT.IsTuKuDownloaded(1))) {
-      logger.warn(`${Default_Config.logPrefix}[警告] 元数据为空 (核心库已下载)`);
-    }
 
     return validData;
   }
@@ -1792,10 +1737,8 @@ class MiaoPluginMBT extends plugin {
   static async _scanWithWorkers(logger) {
     const logPrefix = Default_Config.logPrefix;
     return new Promise(async (resolve, reject) => {
-        logger.info(`${logPrefix}[Worker] 开始使用多线程并行扫描...`);
         const startTime = Date.now();
         
-        // --- Worker 脚本代码内联 ---
         const workerCode = `
             import { parentPort, workerData } from 'node:worker_threads';
             import fs from 'node:fs/promises';
@@ -1803,28 +1746,20 @@ class MiaoPluginMBT extends plugin {
             
             const ERROR_CODES = { NotFound: "ENOENT", Access: "EACCES" };
 
-            function logToParent(level, message, ...args) {
-                if (parentPort) {
-                    parentPort.postMessage({ type: 'log', payload: { level, message, args } });
-                }
-            }
+            function logToParent(level, message, ...args) { if (parentPort) parentPort.postMessage({ type: 'log', payload: { level, message, args } }); }
 
             async function scanAssignedDirectories(repoInfo) {
-                const { path: repoPath, name: repoName } = repoInfo;
-                const results = [];
+                const { path: repoPath, name: repoName } = repoInfo; const results = [];
                 const sourceFolders = { gs: "gs-character", sr: "sr-character", zzz: "zzz-character", waves: "waves-character" };
-
                 for (const gameKey in sourceFolders) {
-                    const sourceFolderName = sourceFolders[gameKey];
-                    if (!sourceFolderName) continue;
+                    const sourceFolderName = sourceFolders[gameKey]; if (!sourceFolderName) continue;
                     const gameFolderPath = path.join(repoPath, sourceFolderName);
                     try {
                         await fs.access(gameFolderPath);
                         const characterDirs = await fs.readdir(gameFolderPath, { withFileTypes: true });
                         for (const charDir of characterDirs) {
                             if (charDir.isDirectory()) {
-                                const characterName = charDir.name;
-                                const charFolderPath = path.join(gameFolderPath, characterName);
+                                const characterName = charDir.name; const charFolderPath = path.join(gameFolderPath, characterName);
                                 try {
                                     const imageFiles = await fs.readdir(charFolderPath);
                                     for (const imageFile of imageFiles) {
@@ -1834,16 +1769,12 @@ class MiaoPluginMBT extends plugin {
                                         }
                                     }
                                 } catch (readCharErr) {
-                                    if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) {
-                                        logToParent('warn', \`读取角色目录 \${charFolderPath} 失败:\`, readCharErr.code);
-                                    }
+                                    if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) { logToParent('warn', \`读取角色目录 \${charFolderPath} 失败:\`, readCharErr.code); }
                                 }
                             }
                         }
                     } catch (readGameErr) {
-                        if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) {
-                            logToParent('warn', \`访问或读取游戏目录 \${gameFolderPath} 失败:\`, readGameErr.code);
-                        }
+                        if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) { logToParent('warn', \`访问或读取游戏目录 \${gameFolderPath} 失败:\`, readGameErr.code); }
                     }
                 }
                 return results;
@@ -1852,76 +1783,54 @@ class MiaoPluginMBT extends plugin {
             (async () => {
                 if (!parentPort) return;
                 try {
-                    const { reposToScan } = workerData;
-                    let allFoundImages = [];
-                    for (const repo of reposToScan) {
-                        const images = await scanAssignedDirectories(repo);
-                        allFoundImages.push(...images);
-                    }
+                    const { reposToScan } = workerData; let allFoundImages = [];
+                    for (const repo of reposToScan) { allFoundImages.push(...(await scanAssignedDirectories(repo))); }
                     parentPort.postMessage({ status: 'success', data: allFoundImages });
-                } catch (error) {
-                    parentPort.postMessage({ status: 'error', error: error.message });
-                } finally {
-                    process.exit(0);
-                }
+                } catch (error) { parentPort.postMessage({ status: 'error', error: error.message }); } 
+                finally { process.exit(0); }
             })();
         `;
 
         const reposToScan = [];
         const repoPathsMap = {
-            "Miao-Plugin-MBT": { path: this.paths.LocalTuKuPath, num: 1 },
-            "Miao-Plugin-MBT-2": { path: this.paths.LocalTuKuPath2, num: 2 },
-            "Miao-Plugin-MBT-3": { path: this.paths.LocalTuKuPath3, num: 3 },
-            "Miao-Plugin-MBT-4": { path: this.paths.LocalTuKuPath4, num: 4 },
+            "Miao-Plugin-MBT": { path: this.paths.LocalTuKuPath, num: 1 }, "Miao-Plugin-MBT-2": { path: this.paths.LocalTuKuPath2, num: 2 },
+            "Miao-Plugin-MBT-3": { path: this.paths.LocalTuKuPath3, num: 3 }, "Miao-Plugin-MBT-4": { path: this.paths.LocalTuKuPath4, num: 4 },
         };
-
         for (const repoName in repoPathsMap) {
             const repoInfo = repoPathsMap[repoName];
-            if (repoInfo.path && (await this.IsTuKuDownloaded(repoInfo.num))) {
-                reposToScan.push({ path: repoInfo.path, name: repoName });
-            }
+            if (repoInfo.path && (await this.IsTuKuDownloaded(repoInfo.num))) { reposToScan.push({ path: repoInfo.path, name: repoName }); }
         }
-        
-        if (reposToScan.length === 0) {
-             logger.warn(`${logPrefix}[Worker] 未找到任何已下载的本地仓库，扫描结束。`);
-             return resolve([]);
-        }
+        if (reposToScan.length === 0) { return resolve([]); }
 
         const numCores = os.cpus().length;
         const numWorkers = Math.max(1, Math.min(reposToScan.length, numCores - 1));
         const chunks = Array.from({ length: numWorkers }, () => []);
         reposToScan.forEach((repo, index) => chunks[index % numWorkers].push(repo));
 
-        //logger.info(`${logPrefix}[Worker] 已启动 ${numWorkers} 个工作线程处理 ${reposToScan.length} 个仓库任务。`);
-
         const workerPromises = chunks.map((chunk, i) => {
             if (chunk.length === 0) return Promise.resolve([]);
             return new Promise((res, rej) => {
                 const worker = new Worker(workerCode, { eval: true, workerData: { reposToScan: chunk } });
-                
                 worker.on('message', (message) => {
                     if (message.type === 'log') {
                         const { level, message: msg, args } = message.payload;
-                        logger[level](`${logPrefix}[Worker ${i}] ${msg}`, ...args);
+                        if (level !== 'info') { // 只记录警告和错误
+                            logger[level](`${logPrefix}[Worker ${i}] ${msg}`, ...args);
+                        }
                     } else if (message.status === 'success') {
                         res(message.data);
                     } else {
                         rej(new Error(message.error));
                     }
                 });
-
                 worker.on('error', rej);
-                worker.on('exit', (code) => {
-                    if (code !== 0) rej(new Error(`工作线程 ${i} 异常退出，退出码: ${code}`));
-                });
+                worker.on('exit', (code) => { if (code !== 0) rej(new Error(`工作线程 ${i} 异常退出，退出码: ${code}`)); });
             });
         });
 
         try {
             const resultsFromWorkers = await Promise.all(workerPromises);
             const allImages = resultsFromWorkers.flat();
-            const duration = Date.now() - startTime;
-            //logger.info(`${logPrefix}[Worker] 所有线程扫描完成，共找到 ${allImages.length} 个图片文件，耗时 ${duration}ms。`);
             resolve(allImages);
         } catch (error) {
             logger.error(`${logPrefix}[Worker] 并行扫描过程中发生错误:`, error);
@@ -1929,8 +1838,7 @@ class MiaoPluginMBT extends plugin {
         }
     });
   }
-
-
+  
   static async ScanLocalImagesToBuildCache(logger = global.logger || console) {
     const logPrefix = Default_Config.logPrefix;
     try {
@@ -1945,20 +1853,16 @@ class MiaoPluginMBT extends plugin {
         }
         return uniqueResults;
     } catch (workerError) {
-        //logger.warn(`${logPrefix}[Worker] 并行扫描失败，已自动切换回传统的单线程扫描模式。错误详情: ${workerError.message}`);
+        //logger.error(`${logPrefix}[Worker] 并行扫描失败，已自动切换单线程扫描模式。错误详情: ${workerError.message}`);
         
         const fallbackCache = []; const ReposToScan = [];
         const repoPathsMap = {
-          "Miao-Plugin-MBT": { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 },
-          "Miao-Plugin-MBT-2": { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
-          "Miao-Plugin-MBT-3": { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 },
-          "Miao-Plugin-MBT-4": { path: MiaoPluginMBT.paths.LocalTuKuPath4, num: 4 },
+          "Miao-Plugin-MBT": { path: MiaoPluginMBT.paths.LocalTuKuPath, num: 1 }, "Miao-Plugin-MBT-2": { path: MiaoPluginMBT.paths.LocalTuKuPath2, num: 2 },
+          "Miao-Plugin-MBT-3": { path: MiaoPluginMBT.paths.LocalTuKuPath3, num: 3 }, "Miao-Plugin-MBT-4": { path: MiaoPluginMBT.paths.LocalTuKuPath4, num: 4 },
         };
         for (const storageBoxName in repoPathsMap) {
           const repoInfo = repoPathsMap[storageBoxName];
-          if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) {
-            ReposToScan.push({ path: repoInfo.path, name: storageBoxName });
-          }
+          if (repoInfo.path && (await MiaoPluginMBT.IsTuKuDownloaded(repoInfo.num))) { ReposToScan.push({ path: repoInfo.path, name: storageBoxName }); }
         }
         const imagePathsFound = new Set();
         for (const Repo of ReposToScan) {
@@ -1983,18 +1887,17 @@ class MiaoPluginMBT extends plugin {
                         }
                       }
                     }
-                  } catch (readCharErr) { if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) logger.warn(`${Default_Config.logPrefix}读取角色目录 ${charFolderPath} 失败:`, readCharErr.code); }
+                  } catch (readCharErr) { if (readCharErr.code !== ERROR_CODES.NotFound && readCharErr.code !== ERROR_CODES.Access) logger.error(`${Default_Config.logPrefix}读取角色目录 ${charFolderPath} 失败:`, readCharErr.code); }
                 }
               }
-            } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.warn(`${Default_Config.logPrefix}读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
+            } catch (readGameErr) { if (readGameErr.code !== ERROR_CODES.NotFound && readGameErr.code !== ERROR_CODES.Access) logger.error(`${Default_Config.logPrefix}读取游戏目录 ${gameFolderPath} 失败:`, readGameErr.code); }
           }
         }
-        //logger.info(`${logPrefix} 单线程扫描完成，共找到 ${fallbackCache.length} 个 .webp 图片文件。`);
         return fallbackCache;
     }
   }
 
-  static async LoadUserBans(forceReload = false, logger = global.logger || console) {
+  static async LoadUserBans(forceReload = false, logger = global.logger || console, isAlreadyInstalled = false) {
     if (MiaoPluginMBT._userBanSet instanceof Set && MiaoPluginMBT._userBanSet.size > 0 && !forceReload) return true;
     
     let data = [];
@@ -2005,13 +1908,11 @@ class MiaoPluginMBT extends plugin {
       data = JSON.parse(content);
       success = true;
     } catch (error) {
-      if (error.code === ERROR_CODES.NotFound) {
-        data = [];
-        success = true;
+      if (error.code === 'ENOENT') {
+        data = []; success = true;
       } else {
         logger.error(`${Default_Config.logPrefix}读取或解析 banlist.json 失败:`, error);
-        data = [];
-        success = false;
+        data = []; success = false;
       }
     }
 
@@ -3772,7 +3673,15 @@ class MiaoPluginMBT extends plugin {
         // logger.info(`${logPrefix} [诊断] 图库已禁用，跳过同步角色文件夹。`);
       }
       // logger.info(`${logPrefix} [诊断] 完整部署成功完成所有步骤。`);
-
+      // -创建安装锁文件 
+      if (stage === 'full') {
+          try {
+              await fsPromises.writeFile(MiaoPluginMBT.paths.installLockPath, new Date().toISOString());
+              // logger.info(`${logPrefix} 已成功创建安装状态标记文件。`);
+          } catch (lockError) {
+              logger.error(`${logPrefix} 创建状态标记文件失败:`, lockError);
+          }
+      }
     } catch (error) {
       logger.error(`${logPrefix} [诊断] RunPostDownloadSetup (阶段: ${stage}) 内部发生致命错误:`, error);
       if (e) await MiaoPluginMBT.ReportError(e, `安装设置 (${stage}阶段)`, error, "", logger);
@@ -4137,57 +4046,29 @@ class MiaoPluginMBT extends plugin {
   }
 
   async CheckInit(e) {
-    if (!MiaoPluginMBT.initializationPromise && !MiaoPluginMBT.isGloballyInitialized) {
-      this.logger.info(`${Default_Config.logPrefix}首次触发，开始初始化...`);
-      await this._initializeInstance();
-    } else if (MiaoPluginMBT.initializationPromise && !MiaoPluginMBT.isGloballyInitialized) {
-      this.logger.info(`${Default_Config.logPrefix}初始化进行中，等待...`);
-      try {
+    if (!MiaoPluginMBT.initializationPromise) {
+        logger.error(`${this.logPrefix}CRITICAL_ERROR: CheckInit 被调用时 initializationPromise 仍为 null！`);
+        await e.reply('『咕咕牛🐂』插件遇到严重的生命周期错误，请重启机器人。', true);
+        return false;
+    }
+    
+    try {
         await MiaoPluginMBT.initializationPromise;
         this.isPluginInited = MiaoPluginMBT.isGloballyInitialized;
-      } catch (error) {
-        this.logger.error(`${Default_Config.logPrefix}等待初始化时捕获到错误:`, error.message || error);
+    } catch (error) {
         this.isPluginInited = false;
-      }
-    } else {
-      this.isPluginInited = MiaoPluginMBT.isGloballyInitialized;
     }
 
     if (!this.isPluginInited) {
-      await e.reply(`${Default_Config.logPrefix}插件初始化失败或仍在进行中，请稍后再试。`, true);
-      return false;
-    }
-
-    let coreDataValid = true;
-    if (!MiaoPluginMBT.MBTConfig || Object.keys(MiaoPluginMBT.MBTConfig).length === 0) {
-      this.logger.error(`${Default_Config.logPrefix}CRITICAL: 配置丢失！`);
-      coreDataValid = false;
-    }
-    if (!Array.isArray(MiaoPluginMBT._imgDataCache)) {
-      this.logger.error(`${Default_Config.logPrefix}CRITICAL: 元数据缓存无效！`);
-      coreDataValid = false;
-    }
-    if (!(MiaoPluginMBT._userBanSet instanceof Set)) {
-      this.logger.error(`${Default_Config.logPrefix}CRITICAL: 用户封禁列表无效！`);
-      coreDataValid = false;
-    }
-    if (!(MiaoPluginMBT._activeBanSet instanceof Set)) {
-      this.logger.error(`${Default_Config.logPrefix}CRITICAL: 生效封禁列表无效！`);
-      coreDataValid = false;
-    }
-    if (!MiaoPluginMBT._aliasData) {
-      this.logger.error(`${Default_Config.logPrefix}CRITICAL: 别名数据丢失！`);
-      coreDataValid = false;
-    }
-
-    if (!coreDataValid) {
-      await e.reply(`${Default_Config.logPrefix}内部状态错误，核心数据加载失败，请重启 Bot。`, true);
+      await e.reply(`『咕咕牛🐂』插件核心服务未就绪，大部分功能无法使用。`, true);
       return false;
     }
 
     if (MiaoPluginMBT._imgDataCache.length === 0 && (await MiaoPluginMBT.IsTuKuDownloaded(1))) {
-      this.logger.warn(`${Default_Config.logPrefix}注意：图片元数据为空，部分功能可能受限。`);
+      await e.reply("『咕咕牛🐂』警告：图片元数据为空，#咕咕牛查看 等功能可能无法正常工作。请尝试 #更新咕咕牛 修复。", true);
+      return false;
     }
+    
     return true;
   }
 
@@ -4751,7 +4632,6 @@ class MiaoPluginMBT extends plugin {
   }
 
   async ManageTuKu(e) {
-    if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${Default_Config.logPrefix}这个操作只有我的主人才能用哦~`, true);
 
     const msg = e.msg.trim();
@@ -4787,6 +4667,12 @@ class MiaoPluginMBT extends plugin {
         errorOperations.push(opName);
         if (!firstError) firstError = { operation: opName, error: err };
       }
+    }
+
+    try {
+        await safeDelete(MiaoPluginMBT.paths.installLockPath);
+    } catch (err) {
+        // 即使删除失败也继续，因为主目录已被删除
     }
 
     const tempHtmlBasePath = path.join(MiaoPluginMBT.paths.YunzaiPath, "temp", "html");
