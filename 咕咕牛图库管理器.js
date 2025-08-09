@@ -6673,60 +6673,62 @@ class MiaoPluginMBT extends plugin {
   }
 
   async Help(e) {
+    const isInstalled = await MiaoPluginMBT.IsTuKuDownloaded(1);
     const localHelpTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "help.html");
     const remoteHelpTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/help.html";
     let templateHtml = "";
+    let templateSource = "local";
 
-    try {
-      templateHtml = await fsPromises.readFile(localHelpTemplatePath, 'utf-8');
-    } catch (localError) {
-      try {
-        const response = await fetch(remoteHelpTemplateUrl, { timeout: 10000 });
-        if (!response.ok) {
-          throw new Error(`请求在线模板失败，状态码: ${response.status}`);
+    if (isInstalled) {
+        try {
+            templateHtml = await fsPromises.readFile(localHelpTemplatePath, 'utf-8');
+        } catch (localError) {
+            templateSource = "remote";
         }
-        templateHtml = await response.text();
-        if (!templateHtml) {
-          throw new Error("获取到的在线帮助模板内容为空。");
-        }
-      } catch (remoteError) {
-        this.logger.error(`${this.logPrefix}CRITICAL: 本地和在线帮助模板均无法加载！`, remoteError);
-        templateHtml = "";
-      }
+    } else {
+        templateSource = "remote";
     }
 
+    if (templateSource === "remote") {
+        try {
+            const response = await fetch(remoteHelpTemplateUrl, { timeout: 10000 });
+            if (!response.ok) throw new Error(`请求在线模板失败，状态码: ${response.status}`);
+            templateHtml = await response.text();
+            if (!templateHtml) throw new Error("获取到的在线帮助模板内容为空。");
+        } catch (remoteError) {
+            this.logger.error(`${this.logPrefix}CRITICAL: 在线帮助模板无法获取！`, remoteError);
+            templateHtml = "";
+        }
+    }
+    
     if (templateHtml) {
       try {
-        let installedDays = '0';
-        try {
-          const stats = await fsPromises.stat(MiaoPluginMBT.paths.LocalTuKuPath);
-          const diffMs = Date.now() - stats.birthtimeMs;
-          installedDays = String(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-        } catch (statError) {
-          if (statError.code !== 'ENOENT') {
-              this.logger.error(`${this.logPrefix}获取安装天数时出错:`, statError);
-          }
-        }
+        let installedDays = '1';
+        let randomIconPaths = [];
 
-        const pictureDirPath = path.join(MiaoPluginMBT.paths.repoGalleryPath, 'html', 'img', 'picture');
-        let availablePictureFiles = [];
-        try {
-          const files = await fsPromises.readdir(pictureDirPath);
-          availablePictureFiles = files.filter(file => /\.(png|webp)$/i.test(file));
-        } catch (err) {
-            if (err.code !== 'ENOENT') {
-                this.logger.error(`${this.logPrefix}读取图片目录失败: ${pictureDirPath}`, err);
+        // 核心注释：仅在插件已安装（使用本地模板）时，才准备额外的数据
+        if (isInstalled) {
+            try {
+              const stats = await fsPromises.stat(MiaoPluginMBT.paths.LocalTuKuPath);
+              if (stats.mtimeMs) { 
+                  const diffMs = Date.now() - stats.mtimeMs;
+                  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                  installedDays = String(Math.max(1, days));
+              }
+            } catch (statError) {
+              if (statError.code !== 'ENOENT') {
+                  this.logger.error(`${this.logPrefix}获取安装天数时出错:`, statError);
+              }
             }
-        }
-
-        const numberOfIcons = 15;
-        const randomIconPaths = [];
-        if (availablePictureFiles.length > 0) {
-          const shuffledIcons = lodash.shuffle(availablePictureFiles);
-          for (let i = 0; i < numberOfIcons; i++) {
-            const iconFilename = shuffledIcons[i % shuffledIcons.length];
-            randomIconPaths.push(iconFilename);
-          }
+            
+            const pictureFiles = await getPictureFiles(this.logger); // 已修复为静默失败
+            if (pictureFiles.length > 0) {
+              const numberOfIcons = 15;
+              const shuffledIcons = lodash.shuffle(pictureFiles);
+              for (let i = 0; i < numberOfIcons; i++) {
+                randomIconPaths.push(shuffledIcons[i % shuffledIcons.length]);
+              }
+            }
         }
 
         const imageBuffer = await renderPageToImage(
@@ -6734,9 +6736,13 @@ class MiaoPluginMBT extends plugin {
           htmlContent: templateHtml,
           data: {
             pluginVersion: Version,
-            randomIconPaths: randomIconPaths,
-            installedDays: installedDays,
-            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue()
+            randomIconPaths: randomIconPaths, // 未安装时为空数组
+            installedDays: installedDays,     // 未安装时为 '1'
+            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+            // 传递 guguuniu_res_path 以确保字体等资源路径正确
+            guguniu_res_path: isInstalled 
+                ? `file://${MiaoPluginMBT.paths.repoGalleryPath}/`.replace(/\\/g, '/') 
+                : 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/main/GuGuNiu-Gallery/' // 在线模板使用远程路径
           },
           imgType: "png",
           pageGotoParams: { waitUntil: "networkidle0" },
@@ -6755,6 +6761,7 @@ class MiaoPluginMBT extends plugin {
     }
 
     if (!templateHtml) {
+      // Fallback text logic remains the same
       let fallbackText = "『咕咕牛帮助手册』(图片生成失败，转为纯文本)\n";
       fallbackText += "--------------------\n";
       fallbackText += "【图库安装】\n";
@@ -6781,7 +6788,6 @@ class MiaoPluginMBT extends plugin {
       fallbackText += "  #咕咕牛触发: 只显示用于开发者测试\n";
       fallbackText += "--------------------\n";
       fallbackText += `Miao-Plugin-MBT v${Version}`;
-
       await e.reply(fallbackText, true);
     }
 
