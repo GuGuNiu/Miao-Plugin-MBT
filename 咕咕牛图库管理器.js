@@ -6673,76 +6673,118 @@ class MiaoPluginMBT extends plugin {
   }
 
   async Help(e) {
+    const localHelpTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "help.html");
+    const remoteHelpTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/help.html";
     let templateHtml = "";
-    let isRemote = false;
 
     try {
-        if (await MiaoPluginMBT.IsTuKuDownloaded(1)) {
-            const localHelpTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "help.html");
-            templateHtml = await fsPromises.readFile(localHelpTemplatePath, 'utf-8');
-        } else {
-            const remoteHelpTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/help.html";
-            const response = await fetch(remoteHelpTemplateUrl, { timeout: 10000 });
-            if (!response.ok) throw new Error(`请求在线模板失败，状态码: ${response.status}`);
-            templateHtml = await response.text();
-            isRemote = true;
+      templateHtml = await fsPromises.readFile(localHelpTemplatePath, 'utf-8');
+    } catch (localError) {
+      try {
+        const response = await fetch(remoteHelpTemplateUrl, { timeout: 10000 });
+        if (!response.ok) {
+          throw new Error(`请求在线模板失败，状态码: ${response.status}`);
+        }
+        templateHtml = await response.text();
+        if (!templateHtml) {
+          throw new Error("获取到的在线帮助模板内容为空。");
+        }
+      } catch (remoteError) {
+        this.logger.error(`${this.logPrefix}CRITICAL: 本地和在线帮助模板均无法加载！`, remoteError);
+        templateHtml = "";
+      }
+    }
+
+    if (templateHtml) {
+      try {
+        let installedDays = '0';
+        try {
+          const stats = await fsPromises.stat(MiaoPluginMBT.paths.LocalTuKuPath);
+          const diffMs = Date.now() - stats.birthtimeMs;
+          installedDays = String(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+        } catch (statError) {
+          if (statError.code !== 'ENOENT') {
+              this.logger.error(`${this.logPrefix}获取安装天数时出错:`, statError);
+          }
         }
 
-        if (!templateHtml) throw new Error("获取到的模板内容为空");
+        const pictureDirPath = path.join(MiaoPluginMBT.paths.repoGalleryPath, 'html', 'img', 'picture');
+        let availablePictureFiles = [];
+        try {
+          const files = await fsPromises.readdir(pictureDirPath);
+          availablePictureFiles = files.filter(file => /\.(png|webp)$/i.test(file));
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                this.logger.error(`${this.logPrefix}读取图片目录失败: ${pictureDirPath}`, err);
+            }
+        }
 
-        const renderData = {
-            pluginVersion: Version,
-            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-            guguniu_res_path: isRemote 
-                ? "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/main/GuGuNiu-Gallery/" 
-                : `file://${path.join(MiaoPluginMBT.paths.LocalTuKuPath, "GuGuNiu-Gallery")}/`.replace(/\\/g, '/')
-        };
-        
+        const numberOfIcons = 15;
+        const randomIconPaths = [];
+        if (availablePictureFiles.length > 0) {
+          const shuffledIcons = lodash.shuffle(availablePictureFiles);
+          for (let i = 0; i < numberOfIcons; i++) {
+            const iconFilename = shuffledIcons[i % shuffledIcons.length];
+            randomIconPaths.push(iconFilename);
+          }
+        }
+
         const imageBuffer = await renderPageToImage(
           "help-panel", {
           htmlContent: templateHtml,
-          data: renderData,
+          data: {
+            pluginVersion: Version,
+            randomIconPaths: randomIconPaths,
+            installedDays: installedDays,
+            scaleStyleValue: MiaoPluginMBT.getScaleStyleValue()
+          },
           imgType: "png",
           pageGotoParams: { waitUntil: "networkidle0" },
           screenshotOptions: { fullPage: true }
         }, this);
 
-        if (!imageBuffer) throw new Error("生成帮助图片失败 (返回空 Buffer)");
-        
-        await e.reply(imageBuffer);
-
-    } catch (error) {
-        this.logger.error(`${this.logPrefix}生成帮助时出错:`, error);
-        
-        let fallbackText = "『咕咕牛帮助手册』(图片生成失败，转为纯文本)\n";
-        fallbackText += "--------------------\n";
-        fallbackText += "【图库安装】\n";
-        fallbackText += "  #下载咕咕牛: 自动测速选择合适节点下载\n";
-        fallbackText += "  #更新咕咕牛: 手动执行更新\n";
-        fallbackText += "\n";
-        fallbackText += "【图库操作】\n";
-        fallbackText += "  #启/禁用咕咕牛: 管理图库同步\n";
-        fallbackText += "  #咕咕牛状态: 查看本地参数\n";
-        fallbackText += "  #咕咕牛查看[角色名]: 查看角色图片\n";
-        fallbackText += "  #咕咕牛导出[角色名+编号]: 导出图片文件\n";
-        fallbackText += "  #可视化[角色名]: 显示面板图\n";
-        fallbackText += "  #重置咕咕牛: 清理图库文件\n";
-        fallbackText += "\n";
-        fallbackText += "【封禁与设置】\n";
-        fallbackText += "  #咕咕牛封/解禁[角色名+编号]: 管理单张图片\n";
-        fallbackText += "  #咕咕牛封禁列表: 显示封禁图片\n";
-        fallbackText += "  #咕咕牛设置净化等级[0-2]: 过滤敏感内容\n";
-        fallbackText += "  #咕咕牛面板: 查看设置状态\n";
-        fallbackText += "  #咕咕牛设置[xx][开启/关闭]: Ai/彩蛋/横屏等\n";
-        fallbackText += "\n";
-        fallbackText += "【测试工具】\n";
-        fallbackText += "  #咕咕牛测速: 测速全部节点\n";
-        fallbackText += "  #咕咕牛触发: 只显示用于开发者测试\n";
-        fallbackText += "--------------------\n";
-        fallbackText += `Miao-Plugin-MBT v${Version}`;
-        await e.reply(fallbackText, true);
+        if (imageBuffer) {
+          await e.reply(imageBuffer);
+        } else {
+          throw new Error("生成帮助图片失败 (返回空 Buffer)");
+        }
+      } catch (renderError) {
+        this.logger.error(`${this.logPrefix}生成帮助图片时出错:`, renderError);
+        templateHtml = "";
+      }
     }
-    
+
+    if (!templateHtml) {
+      let fallbackText = "『咕咕牛帮助手册』(图片生成失败，转为纯文本)\n";
+      fallbackText += "--------------------\n";
+      fallbackText += "【图库安装】\n";
+      fallbackText += "  #下载咕咕牛: 自动测速选择合适节点下载\n";
+      fallbackText += "  #更新咕咕牛: 手动执行更新\n";
+      fallbackText += "\n";
+      fallbackText += "【图库操作】\n";
+      fallbackText += "  #启/禁用咕咕牛: 管理图库同步\n";
+      fallbackText += "  #咕咕牛状态: 查看本地参数\n";
+      fallbackText += "  #咕咕牛查看[角色名]: 查看角色图片\n";
+      fallbackText += "  #咕咕牛导出[角色名+编号]: 导出图片文件\n";
+      fallbackText += "  #可视化[角色名]: 显示面板图\n";
+      fallbackText += "  #重置咕咕牛: 清理图库文件\n";
+      fallbackText += "\n";
+      fallbackText += "【封禁与设置】\n";
+      fallbackText += "  #咕咕牛封/解禁[角色名+编号]: 管理单张图片\n";
+      fallbackText += "  #咕咕牛封禁列表: 显示封禁图片\n";
+      fallbackText += "  #咕咕牛设置净化等级[0-2]: 过滤敏感内容\n";
+      fallbackText += "  #咕咕牛面板: 查看设置状态\n";
+      fallbackText += "  #咕咕牛设置[xx][开启/关闭]: Ai/彩蛋/横屏等\n";
+      fallbackText += "\n";
+      fallbackText += "【测试工具】\n";
+      fallbackText += "  #咕咕牛测速: 测速全部节点\n";
+      fallbackText += "  #咕咕牛触发: 只显示用于开发者测试\n";
+      fallbackText += "--------------------\n";
+      fallbackText += `Miao-Plugin-MBT v${Version}`;
+
+      await e.reply(fallbackText, true);
+    }
+
     return true;
   }
   
