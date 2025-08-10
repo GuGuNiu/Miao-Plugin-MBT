@@ -333,19 +333,23 @@ function loadNextImage() {
     const nextIndex = STEState.currentIndex + 1;
 
     if (nextIndex >= STEState.currentImageList.length) {
+        // 如果没有更多图片，则隐藏相关UI并显示完成信息
         if (document.getElementById('stePreviewPlaceholder')) document.getElementById('stePreviewPlaceholder').textContent = '所有图片处理完毕！🎉';
         if (DOM.steImageInfo) DOM.steImageInfo.classList.add('hidden');
         if (DOM.steProgressDisplay) DOM.steProgressDisplay.textContent = '完成';
         if (document.getElementById('stePreviewImage')) document.getElementById('stePreviewImage').classList.add('hidden');
         if (DOM.steThumbnailStripContainer) DOM.steThumbnailStripContainer.classList.add('hidden');
-        displayToast("当前模式下所有图片已处理完毕！", "success");
-        return;
+        
+        // 只有在补缺模式下才显示“处理完毕”的Toast，避免在全部模式浏览到最后时弹出
+        if (mode === 'fill') {
+            displayToast("当前模式下所有图片已处理完毕！", "success");
+        }
     } else {
+        // 如果有图片要显示，确保缩略图容器是可见的
         if (DOM.steThumbnailStripContainer) DOM.steThumbnailStripContainer.classList.remove('hidden');
+        // 调用核心切换函数
+        switchToImageByIndex(nextIndex);
     }
-    
-    // 调用新的核心切换函数
-    switchToImageByIndex(nextIndex);
 }
 
 /**
@@ -479,30 +483,22 @@ async function saveAndNext() {
 
     const success = await updateUserData(updatedDataList, `标签已保存`, "toast", false, 2000);
     if (success) {
-        //  从当前待办列表中移除刚刚处理完的图片
-        STEState.currentImageList.splice(STEState.currentIndex, 1);
-    
-        //  更新虚拟滚动条的总宽度以反映列表长度的变化
-        STEState.virtualStrip.totalItems = STEState.currentImageList.length;
-        if (STEState.virtualStrip.strip) {
-            STEState.virtualStrip.strip.style.width = `${STEState.virtualStrip.totalItems * STEState.virtualStrip.itemWidth}px`;
-        }
-    
-        //  检查是否已处理完所有图片
-        if (STEState.currentIndex >= STEState.currentImageList.length) {
-            // 如果是，说明刚才处理的是最后一张，直接显示完成界面
-            const placeholder = document.getElementById('stePreviewPlaceholder');
-            if (placeholder) placeholder.textContent = '所有图片处理完毕！🎉';
-            if (DOM.steImageInfo) DOM.steImageInfo.classList.add('hidden');
-            if (DOM.steProgressDisplay) DOM.steProgressDisplay.textContent = '完成';
-            const previewImage = document.getElementById('stePreviewImage');
-            if (previewImage) previewImage.classList.add('hidden');
-            const thumbContainer = document.getElementById('steThumbnailStripContainer');
-            if (thumbContainer) thumbContainer.classList.add('hidden');
-            displayToast("当前模式下所有图片已处理完毕！", "success");
+        if (STEState.currentMode === 'fill') {
+            // 从当前列表中移除已处理的图片
+            STEState.currentImageList.splice(STEState.currentIndex, 1);
+            STEState.virtualStrip.totalItems = STEState.currentImageList.length;
+            if (STEState.virtualStrip.strip) {
+                STEState.virtualStrip.strip.style.width = `${STEState.virtualStrip.totalItems * STEState.virtualStrip.itemWidth}px`;
+            }
+
+            // 检查是否处理完毕
+            if (STEState.currentIndex >= STEState.currentImageList.length) {
+                loadNextImage(); // 让 loadNextImage 显示完成界面
+            } else {
+                switchToImageByIndex(STEState.currentIndex);
+            }
         } else {
-            //  如果列表未空，则直接切换到当前索引处的图片
-            switchToImageByIndex(STEState.currentIndex);
+            loadNextImage();
         }
     }
 }

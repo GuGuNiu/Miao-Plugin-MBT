@@ -1052,25 +1052,27 @@ function setupDataListEventListeners() {
 function handleDataListItemClick(event) {
     const target = event.target;
 
-    // 检查是否点击了编辑按钮
     const editButton = target.closest('.data-item-edit-btn');
     if (editButton?.dataset.path && editButton.dataset.storagebox) {
+        // 打开编辑模态框并立即停止后续操作
         openEditModal(editButton.dataset.path, editButton.dataset.storagebox);
         return;
     }
 
-    // 检查是否点击了缩略图
-    const card = target.closest('.data-item-card');
-    if (card && card.dataset.fullSrc && !target.closest('.data-item-edit-btn')) {
-        const fullSrc = card.dataset.fullSrc;
-        if (fullSrc && !fullSrc.endsWith('/placeholder.png')) {
-            openImageModal(fullSrc);
-        } else {
-            console.warn("卡片点击 但完整图片源无效:", fullSrc);
+    const thumbnailContainer = target.closest('.data-item-thumbnail-container');
+    if (thumbnailContainer) {
+        // 如果确实点击了图片区域，再向上找到整个卡片以获取图片地址数据
+        const card = thumbnailContainer.closest('.data-item-card');
+        if (card && card.dataset.fullSrc) {
+            const fullSrc = card.dataset.fullSrc;
+            if (!fullSrc.endsWith('/placeholder.png')) {
+                openImageModal(fullSrc);
+            } else {
+                console.warn("缩略图点击，但完整图片源无效:", fullSrc);
+            }
         }
     }
 }
-
 
 /**
  * 设置与模态框相关的事件监听器
