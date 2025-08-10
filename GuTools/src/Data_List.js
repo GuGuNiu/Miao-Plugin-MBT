@@ -3,6 +3,15 @@
 //       和属性编辑模态框
 // ==========================================================================
 
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const size = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+    return `${size} ${sizes[i]}`;
+}
+
 /**
  * 切换自定义游戏筛选下拉框的显示/隐藏状态
  * @param {MouseEvent} event
@@ -60,7 +69,7 @@ function updateFilterToggleButtonText(checkboxId) {
         button.textContent = checkbox.checked ? textOn : textOff; // 根据选中状态设置文本
         button.classList.toggle(UI_CLASSES.ACTIVE, checkbox.checked); // 根据选中状态添加/移除激活类
     } else {
-         // console.warn(`DataList: 未找到复选框 #${checkboxId} 或其对应的切换按钮`);
+        // console.warn(`DataList: 未找到复选框 #${checkboxId} 或其对应的切换按钮`);
     }
 }
 
@@ -99,7 +108,7 @@ function populateSecondaryTagsDropdown() {
         return;
     }
 
-    contentArea.innerHTML = ''; 
+    contentArea.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
     for (const [category, tags] of Object.entries(filterState.availableTags)) {
@@ -123,7 +132,7 @@ function populateSecondaryTagsDropdown() {
             tagEl.dataset.tag = tag;
             wrapperEl.appendChild(tagEl);
         });
-        
+
         categoryEl.appendChild(wrapperEl);
         fragment.appendChild(categoryEl);
     }
@@ -315,12 +324,12 @@ function applyFiltersAndRenderDataList() {
     };
 
     const missingElements = Object.entries(requiredElementsMap)
-                                .filter(([key, element]) => !element)
-                                .map(([key]) => key);
+        .filter(([key, element]) => !element)
+        .map(([key]) => key);
 
     if (missingElements.length > 0) {
         console.error(`DataList: 缺少必要的过滤或列表容器元素: ${missingElements.join(', ')}`);
-        if(DOM.dataListContainer) {
+        if (DOM.dataListContainer) {
             DOM.dataListContainer.innerHTML = `<p class="no-results" style="display:block;">错误：界面控件加载不完整，无法显示列表。</p>`;
         }
         return;
@@ -357,13 +366,13 @@ function setupVirtualScroll(containerElement, data) {
 
     // 查找或创建内部结构
     if (!vsInfo.innerSpacer || !vsInfo.visibleItemsContainer) {
-         vsInfo.innerSpacer = containerElement.querySelector('#virtualScrollInner');
-         vsInfo.visibleItemsContainer = vsInfo.innerSpacer?.querySelector('#visibleItemsContainer');
-         if (!vsInfo.innerSpacer || !vsInfo.visibleItemsContainer) {
-             console.error("虚拟滚动: 内部结构元素 #virtualScrollInner 或 #visibleItemsContainer 缺失！");
-             containerElement.innerHTML = '<p class="no-results" style="display:block;">虚拟列表结构错误</p>';
-             return;
-         }
+        vsInfo.innerSpacer = containerElement.querySelector('#virtualScrollInner');
+        vsInfo.visibleItemsContainer = vsInfo.innerSpacer?.querySelector('#visibleItemsContainer');
+        if (!vsInfo.innerSpacer || !vsInfo.visibleItemsContainer) {
+            console.error("虚拟滚动: 内部结构元素 #virtualScrollInner 或 #visibleItemsContainer 缺失！");
+            containerElement.innerHTML = '<p class="no-results" style="display:block;">虚拟列表结构错误</p>';
+            return;
+        }
     }
 
     // 重置样式
@@ -374,26 +383,26 @@ function setupVirtualScroll(containerElement, data) {
     // 处理 "无结果" 提示
     let noResultsElement = containerElement.querySelector('.no-results');
     if (!noResultsElement) {
-         noResultsElement = document.createElement('p');
-         noResultsElement.className = 'no-results';
-         noResultsElement.textContent = '没有找到匹配的数据。';
-         noResultsElement.style.display = 'none';
-         containerElement.insertBefore(noResultsElement, vsInfo.innerSpacer);
+        noResultsElement = document.createElement('p');
+        noResultsElement.className = 'no-results';
+        noResultsElement.textContent = '没有找到匹配的数据。';
+        noResultsElement.style.display = 'none';
+        containerElement.insertBefore(noResultsElement, vsInfo.innerSpacer);
     }
 
     if (vsInfo.filteredData.length === 0) {
         noResultsElement.style.display = 'block'; // 显示无结果提示
         console.log("虚拟滚动: 没有数据可显示");
-         // 隐藏 spacer 和 visible container
-         if(vsInfo.innerSpacer) vsInfo.innerSpacer.style.display = 'none';
-         if(vsInfo.visibleItemsContainer) vsInfo.visibleItemsContainer.style.display = 'none';
+        // 隐藏 spacer 和 visible container
+        if (vsInfo.innerSpacer) vsInfo.innerSpacer.style.display = 'none';
+        if (vsInfo.visibleItemsContainer) vsInfo.visibleItemsContainer.style.display = 'none';
         return;
     }
 
     // 有数据 则隐藏无结果提示 并显示列表结构
     noResultsElement.style.display = 'none';
-     if(vsInfo.innerSpacer) vsInfo.innerSpacer.style.display = 'block';
-     if(vsInfo.visibleItemsContainer) vsInfo.visibleItemsContainer.style.display = 'block';
+    if (vsInfo.innerSpacer) vsInfo.innerSpacer.style.display = 'block';
+    if (vsInfo.visibleItemsContainer) vsInfo.visibleItemsContainer.style.display = 'block';
 
 
     if (vsInfo.itemHeight <= 0) {
@@ -440,9 +449,9 @@ function renderVisibleItems() {
     const startRow = Math.max(0, Math.floor(scrollTop / itemHeight) - bufferRows);
     const endRow = Math.min(
         Math.ceil(totalItems / itemsPerRow) - 1,
-        Math.ceil((scrollTop + containerHeight) / itemHeight) -1 + bufferRows
+        Math.ceil((scrollTop + containerHeight) / itemHeight) - 1 + bufferRows
     );
-    
+
     const startIndex = startRow * itemsPerRow;
     const endIndex = Math.min(totalItems - 1, (endRow + 1) * itemsPerRow - 1);
 
@@ -461,7 +470,7 @@ function renderVisibleItems() {
 
         const row = Math.floor(i / itemsPerRow);
         const col = i % itemsPerRow;
-        
+
         card.style.position = 'absolute';
         card.style.top = `${row * itemHeight}px`;
         card.style.left = `calc(${(100 / itemsPerRow) * col}% + ${col > 0 ? (15 / itemsPerRow) : 0}px)`;
@@ -496,102 +505,135 @@ function renderVisibleItems() {
  * @param {object} entryData 该卡片对应的数据条目
  */
 function populateCardContent(cardElement, entryData) {
-   if (!cardElement || !entryData?.attributes) return;
+    if (!cardElement || !entryData?.attributes) return;
 
-   const contentContainer = cardElement.querySelector('.data-item-content');
-   const thumbnail = cardElement.querySelector('.data-item-thumbnail');
-   const thumbnailContainer = cardElement.querySelector('.data-item-thumbnail-container');
+    const contentContainer = cardElement.querySelector('.data-item-content');
+    const thumbnail = cardElement.querySelector('.data-item-thumbnail');
+    const thumbnailContainer = cardElement.querySelector('.data-item-thumbnail-container');
 
-   if (!contentContainer || !thumbnail || !thumbnailContainer) return;
+    if (!contentContainer || !thumbnail || !thumbnailContainer) return;
 
-   contentContainer.innerHTML = ''; 
+    contentContainer.innerHTML = '';
 
-   const storagebox = entryData.storagebox; 
-   const relativePath = entryData.path || '';
-   let fullResImagePath = '/placeholder.png'; 
-   let thumbnailPath = '/placeholder.png';
+    const storagebox = entryData.storagebox;
+    const relativePath = entryData.path || '';
+    let fullResImagePath = '/placeholder.png';
+    let thumbnailPath = '/placeholder.png';
 
-   if (storagebox && relativePath) { 
-       const originalCaseStorageBox = AppState.availableStorageBoxes.find(
-          (box) => box.toLowerCase() === storagebox.toLowerCase() 
-       );
-       if (originalCaseStorageBox) {
-           fullResImagePath = buildFullWebPath(originalCaseStorageBox, relativePath);
-       } else {
-           fullResImagePath = buildFullWebPath(storagebox, relativePath); 
-           console.warn("DataList: populateCardContent - 未找到原始大小写仓库名，使用JSON中的:", storagebox);
-       }
-       fullResImagePath = fullResImagePath.replace(/\\/g, '/');
-       thumbnailPath = `/api/thumbnail${fullResImagePath}`;
-   } else {
-       console.warn("DataList: 缺少 storagebox 或 path 无法生成缩略图路径:", entryData);
-   }
+    if (storagebox && relativePath) {
+        const originalCaseStorageBox = AppState.availableStorageBoxes.find(
+            (box) => box.toLowerCase() === storagebox.toLowerCase()
+        );
+        if (originalCaseStorageBox) {
+            fullResImagePath = buildFullWebPath(originalCaseStorageBox, relativePath);
+        } else {
+            fullResImagePath = buildFullWebPath(storagebox, relativePath);
+            console.warn("DataList: populateCardContent - 未找到原始大小写仓库名，使用JSON中的:", storagebox);
+        }
+        fullResImagePath = fullResImagePath.replace(/\\/g, '/');
+        thumbnailPath = `/api/thumbnail${fullResImagePath}`;
+    } else {
+        console.warn("DataList: 缺少 storagebox 或 path 无法生成缩略图路径:", entryData);
+    }
 
-   cardElement.dataset.fullSrc = fullResImagePath;
-   
-   thumbnail.alt = entryData.attributes.filename || '图片';
-   thumbnail.src = thumbnailPath;
+    cardElement.dataset.fullSrc = fullResImagePath;
 
-   thumbnail.onload = function() {
-       this.classList.remove('load-error'); 
-   };
-   thumbnail.onerror = function() {
-       thumbnailContainer.style.backgroundColor = '#fdd'; 
-       console.error("缩略图加载失败:", this.src);
-       this.alt = '缩略图加载失败';
-       this.classList.add('load-error');
-   };
-   
-   const attrs = entryData.attributes;
-   const filename = attrs.filename || '未知文件名';
-   const gid = entryData.gid || '无 GID';
-   const timestamp = formatTimestamp(entryData.timestamp);
-   
-   let tagsHtml = '';
-   if (attrs.isPx18) tagsHtml += '<span class="attr-tag tag-px18">Px18</span>';
-   if (attrs.isRx18) tagsHtml += '<span class="attr-tag tag-rx18">Rx18</span>';
-   switch (attrs.layout) {
-       case 'normal': tagsHtml += '<span class="attr-tag tag-normal">人像</span>'; break;
-       case 'fullscreen': tagsHtml += '<span class="attr-tag tag-fullscreen">全屏</span>'; break;
-       case 'catcake': tagsHtml += '<span class="attr-tag tag-catcake">猫糕</span>'; break;
-   }
-   if (attrs.isEasterEgg) tagsHtml += '<span class="attr-tag tag-easteregg">彩蛋</span>';
-   if (attrs.isAiImage) tagsHtml += '<span class="attr-tag tag-ai">AI</span>';
-   if (attrs.isBan) tagsHtml += '<span class="attr-tag tag-ban">⛔封禁</span>';
+    thumbnail.alt = entryData.attributes.filename || '图片';
+    thumbnail.src = thumbnailPath;
 
-   const editButtonHtml = `<button class="data-item-edit-btn" data-path="${entryData.path}" data-storagebox="${entryData.storagebox}" title="修改属性"></button>`;
+    thumbnail.onload = function () {
+        this.classList.remove('load-error');
+    };
+    thumbnail.onerror = function () {
+        thumbnailContainer.style.backgroundColor = '#fdd';
+        console.error("缩略图加载失败:", this.src);
+        this.alt = '缩略图加载失败';
+        this.classList.add('load-error');
+    };
 
-   const filenameDiv = document.createElement('div');
-   filenameDiv.className = 'filename';
-   filenameDiv.title = filename;
-   filenameDiv.innerHTML = `${filename} <span class="gid-display">(GID: ${gid})</span>`;
-   contentContainer.appendChild(filenameDiv);
+    const attrs = entryData.attributes;
+    const filename = attrs.filename || '未知文件名';
+    const gid = entryData.gid || '无 GID';
+    const timestamp = formatTimestamp(entryData.timestamp);
 
-   const detailsDiv = document.createElement('div');
-   detailsDiv.className = 'details';
-   const timestampSpan = document.createElement('span');
-   timestampSpan.className = 'timestamp';
-   timestampSpan.title = '保存时间';
-   timestampSpan.textContent = timestamp;
-   const sourceGallerySpan = document.createElement('span');
-   sourceGallerySpan.className = 'source-gallery';
-   sourceGallerySpan.title = '游戏来源';
-   sourceGallerySpan.textContent = getGameName(entryData.sourceGallery);
-   detailsDiv.appendChild(timestampSpan);
-   detailsDiv.appendChild(sourceGallerySpan);
-   contentContainer.appendChild(detailsDiv);
+    // --- 文件名、GID、文件大小行 ---
+    const filenameDiv = document.createElement('div');
+    filenameDiv.className = 'filename';
+    filenameDiv.title = filename;
 
-   const attributeTagsDiv = document.createElement('div');
-   attributeTagsDiv.className = 'attribute-tags';
-   attributeTagsDiv.innerHTML = tagsHtml || '<span class="no-tags">无特殊标签</span>';
-   contentContainer.appendChild(attributeTagsDiv);
-   
-   const tempButtonContainer = document.createElement('div'); 
-   tempButtonContainer.innerHTML = editButtonHtml;
-   if (tempButtonContainer.firstChild) {
-       contentContainer.appendChild(tempButtonContainer.firstChild);
-   }
+    const filenameSpan = document.createElement('span'); // 用span包裹文件名和GID
+    filenameSpan.innerHTML = `${filename} <span class="gid-display">(GID: ${gid})</span>`;
+    filenameDiv.appendChild(filenameSpan);
+
+    const fileSize = AppState.fileSizesMap.get(fullResImagePath);
+    if (fileSize !== undefined) {
+        const fileSizeSpan = document.createElement('div');
+        fileSizeSpan.className = 'data-item-filesize';
+        fileSizeSpan.textContent = formatBytes(fileSize);
+        filenameDiv.appendChild(fileSizeSpan);
+    }
+    contentContainer.appendChild(filenameDiv);
+
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'details';
+    const timestampSpan = document.createElement('span');
+    timestampSpan.className = 'timestamp';
+    timestampSpan.title = '保存时间';
+    timestampSpan.textContent = timestamp;
+    const sourceGallerySpan = document.createElement('span');
+    sourceGallerySpan.className = 'source-gallery';
+    sourceGallerySpan.title = '游戏来源';
+    sourceGallerySpan.textContent = getGameName(entryData.sourceGallery);
+    detailsDiv.appendChild(timestampSpan);
+    detailsDiv.appendChild(sourceGallerySpan);
+    contentContainer.appendChild(detailsDiv);
+
+    const bottomRow = document.createElement('div');
+    bottomRow.className = 'data-item-bottom-row';
+
+    const allTagsWrapper = document.createElement('div');
+    allTagsWrapper.className = 'all-tags-wrapper';
+
+    const attributeTagsDiv = document.createElement('div');
+    attributeTagsDiv.className = 'attribute-tags';
+    let tagsHtml = '';
+    if (attrs.isPx18) tagsHtml += '<span class="attr-tag tag-px18">Px18</span>';
+    if (attrs.isRx18) tagsHtml += '<span class="attr-tag tag-rx18">Rx18</span>';
+    switch (attrs.layout) {
+        case 'normal': tagsHtml += '<span class="attr-tag tag-normal">人像</span>'; break;
+        case 'fullscreen': tagsHtml += '<span class="attr-tag tag-fullscreen">全屏</span>'; break;
+        case 'catcake': tagsHtml += '<span class="attr-tag tag-catcake">猫糕</span>'; break;
+    }
+    if (attrs.isEasterEgg) tagsHtml += '<span class="attr-tag tag-easteregg">彩蛋</span>';
+    if (attrs.isAiImage) tagsHtml += '<span class="attr-tag tag-ai">AI</span>';
+    if (attrs.isBan) tagsHtml += '<span class="attr-tag tag-ban">⛔封禁</span>';
+    attributeTagsDiv.innerHTML = tagsHtml || '<span class="no-tags">无特殊标签</span>';
+    allTagsWrapper.appendChild(attributeTagsDiv); // 添加到总包裹容器
+
+    if (Array.isArray(attrs.secondaryTags) && attrs.secondaryTags.length > 0) {
+        const secondaryTagsContainer = document.createElement('div');
+        secondaryTagsContainer.className = 'secondary-tags-container';
+        attrs.secondaryTags.forEach(tag => {
+            const tagPill = document.createElement('span');
+            tagPill.className = 'secondary-tag-pill';
+            tagPill.textContent = tag;
+            secondaryTagsContainer.appendChild(tagPill);
+        });
+        allTagsWrapper.appendChild(secondaryTagsContainer); // 也添加到总包裹容器
+    }
+
+    bottomRow.appendChild(allTagsWrapper);
+
+    const editButtonHtml = `<button class="data-item-edit-btn" data-path="${entryData.path}" data-storagebox="${entryData.storagebox}" title="修改属性"></button>`;
+    const tempButtonContainer = document.createElement('div');
+    tempButtonContainer.innerHTML = editButtonHtml;
+    if (tempButtonContainer.firstChild) {
+        bottomRow.appendChild(tempButtonContainer.firstChild);
+    }
+
+    contentContainer.appendChild(bottomRow);
 }
+
 /**
  * 处理列表容器的滚动事件
  */
@@ -615,7 +657,7 @@ function handleScroll() {
  * 打开属性编辑模态框
  * @param {string} path 被编辑条目的路径
  */
-function openEditModal(path, storagebox) { 
+function openEditModal(path, storagebox) {
     const modalElements = [
         DOM.editAttributeModal, DOM.modalFilenameSpan, DOM.modalEntryPathInput,
         DOM.modalIsEasterEggCheckbox, DOM.modalIsAiImageCheckbox, DOM.modalisBanCheckbox,
@@ -627,19 +669,19 @@ function openEditModal(path, storagebox) {
         return;
     }
 
-    const entry = AppState.userData.find(e => e.path === path && e.storagebox === storagebox); 
+    const entry = AppState.userData.find(e => e.path === path && e.storagebox === storagebox);
     if (!entry?.attributes) {
         console.error(`DataList: 找不到路径 "${path}" (仓库: ${storagebox}) 的条目数据`);
         displayToast(`错误：找不到要编辑的数据`, UI_CLASSES.ERROR);
         return;
     }
 
-    AppState.dataList.currentEditPath = path; 
-    AppState.dataList.currentEditStoragebox = storagebox; 
+    AppState.dataList.currentEditPath = path;
+    AppState.dataList.currentEditStoragebox = storagebox;
 
     DOM.modalFilenameSpan.textContent = entry.attributes.filename;
-    DOM.modalEntryPathInput.value = path; 
-    
+    DOM.modalEntryPathInput.value = path;
+
     let ratingValue = 'none';
     if (entry.attributes.isPx18) ratingValue = 'px18';
     else if (entry.attributes.isRx18) ratingValue = 'rx18';
@@ -654,10 +696,10 @@ function openEditModal(path, storagebox) {
     DOM.modalIsAiImageCheckbox.checked = !!entry.attributes.isAiImage;
     DOM.modalisBanCheckbox.checked = !!entry.attributes.isBan;
 
-    hideModalMessage(); 
-    if (DOM.modalSaveButton) DOM.modalSaveButton.disabled = false; 
+    hideModalMessage();
+    if (DOM.modalSaveButton) DOM.modalSaveButton.disabled = false;
 
-    DOM.editAttributeModal.classList.remove(UI_CLASSES.HIDDEN); 
+    DOM.editAttributeModal.classList.remove(UI_CLASSES.HIDDEN);
 }
 
 /**
@@ -675,15 +717,15 @@ function closeEditModal() {
  * 保存属性编辑模态框中的更改
  */
 async function saveAttributeChanges() {
-    if (!AppState.dataList.currentEditPath || !AppState.dataList.currentEditStoragebox || !DOM.modalEntryPathInput || !DOM.modalSaveButton) { 
+    if (!AppState.dataList.currentEditPath || !AppState.dataList.currentEditStoragebox || !DOM.modalEntryPathInput || !DOM.modalSaveButton) {
         console.error("DataList: 保存属性更改失败 状态或元素缺失");
         displayToast("保存失败：内部状态错误", UI_CLASSES.ERROR);
         return;
     }
 
-    const entryIndex = AppState.userData.findIndex(e => 
-        e.path === AppState.dataList.currentEditPath && 
-        e.storagebox === AppState.dataList.currentEditStoragebox 
+    const entryIndex = AppState.userData.findIndex(e =>
+        e.path === AppState.dataList.currentEditPath &&
+        e.storagebox === AppState.dataList.currentEditStoragebox
     );
     if (entryIndex === -1) {
         console.error("DataList: 保存错误 在 userData 中找不到路径", AppState.dataList.currentEditPath, "仓库", AppState.dataList.currentEditStoragebox);
@@ -691,7 +733,7 @@ async function saveAttributeChanges() {
         return;
     }
 
-    DOM.modalSaveButton.disabled = true; 
+    DOM.modalSaveButton.disabled = true;
 
     const updatedEntryFromModal = JSON.parse(JSON.stringify(AppState.userData[entryIndex]));
     const rating = document.querySelector('input[name="modalRating"]:checked')?.value || 'none';
@@ -702,7 +744,7 @@ async function saveAttributeChanges() {
     updatedEntryFromModal.attributes.isEasterEgg = DOM.modalIsEasterEggCheckbox.checked;
     updatedEntryFromModal.attributes.isAiImage = DOM.modalIsAiImageCheckbox.checked;
     updatedEntryFromModal.attributes.isBan = DOM.modalisBanCheckbox.checked;
-    updatedEntryFromModal.timestamp = new Date().toISOString(); 
+    updatedEntryFromModal.timestamp = new Date().toISOString();
 
     const newDataListForBackend = AppState.userData.map((entry, index) =>
         index === entryIndex ? updatedEntryFromModal : entry
@@ -711,22 +753,22 @@ async function saveAttributeChanges() {
     let success = false;
     try {
         if (typeof updateUserData === "function") {
-             success = await updateUserData(
+            success = await updateUserData(
                 newDataListForBackend,
                 `成功修改 "${updatedEntryFromModal.attributes.filename}" 的属性`,
-                'toast', 
-                false, 
+                'toast',
+                false,
                 DELAYS.MESSAGE_CLEAR_DEFAULT,
-                true 
+                true
             );
         } else {
             throw new Error("核心函数 updateUserData 未定义");
         }
     } catch (error) {
-         console.error("DataList: 保存属性调用 updateUserData 失败:", error);
-         success = false;
+        console.error("DataList: 保存属性调用 updateUserData 失败:", error);
+        success = false;
     } finally {
-        DOM.modalSaveButton.disabled = false; 
+        DOM.modalSaveButton.disabled = false;
     }
 
     if (success) {
@@ -734,25 +776,25 @@ async function saveAttributeChanges() {
         if (vsInfo.filteredData && vsInfo.filteredData.length > 0) {
             let originalStorageBoxForSearch = "";
             const originalEntry = AppState.userData.find(e => e.path === AppState.dataList.currentEditPath && e.storagebox === updatedEntryFromModal.storagebox);
-            if(originalEntry && originalEntry.storagebox){
-                 const foundOriginalCase = AppState.availableStorageBoxes.find(box => box.toLowerCase() === originalEntry.storagebox.toLowerCase());
-                 if(foundOriginalCase) originalStorageBoxForSearch = foundOriginalCase;
-                 else originalStorageBoxForSearch = originalEntry.storagebox; 
+            if (originalEntry && originalEntry.storagebox) {
+                const foundOriginalCase = AppState.availableStorageBoxes.find(box => box.toLowerCase() === originalEntry.storagebox.toLowerCase());
+                if (foundOriginalCase) originalStorageBoxForSearch = foundOriginalCase;
+                else originalStorageBoxForSearch = originalEntry.storagebox;
             }
 
-            const entryIndexInFilteredData = vsInfo.filteredData.findIndex(e => 
-                e.path === AppState.dataList.currentEditPath && 
-                e.storageBox === originalStorageBoxForSearch 
+            const entryIndexInFilteredData = vsInfo.filteredData.findIndex(e =>
+                e.path === AppState.dataList.currentEditPath &&
+                e.storageBox === originalStorageBoxForSearch
             );
 
             if (entryIndexInFilteredData > -1) {
                 let entryForFilteredData = { ...updatedEntryFromModal };
                 if (originalStorageBoxForSearch) {
-                    entryForFilteredData.storageBox = originalStorageBoxForSearch; 
-                    delete entryForFilteredData.storagebox; 
+                    entryForFilteredData.storageBox = originalStorageBoxForSearch;
+                    delete entryForFilteredData.storagebox;
                 }
                 vsInfo.filteredData[entryIndexInFilteredData] = entryForFilteredData;
-                renderVisibleItems(); 
+                renderVisibleItems();
             } else {
                 // 如果条目因修改而不符合当前过滤条件，不刷新是正常的
                 // 但如果确实希望刷新（会丢滚动条），可以调用 applyFiltersAndRenderDataList();
@@ -909,7 +951,7 @@ function setupDataListEventListeners() {
             // console.warn(`DataList: 过滤控件 ${config.element} 假设的 未找到`);
         }
     });
-    
+
     // 为搜索框添加额外的 focus 和 blur 监听器用于建议列表
     if (DOM.dataListSearchInput) {
         DOM.dataListSearchInput.addEventListener('focus', () => {
@@ -950,12 +992,12 @@ function setupDataListEventListeners() {
             visibleItemsCont.removeEventListener('click', handleDataListItemClick);
             visibleItemsCont.addEventListener('click', handleDataListItemClick);
         } else {
-             console.error("DataList: 未找到 #visibleItemsContainer 无法设置列表项点击事件");
+            console.error("DataList: 未找到 #visibleItemsContainer 无法设置列表项点击事件");
         }
     } else { console.error("DataList: 列表容器 dataListContainer 未找到"); }
 
     setupCustomGameFilter();
-    
+
     // 全局点击，关闭自定义下拉框
     document.addEventListener('click', (event) => {
         if (DOM.filterGameDropdown && !DOM.filterGameDropdown.classList.contains('hidden')) {
@@ -977,9 +1019,9 @@ function handleDataListItemClick(event) {
 
     // 检查是否点击了编辑按钮
     const editButton = target.closest('.data-item-edit-btn');
-    if (editButton?.dataset.path && editButton.dataset.storagebox) { 
+    if (editButton?.dataset.path && editButton.dataset.storagebox) {
         openEditModal(editButton.dataset.path, editButton.dataset.storagebox);
-        return; 
+        return;
     }
 
     // 检查是否点击了缩略图
@@ -1063,7 +1105,7 @@ function handleEscapeKey(event) {
         }
         // 检查图片放大模态框是否可见
         else if (DOM.imageModalOverlay && !DOM.imageModalOverlay.classList.contains(UI_CLASSES.HIDDEN)) {
-             closeImageModal();
+            closeImageModal();
         }
     }
 }
@@ -1072,11 +1114,11 @@ function handleEscapeKey(event) {
  * 更新数据列表面板的条目计数显示
  */
 function updateDataListCount() {
-     if (DOM.dataListCountDisplay) {
-         // 这个函数现在只更新总数 过滤后的数量由 applyFiltersAndRenderDataList 更新
-         // DOM.dataListCountDisplay.textContent = `总计: ${AppState.userData.length} 条`;
-         // 显示过滤后的数量
-         const count = AppState.dataList.virtualScrollInfo.filteredData?.length ?? 0;
-         DOM.dataListCountDisplay.textContent = `当前显示: ${count} 条`;
-     }
+    if (DOM.dataListCountDisplay) {
+        // 这个函数现在只更新总数 过滤后的数量由 applyFiltersAndRenderDataList 更新
+        // DOM.dataListCountDisplay.textContent = `总计: ${AppState.userData.length} 条`;
+        // 显示过滤后的数量
+        const count = AppState.dataList.virtualScrollInfo.filteredData?.length ?? 0;
+        DOM.dataListCountDisplay.textContent = `当前显示: ${count} 条`;
+    }
 }

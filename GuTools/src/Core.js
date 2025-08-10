@@ -54,35 +54,6 @@ const UI_CLASSES = {
   LOADING: "loading",
 };
 
-const SECONDARY_TAGS_LIST = [
-
-  // 🧑‍💼 职业制服类
-  "制服", "女仆装", "护士", "教师", "情趣内衣",
-
-  // 🎓 校园类服装
-  "JK", "体操服", "死库水", "和服", "运动服", "校服",
-  
-  // 👗 礼服/特殊场景服饰类
-  "兔女郎", "旗袍", "泳装", "花嫁", "礼服", "婚纱",
- 
-  // 💧 裙子类
-  "连身裙", "超短裙", "睡裙", "泳裙",
-
-  // 🧦 装饰与配件类
-  "过膝袜", "白丝", "黑丝", "网袜", "小腿袜", "吊带袜", "半身袜",  "高跟", "眼镜", "颈环", "猫耳", "兔耳",
- 
-  // 🔥 身体特征类
-  "巨乳", "贫乳", "酥胸", "翘臀", "美腿", "绝对领域", "腋下", "肚脐", "腹肌", "裸足", "美背",
-  "脚底", "洁白肌肤", "乳晕", "乳沟", "露出", "生殖器",
-  
-  // 🧒 人物类型类
-  "萝莉", "猫娘", "少女", "御姐", "熟女", "魅魔", "大小姐", "男娘", "正太", "TS", "扶她", "沃尔玛购物袋",
-
-  // ❤  情绪/表情/行为类
-  "发情", "淫纹", "挑逗"
-
-];
-
 const PAGINATION = {
   PLUGIN_GALLERY_ITEMS_PER_PAGE: 8,
   FILE_SIZE_ITEMS_PER_PAGE: 8,
@@ -97,7 +68,7 @@ const AppState = {
   generator: {
     isShowingFolderSuggestions: false,
     showingRelatedImages: false,
-    currentSelection: null, 
+    currentSelection: null,
     currentGeneratedId: null,
     currentCalculatedMd5: null,
     searchDelayTimer: null,
@@ -112,9 +83,9 @@ const AppState = {
     dataLoaded: false,
     tempImagesList: [],
     characterFoldersList: [],
-    selectedTempImageInfo: null, 
+    selectedTempImageInfo: null,
     selectedTargetFolder: null,
-    selectedStorageBox: null, 
+    selectedStorageBox: null,
     suggestedFilenameBase: "",
     suggestedFilenameNum: 0,
     suggestedFilenameExt: "",
@@ -154,6 +125,7 @@ const AppState = {
     currentPage: 1,
     totalPages: 1,
   },
+  fileSizesMap: new Map(),
   dataList: {
     currentEditPath: null,
     searchDebounceTimer: null,
@@ -161,8 +133,8 @@ const AppState = {
       container: null,
       innerSpacer: null,
       visibleItemsContainer: null,
-      itemHeight: 180,
-      itemsPerRow: 2, 
+      itemHeight: 200,
+      itemsPerRow: 2,
       bufferItems: 1,
       scrollTop: 0,
       filteredData: [],
@@ -356,7 +328,7 @@ function cacheDomElements() {
   DOM.stockroomInfoContainer = document.getElementById('stockroomInfoContainer');
 
   // --- GuTools - Storagebox 校准视图 ---
-  DOM.storageboxCalibrationPaneView = document.getElementById('storageboxCalibrationPaneView'); 
+  DOM.storageboxCalibrationPaneView = document.getElementById('storageboxCalibrationPaneView');
   DOM.sbxCalStartButton = document.getElementById('sbxCalStartButton');
   DOM.sbxCalAbortButton = document.getElementById('sbxCalAbortButton');
   DOM.sbxCalFixButton = document.getElementById('sbxCalFixButton');
@@ -367,7 +339,7 @@ function cacheDomElements() {
   DOM.sbxCalTotalJsonDisplay = document.getElementById('sbxCalTotalJsonDisplay');
   DOM.sbxCalTotalFilesDisplay = document.getElementById('sbxCalTotalFilesDisplay');
   DOM.sbxCalMismatchCountDisplay = document.getElementById('sbxCalMismatchCountDisplay');
-  DOM.sbxCalMismatchCountDisplayInner = document.getElementById('sbxCalMismatchCountDisplayInner'); 
+  DOM.sbxCalMismatchCountDisplayInner = document.getElementById('sbxCalMismatchCountDisplayInner');
 
   // --- GuTools - 文件大小核查视图 ---
   DOM.fileSizePaneView = document.getElementById('fileSizePaneView');
@@ -480,7 +452,7 @@ function cacheDomElements() {
     DOM.md5JsonListContainer,
     DOM.jsonCalMissingList,
     DOM.appVersionElement,
-    DOM.tuKuOPStatusText, 
+    DOM.tuKuOPStatusText,
     DOM.pflStatusText,
     DOM.tuKuOPToggleSwitch,
   ];
@@ -616,7 +588,7 @@ async function updateUserData(
   targetElementId = "generatorMessageArea",
   isExternalData = false,
   successDuration = DELAYS.MESSAGE_CLEAR_DEFAULT,
-  preventListRefresh = false 
+  preventListRefresh = false
 ) {
   let targetElement = document.getElementById(targetElementId);
   if (!targetElement && targetElementId !== "toast") {
@@ -627,7 +599,7 @@ async function updateUserData(
     ? API_ENDPOINTS.UPDATE_EXTERNAL_USER_DATA
     : API_ENDPOINTS.UPDATE_USER_DATA;
   const dataTypeDesc = isExternalData ? "外部插件" : "内部主图库";
-  
+
   const displayFunc =
     targetElementId === "toast" ? displayToast : displayScopedMessage;
   const messageArgs = targetElementId === "toast" ? [] : [targetElement];
@@ -654,30 +626,30 @@ async function updateUserData(
       ) {
         renderPluginFolderList();
       }
-    }  else { 
-      AppState.userData = newData; 
+    } else {
+      AppState.userData = newData;
       AppState.userDataPaths = new Set();
       AppState.userData.forEach(e => {
-          const originalCaseStorageBox = AppState.availableStorageBoxes.find(
-            (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
-          );
-          if (e.path && originalCaseStorageBox) {
-              const fullPath = `/${originalCaseStorageBox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
-              AppState.userDataPaths.add(fullPath);
-          } else if (e.path && e.storagebox) {
-            const fullPath = `/${e.storagebox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
-            AppState.userDataPaths.add(fullPath);
-          }
+        const originalCaseStorageBox = AppState.availableStorageBoxes.find(
+          (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
+        );
+        if (e.path && originalCaseStorageBox) {
+          const fullPath = `/${originalCaseStorageBox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+          AppState.userDataPaths.add(fullPath);
+        } else if (e.path && e.storagebox) {
+          const fullPath = `/${e.storagebox}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+          AppState.userDataPaths.add(fullPath);
+        }
       });
 
       if (typeof updateGeneratorEntryCount === "function") updateGeneratorEntryCount();
-      if (typeof updateDataListCount === "function") updateDataListCount(); 
+      if (typeof updateDataListCount === "function") updateDataListCount();
 
       if (!preventListRefresh && DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE) && typeof applyFiltersAndRenderDataList === "function") {
-        applyFiltersAndRenderDataList(); 
+        applyFiltersAndRenderDataList();
       } else if (preventListRefresh && DOM.dataListPane?.classList.contains(UI_CLASSES.ACTIVE)) {
       }
-      
+
       if (AppState.currentGuToolMode === "md5" && typeof populateMd5JsonList === "function") populateMd5JsonList();
     }
 
@@ -824,6 +796,18 @@ function generateNumericId(length = 10) {
 }
 
 /**
+ * 根据仓库名和相对路径构建完整的Web访问路径
+ * @param {string} storageBox 仓库名
+ * @param {string} relativePath 相对路径
+ * @returns {string} 完整的Web路径
+ */
+function buildFullWebPath(storageBox, relativePath) {
+  if (!storageBox || !relativePath) return '';
+  // 确保路径以 '/' 开头且没有重复的斜杠
+  return `/${storageBox}/${relativePath}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+}
+
+/**
  * 生成 GELD ID 字母数字组合
  * @param {number} [length=20] ID 长度
  * @returns {string} GELD ID
@@ -947,32 +931,32 @@ function populateStorageBoxSelect(
 async function ensureCoreDataLoaded() {
   // 检查数据是否已经存在且有效
   if (AppState.galleryImages && AppState.galleryImages.length > 0 && AppState.userData) {
-      console.debug("核心数据已存在，跳过加载。");
-      return true;
+    console.debug("核心数据已存在，跳过加载。");
+    return true;
   }
 
   console.log("核心数据不存在，正在触发加载...");
   displayToast("正在加载核心图库数据...", "info");
 
   try {
-      if (typeof fetchAllDataForDataList === "function") { // 云端数据库的加载函数
-          const success = await fetchAllDataForDataList();
-          if (!success) throw new Error("fetchAllDataForDataList 返回 false");
-          
-          // 再次检查数据是否加载成功
-          if (AppState.galleryImages && AppState.galleryImages.length > 0 && AppState.userData) {
-               displayToast("核心数据加载成功！", "success", 1500);
-               return true;
-          } else {
-               throw new Error("核心数据加载函数执行后，数据仍然无效。");
-          }
+    if (typeof fetchAllDataForDataList === "function") { // 云端数据库的加载函数
+      const success = await fetchAllDataForDataList();
+      if (!success) throw new Error("fetchAllDataForDataList 返回 false");
+
+      // 再次检查数据是否加载成功
+      if (AppState.galleryImages && AppState.galleryImages.length > 0 && AppState.userData) {
+        displayToast("核心数据加载成功！", "success", 1500);
+        return true;
       } else {
-          throw new Error("找不到核心数据加载函数 (例如 fetchAllDataForDataList)");
+        throw new Error("核心数据加载函数执行后，数据仍然无效。");
       }
+    } else {
+      throw new Error("找不到核心数据加载函数 (例如 fetchAllDataForDataList)");
+    }
   } catch (error) {
-      console.error("加载核心数据失败:", error);
-      displayToast(`加载核心数据失败: ${error.message}`, "error", 4000);
-      return false;
+    console.error("加载核心数据失败:", error);
+    displayToast(`加载核心数据失败: ${error.message}`, "error", 4000);
+    return false;
   }
 }
 
@@ -1054,9 +1038,10 @@ async function initializeApplication() {
   let galleryImagesLoaded = false;
   let userDataLoaded = false;
   try {
-    const [imagesResult, userdataResult] = await Promise.allSettled([
+    const [imagesResult, userdataResult, fileSizesResult] = await Promise.allSettled([
       fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_IMAGES),
       fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA),
+      fetchJsonData(API_ENDPOINTS.FETCH_FILE_SIZES)
     ]);
 
     if (
@@ -1064,7 +1049,7 @@ async function initializeApplication() {
       Array.isArray(imagesResult.value)
     ) {
       AppState.galleryImages = imagesResult.value.map((img, index) => {
-        let currentStorageBox = img.storageBox || img.storagebox; 
+        let currentStorageBox = img.storageBox || img.storagebox;
         let originalUrlPath = img.urlPath || "";
         let relativePath = "";
 
@@ -1079,19 +1064,15 @@ async function initializeApplication() {
         let pathWithoutRepo = originalUrlPath;
         if (typeof pathWithoutRepo !== "string") pathWithoutRepo = "";
 
-        // 使用原始大小写构建正则 用于提取相对路径
         const escapedStorageBox = currentStorageBox.replace(
           /[-\/\\^$*+?.()|[\]{}]/g,
           "\\$&"
         );
-        const repoPrefixRegex = new RegExp(`^/?(${escapedStorageBox})/`, "i"); // 忽略匹配时的大小写
+        const repoPrefixRegex = new RegExp(`^/?(${escapedStorageBox})/`, "i");
 
         if (pathWithoutRepo.match(repoPrefixRegex)) {
           pathWithoutRepo = pathWithoutRepo.replace(repoPrefixRegex, "");
         } else if (pathWithoutRepo.startsWith("/")) {
-          console.warn(
-            `Core: galleryImage[${index}] urlPath 开头与仓库名 ${currentStorageBox} 不匹配: ${originalUrlPath}`
-          );
           pathWithoutRepo = pathWithoutRepo.substring(1);
         }
         relativePath = pathWithoutRepo;
@@ -1100,15 +1081,11 @@ async function initializeApplication() {
           .replace(/\\/g, "/")
           .replace(/\/{2,}/g, "/");
 
-        // if (originalUrlPath !== finalRelativePath && index < 10) { // 日志过多 暂时注释
-        //     console.log(`Core: Path transformation[${index}]: ${originalUrlPath} -> ${finalRelativePath} (storageBox: ${currentStorageBox})`);
-        // }
-
         return {
           ...img,
-          storageBox: currentStorageBox, // 存储原始大小写
-          urlPath: finalRelativePath, // 存储相对路径
-          storagebox: undefined, // 移除小写字段
+          storageBox: currentStorageBox,
+          urlPath: finalRelativePath,
+          storagebox: undefined,
         };
       });
 
@@ -1117,7 +1094,7 @@ async function initializeApplication() {
         ...new Set(
           AppState.galleryImages.map((img) => img.storageBox).filter(Boolean)
         ),
-      ].sort(); // 存储原始大小写
+      ].sort();
       console.log(
         `核心数据: 加载 ${AppState.galleryImages.length} 图库信息 来自 ${
           AppState.availableStorageBoxes.length
@@ -1173,14 +1150,8 @@ async function initializeApplication() {
             .replace(/\\/g, "/")
             .replace(/\/{2,}/g, "/");
           AppState.userDataPaths.add(fullPath);
-          console.warn(
-            `Core: userData[${index}] 未找到 ${e.storagebox} 的原始大小写 使用小写构建路径`
-          );
         } else {
-          console.warn(
-            `Core: userData 条目 ${index} 缺少 path 或 storagebox 无法添加到 Set:`,
-            e
-          );
+          // Warning for missing data is now handled in the previous block.
         }
       });
       userDataLoaded = true;
@@ -1190,17 +1161,11 @@ async function initializeApplication() {
 
       if (typeof updateGeneratorEntryCount === "function")
         updateGeneratorEntryCount();
-      else
-        console.warn(
-          "Core: updateGeneratorEntryCount 未定义 GuTools_Generator.js"
-        );
       if (
         AppState.currentGuToolMode === "md5" &&
         typeof populateMd5JsonList === "function"
       )
         populateMd5JsonList();
-      else if (AppState.currentGuToolMode === "md5")
-        console.warn("Core: populateMd5JsonList 未定义 GuTools_MD5.js");
     } else {
       console.error(
         "核心数据: 加载用户数据失败:",
@@ -1222,6 +1187,18 @@ async function initializeApplication() {
         populateMd5JsonList();
     }
 
+    if (fileSizesResult.status === 'fulfilled' && Array.isArray(fileSizesResult.value)) {
+        const fileSizesData = fileSizesResult.value;
+        fileSizesData.forEach(file => {
+            const fullWebPath = buildFullWebPath(file.storageBox, file.urlPath);
+            AppState.fileSizesMap.set(fullWebPath, file.sizeInBytes);
+        });
+        console.log(`核心数据: 成功加载并映射了 ${AppState.fileSizesMap.size} 个文件的大小信息`);
+    } else {
+        console.error("核心数据: 加载文件大小信息失败:", fileSizesResult.reason || "未知错误");
+        displayToast("未能加载文件大小信息", UI_CLASSES.WARNING);
+    }
+    
     if (galleryImagesLoaded && userDataLoaded) {
       displayGeneratorMessage(
         "核心数据加载完毕！",
@@ -1291,7 +1268,6 @@ async function initializeApplication() {
     for (const funcInfo of setupFunctions) {
       if (typeof window[funcInfo.name] === "function") {
         window[funcInfo.name]();
-        console.log(`  > ${funcInfo.name} 来自 ${funcInfo.file} 已调用`);
       } else {
         console.warn(
           `核心: ${funcInfo.name} 函数在 ${funcInfo.file} 中尚未定义`
@@ -1301,7 +1277,7 @@ async function initializeApplication() {
     console.log("核心: 事件监听器设置调用完成");
     if (typeof initializeImageViewer === 'function') {
       initializeImageViewer();
-  }
+    }
 
     if (typeof updateGalleryStatusDisplay === "function")
       updateGalleryStatusDisplay();
@@ -1350,84 +1326,84 @@ function initializeImageViewer() {
   const closeButton = DOM.modalCloseButton;
 
   if (!viewer || !overlay || !closeButton) {
-      console.warn("图片放大镜核心DOM元素缺失，功能将不可用。");
-      return;
+    console.warn("图片放大镜核心DOM元素缺失，功能将不可用。");
+    return;
   }
 
   // 重置缩放和平移状态
   const resetZoomState = () => {
-      currentZoom = 1;
-      currentTranslate = { x: 0, y: 0 };
-      viewer.style.transform = 'translate(0px, 0px) scale(1)';
-      viewer.style.cursor = 'grab';
+    currentZoom = 1;
+    currentTranslate = { x: 0, y: 0 };
+    viewer.style.transform = 'translate(0px, 0px) scale(1)';
+    viewer.style.cursor = 'grab';
   };
-  
+
   window.resetImageViewer = resetZoomState;
 
   // 打开放大镜
   window.openImageViewer = (imageSrc) => {
-      resetZoomState();
-      viewer.src = imageSrc;
-      overlay.classList.remove('hidden');
+    resetZoomState();
+    viewer.src = imageSrc;
+    overlay.classList.remove('hidden');
   };
-  
+
   // 关闭放大镜
   const closeImageViewer = () => {
-      overlay.classList.add('hidden');
+    overlay.classList.add('hidden');
   };
 
   // 滚轮缩放事件
   overlay.addEventListener('wheel', (e) => {
-      if (overlay.classList.contains('hidden')) return;
-      e.preventDefault();
-      
-      const rect = viewer.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
-      
-      const delta = e.deltaY > 0 ? -ZOOM_SPEED : ZOOM_SPEED;
-      const oldZoom = currentZoom;
-      currentZoom = Math.max(0.5, Math.min(currentZoom + delta, 5));
-      
-      const zoomRatio = currentZoom / oldZoom;
-      
-      currentTranslate.x = offsetX - (offsetX - currentTranslate.x) * zoomRatio;
-      currentTranslate.y = offsetY - (offsetY - currentTranslate.y) * zoomRatio;
+    if (overlay.classList.contains('hidden')) return;
+    e.preventDefault();
 
-      viewer.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentZoom})`;
+    const rect = viewer.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const delta = e.deltaY > 0 ? -ZOOM_SPEED : ZOOM_SPEED;
+    const oldZoom = currentZoom;
+    currentZoom = Math.max(0.5, Math.min(currentZoom + delta, 5));
+
+    const zoomRatio = currentZoom / oldZoom;
+
+    currentTranslate.x = offsetX - (offsetX - currentTranslate.x) * zoomRatio;
+    currentTranslate.y = offsetY - (offsetY - currentTranslate.y) * zoomRatio;
+
+    viewer.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentZoom})`;
   }, { passive: false });
 
   // 鼠标拖动平移事件
   viewer.addEventListener('mousedown', (e) => {
-      if (overlay.classList.contains('hidden')) return;
-      e.preventDefault();
-      isPanning = true;
-      startPos = { x: e.clientX - currentTranslate.x, y: e.clientY - currentTranslate.y };
-      viewer.style.cursor = 'grabbing';
+    if (overlay.classList.contains('hidden')) return;
+    e.preventDefault();
+    isPanning = true;
+    startPos = { x: e.clientX - currentTranslate.x, y: e.clientY - currentTranslate.y };
+    viewer.style.cursor = 'grabbing';
   });
 
   const stopPanning = () => {
-      isPanning = false;
-      if (viewer) viewer.style.cursor = 'grab';
+    isPanning = false;
+    if (viewer) viewer.style.cursor = 'grab';
   };
 
   overlay.addEventListener('mousemove', (e) => {
-      if (!isPanning || overlay.classList.contains('hidden')) return;
-      e.preventDefault();
-      currentTranslate.x = e.clientX - startPos.x;
-      currentTranslate.y = e.clientY - startPos.y;
-      viewer.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentZoom})`;
+    if (!isPanning || overlay.classList.contains('hidden')) return;
+    e.preventDefault();
+    currentTranslate.x = e.clientX - startPos.x;
+    currentTranslate.y = e.clientY - startPos.y;
+    viewer.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentZoom})`;
   });
-  
+
   overlay.addEventListener('mouseup', stopPanning);
   overlay.addEventListener('mouseleave', stopPanning);
 
   // 关闭事件
   closeButton.addEventListener('click', closeImageViewer);
   overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-          closeImageViewer();
-      }
+    if (e.target === overlay) {
+      closeImageViewer();
+    }
   });
 
   console.log("图片放大镜功能已初始化。");

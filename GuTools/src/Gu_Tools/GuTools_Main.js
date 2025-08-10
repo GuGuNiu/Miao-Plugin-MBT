@@ -176,16 +176,6 @@ async function switchGuToolMode(targetMode) {
           console.error("GuTools FileSize: initializeFileSizeView 未定义！");
         }
         break;
-        
-      case "secondary_tag_editor":
-        if (typeof initializeSecondaryTagEditorView === "function") {
-          initializeSecondaryTagEditorView();
-        } else {
-          console.error("GuTools SecondaryTagEditor: initializeSecondaryTagEditorView 未定义！");
-        }
-        break;
-      default:
-        console.warn(`GuTools: 未知模式的特定加载逻辑: ${targetMode}`);
     }
   } catch (error) {
     console.error(`GuTools: 切换到模式 ${targetMode} 时执行特定逻辑出错:`, error);

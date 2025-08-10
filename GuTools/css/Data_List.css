@@ -488,7 +488,7 @@
 
 .data-item-thumbnail-container {
   flex-shrink: 0;
-  width: 120px;
+  width: 300px;
   height: 100%;
   border-radius: 0;
   overflow: hidden;
@@ -501,7 +501,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; 
   object-position: center;
   transition: transform 0.3s ease;
   cursor: pointer;
@@ -525,8 +525,11 @@
   font-weight: 600;
   color: var(--text-color);
   word-break: break-all;
-  font-size: 0.95em;
+  font-size: 1em;
   padding-right: 0;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
 }
 
 .data-item-card .gid-display {
@@ -809,6 +812,64 @@
   font-weight: 500;
   color: #6d4c41;
   line-height: 1.6;
-  padding-top: 10px;
   margin: 0;     
+}
+
+.data-item-filesize {
+  flex-shrink: 0;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: #1e40af; 
+  background-color: #dbeafe; 
+  border: 1px solid #93c5fd; 
+  padding: 3px 8px;
+  border-radius: 10px;
+  margin-left: 10px;
+}
+
+.secondary-tags-container {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.secondary-tag-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 3px;
+  background-color: #e0f2f1; 
+  color: #00695c; 
+  border: 1px solid #b2dfdb;
+  border-radius: var(--border-radius-small);
+}
+
+.data-item-bottom-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px; 
+  margin-top: auto; 
+}
+
+.secondary-tags-container {
+  flex-grow: 1; 
+  min-width: 0; 
+}
+
+.data-item-edit-btn {
+  position: static; 
+  flex-shrink: 0;
+}
+
+.all-tags-wrapper {
+  flex: 1; 
+  min-width: 0; 
+  display: flex;
+  flex-direction: column; 
+}
+
+.secondary-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
