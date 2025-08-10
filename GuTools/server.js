@@ -2028,6 +2028,39 @@ app.get("/api/secondary-tags", async (req, res) => {
   }
 });
 
+// [POST] 移除错误的 searchIndex 字段工具
+app.post('/api/cleanup-search-index', async (req, res) => {
+  console.log("请求: [POST] /api/cleanup-search-index");
+  try {
+    let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
+    let cleanedCount = 0;
+    
+    // 遍历所有条目，如果存在 searchIndex，则删除它
+    imageData.forEach(entry => {
+      if (entry.hasOwnProperty('searchIndex')) {
+        delete entry.searchIndex;
+        cleanedCount++;
+      }
+    });
+
+    if (cleanedCount > 0) {
+      // 如果有数据被清理，则写回文件
+      await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, imageData, "内部用户数据 (已清理)");
+      const message = `清理成功！已从 ${cleanedCount} 条记录中移除了 searchIndex 字段。`;
+      console.log(`  > ${message}`);
+      res.json({ success: true, message: message });
+    } else {
+      const message = "无需清理，数据文件中不包含 searchIndex 字段。";
+      console.log(`  > ${message}`);
+      res.json({ success: true, message: message });
+    }
+
+  } catch (error) {
+    console.error('[API 清理工具] 处理时出错:', error);
+    res.status(500).json({ success: false, error: `清理失败: ${error.message}` });
+  }
+});
+
 // [GET] 更新二级标签
 app.post("/api/update-secondary-tags", async (req, res) => {
   console.log("请求: [POST] /api/update-secondary-tags");

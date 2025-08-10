@@ -150,51 +150,104 @@ function renderBannedGrid() {
 
 function renderGrid(gridElement, data, type, selectionSet) {
     if (!gridElement) return;
-    gridElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+
+    // --- 虚拟滚动核心状态 ---
+    const cardHeight = 180; // 卡片高度
+    const cardMinWidth = 140; // 卡片最小宽度
+    const cardGap = 16;     // 卡片间隙
+    const scrollTop = gridElement.scrollTop;
+    const containerHeight = gridElement.clientHeight;
+    const containerWidth = gridElement.clientWidth - 32; 
+
+    gridElement.innerHTML = ''; // 清理旧的DOM
+
+    // 如果没有数据，显示占位符并返回
     if (data.length === 0) {
         gridElement.innerHTML = `<div class="bm-placeholder"><p>${type === 'unbanned' ? '没有匹配的图片' : '暂无封禁图片'}</p></div>`;
         return;
     }
-    data.forEach(img => {
+
+    // 计算布局参数
+    const columns = Math.max(1, Math.floor((containerWidth + cardGap) / (cardMinWidth + cardGap)));
+    const cardWidth = (containerWidth - (columns - 1) * cardGap) / columns;
+    const totalRows = Math.ceil(data.length / columns);
+    const totalHeight = totalRows * (cardHeight + cardGap);
+
+    // 创建一个“撑高”的内部容器
+    const spacer = document.createElement('div');
+    spacer.style.position = 'relative';
+    spacer.style.width = '100%';
+    spacer.style.height = `${totalHeight}px`;
+
+    // 计算当前应该渲染的行范围
+    const startRow = Math.max(0, Math.floor(scrollTop / (cardHeight + cardGap)) - 1); // 向上多渲染1行作为缓冲区
+    const endRow = Math.min(totalRows - 1, Math.ceil((scrollTop + containerHeight) / (cardHeight + cardGap)) + 1); // 向下多渲染1行
+
+    // 只创建并渲染可见区域的卡片
+    const fragment = document.createDocumentFragment();
+    const startIndex = startRow * columns;
+    const endIndex = Math.min(data.length, (endRow + 1) * columns);
+
+    for (let i = startIndex; i < endIndex; i++) {
+        const img = data[i];
+        const row = Math.floor(i / columns);
+        const col = i % columns;
+
         const card = document.createElement('div');
         card.className = 'bm-image-card';
         card.dataset.gid = img.gid;
-        const thumbnailPath = getThumbnailPath(img), filename = (img.attributes.filename || '未知文件').replace(/\.webp$/i, '');
+
+        // --- 使用精确的像素值进行绝对定位 ---
+        card.style.position = 'absolute';
+        card.style.top = `${row * (cardHeight + cardGap)}px`;
+        card.style.left = `${col * (cardWidth + cardGap)}px`;
+        card.style.width = `${cardWidth}px`;
+        card.style.height = `${cardHeight}px`;
+        
+        const thumbnailPath = getThumbnailPath(img);
+        const filename = (img.attributes.filename || '未知文件').replace(/\.webp$/i, '');
         card.innerHTML = `<img src="${thumbnailPath}" alt="${filename}" loading="lazy" draggable="false" onerror="this.src='/placeholder.png'"><span class="bm-card-filename" title="${filename}">${filename}</span>`;
         if (selectionSet.has(String(img.gid))) card.classList.add('is-selected');
+        
         fragment.appendChild(card);
-    });
-    gridElement.appendChild(fragment);
+    }
+    
+    spacer.appendChild(fragment);
+    gridElement.appendChild(spacer);
 }
 
 function setupDragToSelect(gridElement, selectionSet, type) {
     let startX, startY, isDragging = false;
     
     gridElement.addEventListener('mousedown', e => {
-        // 判断点击是否发生在滚动条上 如果是则不启动拖选
-        if (e.offsetX >= gridElement.clientWidth) {
+        // 判断点击是否发生在滚动条上 或 不是鼠标左键，如果是则不启动拖选
+        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth) {
             return;
         }
         
+        // 阻止默认行为，如文本选择
         e.preventDefault();
         isDragging = true;
         BanManagementState.activeDragSelect = type;
 
         const rect = gridElement.getBoundingClientRect();
-        const scrollLeft = gridElement.scrollLeft;
-        const scrollTop = gridElement.scrollTop;
-        startX = e.clientX - rect.left + scrollLeft;
-        startY = e.clientY - rect.top + scrollTop;
+        // --- 将滚动条位置加入初始坐标计算 ---
+        startX = e.clientX - rect.left + gridElement.scrollLeft;
+        startY = e.clientY - rect.top + gridElement.scrollTop;
         
-        DOM_BM.selectionBox.style.left = `${e.clientX - rect.left}px`;
-        DOM_BM.selectionBox.style.top = `${e.clientY - rect.top}px`;
+        DOM_BM.selectionBox.style.left = `${startX}px`; // 直接使用相对于 spacer 的坐标
+        DOM_BM.selectionBox.style.top = `${startY}px`;
         DOM_BM.selectionBox.style.width = '0px';
         DOM_BM.selectionBox.style.height = '0px';
-        DOM_BM.selectionBox.style.transform = `translate(0, 0)`;
-        gridElement.appendChild(DOM_BM.selectionBox);
+        
+        // 将选框添加到 spacer 内部
+        const spacer = gridElement.querySelector('div');
+        if (spacer) {
+            spacer.appendChild(DOM_BM.selectionBox);
+        }
         DOM_BM.selectionBox.classList.remove('hidden');
 
+        // 如果没有按住 Ctrl/Meta 键，则清除之前的选择
         if (!e.ctrlKey && !e.metaKey) {
             clearSelection(type);
         }
@@ -204,17 +257,17 @@ function setupDragToSelect(gridElement, selectionSet, type) {
         if (!isDragging || BanManagementState.activeDragSelect !== type) return;
         e.preventDefault();
         const rect = gridElement.getBoundingClientRect();
-        const scrollLeft = gridElement.scrollLeft;
-        const scrollTop = gridElement.scrollTop;
-        let currentX = e.clientX - rect.left + scrollLeft;
-        let currentY = e.clientY - rect.top + scrollTop;
+        // --- 同样在移动时考虑滚动条位置 ---
+        let currentX = e.clientX - rect.left + gridElement.scrollLeft;
+        let currentY = e.clientY - rect.top + gridElement.scrollTop;
         
         const boxX = Math.min(startX, currentX);
         const boxY = Math.min(startY, currentY);
         const boxWidth = Math.abs(currentX - startX);
         const boxHeight = Math.abs(currentY - startY);
 
-        DOM_BM.selectionBox.style.transform = `translate(${boxX - scrollLeft}px, ${boxY - scrollTop}px)`;
+        DOM_BM.selectionBox.style.left = `${boxX}px`;
+        DOM_BM.selectionBox.style.top = `${boxY}px`;
         DOM_BM.selectionBox.style.width = `${boxWidth}px`;
         DOM_BM.selectionBox.style.height = `${boxHeight}px`;
 
@@ -226,8 +279,6 @@ function setupDragToSelect(gridElement, selectionSet, type) {
         isDragging = false;
         BanManagementState.activeDragSelect = null;
         DOM_BM.selectionBox.classList.add('hidden');
-        DOM_BM.selectionBox.style.width = '0px';
-        DOM_BM.selectionBox.style.height = '0px';
         if (DOM_BM.selectionBox.parentElement) {
             DOM_BM.selectionBox.parentElement.removeChild(DOM_BM.selectionBox);
         }
@@ -497,20 +548,30 @@ function setupDragToSelect(gridElement, selectionSet, type) {
 
 function checkSelection(gridElement, selectionSet) {
     if (!DOM_BM.selectionBox.parentElement) return;
-    const boxRect = DOM_BM.selectionBox.getBoundingClientRect();
+
+    // 获取选框相对于 spacer 的位置
+    const boxLeft = parseFloat(DOM_BM.selectionBox.style.left);
+    const boxTop = parseFloat(DOM_BM.selectionBox.style.top);
+    const boxRight = boxLeft + parseFloat(DOM_BM.selectionBox.style.width);
+    const boxBottom = boxTop + parseFloat(DOM_BM.selectionBox.style.height);
+
     const cards = gridElement.querySelectorAll('.bm-image-card');
     
     cards.forEach(card => {
-        const cardRect = card.getBoundingClientRect();
+        // 获取卡片相对于 spacer 的位置
+        const cardLeft = parseFloat(card.style.left);
+        const cardTop = parseFloat(card.style.top);
+        const cardRight = cardLeft + card.offsetWidth;
+        const cardBottom = cardTop + card.offsetHeight;
         const gid = card.dataset.gid;
-        const isIntersecting = !(boxRect.right < cardRect.left || boxRect.left > cardRect.right || boxRect.bottom < cardRect.top || boxRect.top > cardRect.bottom);
+        
+        // 矩形相交检测
+        const isIntersecting = !(boxRight < cardLeft || boxLeft > cardRight || boxBottom < cardTop || boxTop > cardBottom);
 
         if (isIntersecting) {
             if (!selectionSet.has(gid)) { selectionSet.add(gid); card.classList.add('is-selected'); }
-        } else {
-            if (!document.body.classList.contains('ctrl-pressed')) {
-                 if (selectionSet.has(gid)) { selectionSet.delete(gid); card.classList.remove('is-selected'); }
-            }
+        } else if (!document.body.classList.contains('ctrl-pressed')) { //  Ctrl 键多选逻辑
+             if (selectionSet.has(gid)) { selectionSet.delete(gid); card.classList.remove('is-selected'); }
         }
     });
     updateBulkActionBar();
@@ -570,41 +631,25 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
     let isDragging = false;
     let startX, startY;
 
-    gridElement.addEventListener('mousedown', e => {
-        // 仅响应鼠标左键 并忽略滚动条区域的点击
-        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth || e.offsetY >= gridElement.clientHeight) {
-            return;
-        }
-
-        isMouseDown = true;
-        isDragging = false; // 重置拖拽状态
-
-        const rect = gridElement.getBoundingClientRect();
-        startX = e.clientX - rect.left + gridElement.scrollLeft;
-        startY = e.clientY - rect.top + gridElement.scrollTop;
-        
-        // 阻止默认行为 如文本选择或图片拖动 以确保逻辑优先
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', e => {
+    const handleMouseMove = (e) => {
         if (!isMouseDown) return;
 
-        // 首次移动时 判定为拖拽操作开始
+        // 首次移动时，判定为拖拽操作开始
         if (!isDragging) {
             isDragging = true;
             BanManagementState.activeDragSelect = type;
 
-            // 如果未按住 Ctrl/Meta 键 则清除之前的选择
             if (!e.ctrlKey && !e.metaKey) {
                 clearSelection(type);
             }
             
             // 初始化并显示选框
-            DOM_BM.selectionBox.style.transform = `translate(${startX - gridElement.scrollLeft}px, ${startY - gridElement.scrollTop}px)`;
+            const spacer = gridElement.querySelector('div');
+            if(spacer) spacer.appendChild(DOM_BM.selectionBox);
+            DOM_BM.selectionBox.style.left = `${startX}px`;
+            DOM_BM.selectionBox.style.top = `${startY}px`;
             DOM_BM.selectionBox.style.width = '0px';
             DOM_BM.selectionBox.style.height = '0px';
-            gridElement.appendChild(DOM_BM.selectionBox);
             DOM_BM.selectionBox.classList.remove('hidden');
         }
 
@@ -619,20 +664,20 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
             const boxWidth = Math.abs(currentX - startX);
             const boxHeight = Math.abs(currentY - startY);
 
-            // 实时更新选框的位置和尺寸
-            DOM_BM.selectionBox.style.transform = `translate(${boxX - gridElement.scrollLeft}px, ${boxY - gridElement.scrollTop}px)`;
+            DOM_BM.selectionBox.style.left = `${boxX}px`;
+            DOM_BM.selectionBox.style.top = `${boxY}px`;
             DOM_BM.selectionBox.style.width = `${boxWidth}px`;
             DOM_BM.selectionBox.style.height = `${boxHeight}px`;
 
             checkSelection(gridElement, selectionSet);
         }
-    });
+    };
 
-    document.addEventListener('mouseup', e => {
+    const handleMouseUp = (e) => {
         if (!isMouseDown) return;
 
         if (isDragging) {
-            // 如果是拖拽操作 则在鼠标抬起时清理拖拽状态和选框
+            // 如果是拖拽操作，则在鼠标抬起时清理
             if (BanManagementState.activeDragSelect === type) {
                 DOM_BM.selectionBox.classList.add('hidden');
                 if (DOM_BM.selectionBox.parentElement) {
@@ -642,7 +687,7 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
                 BanManagementState.activeDragSelect = null;
             }
         } else {
-            // 如果未拖拽 则是单击操作
+            // 如果未拖拽，则是单击操作
             const card = e.target.closest('.bm-image-card');
             if (card) {
                 const gid = card.dataset.gid;
@@ -653,15 +698,40 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
                     selectionSet.add(gid);
                     card.classList.add('is-selected');
                 }
+                updateBulkActionBar();
             } else if (!e.ctrlKey && !e.metaKey) {
                 // 点击在空白区域
                 clearSelection(type);
+                updateBulkActionBar();
             }
-            updateBulkActionBar();
         }
 
         isMouseDown = false;
         isDragging = false;
+        
+        // 移除 document 上的监听器
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    gridElement.addEventListener('mousedown', e => {
+        // 仅响应鼠标左键，并忽略滚动条区域
+        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth || e.offsetY >= gridElement.clientHeight) {
+            return;
+        }
+
+        isMouseDown = true;
+        isDragging = false;
+
+        const rect = gridElement.getBoundingClientRect();
+        startX = e.clientX - rect.left + gridElement.scrollLeft;
+        startY = e.clientY - rect.top + gridElement.scrollTop;
+        
+        e.preventDefault();
+
+        // 绑定 document 级别的事件
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
     });
 }
 
@@ -675,7 +745,8 @@ function setupBanManagementEventListeners() {
     if(DOM_BM.bannedGrid) {
         setupDragAndClick_BM(DOM_BM.bannedGrid, BanManagementState.selectedBannedGids, 'banned');
     }
-
+    DOM_BM.unbannedGrid?.addEventListener('scroll', renderUnbannedGrid);
+    DOM_BM.bannedGrid?.addEventListener('scroll', renderBannedGrid);
     DOM_BM.bannedPanel?.addEventListener('click', handlePanelSwap);
     DOM_BM.unbannedPanel?.addEventListener('click', handlePanelSwap);
     DOM_BM.bulkSelectAllBtn?.addEventListener('click', selectAllInCurrentView);

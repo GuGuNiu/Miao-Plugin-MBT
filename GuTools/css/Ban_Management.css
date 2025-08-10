@@ -333,15 +333,13 @@
     flex-grow: 1;
     overflow-y: auto;
     padding: 16px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
-    align-content: flex-start;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     position: relative;
     user-select: none;
     min-height: 0;
     scrollbar-width: thin;
     scrollbar-color: var(--bm-select-border) var(--bm-select-bg);
+    box-sizing: border-box;
 }
 
 .bm-image-grid::-webkit-scrollbar {
@@ -364,7 +362,7 @@
     border-radius: 10px;
     background: #f4f4f4;
     width: 100%;
-    height: 160px;
+    height: 180px;
     position: relative;
     cursor: pointer;
     border: 3px solid transparent;

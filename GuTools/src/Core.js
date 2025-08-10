@@ -130,6 +130,8 @@ const AppState = {
     currentEditPath: null,
     currentSortOrder: 'default', 
     searchDebounceTimer: null,
+    searchIndexBuilt: false,
+    searchIndexMap: new Map(), 
     virtualScrollInfo: {
       container: null,
       innerSpacer: null,

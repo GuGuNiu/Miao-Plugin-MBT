@@ -1,5 +1,5 @@
 // ==========================================================================
-// GuTools 二级标签编辑器 (已修复滚动体验和交互逻辑的最终版本)
+// GuTools 二级标签编辑器
 // ==========================================================================
 
 const STEState = {
@@ -16,6 +16,9 @@ const STEState = {
     characterTags: [],
     isSavingTags: false,
     isScrolling: false, // 标记是否为程序化滚动
+    allPredefinedTags: [], // 用于存储所有可搜索的标签
+    activeSuggestionIndex: -1, // 用于键盘上下导航
+    tagSearchIndex: [], // 存储用于搜索的标签对象
 
     // 虚拟化滚动条状态
     virtualStrip: {
@@ -50,7 +53,7 @@ let modalTagState = null;
 // ==========================================================================
 
 /**
- * 滚动结束处理函数，实现“齿轮感”吸附效果
+ * 滚动结束处理函数，实现齿轮感吸附效果
  */
 function handleScrollEnd() {
     const vstrip = STEState.virtualStrip;
@@ -83,7 +86,7 @@ function switchToImageByIndex(newIndex) {
     if (DOM.steProgressDisplay) {
         DOM.steProgressDisplay.textContent = `${STEState.currentIndex + 1}/${STEState.currentImageList.length}`;
     }
-    
+
     // 渲染主图和标签，这个函数内部会处理滚动条的“吸附”动画
     renderImageAndTags(STEState.currentImageEntry);
 }
@@ -94,6 +97,30 @@ function switchToImageByIndex(newIndex) {
 // ==========================================================================
 
 /**
+ * 等待 pinyin 库加载完成的辅助函数
+ * @param {number} timeout - 最大等待时间 (毫秒)
+ * @returns {Promise<void>}
+ */
+function waitForPinyin(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        const check = () => {
+            if (typeof pinyinPro !== 'undefined') { 
+                // 找到了！任务完成
+                resolve();
+            } else if (Date.now() - startTime > timeout) {
+                // 等太久了，超时失败
+                reject(new Error("等待 pinyin 库加载超时！"));
+            } else {
+                // 还没找到，50毫秒后再检查一次
+                setTimeout(check, 50);
+            }
+        };
+        check();
+    });
+}
+
+/**
  * 初始化二级标签编辑器视图，从API获取标签并动态创建UI。
  */
 async function initializeSecondaryTagEditorView() {
@@ -101,6 +128,7 @@ async function initializeSecondaryTagEditorView() {
     if (!DOM.secondaryTagEditorPaneView) return;
 
     try {
+        await waitForPinyin();
         const response = await fetch('/api/secondary-tags');
         if (!response.ok) throw new Error(`无法获取标签配置 (HTTP ${response.status})`);
         const allTagsData = await response.json();
@@ -146,6 +174,22 @@ async function initializeSecondaryTagEditorView() {
                 characterTagsContainer.appendChild(tagEl);
             });
         }
+
+        const allTagsSet = new Set(STEState.characterTags);
+        Object.values(STEState.tagCategories).forEach(tags => {
+            tags.forEach(tag => allTagsSet.add(tag));
+        });
+        STEState.allPredefinedTags = Array.from(allTagsSet);
+        const { pinyin } = pinyinPro;
+        STEState.tagSearchIndex = STEState.allPredefinedTags.map(tag => {
+            return {
+                tag: tag, 
+                lower: tag.toLowerCase(),
+                initials: pinyin(tag, { pattern: 'first' }).replace(/\s/g, '').toLowerCase(),          
+                fullPinyin: pinyin(tag, { toneType: 'none', type: 'array' }).join('').toLowerCase()
+            };
+        });
+
         STEState.isInitialized = true;
     } catch (error) {
         console.error("加载二级标签失败:", error);
@@ -221,7 +265,7 @@ function initializeVirtualStrip() {
 
     // 创建可复用的DOM节点池
     const fragment = document.createDocumentFragment();
-    vstrip.thumbPool = []; 
+    vstrip.thumbPool = [];
     for (let i = 0; i < vstrip.poolSize; i++) {
         const thumb = document.createElement('img');
         thumb.className = 'ste-thumbnail';
@@ -272,7 +316,7 @@ function renderVisibleThumbnails() {
 
             let scale = Math.max(0.8, 1.05 - distance / (vstrip.container.offsetWidth * 0.8)); // 调整基线和影响范围
             let opacity = Math.max(0.7, 1 - distance / (vstrip.container.offsetWidth / 1.2)); // 调整基线和影响范围
-            
+
             if (isActive) {
                 scale = 1.25; // 当前选中的缩略图放大
                 opacity = 1;
@@ -295,6 +339,97 @@ function renderVisibleThumbnails() {
 // ==========================================================================
 // == 状态与数据处理
 // ==========================================================================
+
+/**
+ * 根据输入，显示标签建议
+ */
+function showTagSuggestions(query) {
+    const suggestionsContainer = document.getElementById('steTagInputSuggestions');
+    if (!suggestionsContainer) return;
+
+    if (!query) {
+        suggestionsContainer.classList.add('hidden');
+        return;
+    }
+
+    const lowerCaseQuery = query.toLowerCase();
+    const results = STEState.tagSearchIndex.filter(tagObj => {
+        // 尚未添加该标签
+        const notAdded = !STEState.currentTags.has(tagObj.tag);
+        // 查询词匹配标签的中文/英文原文，或者匹配其拼音首字母
+        const queryMatch = tagObj.lower.includes(lowerCaseQuery) || 
+                               tagObj.initials.includes(lowerCaseQuery) ||
+                               tagObj.fullPinyin.includes(lowerCaseQuery);
+        return notAdded && queryMatch;
+    }).slice(0, 10); // 最多显示10条建议
+
+    suggestionsContainer.innerHTML = '';
+    if (results.length === 0) {
+        suggestionsContainer.classList.add('hidden');
+        return;
+    }
+
+    results.forEach(tagObj => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-tag-item';
+        item.textContent = tagObj.tag; // 显示原始标签名
+        item.dataset.tag = tagObj.tag; // 存储原始标签名
+        item.addEventListener('mousedown', () => {
+            addTag(tagObj.tag);
+        });
+        suggestionsContainer.appendChild(item);
+    });
+
+    STEState.activeSuggestionIndex = -1;
+    suggestionsContainer.classList.remove('hidden');
+}
+
+/**
+ * 隐藏标签建议列表
+ */
+function hideTagSuggestions() {
+    const suggestionsContainer = document.getElementById('steTagInputSuggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.classList.add('hidden');
+    }
+    STEState.activeSuggestionIndex = -1;
+}
+
+/**
+ * 根据 activeSuggestionIndex 更新建议列表的选中高亮状态
+ */
+function updateSuggestionHighlight() {
+    const suggestionsContainer = document.getElementById('steTagInputSuggestions');
+    if (!suggestionsContainer) return;
+    
+    const items = suggestionsContainer.querySelectorAll('.suggestion-tag-item');
+    
+    items.forEach((item, index) => {
+        const isSelected = index === STEState.activeSuggestionIndex;
+        item.classList.toggle('selected', isSelected);
+
+        if (isSelected) {
+            item.scrollIntoView({
+                behavior: 'smooth', // 平滑滚动
+                block: 'nearest'    // 'nearest' 会以最小的滚动幅度让元素可见
+            });
+        }
+    });
+}
+
+/**
+ * 统一的添加标签函数
+ * @param {string} tag - 要添加的标签
+ */
+function addTag(tag) {
+    if (tag) {
+        STEState.currentTags.add(tag);
+        renderCurrentTags();
+        updatePredefinedTagsUI();
+        if (DOM.steTagInput) DOM.steTagInput.value = '';
+        hideTagSuggestions();
+    }
+}
 
 /**
  * 加载并显示“下一张”需要编辑的图片
@@ -339,7 +474,7 @@ function loadNextImage() {
         if (DOM.steProgressDisplay) DOM.steProgressDisplay.textContent = '完成';
         if (document.getElementById('stePreviewImage')) document.getElementById('stePreviewImage').classList.add('hidden');
         if (DOM.steThumbnailStripContainer) DOM.steThumbnailStripContainer.classList.add('hidden');
-        
+
         // 只有在补缺模式下才显示“处理完毕”的Toast，避免在全部模式浏览到最后时弹出
         if (mode === 'fill') {
             displayToast("当前模式下所有图片已处理完毕！", "success");
@@ -429,10 +564,10 @@ function renderCurrentTags() {
         const removeBtn = document.createElement('span');
         removeBtn.className = 'ste-tag-remove';
         removeBtn.textContent = '×';
-        removeBtn.onclick = () => { 
-            STEState.currentTags.delete(tag); 
-            renderCurrentTags(); 
-            updatePredefinedTagsUI(); 
+        removeBtn.onclick = () => {
+            STEState.currentTags.delete(tag);
+            renderCurrentTags();
+            updatePredefinedTagsUI();
         };
         li.appendChild(removeBtn);
         DOM.steTagList.appendChild(li);
@@ -456,6 +591,18 @@ function updatePredefinedTagsUI() {
  */
 async function saveAndNext() {
     if (!STEState.currentImageEntry) return;
+
+    const selectedTagsArray = Array.from(STEState.currentTags);
+    
+    const hasCharacterTag = selectedTagsArray.some(tag => STEState.characterTags.includes(tag));
+
+    // 如果检查未通过（即一个人物标签都没选）
+    if (!hasCharacterTag) {
+        // 弹出 Toast 提示框，并立即停止函数执行
+        displayToast("请至少选择一个人物标签！", "warning");
+        return; 
+    }
+
     const currentSelection = STEState.currentImageEntry;
     let entryIndex = AppState.userData.findIndex(ud => ud.path === currentSelection.urlPath && ud.storagebox?.toLowerCase() === currentSelection.storageBox.toLowerCase());
     let entryToProcess, isNewEntry = false;
@@ -580,21 +727,65 @@ function setupSecondaryTagEditorEventListeners() {
 
     // 手动标签输入
     if (DOM.steTagInput) {
+        // 输入时，触发模糊搜索
+        DOM.steTagInput.addEventListener('input', () => {
+            const query = DOM.steTagInput.value.trim();
+            showTagSuggestions(query);
+        });
+
+        // 处理键盘事件（上、下、回车、Esc）
         DOM.steTagInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ',') {
-                e.preventDefault();
-                const tag = DOM.steTagInput.value.trim();
-                if (tag) {
-                    STEState.currentTags.add(tag);
-                    renderCurrentTags();
-                    updatePredefinedTagsUI();
-                    DOM.steTagInput.value = '';
-                }
+            const suggestionsContainer = document.getElementById('steTagInputSuggestions');
+            const items = suggestionsContainer?.querySelectorAll('.suggestion-tag-item');
+            const suggestionsVisible = items && items.length > 0;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    if (suggestionsVisible) {
+                        e.preventDefault();
+                        STEState.activeSuggestionIndex = (STEState.activeSuggestionIndex + 1) % items.length;
+                        updateSuggestionHighlight();
+                    }
+                    break;
+
+                case 'ArrowUp':
+                    if (suggestionsVisible) {
+                        e.preventDefault();
+                        STEState.activeSuggestionIndex = (STEState.activeSuggestionIndex - 1 + items.length) % items.length;
+                        updateSuggestionHighlight();
+                    }
+                    break;
+
+                case 'Enter':
+                    e.preventDefault(); // 始终阻止默认的回车行为
+                    let tagToAdd = '';
+                    if (suggestionsVisible && STEState.activeSuggestionIndex > -1) {
+                        // 如果有高亮的建议项，则添加该项
+                        tagToAdd = items[STEState.activeSuggestionIndex].dataset.tag;
+                    } else {
+                        // 否则，添加输入框中当前输入的内容
+                        tagToAdd = DOM.steTagInput.value.trim();
+                    }
+                    addTag(tagToAdd);
+                    break;
+
+                case ',': // 保留逗号添加的功能
+                    e.preventDefault();
+                    addTag(DOM.steTagInput.value.trim());
+                    break;
+
+                case 'Escape':
+                    hideTagSuggestions();
+                    break;
             }
         });
-    }
 
-    // 模式切换
+        // 当输入框失去焦点时，隐藏建议列表
+        DOM.steTagInput.addEventListener('blur', () => {
+            // 延迟隐藏，以便让鼠标点击事件能够成功触发
+            setTimeout(hideTagSuggestions, 150);
+        });
+    }
     document.querySelectorAll('input[name="steMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             STEState.currentMode = e.target.value;
@@ -714,13 +905,13 @@ function setupSecondaryTagEditorEventListeners() {
                     handleScrollEnd();
                     return;
                 }
-                
+
                 // 根据当前速度更新滚动位置
                 thumbContainer.scrollLeft -= inertiaState.velocity;
-                
+
                 // 模拟摩擦力，让速度每一帧都衰减
                 inertiaState.velocity *= 0.94; // 这个摩擦系数可以微调 (0.92 ~ 0.96)
-                
+
                 // 请求下一帧动画
                 inertiaState.frameId = requestAnimationFrame(inertiaFrame);
             };
@@ -728,7 +919,7 @@ function setupSecondaryTagEditorEventListeners() {
             // 启动动画
             inertiaState.frameId = requestAnimationFrame(inertiaFrame);
         };
-        
+
         // 绑定鼠标与触摸事件
         thumbContainer.addEventListener('mousedown', startDrag);
         thumbContainer.addEventListener('mousemove', onDrag);
@@ -755,6 +946,25 @@ function setupSecondaryTagEditorEventListeners() {
     if (manageTagsBtn) {
         manageTagsBtn.addEventListener('click', openTagManagementModal);
     }
+
+    //横向滚轮滚动
+    const categorizedTagsContainer = document.getElementById('steCategorizedTags');
+    if (categorizedTagsContainer) {
+        categorizedTagsContainer.addEventListener('wheel', (event) => {
+            const targetWrapper = event.target.closest('.ste-category-tags-wrapper');
+            if (!targetWrapper) {
+                return;
+            }
+
+            // 检查这个标签行是否真的有内容溢出
+            if (targetWrapper.scrollWidth > targetWrapper.clientWidth) {
+                // 阻止默认的页面垂直滚动行为
+                event.preventDefault();
+
+                targetWrapper.scrollLeft += event.deltaY;
+            }
+        }, { passive: false });
+    }
 }
 
 
@@ -766,7 +976,7 @@ function openTagManagementModal() {
     const modal = document.getElementById('steTagManagementModal');
     const select = document.getElementById('steModalCategorySelect');
     const deleteCategorySelect = document.getElementById('steModalDeleteCategorySelect');
-    
+
     if (!modal || !select || !deleteCategorySelect) return;
 
     document.getElementById('secondaryTagEditorPaneView').classList.add('modal-active');
@@ -789,7 +999,7 @@ function openTagManagementModal() {
         select.add(new Option(category, category));
         deleteCategorySelect.add(new Option(category, category));
     });
-    
+
     populateTagsForDeletion();
     modal.classList.remove('hidden');
 }
@@ -797,9 +1007,9 @@ function openTagManagementModal() {
 function closeTagManagementModal() {
     const modal = document.getElementById('steTagManagementModal');
     if (modal) modal.classList.add('hidden');
-    
+
     document.getElementById('secondaryTagEditorPaneView').classList.remove('modal-active');
-    
+
     if (sortableInstance) {
         sortableInstance.destroy();
         sortableInstance = null;
@@ -813,7 +1023,7 @@ function populateTagsForDeletion() {
     const category = select.value;
 
     if (sortableInstance) sortableInstance.destroy();
-    
+
     container.innerHTML = '';
     const tags = category === "🧜‍♂ 人物类型" ? modalTagState.characterTags : (modalTagState.tagCategories[category] || []);
 
@@ -839,7 +1049,7 @@ function populateTagsForDeletion() {
         animation: 150,
         ghostClass: 'sortable-ghost',
         onEnd: (evt) => {
-            const updatedTags = Array.from(container.children).map(item => 
+            const updatedTags = Array.from(container.children).map(item =>
                 item.querySelector('.ste-tag-remove').dataset.tag
             );
             if (category === "🧜‍♂ 人物类型") {
@@ -860,7 +1070,7 @@ function handleDeleteTag(tagToDelete, categoryFrom) {
         if (modalTagState.tagCategories[categoryFrom].length === 0) {
             delete modalTagState.tagCategories[categoryFrom];
             const select = document.getElementById('steModalDeleteCategorySelect');
-            for(let i = 0; i < select.options.length; i++) {
+            for (let i = 0; i < select.options.length; i++) {
                 if (select.options[i].value === categoryFrom) {
                     select.remove(i);
                     break;
@@ -880,7 +1090,7 @@ function handleAddNewTag() {
         displayModalMessage("请选择分类并输入至少一个新标签！", "warning");
         return;
     }
-    
+
     let targetArray;
     if (category === "🧜‍♂ 人物类型") {
         targetArray = modalTagState.characterTags;
@@ -921,7 +1131,7 @@ function handleAddNewCategory() {
 
     modalTagState.tagCategories[newCategory] = [firstTag];
     displayModalMessage(`已在本地新增分类 [${newCategory}]，点击“保存更改”生效。`, "info");
-    
+
     const select = document.getElementById('steModalCategorySelect');
     const deleteSelect = document.getElementById('steModalDeleteCategorySelect');
     select.add(new Option(newCategory, newCategory));

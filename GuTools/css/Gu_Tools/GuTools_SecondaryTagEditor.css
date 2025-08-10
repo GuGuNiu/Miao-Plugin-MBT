@@ -840,3 +840,53 @@
     height: 100%;
     object-fit: contain; 
 }
+
+.ste-manual-tags-container {
+    position: relative;
+}
+
+/* --- 标签建议列表的样式 --- */
+.ste-suggestions-list {
+    position: absolute;
+    bottom: calc(100% + 4px); 
+    left: 0;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 2px solid var(--ste-border-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    z-index: 1010;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ste-accent) var(--ste-bg);
+}
+
+.ste-suggestions-list::-webkit-scrollbar {
+    width: 8px;
+}
+.ste-suggestions-list::-webkit-scrollbar-track {
+    background: var(--ste-bg);
+}
+.ste-suggestions-list::-webkit-scrollbar-thumb {
+    background-color: var(--ste-accent);
+    border-radius: 4px;
+}
+
+/* --- 单个建议项的样式 --- */
+.suggestion-tag-item {
+    padding: 9px 15px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--ste-text-medium);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* --- 鼠标悬停或键盘选中时的样式 --- */
+.suggestion-tag-item:hover,
+.suggestion-tag-item.selected {
+    background-color: var(--ste-accent);
+    color: white;
+    font-weight: 600;
+}

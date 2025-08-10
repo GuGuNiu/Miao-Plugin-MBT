@@ -3,6 +3,63 @@
 //       和属性编辑模态框
 // ==========================================================================
 
+
+async function buildDataListSearchIndex() {
+    // 检查 pinyinPro 库是否已加载
+    if (typeof pinyinPro === 'undefined') {
+        console.error("DataList: pinyinPro 库未加载，无法构建拼音搜索索引。");
+        // 尝试等待一小段时间，以防万一
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+        if (typeof pinyinPro === 'undefined') {
+            displayToast("拼音库加载失败，搜索功能受限！", "error");
+            return;
+        }
+    }
+    
+    // 从 pinyinPro 全局对象中安全地解构出 pinyin 函数
+    const { pinyin } = pinyinPro;
+
+    console.log("DataList: 正在构建拼音搜索索引...");
+    const startTime = performance.now();
+
+    // 在构建新索引前，先清空旧的 Map
+    AppState.dataList.searchIndexMap.clear();
+
+    for (const entry of AppState.userData) {
+        // 必须有 gid 作为 Map 的唯一键，否则跳过
+        if (!entry.attributes || !entry.gid) {
+            continue;
+        }
+
+        const textsToProcess = [];
+        
+        // 添加角色名/父文件夹名
+        if (entry.attributes.parentFolder) {
+            textsToProcess.push(entry.attributes.parentFolder);
+        }
+
+        // 添加所有二级标签
+        if (Array.isArray(entry.attributes.secondaryTags)) {
+            textsToProcess.push(...entry.attributes.secondaryTags);
+        }
+
+        // 如果没有任何可供索引的文本，则跳过此条目
+        const combinedText = textsToProcess.join(' ');
+        if (!combinedText) {
+            continue;
+        }
+
+        const lowerCaseText = combinedText.toLowerCase();
+        const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
+        const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
+        const searchIndexString = `${lowerCaseText} ${fullPinyin} ${initials}`;
+        AppState.dataList.searchIndexMap.set(entry.gid, searchIndexString);
+    }
+
+    const duration = performance.now() - startTime;
+    console.log(`DataList: 拼音搜索索引构建完成，共处理 ${AppState.dataList.searchIndexMap.size} 条记录，耗时 ${duration.toFixed(2)} ms。`);
+}
+
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -258,9 +315,16 @@ function filterUserDataEntries() {
 
         // 搜索词过滤
         if (searchTerm) {
-            const filenameMatch = (entry.attributes.filename || '').toLowerCase().includes(searchTerm);
+            // 独立检查 GID 是否匹配
             const gidMatch = (entry.gid || '').toString().toLowerCase().includes(searchTerm);
-            if (!filenameMatch && !gidMatch) return false;
+            
+            const searchIndexString = AppState.dataList.searchIndexMap.get(entry.gid) || '';
+            const searchIndexMatch = searchIndexString.includes(searchTerm);
+
+            // GID 或 搜索索引 任意一个匹配即可
+            if (!gidMatch && !searchIndexMatch) {
+                return false;
+            }
         }
 
         // 属性过滤
@@ -308,7 +372,7 @@ function filterUserDataEntries() {
                 const sizeA = AppState.fileSizesMap.get(pathA) || 0;
                 const sizeB = AppState.fileSizesMap.get(pathB) || 0;
                 return currentSortOrder === 'size_desc' ? sizeB - sizeA : sizeA - sizeB;
-            
+
             case 'date_desc':
                 return new Date(b.timestamp) - new Date(a.timestamp);
 
@@ -320,7 +384,7 @@ function filterUserDataEntries() {
                 return (a.attributes?.filename || '').localeCompare(b.attributes?.filename || '', undefined, { numeric: true, sensitivity: 'base' });
         }
     });
-    
+
     return filteredEntries;
 }
 
@@ -936,7 +1000,13 @@ function handleGlobalDropdownClose(event) {
 /**
  * 设置云端Json数据页面的事件监听器
  */
-function setupDataListEventListeners() {
+async function setupDataListEventListeners() {
+
+    if (!AppState.dataList.searchIndexBuilt) {
+        await buildDataListSearchIndex();
+        AppState.dataList.searchIndexBuilt = true; // 设置标志位，防止重复构建
+    }
+
     // 定义过滤器控件和对应的互斥组
     const filterControlsConfig = [
         { element: DOM.dataListSearchInput, event: 'input', group: null, debounce: true },
@@ -975,7 +1045,7 @@ function setupDataListEventListeners() {
             config.element.addEventListener(config.event, handler);
         }
     });
-    
+
     if (DOM.dataListSearchInput) {
         DOM.dataListSearchInput.addEventListener('focus', () => {
             const history = ["玛薇卡", "胡桃", "丝柯"];
