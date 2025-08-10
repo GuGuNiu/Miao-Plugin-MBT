@@ -1,8 +1,9 @@
 // ==========================================================================
-// GuTools 二级标签编辑器: 补缺或全体编辑图片的二级标签
+// GuTools 二级标签编辑器 (已修复滚动体验和交互逻辑的最终版本)
 // ==========================================================================
 
 const STEState = {
+    isInitialized: false,
     currentMode: 'fill',
     currentIndex: -1,
     currentImageList: [],
@@ -14,16 +15,89 @@ const STEState = {
     tagCategories: {},
     characterTags: [],
     isSavingTags: false,
+    isScrolling: false, // 标记是否为程序化滚动
+
+    // 虚拟化滚动条状态
+    virtualStrip: {
+        isInitialized: false,
+        container: null,
+        strip: null,
+        thumbPool: [],
+        poolSize: 40,      // DOM节点池大小
+        totalItems: 0,
+        itemWidth: 110,    // 单个项目的宽度
+        scrollEndTimer: null, // 用于检测滚动停止的计时器
+    },
+
+    // 惯性滚动状态
+    inertia: {
+        isDragging: false,
+        startX: 0,
+        scrollLeft: 0,
+        velocity: 0,
+        lastX: 0,
+        frameId: null,
+    }
 };
 
 // 用于管理模态框内部状态和 SortableJS 实例
 let sortableInstance = null;
 let modalTagState = null;
 
+
+// ==========================================================================
+// == 核心交互逻辑函数
+// ==========================================================================
+
+/**
+ * 滚动结束处理函数，实现“齿轮感”吸附效果
+ */
+function handleScrollEnd() {
+    const vstrip = STEState.virtualStrip;
+    if (!vstrip.container) return;
+
+    // 计算当前最靠近中心的缩略图索引
+    const containerCenter = vstrip.container.scrollLeft + vstrip.container.offsetWidth / 2;
+    const centerIndex = Math.round(containerCenter / vstrip.itemWidth - 0.5);
+
+    if (centerIndex >= 0 && centerIndex < vstrip.totalItems && centerIndex !== STEState.currentIndex) {
+        // 如果计算出的中心索引和当前索引不同，则切换到该图片
+        switchToImageByIndex(centerIndex);
+    } else {
+        // 如果索引相同，也强制滚动到精确的中心位置，确保完美对齐
+        const targetScrollLeft = (STEState.currentIndex * vstrip.itemWidth) - (vstrip.container.offsetWidth / 2) + (vstrip.itemWidth / 2);
+        vstrip.container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+    }
+}
+
+/**
+ * 所有图片切换的统一入口，直接切换到指定索引的图片
+ * @param {number} newIndex - 要切换到的图片在 currentImageList 中的索引
+ */
+function switchToImageByIndex(newIndex) {
+    if (newIndex < 0 || newIndex >= STEState.currentImageList.length) return;
+
+    STEState.currentIndex = newIndex;
+    STEState.currentImageEntry = STEState.currentImageList[newIndex];
+
+    if (DOM.steProgressDisplay) {
+        DOM.steProgressDisplay.textContent = `${STEState.currentIndex + 1}/${STEState.currentImageList.length}`;
+    }
+    
+    // 渲染主图和标签，这个函数内部会处理滚动条的“吸附”动画
+    renderImageAndTags(STEState.currentImageEntry);
+}
+
+
+// ==========================================================================
+// == 初始化与UI构建
+// ==========================================================================
+
 /**
  * 初始化二级标签编辑器视图，从API获取标签并动态创建UI。
  */
 async function initializeSecondaryTagEditorView() {
+    if (STEState.isInitialized) return;
     if (!DOM.secondaryTagEditorPaneView) return;
 
     try {
@@ -35,6 +109,7 @@ async function initializeSecondaryTagEditorView() {
         delete allTagsData['🧜‍♂ 人物类型'];
         STEState.tagCategories = allTagsData;
 
+        // 动态构建分类标签UI
         const categorizedTagsContainer = document.getElementById('steCategorizedTags');
         if (categorizedTagsContainer) {
             categorizedTagsContainer.innerHTML = '';
@@ -59,6 +134,7 @@ async function initializeSecondaryTagEditorView() {
             }
         }
 
+        // 动态构建人物标签UI
         const characterTagsContainer = document.getElementById('steCharTagsInteractive');
         if (characterTagsContainer) {
             characterTagsContainer.innerHTML = '';
@@ -70,12 +146,13 @@ async function initializeSecondaryTagEditorView() {
                 characterTagsContainer.appendChild(tagEl);
             });
         }
-
+        STEState.isInitialized = true;
     } catch (error) {
         console.error("加载二级标签失败:", error);
         displayToast("加载二级标签配置失败！", "error");
     }
 
+    // 绑定模态框事件
     const modal = document.getElementById('steTagManagementModal');
     if (modal) {
         modal.querySelector('#steModalCloseBtn').addEventListener('click', closeTagManagementModal);
@@ -85,6 +162,7 @@ async function initializeSecondaryTagEditorView() {
         modal.querySelector('#steModalSaveChangesBtn').addEventListener('click', handleSaveChanges);
     }
 
+    // 重置并加载首张图
     resetSTEInterface();
     if (DOM.steSearchInput) DOM.steSearchInput.disabled = true;
     const fillModeRadio = document.querySelector('input[name="steMode"][value="fill"]');
@@ -104,8 +182,12 @@ function resetSTEInterface(clearAll = true) {
     }
     STEState.currentImageEntry = null;
     STEState.currentTags.clear();
-    if (DOM.stePreviewImage) { DOM.stePreviewImage.src = ''; DOM.stePreviewImage.classList.add('hidden'); }
-    if (DOM.stePreviewPlaceholder) DOM.stePreviewPlaceholder.textContent = '加载中...';
+
+    const mainPreview = document.getElementById('stePreviewImage');
+    const mainPreviewPlaceholder = document.getElementById('stePreviewPlaceholder');
+
+    if (mainPreview) { mainPreview.src = ''; mainPreview.classList.add('hidden'); }
+    if (mainPreviewPlaceholder) mainPreviewPlaceholder.textContent = '加载中...';
     if (DOM.steImageInfo) DOM.steImageInfo.classList.add('hidden');
     if (DOM.steTagList) DOM.steTagList.innerHTML = '';
     if (DOM.steTagInput) DOM.steTagInput.value = '';
@@ -114,62 +196,177 @@ function resetSTEInterface(clearAll = true) {
     updatePredefinedTagsUI();
 }
 
+
+// ==========================================================================
+// == 虚拟化滚动条渲染函数
+// ==========================================================================
+
 /**
- * 加载并显示下一张需要编辑的图片。
+ * 初始化虚拟滚动条，创建DOM节点池并设置虚拟总宽度。
+ */
+function initializeVirtualStrip() {
+    const vstrip = STEState.virtualStrip;
+    if (vstrip.isInitialized) return;
+
+    vstrip.container = document.getElementById('steThumbnailStripContainer');
+    vstrip.strip = document.getElementById('steThumbnailStrip');
+    if (!vstrip.container || !vstrip.strip) return;
+
+    vstrip.totalItems = STEState.currentImageList.length;
+    vstrip.strip.innerHTML = '';
+
+    // 这是实现虚拟滚动的关键：让内部容器拥有所有图片的总宽度
+    vstrip.strip.style.width = `${vstrip.totalItems * vstrip.itemWidth}px`;
+    vstrip.strip.style.height = '100%';
+
+    // 创建可复用的DOM节点池
+    const fragment = document.createDocumentFragment();
+    vstrip.thumbPool = []; 
+    for (let i = 0; i < vstrip.poolSize; i++) {
+        const thumb = document.createElement('img');
+        thumb.className = 'ste-thumbnail';
+        thumb.style.position = 'absolute';
+        thumb.style.top = '50%';
+        thumb.ondragstart = () => false;
+        vstrip.thumbPool.push(thumb);
+        fragment.appendChild(thumb);
+    }
+    vstrip.strip.appendChild(fragment);
+    vstrip.isInitialized = true;
+}
+
+/**
+ * 根据滚动位置，渲染当前可见的缩略图。
+ */
+function renderVisibleThumbnails() {
+    const vstrip = STEState.virtualStrip;
+    if (!vstrip.isInitialized) return;
+
+    const scrollLeft = vstrip.container.scrollLeft;
+    const containerCenter = scrollLeft + vstrip.container.offsetWidth / 2;
+    // 计算可见范围，并向两侧多渲染一些作为缓冲区
+    const startIndex = Math.max(0, Math.floor(scrollLeft / vstrip.itemWidth) - 5);
+    const endIndex = Math.min(vstrip.totalItems, startIndex + vstrip.poolSize);
+
+    // 循环利用节点池中的DOM元素
+    vstrip.thumbPool.forEach((thumb, poolIndex) => {
+        const itemIndex = startIndex + poolIndex;
+        if (itemIndex < endIndex && itemIndex < vstrip.totalItems) {
+            const imageEntry = STEState.currentImageList[itemIndex];
+            if (!imageEntry) return;
+
+            const fullPath = buildFullWebPath(imageEntry.storageBox, imageEntry.urlPath);
+            const newSrc = `/api/thumbnail${fullPath}`;
+
+            thumb.style.display = 'block';
+            thumb.dataset.index = itemIndex;
+
+            if (thumb.src !== newSrc) {
+                thumb.src = newSrc;
+            }
+
+            // --- 合并后的样式计算逻辑 ---
+            const thumbCenter = (itemIndex * vstrip.itemWidth) + (vstrip.itemWidth / 2);
+            const distance = Math.abs(containerCenter - thumbCenter);
+            const isActive = itemIndex === STEState.currentIndex;
+
+            let scale = Math.max(0.75, 1.1 - distance / vstrip.container.offsetWidth);
+            let opacity = Math.max(0.6, 1 - distance / (vstrip.container.offsetWidth / 1.5));
+            
+            if (isActive) {
+                scale = 1.25; // 当前选中的缩略图放大
+                opacity = 1;
+                thumb.classList.add('active');
+            } else {
+                thumb.classList.remove('active');
+            }
+
+            // 直接计算并设置最终的 transform 样式
+            thumb.style.transform = `translateX(${itemIndex * vstrip.itemWidth}px) translateY(-50%) scale(${scale})`;
+            thumb.style.opacity = opacity;
+
+        } else {
+            // 隐藏当前不需要的节点
+            thumb.style.display = 'none';
+        }
+    });
+}
+
+// ==========================================================================
+// == 状态与数据处理
+// ==========================================================================
+
+/**
+ * 加载并显示“下一张”需要编辑的图片
  */
 function loadNextImage() {
-    if (typeof window.resetImageViewer === 'function') {
-        window.resetImageViewer();
-    }
     resetSTEInterface(false);
+
     const mode = STEState.currentMode;
     const searchKeyword = DOM.steSearchInput.value.toLowerCase().trim();
-    if (STEState.currentImageList.length === 0 || mode !== STEState.lastBuiltMode || (mode === 'all' && searchKeyword !== STEState.lastSearchKeyword)) {
+
+    // 检查是否需要重新构建图片列表
+    const shouldRebuildList = STEState.currentImageList.length === 0 ||
+        mode !== STEState.lastBuiltMode ||
+        (mode === 'all' && searchKeyword !== STEState.lastSearchKeyword);
+
+    if (shouldRebuildList) {
         STEState.lastBuiltMode = mode;
         STEState.lastSearchKeyword = searchKeyword;
         STEState.currentIndex = -1;
+        STEState.virtualStrip.isInitialized = false; // 需要重新初始化虚拟滚动
+
         if (mode === 'fill') {
             STEState.currentImageList = AppState.galleryImages.filter(img => {
                 const userDataEntry = AppState.userData.find(ud => ud.path === img.urlPath && ud.storagebox?.toLowerCase() === img.storageBox.toLowerCase());
                 return !userDataEntry || !userDataEntry.attributes.secondaryTags || userDataEntry.attributes.secondaryTags.length === 0;
             });
         } else if (mode === 'all') {
-            if (searchKeyword) {
-                 STEState.currentImageList = AppState.galleryImages.filter(img => img.fileName.toLowerCase().includes(searchKeyword) || img.name.toLowerCase().includes(searchKeyword));
-            } else {
-                STEState.currentImageList = [...AppState.galleryImages];
-            }
+            STEState.currentImageList = searchKeyword ?
+                AppState.galleryImages.filter(img => img.fileName.toLowerCase().includes(searchKeyword) || img.name.toLowerCase().includes(searchKeyword)) :
+                [...AppState.galleryImages];
         }
+
+        initializeVirtualStrip();
     }
-    let imagePool = STEState.currentImageList;
+
     const nextIndex = STEState.currentIndex + 1;
-    if (nextIndex >= imagePool.length) {
-        if (DOM.stePreviewPlaceholder) DOM.stePreviewPlaceholder.textContent = '所有图片处理完毕！🎉';
+
+    if (nextIndex >= STEState.currentImageList.length) {
+        if (document.getElementById('stePreviewPlaceholder')) document.getElementById('stePreviewPlaceholder').textContent = '所有图片处理完毕！🎉';
         if (DOM.steImageInfo) DOM.steImageInfo.classList.add('hidden');
         if (DOM.steProgressDisplay) DOM.steProgressDisplay.textContent = '完成';
-        if (DOM.stePreviewImage) DOM.stePreviewImage.classList.add('hidden');
+        if (document.getElementById('stePreviewImage')) document.getElementById('stePreviewImage').classList.add('hidden');
+        if (DOM.steThumbnailStripContainer) DOM.steThumbnailStripContainer.classList.add('hidden');
         displayToast("当前模式下所有图片已处理完毕！", "success");
         return;
+    } else {
+        if (DOM.steThumbnailStripContainer) DOM.steThumbnailStripContainer.classList.remove('hidden');
     }
-    STEState.currentIndex = nextIndex;
-    STEState.currentImageEntry = imagePool[nextIndex];
-    if (DOM.steProgressDisplay) DOM.steProgressDisplay.textContent = `${STEState.currentIndex + 1}/${imagePool.length}`;
-    renderImageAndTags(STEState.currentImageEntry);
+    
+    // 调用新的核心切换函数
+    switchToImageByIndex(nextIndex);
 }
 
 /**
- * 渲染当前图片预览、信息及其已有的标签。
+ * 渲染主图、信息、标签，并触发滚动条吸附动画
  */
 function renderImageAndTags(imageEntry) {
     if (!imageEntry) return;
 
-    if (DOM.stePreviewImage) {
-        const fullPath = buildFullWebPath(imageEntry.storageBox, imageEntry.urlPath);
-        DOM.stePreviewImage.src = fullPath;
-        DOM.stePreviewImage.classList.remove('hidden');
-        if (DOM.stePreviewPlaceholder) DOM.stePreviewPlaceholder.textContent = '';
+    if (typeof window.resetImageViewer === 'function') {
+        window.resetImageViewer();
     }
-    
+
+    // 渲染主图
+    const mainPreview = document.getElementById('stePreviewImage');
+    if (mainPreview) {
+        mainPreview.src = buildFullWebPath(imageEntry.storageBox, imageEntry.urlPath);
+        mainPreview.classList.remove('hidden');
+        if (document.getElementById('stePreviewPlaceholder')) document.getElementById('stePreviewPlaceholder').textContent = '';
+    }
+
+    // 渲染信息
     if (DOM.steImageInfo) {
         DOM.steImageInfo.classList.remove('hidden');
         DOM.steImageInfo.querySelector('.info-left-content .ste-info-filename').textContent = imageEntry.fileName;
@@ -178,45 +375,68 @@ function renderImageAndTags(imageEntry) {
         DOM.steImageInfo.querySelector('.info-left-content .ste-info-storagebox').textContent = `仓库: ${imageEntry.storageBox}`;
     }
 
+    // 渲染标签
     const userDataEntry = AppState.userData.find(ud => ud.path === imageEntry.urlPath && ud.storagebox?.toLowerCase() === imageEntry.storageBox.toLowerCase());
+    STEState.currentTags.clear();
     if (userDataEntry && userDataEntry.attributes.secondaryTags) {
         userDataEntry.attributes.secondaryTags.forEach(tag => STEState.currentTags.add(tag));
     }
-
     renderCurrentTags();
     updatePredefinedTagsUI();
 
+    // 滚动条吸附动画
+    const vstrip = STEState.virtualStrip;
+    if (vstrip.container && vstrip.isInitialized) {
+        STEState.isScrolling = true;
+        const targetScrollLeft = (STEState.currentIndex * vstrip.itemWidth) - (vstrip.container.offsetWidth / 2) + (vstrip.itemWidth / 2);
+
+        vstrip.container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+
+        // 在动画期间持续渲染，确保视觉平滑
+        const animationStartTime = performance.now();
+        const animationDuration = 350; // 动画时长
+        const renderDuringAnimation = () => {
+            renderVisibleThumbnails();
+            if (performance.now() - animationStartTime < animationDuration) {
+                requestAnimationFrame(renderDuringAnimation);
+            } else {
+                STEState.isScrolling = false; // 动画结束后解锁
+            }
+        };
+        requestAnimationFrame(renderDuringAnimation);
+    }
+
+    // 启用按钮
     if (DOM.steSaveButton) DOM.steSaveButton.disabled = false;
     if (DOM.steSkipButton) DOM.steSkipButton.disabled = false;
 }
 
 /**
- * 仅渲染手动输入的标签列表。
+ * 渲染手动输入的标签列表
  */
 function renderCurrentTags() {
-    if (DOM.steTagList) {
-        DOM.steTagList.innerHTML = '';
-        const nonCharTags = Array.from(STEState.currentTags).filter(tag => !STEState.characterTags.includes(tag));
-        nonCharTags.forEach(tag => {
-            const li = document.createElement('li');
-            li.className = 'ste-tag-item';
-            li.textContent = tag;
-            const removeBtn = document.createElement('span');
-            removeBtn.className = 'ste-tag-remove';
-            removeBtn.textContent = '×';
-            removeBtn.onclick = () => { 
-                STEState.currentTags.delete(tag); 
-                renderCurrentTags(); 
-                updatePredefinedTagsUI(); 
-            };
-            li.appendChild(removeBtn);
-            DOM.steTagList.appendChild(li);
-        });
-    }
+    if (!DOM.steTagList) return;
+    DOM.steTagList.innerHTML = '';
+    const nonCharTags = Array.from(STEState.currentTags).filter(tag => !STEState.characterTags.includes(tag));
+    nonCharTags.forEach(tag => {
+        const li = document.createElement('li');
+        li.className = 'ste-tag-item';
+        li.textContent = tag;
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'ste-tag-remove';
+        removeBtn.textContent = '×';
+        removeBtn.onclick = () => { 
+            STEState.currentTags.delete(tag); 
+            renderCurrentTags(); 
+            updatePredefinedTagsUI(); 
+        };
+        li.appendChild(removeBtn);
+        DOM.steTagList.appendChild(li);
+    });
 }
 
 /**
- * 更新所有可点击标签,左右面板的选中高亮状态。
+ * 更新所有可点击标签的选中高亮状态
  */
 function updatePredefinedTagsUI() {
     document.querySelectorAll('.ste-predefined-tag').forEach(el => {
@@ -228,13 +448,14 @@ function updatePredefinedTagsUI() {
 }
 
 /**
- * 保存当前图片的标签并加载下一张。
+ * 保存当前图片的标签并加载下一张
  */
 async function saveAndNext() {
     if (!STEState.currentImageEntry) return;
     const currentSelection = STEState.currentImageEntry;
     let entryIndex = AppState.userData.findIndex(ud => ud.path === currentSelection.urlPath && ud.storagebox?.toLowerCase() === currentSelection.storageBox.toLowerCase());
     let entryToProcess, isNewEntry = false;
+
     if (entryIndex > -1) {
         entryToProcess = { ...AppState.userData[entryIndex] };
         if (!entryToProcess.attributes) entryToProcess.attributes = {};
@@ -249,13 +470,22 @@ async function saveAndNext() {
         };
         isNewEntry = true;
     }
+
     entryToProcess.attributes.secondaryTags = Array.from(STEState.currentTags);
     entryToProcess.timestamp = new Date().toISOString();
+
     const updatedDataList = [...AppState.userData];
     if (isNewEntry) { updatedDataList.push(entryToProcess); } else { updatedDataList[entryIndex] = entryToProcess; }
+
     const success = await updateUserData(updatedDataList, `标签已保存`, "toast", false, 2000);
     if (success) { 
-        STEState.currentImageList = []; 
+        // 核心优化：不重置列表，只移除已处理项，提升性能
+        STEState.currentImageList.splice(STEState.currentIndex, 1);
+        STEState.virtualStrip.totalItems = STEState.currentImageList.length;
+        if(STEState.virtualStrip.strip) {
+            STEState.virtualStrip.strip.style.width = `${STEState.virtualStrip.totalItems * STEState.virtualStrip.itemWidth}px`;
+        }
+        STEState.currentIndex -=1; // 指向下一个的前一个
         loadNextImage(); 
     } else { 
         if (DOM.steSaveButton) DOM.steSaveButton.disabled = false; 
@@ -263,22 +493,20 @@ async function saveAndNext() {
 }
 
 /**
- * 显示搜索建议。
+ * 显示搜索建议
  */
 function displaySteSuggestions(results) {
     if (!DOM.steSuggestions) return;
     DOM.steSuggestions.innerHTML = '';
     if (results.length === 0) { DOM.steSuggestions.classList.add('hidden'); return; }
     const fragment = document.createDocumentFragment();
-    results.forEach(imgInfo => {
+    results.slice(0, 20).forEach(imgInfo => {
         const item = document.createElement('div');
         item.className = 'suggestion-item import-suggestion';
         const thumb = document.createElement('img');
         thumb.className = 'suggestion-thumbnail';
         const fullImagePath = buildFullWebPath(imgInfo.storageBox, imgInfo.urlPath);
         thumb.src = `/api/thumbnail${fullImagePath}`;
-        thumb.alt = imgInfo.fileName;
-        thumb.loading = 'lazy';
         const textContainer = document.createElement('div');
         textContainer.className = 'suggestion-text-content';
         const charNameSpan = document.createElement('span');
@@ -287,27 +515,26 @@ function displaySteSuggestions(results) {
         const fileNameSpan = document.createElement('span');
         fileNameSpan.className = 'suggestion-file-name';
         fileNameSpan.textContent = imgInfo.fileName;
-        textContainer.appendChild(charNameSpan);
-        textContainer.appendChild(fileNameSpan);
-        item.appendChild(thumb);
-        item.appendChild(textContainer);
+        textContainer.append(charNameSpan, fileNameSpan);
+        item.append(thumb, textContainer);
         item.title = `${imgInfo.storageBox}/${imgInfo.folderName}/${imgInfo.fileName}`;
         item.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            if (DOM.steSearchInput) DOM.steSearchInput.value = imgInfo.fileName;
-            if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
-            const foundIndex = AppState.galleryImages.findIndex(img => img.urlPath === imgInfo.urlPath && img.storageBox === imgInfo.storageBox);
-            if (foundIndex > -1) {
-                STEState.currentImageList = [...AppState.galleryImages];
-                STEState.currentIndex = foundIndex - 1;
-                loadNextImage();
-            }
+            DOM.steSearchInput.value = imgInfo.fileName;
+            DOM.steSuggestions.classList.add('hidden');
+            STEState.currentImageList = []; // 强制重建列表以定位到搜索结果
+            loadNextImage();
         });
         fragment.appendChild(item);
     });
     DOM.steSuggestions.appendChild(fragment);
     DOM.steSuggestions.classList.remove('hidden');
 }
+
+
+// ==========================================================================
+// == 事件监听器设置
+// ==========================================================================
 
 /**
  * 设置二级标签编辑器视图的所有事件监听器。
@@ -316,36 +543,31 @@ function setupSecondaryTagEditorEventListeners() {
     const rightPanel = document.querySelector('.ste-right-panel');
     const leftPanelInfo = document.getElementById('steImageInfo');
 
+    // 右侧预定义标签点击
     if (rightPanel) {
         rightPanel.addEventListener('click', (e) => {
             if (e.target.matches('.ste-predefined-tag')) {
                 const tag = e.target.dataset.tag;
-                if (STEState.currentTags.has(tag)) {
-                    STEState.currentTags.delete(tag);
-                } else {
-                    STEState.currentTags.add(tag);
-                }
+                STEState.currentTags.has(tag) ? STEState.currentTags.delete(tag) : STEState.currentTags.add(tag);
                 renderCurrentTags();
                 updatePredefinedTagsUI();
             }
         });
     }
 
+    // 左侧人物标签点击
     if (leftPanelInfo) {
         leftPanelInfo.addEventListener('click', (e) => {
-            if(e.target.matches('.char-tag-pill')) {
+            if (e.target.matches('.char-tag-pill')) {
                 const tag = e.target.dataset.tag;
-                if (STEState.currentTags.has(tag)) {
-                    STEState.currentTags.delete(tag);
-                } else {
-                    STEState.currentTags.add(tag);
-                }
-                renderCurrentTags(); 
+                STEState.currentTags.has(tag) ? STEState.currentTags.delete(tag) : STEState.currentTags.add(tag);
+                renderCurrentTags();
                 updatePredefinedTagsUI();
             }
         });
     }
 
+    // 手动标签输入
     if (DOM.steTagInput) {
         DOM.steTagInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ',') {
@@ -361,68 +583,157 @@ function setupSecondaryTagEditorEventListeners() {
         });
     }
 
+    // 模式切换
     document.querySelectorAll('input[name="steMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             STEState.currentMode = e.target.value;
             STEState.currentImageList = [];
             STEState.currentIndex = -1;
-            const isAllMode = STEState.currentMode === 'all';
-            if (DOM.steSearchInput) {
-                DOM.steSearchInput.disabled = !isAllMode;
-                if (!isAllMode) {
-                    DOM.steSearchInput.value = '';
-                    if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
-                }
+            DOM.steSearchInput.disabled = (STEState.currentMode !== 'all');
+            if (STEState.currentMode !== 'all') {
+                DOM.steSearchInput.value = '';
+                DOM.steSuggestions.classList.add('hidden');
             }
             loadNextImage();
         });
     });
 
+    // 搜索框逻辑
     if (DOM.steSearchInput) {
         DOM.steSearchInput.addEventListener('input', () => {
             clearTimeout(STEState.searchDebounceTimer);
             STEState.searchDebounceTimer = setTimeout(() => {
                 const query = DOM.steSearchInput.value.toLowerCase().trim();
                 if (query) {
-                    const results = AppState.galleryImages.filter(img => img.fileName.toLowerCase().includes(query) || img.name.toLowerCase().includes(query)).slice(0, 20);
+                    const results = AppState.galleryImages.filter(img => img.fileName.toLowerCase().includes(query) || img.name.toLowerCase().includes(query));
                     displaySteSuggestions(results);
                 } else {
-                    if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
+                    DOM.steSuggestions.classList.add('hidden');
                 }
             }, DELAYS.INPUT_DEBOUNCE);
         });
         DOM.steSearchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
+                DOM.steSuggestions.classList.add('hidden');
                 STEState.currentImageList = [];
-                STEState.currentIndex = -1;
                 loadNextImage();
             }
         });
-        DOM.steSearchInput.addEventListener('blur', () => { setTimeout(() => { if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden'); }, 200); });
+        DOM.steSearchInput.addEventListener('blur', () => { setTimeout(() => DOM.steSuggestions.classList.add('hidden'), 200); });
     }
 
+    // 底部按钮
     if (DOM.steSaveButton) DOM.steSaveButton.addEventListener('click', saveAndNext);
     if (DOM.steSkipButton) DOM.steSkipButton.addEventListener('click', loadNextImage);
-    if (DOM.stePreviewImage) {
-        DOM.stePreviewImage.addEventListener('click', () => {
-            if (DOM.stePreviewImage.src && !DOM.stePreviewImage.classList.contains('hidden')) {
-                if (typeof window.openImageViewer === 'function') {
-                    window.openImageViewer(DOM.stePreviewImage.src);
-                }
+
+    // 主图放大
+    const mainPreview = document.getElementById('stePreviewImage');
+    if (mainPreview) {
+        mainPreview.addEventListener('click', () => {
+            if (mainPreview.src && !mainPreview.classList.contains('hidden') && typeof window.openImageViewer === 'function') {
+                window.openImageViewer(mainPreview.src);
             }
         });
     }
 
+    // 横向缩略图条的交互逻辑
+    const thumbContainer = document.getElementById('steThumbnailStripContainer');
+    if (thumbContainer) {
+        const inertiaState = STEState.inertia;
+        let hasDragged = false;
+
+        // 点击缩略图切换
+        thumbContainer.addEventListener('click', e => {
+            if (hasDragged) {
+                e.preventDefault();
+                hasDragged = false;
+                return;
+            }
+            const thumb = e.target.closest('.ste-thumbnail');
+            if (thumb) {
+                const newIndex = parseInt(thumb.dataset.index, 10);
+                if (!isNaN(newIndex) && newIndex !== STEState.currentIndex) {
+                    switchToImageByIndex(newIndex);
+                }
+            }
+        });
+
+        // 拖拽开始
+        const startDrag = (e) => {
+            hasDragged = false;
+            inertiaState.isDragging = true;
+            thumbContainer.classList.add('active-drag');
+            inertiaState.startX = e.pageX || e.touches[0].pageX;
+            inertiaState.scrollLeft = thumbContainer.scrollLeft;
+            inertiaState.lastX = inertiaState.startX;
+            inertiaState.velocity = 0;
+            cancelAnimationFrame(inertiaState.frameId);
+        };
+
+        // 拖拽中
+        const onDrag = (e) => {
+            if (!inertiaState.isDragging) return;
+            e.preventDefault();
+            hasDragged = true;
+            const currentX = e.pageX || e.touches[0].pageX;
+            const walk = currentX - inertiaState.startX;
+            thumbContainer.scrollLeft = inertiaState.scrollLeft - walk;
+            inertiaState.velocity = currentX - inertiaState.lastX;
+            inertiaState.lastX = currentX;
+        };
+
+        // 拖拽结束，启动惯性
+        const stopDrag = () => {
+            if (!inertiaState.isDragging) return;
+            inertiaState.isDragging = false;
+            thumbContainer.classList.remove('active-drag');
+            if (!hasDragged) return;
+
+            const inertiaFrame = () => {
+                if (Math.abs(inertiaState.velocity) < 0.5) {
+                    cancelAnimationFrame(inertiaState.frameId);
+                    handleScrollEnd(); // 惯性结束后触发对齐
+                    return;
+                }
+                thumbContainer.scrollLeft -= inertiaState.velocity;
+                inertiaState.velocity *= 0.92;
+                inertiaState.frameId = requestAnimationFrame(inertiaFrame);
+            };
+            inertiaState.frameId = requestAnimationFrame(inertiaFrame);
+        };
+        
+        // 绑定鼠标与触摸事件
+        thumbContainer.addEventListener('mousedown', startDrag);
+        thumbContainer.addEventListener('mousemove', onDrag);
+        thumbContainer.addEventListener('mouseup', stopDrag);
+        thumbContainer.addEventListener('mouseleave', stopDrag);
+        thumbContainer.addEventListener('touchstart', startDrag, { passive: true });
+        thumbContainer.addEventListener('touchmove', onDrag, { passive: false });
+        thumbContainer.addEventListener('touchend', stopDrag);
+
+        // 滚动事件监听
+        thumbContainer.addEventListener('scroll', () => {
+            renderVisibleThumbnails(); // 滚动时，只更新视觉元素
+            // 如果不是程序化滚动或拖拽，则启动滚动结束检测
+            if (!STEState.isScrolling && !inertiaState.isDragging) {
+                clearTimeout(STEState.virtualStrip.scrollEndTimer);
+                STEState.virtualStrip.scrollEndTimer = setTimeout(handleScrollEnd, 150);
+            }
+        });
+    }
+
+    // 标签管理按钮
     const manageTagsBtn = document.getElementById('steManageTagsBtn');
     if (manageTagsBtn) {
         manageTagsBtn.addEventListener('click', openTagManagementModal);
     }
 }
 
-/**
- * 打开标签管理模态框，并创建临时状态
- */
+
+// ==========================================================================
+// == 标签管理模态框相关函数 (无重大逻辑变更)
+// ==========================================================================
+
 function openTagManagementModal() {
     const modal = document.getElementById('steTagManagementModal');
     const select = document.getElementById('steModalCategorySelect');
@@ -455,9 +766,6 @@ function openTagManagementModal() {
     modal.classList.remove('hidden');
 }
 
-/**
- * 关闭标签管理模态框，并销毁临时状态
- */
 function closeTagManagementModal() {
     const modal = document.getElementById('steTagManagementModal');
     if (modal) modal.classList.add('hidden');
@@ -471,9 +779,6 @@ function closeTagManagementModal() {
     modalTagState = null;
 }
 
-/**
- * 在删除区选择分类时，动态填充标签并启用拖拽排序
- */
 function populateTagsForDeletion() {
     const select = document.getElementById('steModalDeleteCategorySelect');
     const container = document.getElementById('tagsToDeleteContainer');
@@ -519,9 +824,6 @@ function populateTagsForDeletion() {
     });
 }
 
-/**
- * 处理删除单个标签的逻辑,仅在临时状态中
- */
 function handleDeleteTag(tagToDelete, categoryFrom) {
     if (categoryFrom === "🧜‍♂ 人物类型") {
         modalTagState.characterTags = modalTagState.characterTags.filter(t => t !== tagToDelete);
@@ -529,7 +831,6 @@ function handleDeleteTag(tagToDelete, categoryFrom) {
         modalTagState.tagCategories[categoryFrom] = modalTagState.tagCategories[categoryFrom].filter(t => t !== tagToDelete);
         if (modalTagState.tagCategories[categoryFrom].length === 0) {
             delete modalTagState.tagCategories[categoryFrom];
-            // 如果分类被删除，需要更新下拉框并重新填充
             const select = document.getElementById('steModalDeleteCategorySelect');
             for(let i = 0; i < select.options.length; i++) {
                 if (select.options[i].value === categoryFrom) {
@@ -540,12 +841,9 @@ function handleDeleteTag(tagToDelete, categoryFrom) {
         }
     }
     displayModalMessage(`标签 [${tagToDelete}] 已在本地移除，点击“保存更改”生效。`, "info");
-    populateTagsForDeletion(); // 重新渲染删除列表
+    populateTagsForDeletion();
 }
 
-/**
- * 处理添加标签按钮点击,仅在临时状态中
- */
 function handleAddNewTag() {
     const category = document.getElementById('steModalCategorySelect').value;
     const newTags = document.getElementById('steModalNewTagInput').value.trim().split(/[,，\s]+/).filter(Boolean);
@@ -579,9 +877,6 @@ function handleAddNewTag() {
     }
 }
 
-/**
- * 处理新增分类按钮点击,仅在临时状态中
- */
 function handleAddNewCategory() {
     const newCategory = document.getElementById('steModalNewCategoryInput').value.trim();
     const firstTag = document.getElementById('steModalFirstTagInput').value.trim();
@@ -599,7 +894,6 @@ function handleAddNewCategory() {
     modalTagState.tagCategories[newCategory] = [firstTag];
     displayModalMessage(`已在本地新增分类 [${newCategory}]，点击“保存更改”生效。`, "info");
     
-    // 更新下拉框
     const select = document.getElementById('steModalCategorySelect');
     const deleteSelect = document.getElementById('steModalDeleteCategorySelect');
     select.add(new Option(newCategory, newCategory));
@@ -609,9 +903,6 @@ function handleAddNewCategory() {
     document.getElementById('steModalFirstTagInput').value = '';
 }
 
-/**
- * 统一的保存入口，将模态框中的临时状态提交到服务器
- */
 async function handleSaveChanges() {
     if (!modalTagState) return;
     const fullData = {
@@ -621,9 +912,6 @@ async function handleSaveChanges() {
     await saveTagsToServer(fullData);
 }
 
-/**
- * 向服务器发送更新后的标签数据
- */
 async function saveTagsToServer(fullData) {
     if (STEState.isSavingTags) return;
     STEState.isSavingTags = true;
@@ -641,7 +929,8 @@ async function saveTagsToServer(fullData) {
         displayModalMessage("保存成功！界面将刷新...", "success");
         setTimeout(() => {
             closeTagManagementModal();
-            initializeSecondaryTagEditorView(); // 重新初始化以加载新标签
+            STEState.isInitialized = false; // 强制重新初始化
+            initializeSecondaryTagEditorView();
         }, 1500);
 
     } catch (error) {

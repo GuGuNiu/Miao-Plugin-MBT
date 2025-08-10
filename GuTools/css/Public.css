@@ -82,7 +82,7 @@ body {
   padding: 25px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: stretch; 
   min-height: 100vh;
   position: relative; /* 为伪元素提供定位上下文 */
 }
@@ -222,7 +222,7 @@ body {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   overflow: hidden;
-  min-height: 90vh;
+  height: calc(100vh - 75px);
   display: flex;
   position: relative;
 }
@@ -239,9 +239,9 @@ body {
 .tab-content {
   flex: 1;
   padding-left: 30px;
-  height: calc(88vh - 70px); 
   overflow: hidden;
   position: relative;
+  display: flex;
 }
 
 .tab-pane {
@@ -250,8 +250,13 @@ body {
   width: calc(100% - 30px);
   height: 100%;
   display: flex;
+  flex-direction: column; 
+  padding: 20px;
+  box-sizing: border-box; 
+  height: 100%;
+  display: flex;
   flex-direction: column;
-  padding: 0 5px 20px 0;
+  padding: 0 5px 0px 0;
   box-sizing: border-box;
   opacity: 0;
   transform: scale(0.9) rotateY(20deg);

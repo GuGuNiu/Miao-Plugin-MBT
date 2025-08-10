@@ -7,7 +7,7 @@
  * @param {'generator' | 'import' | 'md5' | 'sequence' | 'json_calibration' | 'stockroom_go' | 'storagebox_calibration'} targetMode 要切换到的目标模式
  */
 async function switchGuToolMode(targetMode) {
-  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check", "secondary_tag_editor"];
+  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check"];
   if (!validModes.includes(targetMode)) {
     console.error(`无效的 GuTools 模式: ${targetMode}`);
     return;
@@ -22,7 +22,6 @@ async function switchGuToolMode(targetMode) {
     stockroom_go: DOM.stockroomGoPaneView,
     storagebox_calibration: DOM.storageboxCalibrationPaneView,
     file_size_check: DOM.fileSizePaneView,
-    secondary_tag_editor: DOM.secondaryTagEditorPaneView,
   };
 
   const targetView = views[targetMode];

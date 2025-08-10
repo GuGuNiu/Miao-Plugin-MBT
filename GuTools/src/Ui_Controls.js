@@ -86,6 +86,7 @@ async function switchTab(targetTabId) {
                 } else { console.warn("UI控件: applyFiltersAndRenderDataList 未定义 Data_List.js"); }
                 break;
 
+
             case 'pluginGalleryPane':
                 // 使用 Plugin Gallery 的状态和函数名
                 if (!AppState.pluginGallery.dataLoaded) {
@@ -141,6 +142,14 @@ async function switchTab(targetTabId) {
                     initializeBanManagement();
                 } else {
                     console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
+                }
+                break;
+
+            case 'secondaryTagEditorPaneView':
+                if (typeof initializeSecondaryTagEditorView === "function") {
+                    await initializeSecondaryTagEditorView(); 
+                } else {
+                    console.warn("UI控件: initializeSecondaryTagEditorView 未定义 GuTools_SecondaryTagEditor.js");
                 }
                 break;
 

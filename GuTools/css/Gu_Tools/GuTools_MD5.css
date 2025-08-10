@@ -9,12 +9,12 @@
 #md5PaneView .md5-layout-wrapper {
   display: flex;
   gap: 20px;
-  height: 100%;
   overflow: hidden;
   padding: 20px;
-  /* 底部圆角与面板视觉统一 */
   border-radius: 0 0 16px 16px;
   border-top: 2px solid #e9ecef;
+  flex-grow: 1;
+  min-height: 0;
 }
 
 #md5PaneView .md5-column {
@@ -27,6 +27,7 @@
   border-radius: 16px;
   box-shadow: 4px 4px 0px #adb5bd;
   overflow: hidden;
+  min-height: 0;
 }
 
 #md5PaneView .md5-left-column {
@@ -336,6 +337,8 @@
 #md5PaneView .scrollable-list,
 #md5PaneView .extra-info-list,
 #md5PaneView #mismatchedMD5List {
+  flex-grow: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 10px;
   font-family: "Consolas", "Courier New", monospace;

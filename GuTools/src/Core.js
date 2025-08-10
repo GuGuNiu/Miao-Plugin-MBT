@@ -944,6 +944,38 @@ function populateStorageBoxSelect(
   }
 }
 
+async function ensureCoreDataLoaded() {
+  // 检查数据是否已经存在且有效
+  if (AppState.galleryImages && AppState.galleryImages.length > 0 && AppState.userData) {
+      console.debug("核心数据已存在，跳过加载。");
+      return true;
+  }
+
+  console.log("核心数据不存在，正在触发加载...");
+  displayToast("正在加载核心图库数据...", "info");
+
+  try {
+      if (typeof fetchAllDataForDataList === "function") { // 云端数据库的加载函数
+          const success = await fetchAllDataForDataList();
+          if (!success) throw new Error("fetchAllDataForDataList 返回 false");
+          
+          // 再次检查数据是否加载成功
+          if (AppState.galleryImages && AppState.galleryImages.length > 0 && AppState.userData) {
+               displayToast("核心数据加载成功！", "success", 1500);
+               return true;
+          } else {
+               throw new Error("核心数据加载函数执行后，数据仍然无效。");
+          }
+      } else {
+          throw new Error("找不到核心数据加载函数 (例如 fetchAllDataForDataList)");
+      }
+  } catch (error) {
+      console.error("加载核心数据失败:", error);
+      displayToast(`加载核心数据失败: ${error.message}`, "error", 4000);
+      return false;
+  }
+}
+
 // --- 初始化框架 ---
 /**
  * 页面加载时执行的主要初始化函数
@@ -1408,3 +1440,4 @@ if (document.readyState === "loading") {
   console.log("核心: DOM 已加载 直接运行初始化");
   initializeApplication();
 }
+

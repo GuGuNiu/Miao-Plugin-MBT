@@ -945,7 +945,7 @@ class MiaoPluginMBT extends plugin {
   static async _installGuToolsDependencies(logger = global.logger || console) {
     const guToolsDir = this.paths.guToolsPath;
     const packageJsonPath = path.join(guToolsDir, 'package.json');
-    const yunzaiRootDir = this.paths.YunzaiPath;
+    const nodeModulesPath = path.join(guToolsDir, 'node_modules');
 
     try {
       await fsPromises.access(packageJsonPath);
@@ -954,32 +954,36 @@ class MiaoPluginMBT extends plugin {
       return true;
     }
 
-    let packageName = 'gutools';
+    // 检查核心依赖是否已存在，避免不必要的重复安装
     try {
-      const pkgContent = await fsPromises.readFile(packageJsonPath, 'utf-8');
-      const pkg = JSON.parse(pkgContent);
-      if (pkg.name) {
-        packageName = pkg.name;
-      }
-    } catch (pkgError) {
-      logger.warn(`${Default_Config.logPrefix}[GuTools Web] 读取 package.json 名称失败，将使用默认值 'gutools'。`);
+      require.resolve('express', { paths: [guToolsDir] });
+      require.resolve('sharp', { paths: [guToolsDir] });
+      logger.info(`${Default_Config.logPrefix}[GuTools Web] 检测到核心依赖已存在，跳过本次安装。`);
+      return true;
+    } catch (e) {
+      // 依赖不存在，继续执行安装
+      logger.info(`${Default_Config.logPrefix}[GuTools Web] 检测到后台服务依赖缺失，开始自动安装...`);
     }
 
-    logger.info(`${Default_Config.logPrefix}[GuTools Web] 正在工作区模式下为 [${packageName}] 安装后台服务依赖...`);
-
     try {
-      // 在Yunzai根目录执行，并使用 --filter
-      const result = await ExecuteCommand("pnpm", ["install", "--filter", packageName], { cwd: yunzaiRootDir }, 300000); // 5分钟超时
+      // 直接在 GuTools 目录下执行 pnpm install
+      const result = await ExecuteCommand(
+        "pnpm", 
+        ["install", "--prod", "--no-frozen-lockfile"], 
+        { cwd: guToolsDir }, 
+        300000 // 5分钟超时
+      );
 
       if (result.stderr && !result.stderr.includes('Peer dependency issues')) {
         logger.warn(`${Default_Config.logPrefix}[GuTools Web] 依赖安装过程中的输出:\n${result.stderr}`);
       }
-      logger.info(`${Default_Config.logPrefix}[GuTools Web] 依赖安装完成。`);
+      logger.info(`${Default_Config.logPrefix}[GuTools Web] 后台服务依赖安装成功。`);
       return true;
     } catch (error) {
       logger.error(`${Default_Config.logPrefix}[GuTools Web] 依赖安装失败!`);
       logger.error(error.stderr || error.message);
-      throw new Error("GuTools 后台服务依赖安装失败，请检查日志。");
+      // 抛出错误，让上层逻辑可以捕获到
+      throw new Error("GuTools 后台服务依赖自动安装失败，请检查 pnpm 环境和网络连接。");
     }
   }
 
@@ -2253,7 +2257,7 @@ class MiaoPluginMBT extends plugin {
       // 尝试从 Redis 缓存读取
       const cachedIp = await redis.get(redisKey);
       if (cachedIp) {
-        logger.info(`${Default_Config.logPrefix}从缓存中获取到公网IP: ${cachedIp}`);
+        //logger.info(`${Default_Config.logPrefix}从缓存中获取到公网IP: ${cachedIp}`);
         return cachedIp;
       }
     } catch (redisError) {
@@ -2712,7 +2716,7 @@ class MiaoPluginMBT extends plugin {
       else { logger.warn(`${Default_Config.logPrefix}未知的 storagebox: ${storageBox} for path: ${relativePath}`); noTarget++; continue; }
 
       if (!sourceBasePath || !(await MiaoPluginMBT.IsTuKuDownloaded(repoNumForCheck))) {
-        logger.warn(`${Default_Config.logPrefix}仓库 ${storageBox} (编号 ${repoNumForCheck}) 未定义路径或未下载，跳过图片 ${relativePath}`); missingSource++; continue;
+        //logger.warn(`${Default_Config.logPrefix}仓库 ${storageBox} (编号 ${repoNumForCheck}) 未定义路径或未下载，跳过图片 ${relativePath}`); missingSource++; continue;
       }
       const sourcePath = path.join(sourceBasePath, relativePath);
       const targetPath = await MiaoPluginMBT.DetermineTargetPath(relativePath);
@@ -6706,7 +6710,6 @@ class MiaoPluginMBT extends plugin {
         let installedDays = '1';
         let randomIconPaths = [];
 
-        // 核心注释：仅在插件已安装（使用本地模板）时，才准备额外的数据
         if (isInstalled) {
             try {
               const stats = await fsPromises.stat(MiaoPluginMBT.paths.LocalTuKuPath);
@@ -6721,7 +6724,7 @@ class MiaoPluginMBT extends plugin {
               }
             }
             
-            const pictureFiles = await getPictureFiles(this.logger); // 已修复为静默失败
+            const pictureFiles = await getPictureFiles(this.logger); 
             if (pictureFiles.length > 0) {
               const numberOfIcons = 15;
               const shuffledIcons = lodash.shuffle(pictureFiles);
@@ -6736,13 +6739,12 @@ class MiaoPluginMBT extends plugin {
           htmlContent: templateHtml,
           data: {
             pluginVersion: Version,
-            randomIconPaths: randomIconPaths, // 未安装时为空数组
-            installedDays: installedDays,     // 未安装时为 '1'
+            randomIconPaths: randomIconPaths, 
+            installedDays: installedDays,     
             scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-            // 传递 guguuniu_res_path 以确保字体等资源路径正确
             guguniu_res_path: isInstalled 
                 ? `file://${MiaoPluginMBT.paths.repoGalleryPath}/`.replace(/\\/g, '/') 
-                : 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/main/GuGuNiu-Gallery/' // 在线模板使用远程路径
+                : 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/main/GuGuNiu-Gallery/'
           },
           imgType: "png",
           pageGotoParams: { waitUntil: "networkidle0" },
@@ -6761,7 +6763,6 @@ class MiaoPluginMBT extends plugin {
     }
 
     if (!templateHtml) {
-      // Fallback text logic remains the same
       let fallbackText = "『咕咕牛帮助手册』(图片生成失败，转为纯文本)\n";
       fallbackText += "--------------------\n";
       fallbackText += "【图库安装】\n";

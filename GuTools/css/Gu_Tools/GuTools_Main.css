@@ -78,11 +78,9 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    /* 视图容器不滚动，滚动由内部元素处理 */
-    overflow: hidden;
-    /* 设定定位上下文支撑内部绝对定位 */
+    overflow-y: hidden;    
+    overflow-x: visible;
     position: relative;
-    padding: 15px;
     box-sizing: border-box;
     /* 定义视图切换动画 */
     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
@@ -104,6 +102,5 @@
     height: 100%;
     /* 隐藏时阻止交互事件 */
     pointer-events: none;
-    /* TODO: 确认 absolute 定位在所有父容器场景下表现一致 */
 }
 

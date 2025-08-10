@@ -202,6 +202,11 @@ app.use(express.json({ limit: "10mb" }));
 
 // --- 令牌验证中间件 ---
 const tokenAuthMiddleware = async (req, res, next) => {
+  if (ENV_MODE === 'local') {
+    console.log('[Token Auth] 开发环境，跳过令牌验证。');
+    return next(); 
+  }
+
   if (req.path.startsWith('/api/') || req.path.startsWith('/external/') || path.extname(req.path)) {
     return next();
   }

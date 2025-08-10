@@ -57,15 +57,17 @@
 }
 
 #secondaryTagEditorPaneView {
-    background-color: var(--ste-bg);
+    /* background-color: var(--ste-bg); */
+    display: flex;
+    flex-direction: column;
 }
 
 #secondaryTagEditorPaneView .ste-layout-wrapper {
     display: flex;
     gap: 20px;
-    padding: 20px;
     height: 100%;
     overflow: hidden;
+    padding: 0 5px 5px 0;
 }
 
 #secondaryTagEditorPaneView .ste-column {
@@ -767,4 +769,71 @@
 .sortable-ghost {
     opacity: 0.4;
     background: #a7f3d0;
+}
+
+#steMainPreviewContainer {
+    aspect-ratio: 16 / 15;
+    border: none;
+    outline: 2px dashed var(--ste-primary-color);
+    outline-offset: -2px;
+    border-radius: var(--ste-border-radius);
+    background-color: var(--ste-light-bg);
+    box-shadow: var(--ste-box-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#steThumbnailStripContainer {
+    width: 100%;
+    height: 120px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    cursor: grab;
+    user-select: none;
+    margin-bottom: 15px;
+    position: relative;
+    scrollbar-width: none;
+}
+
+#steThumbnailStripContainer::-webkit-scrollbar {
+    display: none;
+}
+
+#steThumbnailStripContainer.active-drag {
+    cursor: grabbing;
+}
+
+#steThumbnailStrip {
+    position: relative;
+    display: block;
+    height: 100%;
+}
+
+.ste-thumbnail {
+    height: 80px;
+    width: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                opacity 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                border-color 0.35s ease, 
+                box-shadow 0.35s ease;
+    border: 4px solid transparent;
+    background-color: #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.ste-thumbnail.active {
+    border-color: var(--ste-accent);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+}
+
+#stePreviewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
 }
