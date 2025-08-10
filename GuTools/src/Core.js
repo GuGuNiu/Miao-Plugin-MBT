@@ -128,6 +128,7 @@ const AppState = {
   fileSizesMap: new Map(),
   dataList: {
     currentEditPath: null,
+    currentSortOrder: 'default', 
     searchDebounceTimer: null,
     virtualScrollInfo: {
       container: null,

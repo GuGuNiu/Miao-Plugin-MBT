@@ -170,6 +170,7 @@
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
 }
 
 /* 自定义游戏筛选下拉框样式 */
@@ -872,4 +873,68 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+
+#sortOrderFilterBtn {
+  border-color: #c7d2fe !important;     
+  background-color: #e0e7ff !important; 
+  color: #4338ca !important;          
+}
+
+#dataListPane .sort-order-filter-container::after {
+  color: #4f46e5; 
+}
+
+#sortOrderFilterBtn:hover {
+  background-color: #c7d2fe; 
+  border-color: #a5b4fc;   
+}
+
+#sortOrderFilterBtn:focus {
+  border-color: #6366f1;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.sort-order-filter-container {
+  min-width: 150px;
+}
+
+#sortOrderFilterBtn {
+  border-color: #c7d2fe !important;
+  background-color: #e0e7ff !important;
+  color: #4338ca !important;
+}
+
+#dataListPane .sort-order-filter-container::after {
+  color: #4f46e5;
+}
+
+#sortOrderFilterBtn:hover {
+  background-color: #c7d2fe;
+  border-color: #a5b4fc;
+}
+
+#sortOrderFilterBtn:focus {
+  border-color: #6366f1;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.sort-order-filter-container .custom-select-dropdown {
+  border-color: #a5b4fc;
+}
+
+.sort-order-filter-container .custom-select-option {
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.sort-order-filter-container .custom-select-option:hover {
+  background-color: #e0e7ff;
+}
+
+#dataListPane .select-wrapper.is-open::after,
+#dataListPane .custom-select-wrapper.is-open::after {
+  transform: translateY(-50%) rotate(180deg);
 }

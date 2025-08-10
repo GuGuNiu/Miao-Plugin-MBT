@@ -787,7 +787,8 @@
 
 #steThumbnailStripContainer {
     width: 100%;
-    height: 120px;
+    height: 140px; 
+    padding: 10px 0; 
     overflow-x: scroll;
     overflow-y: hidden;
     cursor: grab;
@@ -795,6 +796,7 @@
     margin-bottom: 15px;
     position: relative;
     scrollbar-width: none;
+    box-sizing: border-box; 
 }
 
 #steThumbnailStripContainer::-webkit-scrollbar {
@@ -822,9 +824,10 @@
                 opacity 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
                 border-color 0.35s ease, 
                 box-shadow 0.35s ease;
-    border: 4px solid transparent;
+    border: 2px solid transparent;
     background-color: #e2e8f0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    will-change: transform, opacity; 
 }
 
 .ste-thumbnail.active {

@@ -270,8 +270,8 @@ function renderVisibleThumbnails() {
             const distance = Math.abs(containerCenter - thumbCenter);
             const isActive = itemIndex === STEState.currentIndex;
 
-            let scale = Math.max(0.75, 1.1 - distance / vstrip.container.offsetWidth);
-            let opacity = Math.max(0.6, 1 - distance / (vstrip.container.offsetWidth / 1.5));
+            let scale = Math.max(0.8, 1.05 - distance / (vstrip.container.offsetWidth * 0.8)); // 调整基线和影响范围
+            let opacity = Math.max(0.7, 1 - distance / (vstrip.container.offsetWidth / 1.2)); // 调整基线和影响范围
             
             if (isActive) {
                 scale = 1.25; // 当前选中的缩略图放大
@@ -697,23 +697,39 @@ function setupSecondaryTagEditorEventListeners() {
             inertiaState.lastX = currentX;
         };
 
-        // 拖拽结束，启动惯性
+        // 拖拽结束，启动真实的惯性减速，结束后再吸附
         const stopDrag = () => {
             if (!inertiaState.isDragging) return;
             inertiaState.isDragging = false;
             thumbContainer.classList.remove('active-drag');
-            if (!hasDragged) return;
 
+            // 如果只是点击，没有产生速度，则直接对齐当前位置
+            if (!hasDragged || Math.abs(inertiaState.velocity) < 0.5) {
+                handleScrollEnd();
+                return;
+            }
+
+            // 启动一个独立的惯性动画循环
             const inertiaFrame = () => {
+                // 当速度衰减到非常小时，停止物理模拟
                 if (Math.abs(inertiaState.velocity) < 0.5) {
                     cancelAnimationFrame(inertiaState.frameId);
-                    handleScrollEnd(); // 惯性结束后触发对齐
+                    // 在物理过程完全结束后，才调用吸附逻辑
+                    handleScrollEnd();
                     return;
                 }
+                
+                // 根据当前速度更新滚动位置
                 thumbContainer.scrollLeft -= inertiaState.velocity;
-                inertiaState.velocity *= 0.92;
+                
+                // 模拟摩擦力，让速度每一帧都衰减
+                inertiaState.velocity *= 0.94; // 这个摩擦系数可以微调 (0.92 ~ 0.96)
+                
+                // 请求下一帧动画
                 inertiaState.frameId = requestAnimationFrame(inertiaFrame);
             };
+
+            // 启动动画
             inertiaState.frameId = requestAnimationFrame(inertiaFrame);
         };
         
@@ -729,7 +745,8 @@ function setupSecondaryTagEditorEventListeners() {
         // 滚动事件监听
         thumbContainer.addEventListener('scroll', () => {
             renderVisibleThumbnails(); // 滚动时，只更新视觉元素
-            // 如果不是程序化滚动或拖拽，则启动滚动结束检测
+
+            // 确保在程序化滚动或用户拖拽时，不启动滚动结束检测
             if (!STEState.isScrolling && !inertiaState.isDragging) {
                 clearTimeout(STEState.virtualStrip.scrollEndTimer);
                 STEState.virtualStrip.scrollEndTimer = setTimeout(handleScrollEnd, 150);

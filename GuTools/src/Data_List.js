@@ -18,7 +18,9 @@ function formatBytes(bytes) {
  */
 function toggleGameFilterDropdown(event) {
     event.stopPropagation();
+    const container = DOM.filterGameBtn.closest('.custom-select-wrapper');
     DOM.filterGameDropdown?.classList.toggle('hidden');
+    container?.classList.toggle('is-open');
 }
 
 /**
@@ -147,8 +149,10 @@ function toggleSecondaryTagsDropdown(event) {
     if (event) {
         event.stopPropagation();
     }
+    const container = DOM.secondaryTagsFilterBtn.closest('.select-wrapper');
     if (DOM.secondaryTagsDropdown) {
-        DOM.secondaryTagsDropdown.classList.toggle(UI_CLASSES.HIDDEN);
+        const isOpen = DOM.secondaryTagsDropdown.classList.toggle('hidden');
+        container?.classList.toggle('is-open', !isOpen);
     }
 }
 
@@ -248,23 +252,21 @@ function filterUserDataEntries() {
     const showEasterEgg = DOM.dataListFilterEasterEgg?.checked ?? false;
     const selectedGame = DOM.filterGameBtn?.dataset.value || '';
     const selectedTags = AppState.dataList.secondaryTagsFilter?.selectedTags ?? new Set();
-
-    // 使用 AppState.userData
+    const currentSortOrder = AppState.dataList.currentSortOrder || 'default';
     const filteredEntries = AppState.userData.filter(entry => {
-        if (!entry?.attributes) return false; // 条目或属性无效则排除
+        if (!entry?.attributes) return false;
 
-        // 搜索词过滤 文件名 或 GID
+        // 搜索词过滤
         if (searchTerm) {
             const filenameMatch = (entry.attributes.filename || '').toLowerCase().includes(searchTerm);
             const gidMatch = (entry.gid || '').toString().toLowerCase().includes(searchTerm);
             if (!filenameMatch && !gidMatch) return false;
         }
 
-        // 属性过滤 勾选表示只显示符合该属性的
+        // 属性过滤
         if (showBan && entry.attributes.isBan !== true) return false;
         if (showAiImage && entry.attributes.isAiImage !== true) return false;
         if (showEasterEgg && entry.attributes.isEasterEgg !== true) return false;
-        // 限制级和构图过滤 HTML 处理了互斥 只需检查勾选状态
         if (showPx18 && entry.attributes.isPx18 !== true) return false;
         if (showRx18 && entry.attributes.isRx18 !== true) return false;
         if (showNormal && entry.attributes.layout !== 'normal') return false;
@@ -274,9 +276,9 @@ function filterUserDataEntries() {
         if (selectedGame) {
             if (selectedGame === 'unknown') {
                 const knownGames = ['gs-character', 'sr-character', 'zzz-character', 'waves-character'];
-                if (knownGames.includes(entry.sourceGallery)) return false; // 排除已知游戏
+                if (knownGames.includes(entry.sourceGallery)) return false;
             } else {
-                if (entry.sourceGallery !== selectedGame) return false; // 必须匹配特定游戏
+                if (entry.sourceGallery !== selectedGame) return false;
             }
         }
 
@@ -293,14 +295,32 @@ function filterUserDataEntries() {
             }
         }
 
-        return true; // 通过所有检查
+        return true;
     });
 
-    // 恢复原来的排序逻辑 只按文件名
-    filteredEntries.sort((a, b) =>
-        (a.attributes?.filename || '').localeCompare(b.attributes?.filename || '', undefined, { numeric: true, sensitivity: 'base' })
-    );
+    // 排序逻辑
+    filteredEntries.sort((a, b) => {
+        switch (currentSortOrder) {
+            case 'size_desc':
+            case 'size_asc':
+                const pathA = buildFullWebPath(a.storagebox, a.path);
+                const pathB = buildFullWebPath(b.storagebox, b.path);
+                const sizeA = AppState.fileSizesMap.get(pathA) || 0;
+                const sizeB = AppState.fileSizesMap.get(pathB) || 0;
+                return currentSortOrder === 'size_desc' ? sizeB - sizeA : sizeA - sizeB;
+            
+            case 'date_desc':
+                return new Date(b.timestamp) - new Date(a.timestamp);
 
+            case 'date_asc':
+                return new Date(a.timestamp) - new Date(b.timestamp);
+
+            case 'default':
+            default:
+                return (a.attributes?.filename || '').localeCompare(b.attributes?.filename || '', undefined, { numeric: true, sensitivity: 'base' });
+        }
+    });
+    
     return filteredEntries;
 }
 
@@ -892,10 +912,32 @@ function handleOutsideTagDropdownClick(event) {
 }
 
 /**
+ * 全局点击事件处理器，用于关闭所有打开的自定义下拉框
+ * @param {MouseEvent} event 
+ */
+function handleGlobalDropdownClose(event) {
+    const dropdowns = [
+        { btn: DOM.filterGameBtn, dropdown: DOM.filterGameDropdown },
+        { btn: DOM.secondaryTagsFilterBtn, dropdown: DOM.secondaryTagsDropdown },
+        { btn: document.getElementById('sortOrderFilterBtn'), dropdown: document.getElementById('sortOrderDropdown') }
+    ];
+
+    dropdowns.forEach(item => {
+        if (item.btn && item.dropdown && !item.dropdown.classList.contains('hidden')) {
+            // 如果点击的目标不在当前按钮或其下拉框内部，则关闭它
+            if (!item.btn.contains(event.target) && !item.dropdown.contains(event.target)) {
+                item.dropdown.classList.add('hidden');
+                item.btn.closest('.select-wrapper, .custom-select-wrapper')?.classList.remove('is-open');
+            }
+        }
+    });
+}
+
+/**
  * 设置云端Json数据页面的事件监听器
  */
 function setupDataListEventListeners() {
-    // 定义过滤器控件和对应的互斥组 
+    // 定义过滤器控件和对应的互斥组
     const filterControlsConfig = [
         { element: DOM.dataListSearchInput, event: 'input', group: null, debounce: true },
         { element: DOM.dataListFilterPx18, event: 'change', group: 'rating' },
@@ -907,20 +949,10 @@ function setupDataListEventListeners() {
         { element: DOM.dataListFilterIsBan, event: 'change', group: null }
     ];
 
-    // 初始化二级标签筛选状态
-    if (!AppState.dataList.secondaryTagsFilter) {
-        AppState.dataList.secondaryTagsFilter = {
-            availableTags: {},
-            selectedTags: new Set()
-        };
-    }
-
     filterControlsConfig.forEach(config => {
         if (config.element) {
             const handler = (event) => {
                 const targetElement = event.target;
-
-                // 处理互斥逻辑
                 if (config.group && targetElement.checked) {
                     filterControlsConfig.forEach(otherConfig => {
                         if (otherConfig.group === config.group && otherConfig.element !== targetElement && otherConfig.element?.checked) {
@@ -929,14 +961,9 @@ function setupDataListEventListeners() {
                         }
                     });
                 }
-
-                // 更新当前点击/输入控件的按钮文本 如果是 checkbox
                 if (targetElement.type === 'checkbox') {
                     updateFilterToggleButtonText(targetElement.id);
                 }
-
-
-                // 根据是否需要防抖来调用过滤函数
                 if (config.debounce) {
                     clearTimeout(AppState.dataList.searchDebounceTimer);
                     AppState.dataList.searchDebounceTimer = setTimeout(applyFiltersAndRenderDataList, DELAYS.DATA_LIST_SEARCH_DEBOUNCE);
@@ -944,68 +971,76 @@ function setupDataListEventListeners() {
                     applyFiltersAndRenderDataList();
                 }
             };
-            // 绑定事件监听器
             config.element.removeEventListener(config.event, handler);
             config.element.addEventListener(config.event, handler);
-        } else {
-            // console.warn(`DataList: 过滤控件 ${config.element} 假设的 未找到`);
         }
     });
-
-    // 为搜索框添加额外的 focus 和 blur 监听器用于建议列表
+    
     if (DOM.dataListSearchInput) {
         DOM.dataListSearchInput.addEventListener('focus', () => {
-            // 示例：显示历史记录
-            const history = ["玛薇卡", "胡桃", "丝柯"]; // 此处应从 localStorage 或其他地方获取
+            const history = ["玛薇卡", "胡桃", "丝柯"];
             showDataListSuggestions(history);
         });
         DOM.dataListSearchInput.addEventListener('blur', () => {
-            // 延迟隐藏，以便点击建议项的操作能够被响应
             setTimeout(hideDataListSuggestions, 150);
         });
     }
 
-    // 二级标签筛选功能
-    if (DOM.secondaryTagsFilterBtn && DOM.secondaryTagsDropdown) {
-        // 初始化
-        fetchSecondaryTagsForFilter();
-
-        // 按钮点击事件
-        DOM.secondaryTagsFilterBtn.removeEventListener('click', toggleSecondaryTagsDropdown);
-        DOM.secondaryTagsFilterBtn.addEventListener('click', toggleSecondaryTagsDropdown);
-
-        // 下拉框内标签点击事件 (事件委托)
-        DOM.secondaryTagsDropdown.removeEventListener('click', handleTagDropdownClick);
-        DOM.secondaryTagsDropdown.addEventListener('click', handleTagDropdownClick);
-
-        // 点击外部关闭下拉框
-        document.removeEventListener('click', handleOutsideTagDropdownClick);
-        document.addEventListener('click', handleOutsideTagDropdownClick);
-    } else {
-        console.warn("DataList: 二级标签筛选按钮或下拉框未找到");
+    // --- 初始化二级标签筛选状态 ---
+    if (!AppState.dataList.secondaryTagsFilter) {
+        AppState.dataList.secondaryTagsFilter = {
+            availableTags: {},
+            selectedTags: new Set()
+        };
     }
 
-    // 列表项点击事件 使用事件代理
+    // --- 二级标签筛选功能 ---
+    if (DOM.secondaryTagsFilterBtn && DOM.secondaryTagsDropdown) {
+        fetchSecondaryTagsForFilter();
+        DOM.secondaryTagsFilterBtn.removeEventListener('click', toggleSecondaryTagsDropdown);
+        DOM.secondaryTagsFilterBtn.addEventListener('click', toggleSecondaryTagsDropdown);
+        DOM.secondaryTagsDropdown.removeEventListener('click', handleTagDropdownClick);
+        DOM.secondaryTagsDropdown.addEventListener('click', handleTagDropdownClick);
+    }
+
+    // --- 游戏筛选功能 ---
+    setupCustomGameFilter();
+
+    // --- 排序方式下拉框的事件处理 ---
+    const sortOrderBtn = document.getElementById('sortOrderFilterBtn');
+    const sortOrderDropdown = document.getElementById('sortOrderDropdown');
+    if (sortOrderBtn && sortOrderDropdown) {
+        sortOrderBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const container = sortOrderBtn.closest('.select-wrapper');
+            sortOrderDropdown.classList.toggle('hidden');
+            container?.classList.toggle('is-open');
+        });
+
+        sortOrderDropdown.addEventListener('click', (event) => {
+            const target = event.target.closest('.custom-select-option');
+            if (!target) return;
+
+            AppState.dataList.currentSortOrder = target.dataset.sortBy;
+            sortOrderBtn.textContent = target.dataset.text;
+            sortOrderDropdown.classList.add('hidden');
+            sortOrderBtn.closest('.select-wrapper')?.classList.remove('is-open');
+            applyFiltersAndRenderDataList();
+        });
+    }
+
+    // --- 统一的“点击外部关闭所有下拉框”逻辑 ---
+    document.removeEventListener('click', handleGlobalDropdownClose); // 先移除旧的，防止重复
+    document.addEventListener('click', handleGlobalDropdownClose);
+
+    // 列表项点击事件 (事件代理)
     if (DOM.dataListContainer) {
         const visibleItemsCont = DOM.dataListContainer.querySelector('#visibleItemsContainer');
         if (visibleItemsCont) {
             visibleItemsCont.removeEventListener('click', handleDataListItemClick);
             visibleItemsCont.addEventListener('click', handleDataListItemClick);
-        } else {
-            console.error("DataList: 未找到 #visibleItemsContainer 无法设置列表项点击事件");
         }
-    } else { console.error("DataList: 列表容器 dataListContainer 未找到"); }
-
-    setupCustomGameFilter();
-
-    // 全局点击，关闭自定义下拉框
-    document.addEventListener('click', (event) => {
-        if (DOM.filterGameDropdown && !DOM.filterGameDropdown.classList.contains('hidden')) {
-            if (!DOM.filterGameBtn.contains(event.target)) {
-                DOM.filterGameDropdown.classList.add('hidden');
-            }
-        }
-    });
+    }
 
     console.log("DataList: 事件监听器设置完成");
 }
