@@ -196,8 +196,7 @@ function renderGrid(gridElement, data, type, selectionSet) {
         card.style.height = `${cardHeight}px`;
         const thumbnailPath = getThumbnailPath(img);
         const filename = (img.attributes.filename || '未知文件').replace(/\.webp$/i, '');
-        card.innerHTML = `<img src="${thumbnailPath}" alt="${filename}" loading="lazy" draggable="false" onerror="this.src='/placeholder.png'"><span class="bm-card-filename" title="${filename}">${filename}</span>`;
-        if (selectionSet.has(String(img.gid))) card.classList.add('is-selected');
+        card.innerHTML = `<img src="${thumbnailPath}" alt="${filename}" loading="lazy" draggable="false" onerror="this.src='/placeholder.png'"><span class="bm-card-filename" title="${filename}">${filename}</span>`;        if (selectionSet.has(String(img.gid))) card.classList.add('is-selected');
         fragment.appendChild(card);
     }
     spacer.appendChild(fragment);
@@ -476,7 +475,7 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
             if (!e.ctrlKey && !e.metaKey) clearSelection(type);
             
             const spacer = gridElement.querySelector('div[style*="position: relative"]');
-            if(spacer) {
+            if (spacer) {
                 const gridRect = gridElement.getBoundingClientRect();
                 const initialLeft = startX - gridRect.left + gridElement.scrollLeft;
                 const initialTop = startY - gridRect.top + gridElement.scrollTop;
@@ -490,18 +489,40 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
         }
         if (isDragging) {
             const rect = gridElement.getBoundingClientRect();
-            const currentX = e.clientX - rect.left + gridElement.scrollLeft;
+            const containerVisibleWidth = gridElement.clientWidth;
+            let currentMouseX = e.clientX;
+            if (currentMouseX < rect.left) {
+                currentMouseX = rect.left;
+            } else if (currentMouseX > rect.right) {
+                currentMouseX = rect.right;
+            }
+
+            const currentX = currentMouseX - rect.left + gridElement.scrollLeft;
             const currentY = e.clientY - rect.top + gridElement.scrollTop;
             const initialX = startX - rect.left + gridElement.scrollLeft;
             const initialY = startY - rect.top + gridElement.scrollTop;
-            const boxX = Math.min(initialX, currentX);
-            const boxY = Math.min(initialY, currentY);
-            const boxWidth = Math.abs(currentX - initialX);
+
+            let boxX = Math.min(initialX, currentX);
+            let boxY = Math.min(initialY, currentY);
+            let boxWidth = Math.abs(currentX - initialX);
+            
+            if (boxX + boxWidth > gridElement.scrollWidth) {
+                boxWidth = gridElement.scrollWidth - boxX;
+            }
+             if (boxX < 0) {
+                boxWidth += boxX; 
+                boxX = 0;
+            }
+
+
             const boxHeight = Math.abs(currentY - initialY);
+            
+
             DOM_BM.selectionBox.style.left = `${boxX}px`;
             DOM_BM.selectionBox.style.top = `${boxY}px`;
             DOM_BM.selectionBox.style.width = `${boxWidth}px`;
             DOM_BM.selectionBox.style.height = `${boxHeight}px`;
+
             checkSelection(gridElement, selectionSet);
         }
     };
@@ -533,7 +554,12 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
     };
 
     gridElement.addEventListener('mousedown', e => {
-        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth || e.offsetY >= gridElement.clientHeight) return;
+        // 修改这里的判断条件，允许在滚动条区域开始拖动，但选框不会绘制到那里
+        if (e.button !== 0) return;
+        
+        // 如果点击发生在滚动条上，则不启动拖拽选择
+        if (e.offsetX >= gridElement.clientWidth) return;
+
         isMouseDown = true;
         isDragging = false;
         startX = e.clientX;
@@ -583,6 +609,9 @@ function setupBanManagementEventListeners() {
     });
     document.addEventListener('keydown', e => { if (e.key === 'Control' || e.key === 'Meta') document.body.classList.add('ctrl-pressed'); });
     document.addEventListener('keyup', e => { if (e.key === 'Control' || e.key === 'Meta') document.body.classList.remove('ctrl-pressed'); });
+    const preventDrag = (e) => e.preventDefault();
+    DOM_BM.unbannedGrid?.addEventListener('dragstart', preventDrag);
+    DOM_BM.bannedGrid?.addEventListener('dragstart', preventDrag);
 }
 
 function updatePanelTitles() {

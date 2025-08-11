@@ -1,19 +1,19 @@
 :root {
-    --bm-bg: #fff5f5;
+    --bm-bg: #fff7ed;
     --bm-panel-bg: #ffffff;
-    --bm-border-color: #fecaca;
-    --bm-primary-text: #b91c1c;
-    --bm-secondary-text: #ef4444;
-    --bm-action-ban-bg: #ef4444;
-    --bm-action-ban-hover: #dc2626;
-    --bm-action-unban-bg: #22c55e;
-    --bm-action-unban-hover: #16a34a;
-    --bm-card-shadow: rgba(185, 28, 28, 0.07);
-    --bm-select-bg: #fee2e2;
-    --bm-select-border: #fca5a5;
+    --bm-border-color: #fed7aa;
+    --bm-primary-text: #9a3412; 
+    --bm-secondary-text: #c2410c;
+    --bm-action-ban-bg: #f97316; 
+    --bm-action-ban-hover: #ea580c;
+    --bm-action-unban-bg: #16a34a;
+    --bm-action-unban-hover: #15803d;
+    --bm-card-shadow: rgba(249, 115, 22, 0.1);
+    --bm-select-bg: #ffedd5;
+    --bm-select-border: #fdba74;
     --bm-transition-smooth: cubic-bezier(0.68, -0.55, 0.27, 1.55);
-    --bm-selection-box-bg: rgba(239, 68, 68, 0.2);
-    --bm-selection-box-border: #ef4444;
+    --bm-selection-box-bg: rgba(249, 115, 22, 0.2);
+    --bm-selection-box-border: #f97316;
 }
 
 #banManagementPane {
@@ -108,13 +108,13 @@
 }
 
 .bm-panel-header {
-    padding: 10px 15px;
+    padding: 10px 20px;
     flex-shrink: 0;
     background-color: rgba(255, 255, 255, 0.75);
     border-radius: var(--border-radius-medium);
     box-shadow: var(--shadow-soft);
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: 15px;
     min-height: 58px;
@@ -136,7 +136,7 @@
     color: var(--bm-primary-text);
     margin: 0;
     flex-shrink: 0;
-    display: none;
+    display: block;
 }
 
 .bm-panel-header.is-secondary-view .bm-panel-title {
@@ -553,7 +553,7 @@
 
 #banManagementPane #bm-secondaryTagsDropdown {
     left: 0;
-    width: 560px;
+    width: 800px;
     padding: 15px;
     display: flex;
     flex-direction: column;
@@ -577,7 +577,7 @@
     gap: 12px;
     padding-right: 10px;
     margin-right: -10px;
-    max-height: 300px;
+    max-height: 450px;
     scrollbar-width: thin;
     scrollbar-color: var(--bm-select-border) var(--bm-select-bg);
 }
@@ -680,4 +680,20 @@
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+}
+
+.bm-image-grid,
+.bm-image-card img {
+    user-select: none;
+    -webkit-user-select: none; /* 兼容旧版 Chrome/Safari */
+    -moz-user-select: none;    /* 兼容 Firefox */
+    -ms-user-select: none;     /* 兼容 IE */
+    -webkit-user-drag: none;
+}
+#banManagementPane,
+#banManagementPane * {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }

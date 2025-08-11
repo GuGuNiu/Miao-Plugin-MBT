@@ -674,8 +674,8 @@
   position: absolute;
   top: calc(100% + 5px);
   right: 0;
-  width: 560px;
-  max-height: 480px;
+  width: 650px;
+  max-height: 550px;
   background-color: #ffffff;
   border: 2px solid #b2dfdb;
   border-radius: var(--border-radius-large, 18px);
