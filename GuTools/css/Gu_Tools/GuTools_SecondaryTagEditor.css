@@ -18,48 +18,8 @@
     --ste-char-tag-selected-bg: #4f46e5;
 }
 
-#steTagManagementModal .cartoon-select {
-    font-size: 0.95em;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    border: 2px solid transparent;
-    min-height: 42px;
-    height: auto;
-    line-height: normal;
-    box-sizing: border-box;
-    vertical-align: middle;
-    border-radius: var(--border-radius-medium);
-    font-weight: 600;
-    color: var(--text-color);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease-out;
-    font-family: "Baloo 2", sans-serif;
-    outline: none;
-    width: 100%;
-}
-
-#steTagManagementModal .cartoon-select {
-    padding-left: 18px;
-    padding-right: 40px;
-    border-color: #81d4fa;
-    background-color: #e1f5fe;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-    text-align: left;
-}
-
-#steTagManagementModal .cartoon-select:focus {
-    border-color: var(--sky-blue-dark);
-    background-color: #ffffff;
-    box-shadow: 0 0 8px rgba(3, 169, 244, 0.4);
-}
-
 #secondaryTagEditorPaneView {
-    /* background-color: var(--ste-bg); */
-    display: flex;
-    flex-direction: column;
+    padding: 0;
 }
 
 #secondaryTagEditorPaneView .ste-layout-wrapper {
@@ -67,14 +27,13 @@
     gap: 20px;
     height: 100%;
     overflow: hidden;
-    padding: 0 5px 5px 0;
+    padding: 20px 5px 5px 0;
 }
 
 #secondaryTagEditorPaneView .ste-column {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    padding: 20px;
     background-color: #ffffff;
     border: 2px solid var(--ste-border-light);
     border-radius: 16px;
@@ -84,11 +43,51 @@
 
 #secondaryTagEditorPaneView .ste-left-panel {
     flex: 0 0 700px;
+    padding: 0;
+    gap: 0;
+}
+
+.ste-left-top {
+    flex: 1;
+    min-height: 0;
+    padding: 20px 20px 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ste-left-bottom {
+    flex: 9;
+    min-height: 0;
+    padding: 10px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#secondaryTagEditorPaneView .gu-tools-title-bar {
+    border-radius: 12px;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    position: relative;
+    flex-shrink: 0;
+}
+
+#secondaryTagEditorPaneView .gu-tools-title-bar::-webkit-scrollbar {
+    display: none;
+}
+
+#secondaryTagEditorPaneView .gu-tools-mode-buttons {
+    padding: 0 5px;
+    flex-shrink: 0;
 }
 
 #secondaryTagEditorPaneView .ste-right-panel {
     flex: 1;
     min-width: 0;
+    padding: 20px;
 }
 
 #secondaryTagEditorPaneView .column-title {
@@ -101,20 +100,21 @@
     text-align: center;
 }
 
-#secondaryTagEditorPaneView .ste-preview-area {
+#steMainPreviewContainer {
+    aspect-ratio: 16 / 9;
     flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #f0fdf4;
-    border: 2px dashed var(--ste-border-light);
-    border-radius: 12px;
-    min-height: 200px;
+    /* border: 2px dashed var(--ste-border-light); */
+    /* border-radius: 12px; */
+    min-height: 0;
     overflow: hidden;
     padding: 10px;
 }
 
-#secondaryTagEditorPaneView #stePreviewImage {
+#stePreviewImage {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
@@ -129,8 +129,8 @@
     flex-shrink: 0;
     padding: 10px 12px;
     background-color: #f0fdf4;
-    border: 1px solid var(--ste-border-light);
-    border-radius: 8px;
+    /* border: 1px solid var(--ste-border-light); */
+    /* border-radius: 8px; */
     font-size: 0.9em;
     color: var(--ste-text-medium);
     display: flex;
@@ -545,7 +545,6 @@
     display: flex;
     gap: 15px;
     margin-top: auto;
-    padding-top: 15px;
 }
 
 .ste-actions .tool-button {
@@ -597,8 +596,6 @@
     opacity: 0.8 !important;
 }
 
-
-/* 标签管理 */
 #secondaryTagEditorPaneView .ste-actions .manage-button {
     flex: 2;
     background-color: var(--ste-char-tag-bg);
@@ -621,14 +618,12 @@
     flex: 4;
 }
 
-/* 模态框整体布局 */
 #steTagManagementModal .modal-content {
-    max-width: 900px;
+    max-width: 1200px;
 }
 
 #steTagManagementModal .dual-column {
     display: flex;
-    flex-direction: row;
     gap: 30px;
 }
 
@@ -642,7 +637,7 @@
 #steTagManagementModal .modal-form-section {
     padding: 20px;
     border: 1px solid var(--ste-border-light);
-    border-radius: 8px;
+    border-radius: 12px;
     background-color: var(--ste-bg);
 }
 
@@ -655,16 +650,10 @@
 }
 
 #steTagManagementModal .modal-form-group {
-    margin-bottom: 12px;
-}
-
-#steTagManagementModal .modal-form-group:last-child {
-    margin-bottom: 0;
+    margin-bottom: 15px;
 }
 
 #steTagManagementModal label {
-    display: block;
-    margin-bottom: 6px;
     font-weight: 600;
     color: var(--ste-text-medium);
     font-size: 0.9em;
@@ -699,17 +688,45 @@
 }
 
 #steTagManagementModal .delete-section {
-    margin-top: 0;
-    padding-top: 15px;
-    border-top: none;
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 
+#tagsToDeleteContainer {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 5px 10px 5px 5px;
+    margin: 0 -5px 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ste-border-dark) var(--ste-border-light);
+}
+
+.ste-modal-tags-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#tagsToDeleteContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+#tagsToDeleteContainer::-webkit-scrollbar-track {
+    background: #ecfdf5;
+}
+
+#tagsToDeleteContainer::-webkit-scrollbar-thumb {
+    background-color: var(--ste-border-dark);
+    border-radius: 4px;
+}
+
 #steTagManagementModal .delete-section h5 {
-    color: #c62828;
-    border-bottom-color: #ef9a9a;
+    color: var(--ste-text-dark);
+    border-bottom-color: var(--ste-border-light);
 }
 
 #steTagManagementModal .tags-to-delete-container {
@@ -738,14 +755,13 @@
 .ste-deletable-tag-item {
     display: inline-flex;
     align-items: center;
-    background-color: #fffbeb;
-    color: #b45309;
-    padding: 5px 12px;
+    background-color: #dcfce7;
+    color: var(--ste-text-dark);
+    padding: 6px 12px;
     border-radius: 16px;
     font-size: 0.9em;
     font-weight: 600;
-    border: 1px solid #fcd34d;
-    cursor: grab;
+    border: 1px solid var(--ste-border-light);
 }
 
 .ste-deletable-tag-item:active {
@@ -758,45 +774,32 @@
     font-weight: bold;
     font-size: 1.2em;
     line-height: 1;
-    transition: color 0.2s;
+    transition: color 0.2s, transform 0.2s;
+    color: var(--ste-text-medium);
 }
 
 .ste-deletable-tag-item .ste-tag-remove:hover {
-    color: #f59e0b;
+    color: #ef4444;
+    transform: scale(1.2);
 }
 
-/* SortableJS 拖拽动画样式 */
 .sortable-ghost {
     opacity: 0.4;
     background: #a7f3d0;
 }
 
-#steMainPreviewContainer {
-    aspect-ratio: 16 / 15;
-    border: none;
-    outline: 2px dashed var(--ste-primary-color);
-    outline-offset: -2px;
-    border-radius: var(--ste-border-radius);
-    background-color: var(--ste-light-bg);
-    box-shadow: var(--ste-box-shadow);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
 #steThumbnailStripContainer {
     width: 100%;
-    height: 140px; 
-    padding: 10px 0; 
+    height: 140px;
+    padding: 10px 0;
     overflow-x: scroll;
     overflow-y: hidden;
     cursor: grab;
     user-select: none;
-    margin-bottom: 15px;
+    flex-shrink: 0;
     position: relative;
     scrollbar-width: none;
-    box-sizing: border-box; 
+    box-sizing: border-box;
 }
 
 #steThumbnailStripContainer::-webkit-scrollbar {
@@ -820,14 +823,14 @@
     border-radius: 12px;
     cursor: pointer;
     flex-shrink: 0;
-    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                opacity 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                border-color 0.35s ease, 
-                box-shadow 0.35s ease;
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+        opacity 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
     border: 2px solid transparent;
     background-color: #e2e8f0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    will-change: transform, opacity; 
+    will-change: transform, opacity;
 }
 
 .ste-thumbnail.active {
@@ -838,17 +841,16 @@
 #stePreviewImage {
     width: 100%;
     height: 100%;
-    object-fit: contain; 
+    object-fit: contain;
 }
 
 .ste-manual-tags-container {
     position: relative;
 }
 
-/* --- 标签建议列表的样式 --- */
 .ste-suggestions-list {
     position: absolute;
-    bottom: calc(100% + 4px); 
+    bottom: calc(100% + 4px);
     left: 0;
     width: 100%;
     max-height: 220px;
@@ -865,15 +867,16 @@
 .ste-suggestions-list::-webkit-scrollbar {
     width: 8px;
 }
+
 .ste-suggestions-list::-webkit-scrollbar-track {
     background: var(--ste-bg);
 }
+
 .ste-suggestions-list::-webkit-scrollbar-thumb {
     background-color: var(--ste-accent);
     border-radius: 4px;
 }
 
-/* --- 单个建议项的样式 --- */
 .suggestion-tag-item {
     padding: 9px 15px;
     cursor: pointer;
@@ -883,7 +886,6 @@
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* --- 鼠标悬停或键盘选中时的样式 --- */
 .suggestion-tag-item:hover,
 .suggestion-tag-item.selected {
     background-color: var(--ste-accent);

@@ -24,61 +24,54 @@ async function switchTab(targetTabId) {
     }
     if (currentActivePane === targetPane) {
         console.debug("UI控件: 尝试切换到当前页:", targetTabId);
-        return; // 已经是当前页
+        return;
     }
 
     console.log(`UI控件: 切换到标签页: ${targetTabId}`);
     AppState.isSwitchingTabs = true;
 
-    // 更新按钮状态
     DOM.tabButtons.forEach(btn => btn.classList.remove(UI_CLASSES.ACTIVE));
     targetButton.classList.add(UI_CLASSES.ACTIVE);
 
-    // 处理面板切换动画
     if (currentActivePane) {
         currentActivePane.classList.add(UI_CLASSES.SLIDING_OUT);
         currentActivePane.classList.remove(UI_CLASSES.ACTIVE);
-        // 移除特定面板的事件监听器
         if (currentActivePane.id === 'dataListPane' && AppState.dataList.virtualScrollInfo.container) {
-            // handleScroll 在 Data_List.js
             AppState.dataList.virtualScrollInfo.container.removeEventListener('scroll', handleScroll);
             console.debug("UI控件: 移除 dataListPane 滚动监听");
         }
-        // 动画结束后清理类
         const paneToRemove = currentActivePane;
-        setTimeout(() => paneToRemove?.classList.remove(UI_CLASSES.SLIDING_OUT), 550); // 略长于动画时间
+        setTimeout(() => paneToRemove?.classList.remove(UI_CLASSES.SLIDING_OUT), 550);
     }
 
-    // 滑入目标面板
     targetPane.classList.remove(UI_CLASSES.SLIDING_OUT);
     targetPane.classList.add(UI_CLASSES.ACTIVE);
 
-    // 特定标签页的加载/初始化逻辑
     try {
         switch (targetTabId) {
             case 'homePane':
-                // 切换到 Home 时 刷新状态显示
                 if (typeof updateGalleryStatusDisplay === "function") updateGalleryStatusDisplay();
                 else console.warn("UI控件: updateGalleryStatusDisplay 未定义");
                 break;
 
             case 'GuTools':
-                // 切换到 GuTools 时 根据当前子模式决定是否加载数据
-                if (AppState.currentGuToolMode === 'import') {
+                if (AppState.currentGuToolMode === 'secondary_tag_editor') {
+                    if (typeof initializeSecondaryTagEditorView === "function") {
+                        console.log("UI控件: 切换到 GuTools SecondaryTagEditor，按需加载数据...");
+                        await initializeSecondaryTagEditorView();
+                    } else { console.warn("UI控件: initializeSecondaryTagEditorView 未定义 GuTools_SecondaryTagEditor.js"); }
+                } else if (AppState.currentGuToolMode === 'import') {
                     if (typeof ensureImportDataLoaded === "function") {
                         console.log("UI控件: 切换到 GuTools Import 按需加载数据...");
-                        await ensureImportDataLoaded(); // 使用 Importer 模块的函数
+                        await ensureImportDataLoaded();
                     } else { console.warn("UI控件: ensureImportDataLoaded 未定义 GuTools_Import.js"); }
                 }
-                // 其他 GuTools 子模式的按需加载逻辑在 GuTools_Main.js 的 switchGuToolMode 中处理
                 break;
 
             case 'dataListPane':
                 if (typeof applyFiltersAndRenderDataList === "function") {
-                    applyFiltersAndRenderDataList(); // 应用过滤器并渲染
-                    // 重新添加滚动监听
+                    applyFiltersAndRenderDataList();
                     if (AppState.dataList.virtualScrollInfo.container && AppState.dataList.virtualScrollInfo.filteredData.length > 0) {
-                        // handleScroll 在 Data_List.js
                         AppState.dataList.virtualScrollInfo.container.removeEventListener('scroll', handleScroll);
                         AppState.dataList.virtualScrollInfo.container.addEventListener('scroll', handleScroll);
                         console.debug("UI控件: 添加 dataListPane 滚动监听");
@@ -86,9 +79,7 @@ async function switchTab(targetTabId) {
                 } else { console.warn("UI控件: applyFiltersAndRenderDataList 未定义 Data_List.js"); }
                 break;
 
-
             case 'pluginGalleryPane':
-                // 使用 Plugin Gallery 的状态和函数名
                 if (!AppState.pluginGallery.dataLoaded) {
                     console.log("UI控件: 首次进入插件图片管理 加载数据...");
                     if (DOM.pluginGalleryFolderLoading) DOM.pluginGalleryFolderLoading.classList.remove(UI_CLASSES.HIDDEN);
@@ -132,7 +123,6 @@ async function switchTab(targetTabId) {
                     if (typeof renderPluginFolderList === "function") renderPluginFolderList();
                     else console.warn("UI控件: renderPluginFolderList 未定义 Plugin_Gallery.js");
                 }
-                // 清除右侧编辑器
                 if (typeof clearPluginEditor === "function") clearPluginEditor();
                 else console.warn("UI控件: clearPluginEditor 未定义 Plugin_Gallery.js");
                 break;
@@ -144,18 +134,9 @@ async function switchTab(targetTabId) {
                     console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
                 }
                 break;
-
-            case 'secondaryTagEditorPaneView':
-                if (typeof initializeSecondaryTagEditorView === "function") {
-                    await initializeSecondaryTagEditorView(); 
-                } else {
-                    console.warn("UI控件: initializeSecondaryTagEditorView 未定义 GuTools_SecondaryTagEditor.js");
-                }
-                break;
-
+            
             case 'advancedManagementPane':
                 console.log("UI控件: 切换到高级管理面板");
-                // 无特殊加载逻辑
                 break;
 
             default:
@@ -165,7 +146,6 @@ async function switchTab(targetTabId) {
         console.error(`UI控件: 切换到标签页 ${targetTabId} 时出错:`, error);
         displayToast(`加载 ${targetTabId} 出错`, UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
     } finally {
-        // 动画结束后解除锁定
         setTimeout(() => {
             AppState.isSwitchingTabs = false;
             console.debug("UI控件: 标签页切换完成");
@@ -283,7 +263,7 @@ async function updateGalleryStatusDisplay() {
 
 
 /**
- * 处理 Home 面板上状态控件的 'change' 事件
+ * 处理 Home 面板上状态控件事件
  * @param {Event} event change 事件对象
  */
 async function handleGalleryControlChange(event) {
@@ -291,7 +271,7 @@ async function handleGalleryControlChange(event) {
     if (!controlElement) return;
 
     let configKey, newValue, statusElement, controlName, valueMap, isRadioGroup = false;
-    let radioElements = []; // 用于处理 radio 组的禁用
+    let radioElements = [];
 
     if (controlElement.id === 'tuKuOPToggleSwitch' && controlElement.type === 'checkbox') {
         configKey = 'TuKuOP';
@@ -302,7 +282,7 @@ async function handleGalleryControlChange(event) {
     } else if (controlElement.name === 'pflLevel' && controlElement.type === 'radio') {
         configKey = 'PFL';
         newValue = Number(controlElement.value);
-        statusElement = DOM.pflStatusText; // 第 303 行附近的警告触发点
+        statusElement = DOM.pflStatusText;
         controlName = '净化等级';
         valueMap = { 0: '关闭净化', 1: '仅过滤R18', 2: '过滤全部敏感数据' };
         isRadioGroup = true;
@@ -311,15 +291,16 @@ async function handleGalleryControlChange(event) {
             document.getElementById('pflRadio1'),
             document.getElementById('pflRadio2')
         ];
+    } else {
+        return;
     }
+
     if (!statusElement) {
-        console.warn(`UI控件: 未找到控件 ${controlElement.id || controlElement.name} 对应的状态文本元素`); // 第 303 行
+        console.warn(`UI控件: 未找到控件 ${controlElement.id || controlElement.name} 对应的状态文本元素`);
     }
 
-    // 获取之前的状态 (对 Radio 组复杂 暂时省略精确回滚)
-    let previousValueText = statusElement ? statusElement.textContent : ''; // 记录之前的文本
+    let previousValueText = statusElement ? statusElement.textContent : '';
 
-    // UI 反馈：禁用控件 显示处理中
     if (isRadioGroup) {
         radioElements.forEach(radio => { if (radio) radio.disabled = true; });
         document.querySelector('.tri-state-switch-container')?.classList.add('disabled');
@@ -338,8 +319,17 @@ async function handleGalleryControlChange(event) {
         });
         if (!result?.success) { throw new Error(result?.error || `更新失败 服务器未明确原因`); }
 
-        // 更新成功
         console.log(`UI控件: 配置更新成功: ${configKey}=${newValue}`);
+
+        if (result.newConfig) {
+            AppState.galleryConfig = result.newConfig;
+            console.log("UI控件: 全局 AppState.galleryConfig 已更新为:", AppState.galleryConfig);
+        }
+        
+        if (configKey === 'PFL') {
+            AppEvents.emit('pflChanged');
+        }
+
         if (statusElement) {
             const statusText = valueMap[newValue] ?? `值 ${newValue}`;
             statusElement.textContent = configKey === 'PFL' ? `当前: ${statusText}` : statusText;
@@ -347,24 +337,18 @@ async function handleGalleryControlChange(event) {
         displayToast(`${controlName} 更新成功`, UI_CLASSES.SUCCESS);
 
     } catch (error) {
-        // 更新失败
         console.error(`UI控件: 更新 ${controlName} 配置失败:`, error);
-        if (statusElement) statusElement.textContent = `${controlName} 更新失败`; // 显示失败状态
+        if (statusElement) statusElement.textContent = `${controlName} 更新失败`;
         displayToast(`${controlName} 更新失败: ${error.message}`, UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
 
-        // 尝试恢复 UI (对于 Radio 组 重新获取状态)
         if (isRadioGroup) {
-            console.log(`UI控件: ${controlName} 更新失败 尝试重新获取状态...`);
-            updateGalleryStatusDisplay(); // 重新加载状态来恢复
+            updateGalleryStatusDisplay();
         } else if (controlElement.type === 'checkbox') {
-            // 尝试恢复 Checkbox
-            controlElement.checked = !controlElement.checked; // 反转回来
-            if (statusElement) statusElement.textContent = previousValueText; // 恢复旧文本
-            console.log(`UI控件: ${controlName} UI 已尝试恢复到之前的状态`);
+            controlElement.checked = !controlElement.checked;
+            if (statusElement) statusElement.textContent = previousValueText;
         }
 
     } finally {
-        // 无论成功失败 最终都重新启用控件
         if (isRadioGroup) {
             radioElements.forEach(radio => { if (radio) radio.disabled = false; });
             document.querySelector('.tri-state-switch-container')?.classList.remove('disabled');

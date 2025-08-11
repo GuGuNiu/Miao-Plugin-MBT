@@ -144,6 +144,14 @@ function renderCurrentFileSizePage() {
     filesToRender.forEach(file => {
         const card = document.createElement('div');
         card.className = 'fs-item-card';
+        const imagePath = buildFullWebPath(file.storageBox, file.urlPath);
+
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+            if (typeof window.openImageViewer === 'function') {
+                window.openImageViewer(imagePath);
+            }
+        });
 
         const thumbContainer = document.createElement('div');
         thumbContainer.className = 'fs-item-thumbnail-container';
@@ -151,8 +159,7 @@ function renderCurrentFileSizePage() {
         const thumb = document.createElement('img');
         thumb.className = 'fs-item-thumbnail';
         thumb.loading = 'lazy';
-        const imagePath = buildFullWebPath(file.storageBox, file.urlPath);
-        thumb.src = imagePath;
+        thumb.src = `/api/thumbnail${imagePath}`;
         thumb.alt = file.fileName;
         thumb.title = `${file.storageBox}/${file.folderName}/${file.fileName}`;
 

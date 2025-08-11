@@ -7,13 +7,14 @@
  * @param {'generator' | 'import' | 'md5' | 'sequence' | 'json_calibration' | 'stockroom_go' | 'storagebox_calibration'} targetMode 要切换到的目标模式
  */
 async function switchGuToolMode(targetMode) {
-  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check"];
+  const validModes = ["generator", "import", "md5", "sequence", "json_calibration", "stockroom_go", "storagebox_calibration", "file_size_check", "secondary_tag_editor"];
   if (!validModes.includes(targetMode)) {
     console.error(`无效的 GuTools 模式: ${targetMode}`);
     return;
   }
 
   const views = {
+    secondary_tag_editor: DOM.secondaryTagEditorPaneView,
     generator: DOM.generatorPaneView,
     import: DOM.importPaneView,
     md5: DOM.md5PaneView,
@@ -83,6 +84,15 @@ async function switchGuToolMode(targetMode) {
 
   try {
     switch (targetMode) {
+
+      case "secondary_tag_editor":
+        if (typeof initializeSecondaryTagEditorView === "function") {
+          await initializeSecondaryTagEditorView();
+        } else {
+          console.error("GuTools SecondaryTagEditor: initializeSecondaryTagEditorView 未定义！");
+        }
+        break;
+
       case "generator":
         if (typeof hideImportMessage === "function") hideImportMessage();
         break;
@@ -209,4 +219,48 @@ function setupGuToolsModeSwitcher() {
   });
 
   console.log(`GuTools: 为 ${modeButtons.length} 个模式按钮设置了切换监听器`);
+}
+
+/**
+ * 设置 GuTools 顶部导航栏的悬停滚动效果
+ */
+function setupGuToolsNavScroll() {
+  const navBar = document.querySelector('#GuTools .gu-tools-title-bar');
+  if (!navBar) {
+      console.warn("GuTools Main: 未找到主导航栏，无法设置悬停滚动。");
+      return;
+  }
+
+  let scrollInterval = null;
+
+  const startScrolling = (direction) => {
+      if (scrollInterval) return;
+      scrollInterval = setInterval(() => {
+          navBar.scrollLeft += direction * 5; 
+      }, 16); 
+  };
+
+  const stopScrolling = () => {
+      clearInterval(scrollInterval);
+      scrollInterval = null;
+  };
+
+  navBar.addEventListener('mousemove', (e) => {
+      const rect = navBar.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const scrollZone = 60; 
+
+      if (navBar.scrollWidth > navBar.clientWidth) {
+          if (mouseX > rect.width - scrollZone) {
+              startScrolling(1); 
+          } else if (mouseX < scrollZone) {
+              startScrolling(-1); 
+          } else {
+              stopScrolling();
+          }
+      }
+  });
+
+  navBar.addEventListener('mouseleave', stopScrolling);
+  console.log("GuTools Main: 悬停滚动效果已设置。");
 }

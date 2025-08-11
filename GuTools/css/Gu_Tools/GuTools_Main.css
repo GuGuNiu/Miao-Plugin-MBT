@@ -5,7 +5,7 @@
 #GuTools {
     background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23bce0f5' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     background-size: 60px 60px, cover;
-    position: relative; /* 设定定位上下文 */
+    position: relative;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -17,7 +17,6 @@
     align-items: center;
     padding: 10px 15px 10px;
     border-bottom: 1px solid var(--border-color, #eee);
-    /* 背景半透明用以区分视图区域 */
     background-color: rgba(255, 255, 255, 0.7);
     flex-shrink: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -82,25 +81,18 @@
     overflow-x: visible;
     position: relative;
     box-sizing: border-box;
-    /* 定义视图切换动画 */
     transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
     opacity: 1;
     transform: translateX(0);
 }
 
-
-
 .gu-tools-view.hidden {
     opacity: 0;
     transform: translateX(-20px);
-    /* 脱离文档流以实现平滑过渡动画 */
     position: absolute;
-    /* 确保绝对定位时覆盖整个父容器区域 */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* 隐藏时阻止交互事件 */
     pointer-events: none;
 }
-

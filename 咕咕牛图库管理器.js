@@ -945,7 +945,6 @@ class MiaoPluginMBT extends plugin {
   static async _installGuToolsDependencies(logger = global.logger || console) {
     const guToolsDir = this.paths.guToolsPath;
     const packageJsonPath = path.join(guToolsDir, 'package.json');
-    const nodeModulesPath = path.join(guToolsDir, 'node_modules');
 
     try {
       await fsPromises.access(packageJsonPath);
@@ -954,36 +953,115 @@ class MiaoPluginMBT extends plugin {
       return true;
     }
 
-    // 检查核心依赖是否已存在，避免不必要的重复安装
     try {
       require.resolve('express', { paths: [guToolsDir] });
       require.resolve('sharp', { paths: [guToolsDir] });
-      logger.info(`${Default_Config.logPrefix}[GuTools Web] 检测到核心依赖已存在，跳过本次安装。`);
+      //logger.info(`${Default_Config.logPrefix}[GuTools Web] 检测到核心依赖已存在，跳过本次安装。`);
       return true;
     } catch (e) {
-      // 依赖不存在，继续执行安装
       logger.info(`${Default_Config.logPrefix}[GuTools Web] 检测到后台服务依赖缺失，开始自动安装...`);
     }
 
-    try {
-      // 直接在 GuTools 目录下执行 pnpm install
-      const result = await ExecuteCommand(
-        "pnpm", 
-        ["install", "--prod", "--no-frozen-lockfile"], 
-        { cwd: guToolsDir }, 
-        300000 // 5分钟超时
-      );
+    let selectedRegistry = 'https://registry.npmjs.org/'; // 默认官方源
 
-      if (result.stderr && !result.stderr.includes('Peer dependency issues')) {
+    try {
+      const geoInfo = await MiaoPluginMBT._getIPGeolocation(logger);
+
+      if (geoInfo && geoInfo.countryCode && geoInfo.countryCode !== 'CN') {
+        logger.info(`${Default_Config.logPrefix}检测到非中国大陆IP (${geoInfo.countryCode})，将使用 npm 官方源。`);
+        selectedRegistry = 'https://registry.npmjs.org/';
+      } else {
+        if (geoInfo) {
+          logger.info(`${Default_Config.logPrefix}检测到中国大陆IP，开始探测最佳镜像源...`);
+        } else {
+          logger.warn(`${Default_Config.logPrefix}IP地理位置检测失败，将默认按国内网络环境探测最佳镜像源...`);
+        }
+        
+        const domesticRegistries = [
+          { name: '淘宝源', url: 'https://registry.npmmirror.com/' },
+          { name: '清华源', url: 'https://registry.pku.edu.cn/repository/npm/' },
+          { name: '华为源', url: 'https://repo.huaweicloud.com/repository/npm/' },
+        ];
+
+        const testPackage = 'express'; // 一个轻量且常见的包
+        const testTimeout = 3000; // 每个源的测试超时时间
+
+        const testRegistry = (registry) => {
+          return new Promise(async (resolve) => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+              controller.abort();
+              resolve(null); // 超时也算失败
+            }, testTimeout);
+
+            try {
+              const response = await fetch(`${registry.url}${testPackage}`, { signal: controller.signal });
+              clearTimeout(timeoutId);
+              if (response.ok) {
+                resolve(registry);
+              } else {
+                resolve(null);
+              }
+            } catch (error) {
+              clearTimeout(timeoutId);
+              resolve(null);
+            }
+          });
+        };
+
+        let foundFastest = false;
+        for (const registry of domesticRegistries) {
+            const result = await testRegistry(registry);
+            if (result) {
+                selectedRegistry = result.url;
+                logger.info(`${Default_Config.logPrefix}已选择最佳镜像源: ${result.name} (${result.url})`);
+                foundFastest = true;
+                break;
+            }
+        }
+
+        if (!foundFastest) {
+            logger.warn(`${Default_Config.logPrefix}所有国内镜像源探测失败或超时，将回退至 npm 官方源。`);
+            selectedRegistry = 'https://registry.npmjs.org/';
+        }
+      }
+    } catch (geoError) {
+        logger.error(`${Default_Config.logPrefix}在IP地理位置检测环节发生错误，将使用默认官方源。`, geoError);
+        selectedRegistry = 'https://registry.npmjs.org/';
+    }
+    
+    try {
+      const npmArgs = [
+        "install",
+        "--prod",
+        "--no-audit",
+        "--prefer-offline",
+        `--registry=${selectedRegistry}`
+      ];
+
+      const result = await ExecuteCommand("npm", npmArgs, { cwd: guToolsDir }, 300000);
+
+      if (result.stderr && !result.stderr.includes('npm WARN')) {
         logger.warn(`${Default_Config.logPrefix}[GuTools Web] 依赖安装过程中的输出:\n${result.stderr}`);
       }
       logger.info(`${Default_Config.logPrefix}[GuTools Web] 后台服务依赖安装成功。`);
       return true;
     } catch (error) {
+      const errorMessage = error.stderr || error.message;
       logger.error(`${Default_Config.logPrefix}[GuTools Web] 依赖安装失败!`);
-      logger.error(error.stderr || error.message);
-      // 抛出错误，让上层逻辑可以捕获到
-      throw new Error("GuTools 后台服务依赖自动安装失败，请检查 pnpm 环境和网络连接。");
+      logger.error(errorMessage);
+      
+      if (errorMessage.includes('EACCES')) {
+        const eaccesError = new Error("GuTools 依赖安装失败：权限不足。");
+        eaccesError.code = 'GUTOOLS_EACCES';
+        throw eaccesError;
+      }
+      
+      let hint = "请检查 npm 环境和网络连接。";
+      if (errorMessage.includes('ETIMEDOUT') || errorMessage.includes('ECONNRESET')) {
+        hint = "网络连接超时，请检查你的网络。";
+      }
+      throw new Error(`GuTools 后台服务依赖自动安装失败。${hint}`);
     }
   }
 
@@ -3733,7 +3811,31 @@ class MiaoPluginMBT extends plugin {
     // logger.info(`${logPrefix} [诊断] === 进入 RunPostDownloadSetup (阶段: ${stage}) ===`);
 
     try {
-      await this._installGuToolsDependencies(logger);
+      try {
+        await this._installGuToolsDependencies(logger);
+      } catch (installError) {
+        if (installError.code === 'GUTOOLS_EACCES') {
+          logger.warn(`${logPrefix} GuTools 依赖因权限问题安装失败，已计划在1分钟后向主人发送手动操作指引。`);
+          setTimeout(() => {
+            const helpMsg = [
+              '[咕咕牛Web服务安装失败提醒]',
+              '哎呀，咕咕牛的后台Web面板依赖没装上，主要是因为文件夹权限不够。',
+              '',
+              '你得手动来一下哈：',
+              '1. 先用命令行工具(比如CMD, PowerShell, a-shell, i-shell, MobaXterm...)进入下面这个目录：',
+              `${this.paths.guToolsPath}`,
+              '',
+              '2. 然后，在上面那个目录里，敲这个命令再回车：',
+              'npm install --prod --registry=https://registry.npmmirror.com',
+              '',
+              '弄完之后重启一下机器人应该就好了。'
+            ].join('\n');
+            MiaoPluginMBT.SendMasterMsg(helpMsg, null, 0, logger);
+          }, 60 * 1000);
+        } else {
+          throw installError;
+        }
+      }
       // 核心阶段 (core & full 都会执行)
       // logger.info(`${logPrefix} [诊断] 同步公共资源 (SyncFilesToCommonRes)...`);
       // logger.info(`${logPrefix} [诊断] 同步特定文件 (咕咕牛图库管理器.js)...`);
@@ -3772,7 +3874,9 @@ class MiaoPluginMBT extends plugin {
       }
     } catch (error) {
       logger.error(`${logPrefix} [诊断] RunPostDownloadSetup (阶段: ${stage}) 内部发生致命错误:`, error);
-      if (e) await MiaoPluginMBT.ReportError(e, `安装设置 (${stage}阶段)`, error, "", logger);
+      if (e && error.code !== 'GUTOOLS_EACCES') { 
+        await MiaoPluginMBT.ReportError(e, `安装设置 (${stage}阶段)`, error, "", logger);
+      }
       throw error;
     } finally {
       // logger.info(`${logPrefix} [诊断] === 退出 RunPostDownloadSetup (阶段: ${stage}) ===`);
@@ -3780,9 +3884,34 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async RunPostUpdateSetup(e, isScheduled = false, logger = global.logger || console) {
-
+    const logPrefix = Default_Config.logPrefix;
     try {
-      await MiaoPluginMBT._installGuToolsDependencies(logger);
+      try {
+        await this._installGuToolsDependencies(logger);
+      } catch (installError) {
+        if (installError.code === 'GUTOOLS_EACCES') {
+           logger.warn(`${logPrefix} GuTools 依赖因权限问题安装失败，已计划在1分钟后向主人发送手动操作指引。`);
+           setTimeout(() => {
+              const helpMsg = [
+                '[咕咕牛Web服务安装失败提醒]',
+                '哎呀，咕咕牛的后台Web面板依赖更新失败了，主要是因为文件夹权限不够。',
+                '',
+                '你得手动来一下哈：',
+                '1. 先用命令行工具(比如CMD, PowerShell, a-shell, i-shell, MobaXterm...)进入下面这个目录：',
+                `${this.paths.guToolsPath}`,
+                '',
+                '2. 然后，在上面那个目录里，敲这个命令再回车：',
+                'npm install --prod --registry=https://registry.npmmirror.com',
+                '',
+                '弄完之后重启一下机器人应该就好了。'
+              ].join('\n');
+              MiaoPluginMBT.SendMasterMsg(helpMsg, null, 0, logger);
+            }, 60 * 1000);
+        } else {
+          throw installError;
+        }
+      }
+
       await MiaoPluginMBT.LoadTuKuConfig(true, logger);
       const imageData = await MiaoPluginMBT.LoadImageData(true, logger);
       MiaoPluginMBT._imgDataCache = Object.freeze(imageData);
@@ -3800,8 +3929,10 @@ class MiaoPluginMBT extends plugin {
 
     } catch (error) {
       logger.error(`${Default_Config.logPrefix}执行过程中发生错误:`, error);
-      if (!isScheduled && e) await MiaoPluginMBT.ReportError(e, "更新后设置", error, "", logger);
-      else if (isScheduled) { const Report = MiaoPluginMBT.FormatError("更新后设置(定时)", error, "", logPrefix); logger.error(`${Default_Config.logPrefix}--- 定时更新后设置失败 ----\n${Report.summary}\n${Report.suggestions}\n---`); }
+      if (error.code !== 'GUTOOLS_EACCES') { // 只有在不是权限错误时才上报
+        if (!isScheduled && e) await MiaoPluginMBT.ReportError(e, "更新后设置", error, "", logger);
+        else if (isScheduled) { const Report = MiaoPluginMBT.FormatError("更新后设置(定时)", error, "", logPrefix); logger.error(`${Default_Config.logPrefix}--- 定时更新后设置失败 ----\n${Report.summary}\n${Report.suggestions}\n---`); }
+      }
     }
     //MiaoPluginMBT._startConfigWatcher(logger);
   }

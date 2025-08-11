@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛图库 -  GuTools Web</title>
+    <title>咕咕牛图库 - GuTools Web</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,8 +44,7 @@
         <div class="tab-navigation">
             <img id="app-logo" src="/logo.png" alt="App Logo">
             <button class="tab-button active" data-tab="homePane">🐂</button>
-            <button class="tab-button" data-tab="GuTools">索引套件</button>
-            <button class="tab-button" data-tab="secondaryTagEditorPaneView">二级标签</button>
+            <button class="tab-button" data-tab="GuTools">咕咕牛专用</button>
             <button class="tab-button" data-tab="dataListPane">云端数据库</button>
             <button class="tab-button" data-tab="banManagementPane">封禁管理</button>
             <button class="tab-button" data-tab="pluginGalleryPane">面板图管理</button>
@@ -92,9 +91,84 @@
             </div>
 
             <div id="GuTools" class="tab-pane">
-                <div id="generatorPaneView" class="gu-tools-view">
+                <div id="secondaryTagEditorPaneView" class="gu-tools-view">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button active"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
+                            <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
+                            <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
+                            <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
+                            <button data-mode="sequence" class="mode-button" title="切换到序号管理模式">序号管理</button>
+                            <button data-mode="json_calibration" class="mode-button" title="切换到JSON校准模式">JSON校准</button>
+                            <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
+                            <button data-mode="storagebox_calibration" class="mode-button"
+                                title="切换到仓库校准模式">仓库校准</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
+                        </div>
+                    </div>
+                    <div class="ste-layout-wrapper">
+                        <div class="ste-column ste-left-panel">
+                            <div id="steThumbnailStripContainer">
+                                <div id="steThumbnailStrip"></div>
+                            </div>
+                            <div id="steMainPreviewContainer">
+                                <p id="stePreviewPlaceholder">请选择模式开始</p>
+                                <img id="stePreviewImage" src="" alt="当前编辑的图片" class="hidden">
+                            </div>
+                            <div id="steImageInfo" class="ste-image-info hidden">
+                                <div class="info-left-content">
+                                    <div class="ste-info-line ste-info-filename" title=""></div>
+                                    <div class="ste-info-line ste-info-character"></div>
+                                    <div class="ste-info-line ste-info-storagebox"></div>
+                                </div>
+                                <div id="steCharTagsInteractive" class="info-right-tags">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ste-column ste-right-panel">
+                            <div class="ste-controls-bar">
+                                <div class="ste-mode-selector">
+                                    <input type="radio" name="steMode" value="fill" id="steModeFill" checked>
+                                    <label for="steModeFill">补缺模式</label>
+                                    <input type="radio" name="steMode" value="all" id="steModeAll">
+                                    <label for="steModeAll">全部模式</label>
+                                    <div class="slider"></div>
+                                </div>
+                                <div id="steSearchWrapper" class="ste-search-wrapper">
+                                    <input type="search" id="steSearchInput" placeholder="搜索角色/文件名...">
+                                    <div id="steSuggestions" class="hidden"></div>
+                                </div>
+                                <div id="steProgressDisplay" class="ste-progress-display">-/-</div>
+                            </div>
+
+                            <div id="steCategorizedTags" class="ste-categorized-tags">
+                            </div>
+
+                            <div class="ste-tags-area">
+                                <h5 class="ste-area-title">● 当前标签 (可手动输入)</h5>
+                                <div id="steManualTags" class="ste-manual-tags-container">
+                                    <ul id="steTagList" class="ste-tag-list"></ul>
+                                    <input type="text" id="steTagInput" class="ste-tag-input"
+                                        placeholder="输入可搜索或创建标签...">
+                                    <div id="steTagInputSuggestions" class="ste-suggestions-list hidden"></div>
+                                </div>
+                            </div>
+
+                            <div class="ste-actions">
+                                <button id="steManageTagsBtn" class="tool-button manage-button">标签管理</button>
+                                <button id="steSkipButton" class="tool-button abort-button">跳过</button>
+                                <button id="steSaveButton" class="tool-button fix-button">保存并下一张</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="generatorPaneView" class="gu-tools-view hidden">
+                    <div class="gu-tools-title-bar">
+                        <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button active" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -157,6 +231,8 @@
                 <div id="importPaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button active" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -229,6 +305,8 @@
                 <div id="md5PaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button active" title="切换到MD5校准模式">MD5校准</button>
@@ -286,6 +364,8 @@
                 <div id="sequencePaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -319,6 +399,8 @@
                 <div id="jsonCalibrationPaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -363,6 +445,8 @@
                 <div id="stockroomGoPaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -407,6 +491,8 @@
                 <div id="storageboxCalibrationPaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -468,6 +554,8 @@
                 <div id="fileSizePaneView" class="gu-tools-view hidden">
                     <div class="gu-tools-title-bar">
                         <div class="gu-tools-mode-buttons">
+                            <button data-mode="secondary_tag_editor" class="mode-button"
+                                title="切换到二级标签管理编辑模式">二级标签管理</button>
                             <button data-mode="generator" class="mode-button" title="切换到JSON生成模式">JSON生成</button>
                             <button data-mode="import" class="mode-button" title="切换到图片入库模式">图片入库</button>
                             <button data-mode="md5" class="mode-button" title="切换到MD5校准模式">MD5校准</button>
@@ -518,9 +606,9 @@
                             </div>
                             <div id="fsPaginationControls" class="pagination-controls hidden">
                                 <button id="fsPrevPageBtn" class="pagination-btn">
-                                    < 上一页</button>
-                                        <span id="fsPageInfo" class="page-info">第 1 / 1 页</span>
-                                        <button id="fsNextPageBtn" class="pagination-btn">下一页 ></button>
+                                    &lt; 上一页</button>
+                                <span id="fsPageInfo" class="page-info">第 1 / 1 页</span>
+                                <button id="fsNextPageBtn" class="pagination-btn">下一页 &gt;</button>
                             </div>
                         </div>
                     </div>
@@ -594,7 +682,7 @@
                         </div>
                         <div class="search-input-wrapper">
                             <input type="search" id="dataListSearchInput" class="cartoon-input search-input"
-                            placeholder=" 搜索角色 / GID / 角色别名 / 二级标签 / 模拼音首字母 / 全拼 / 模糊查找......" autocomplete="off">
+                                placeholder=" 搜索角色 / GID / 角色别名 / 二级标签 / 模拼音首字母 / 全拼 / 模糊查找......" autocomplete="off">
                         </div>
                         <div class="select-wrapper secondary-tags-filter-container">
                             <button id="secondaryTagsFilterBtn" class="cartoon-select">二级标签筛选</button>
@@ -604,7 +692,8 @@
                                     <p>正在加载标签...</p>
                                 </div>
                                 <div class="tags-dropdown-footer">
-                                    <button id="clearSecondaryTagsBtn" class="tool-button-adv abort-button">清空选择</button>
+                                    <button id="clearSecondaryTagsBtn"
+                                        class="tool-button-adv abort-button">清空选择</button>
                                 </div>
                             </div>
                         </div>
@@ -663,7 +752,10 @@
                 <div class="bm-layout-wrapper">
                     <div class="bm-left-column">
                         <div class="bm-panel bm-controls-panel">
-                            <h4 class="bm-panel-title">筛选与控制</h4>
+                            <h4 class="bm-panel-title">
+                                筛选与控制
+                                <span id="bm-pfl-indicator" class="pfl-indicator hidden"></span>
+                            </h4>
                             <div class="bm-controls">
                                 <div class="bm-top-controls">
                                     <div class="bm-filter-row">
@@ -672,46 +764,78 @@
                                             <div id="bm-filterGameDropdown" class="custom-select-dropdown hidden"></div>
                                         </div>
                                         <div class="select-wrapper secondary-tags-filter-container">
-                                            <button id="bm-secondaryTagsFilterBtn" class="cartoon-select">二级标签</button>
+                                            <button id="bm-secondaryTagsFilterBtn"
+                                                class="cartoon-select">二级标签管理</button>
                                             <div id="bm-secondaryTagsDropdown" class="custom-select-dropdown hidden">
                                                 <div class="tags-dropdown-header">按二级标签筛选</div>
                                                 <div class="tags-dropdown-content">
                                                     <p>加载中...</p>
                                                 </div>
                                                 <div class="tags-dropdown-footer">
-                                                    <button id="bm-clearSecondaryTagsBtn" class="tool-button-adv abort-button">清空选择</button>
+                                                    <button id="bm-clearSecondaryTagsBtn"
+                                                        class="tool-button-adv abort-button">清空选择</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="search-input-wrapper">
-                                        <input type="search" id="bm-dataListSearchInput" class="cartoon-input search-input" placeholder="搜索角色/GID..." autocomplete="off">
+                                        <input type="search" id="bm-dataListSearchInput"
+                                            class="cartoon-input search-input" placeholder="搜索角色/GID..."
+                                            autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="filter-controls">
-                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterPx18" class="filter-toggle-checkbox"><span class="filter-toggle-button" data-on="Px18 开" data-off="Px18 关">Px18</span></label>
-                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterRx18" class="filter-toggle-checkbox"><span class="filter-toggle-button" data-on="Rx18 开" data-off="Rx18 关">Rx18</span></label>
-                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterNormal" class="filter-toggle-checkbox"><span class="filter-toggle-button" data-on="人像 开" data-off="人像 关">人像</span></label>
-                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterFullscreen" class="filter-toggle-checkbox"><span class="filter-toggle-button" data-on="全屏 开" data-off="全屏 关">全屏</span></label>
-                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterEasterEgg" class="filter-toggle-checkbox"><span class="filter-toggle-button" data-on="彩蛋 开" data-off="彩蛋 关">彩蛋</span></label>
-                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterAiImage" class="filter-toggle-checkbox"><span class="filter-toggle-button" data-on="AI 开" data-off="AI 关">AI图</span></label>
+                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterPx18"
+                                            class="filter-toggle-checkbox"><span class="filter-toggle-button"
+                                            data-on="Px18 开" data-off="Px18 关">Px18</span></label>
+                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterRx18"
+                                            class="filter-toggle-checkbox"><span class="filter-toggle-button"
+                                            data-on="Rx18 开" data-off="Rx18 关">Rx18</span></label>
+                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterNormal"
+                                            class="filter-toggle-checkbox"><span
+                                            class="filter-toggle-button filter-toggle-layout" data-on="人像 开"
+                                            data-off="人像 关">人像</span></label>
+                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterFullscreen"
+                                            class="filter-toggle-checkbox"><span
+                                            class="filter-toggle-button filter-toggle-layout" data-on="全屏 开"
+                                            data-off="全屏 关">全屏</span></label>
+                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterEasterEgg"
+                                            class="filter-toggle-checkbox"><span
+                                            class="filter-toggle-button filter-toggle-special" data-on="彩蛋 开"
+                                            data-off="彩蛋 关">彩蛋</span></label>
+                                    <label class="filter-toggle-label"><input type="checkbox" id="bm-filterAiImage"
+                                            class="filter-toggle-checkbox"><span
+                                            class="filter-toggle-button filter-toggle-ai" data-on="AI 开"
+                                            data-off="AI 关">AI图</span></label>
                                 </div>
                             </div>
                         </div>
                         <div id="bm-banned-header" class="bm-panel-header is-secondary-view">
                             <h4 class="bm-panel-title">已封禁列表 (<span id="bm-banned-count">0</span>)</h4>
                             <div class="game-stats-dashboard">
-                                <div class="game-stat-item" data-game="gs-character" style="--game-color: #a7d8f0; --game-text-color: #1c6a97;"><span class="game-name">原神</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="sr-character" style="--game-color: #565656; --game-text-color: #ffffff;"><span class="game-name">星铁</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="zzz-character" style="--game-color: #fe97e7; --game-text-color: #6a3838;"><span class="game-name">绝区零</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="waves-character" style="--game-color: #ffd600; --game-text-color: #383d41;"><span class="game-name">鸣潮</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="unknown" style="--game-color: #e0e0e0; --game-text-color: #616161;"><span class="game-name">未知</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="gs-character"
+                                    style="--game-color: #a7d8f0; --game-text-color: #1c6a97;"><span
+                                        class="game-name">原神</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="sr-character"
+                                    style="--game-color: #565656; --game-text-color: #ffffff;"><span
+                                        class="game-name">星铁</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="zzz-character"
+                                    style="--game-color: #fe97e7; --game-text-color: #6a3838;"><span
+                                        class="game-name">绝区零</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="waves-character"
+                                    style="--game-color: #ffd600; --game-text-color: #383d41;"><span
+                                        class="game-name">鸣潮</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="unknown"
+                                    style="--game-color: #e0e0e0; --game-text-color: #616161;"><span
+                                        class="game-name">未知</span><span class="game-count">0</span></div>
                             </div>
                         </div>
                         <div id="bm-banned-panel" class="bm-panel is-secondary">
-                            <div id="bm-banned-grid" class="bm-image-grid">
-                                <div class="bm-placeholder">
-                                    <p>这里将显示所有被封禁的图片</p>
+                            <div class="bm-panel-wrapper">
+                                <div id="bm-banned-grid" class="bm-image-grid">
+                                    <div class="bm-placeholder">
+                                        <p>这里将显示所有被封禁的图片</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -720,17 +844,29 @@
                         <div id="bm-unbanned-header" class="bm-panel-header">
                             <h4 class="bm-panel-title">未封禁列表 (<span id="bm-unbanned-count">0</span>)</h4>
                             <div class="game-stats-dashboard">
-                                <div class="game-stat-item" data-game="gs-character" style="--game-color: #a7d8f0; --game-text-color: #1c6a97;"><span class="game-name">原神</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="sr-character" style="--game-color: #565656; --game-text-color: #ffffff;"><span class="game-name">星铁</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="zzz-character" style="--game-color: #fe97e7; --game-text-color: #6a3838;"><span class="game-name">绝区零</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="waves-character" style="--game-color: #ffd600; --game-text-color: #383d41;"><span class="game-name">鸣潮</span><span class="game-count">0</span></div>
-                                <div class="game-stat-item" data-game="unknown" style="--game-color: #e0e0e0; --game-text-color: #616161;"><span class="game-name">未知</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="gs-character"
+                                    style="--game-color: #a7d8f0; --game-text-color: #1c6a97;"><span
+                                        class="game-name">原神</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="sr-character"
+                                    style="--game-color: #565656; --game-text-color: #ffffff;"><span
+                                        class="game-name">星铁</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="zzz-character"
+                                    style="--game-color: #fe97e7; --game-text-color: #6a3838;"><span
+                                        class="game-name">绝区零</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="waves-character"
+                                    style="--game-color: #ffd600; --game-text-color: #383d41;"><span
+                                        class="game-name">鸣潮</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="unknown"
+                                    style="--game-color: #e0e0e0; --game-text-color: #616161;"><span
+                                        class="game-name">未知</span><span class="game-count">0</span></div>
                             </div>
                         </div>
                         <div id="bm-unbanned-panel" class="bm-panel is-primary">
-                            <div id="bm-unbanned-grid" class="bm-image-grid">
-                                <div class="bm-placeholder">
-                                    <p>根据筛选条件显示图片</p>
+                            <div class="bm-panel-wrapper">
+                                <div id="bm-unbanned-grid" class="bm-image-grid">
+                                    <div class="bm-placeholder">
+                                        <p>根据筛选条件显示图片</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -799,11 +935,12 @@
                             <div class="cgp-input-group">
                                 <label for="cgp-repo-url-input">Git 仓库地址</label>
                                 <div class="cgp-input-wrapper">
-                                    <input type="text" id="cgp-repo-url-input" placeholder="https://github.com/user/repo">
+                                    <input type="text" id="cgp-repo-url-input"
+                                        placeholder="https://github.com/user/repo">
                                 </div>
                             </div>
                             <div class="cgp-input-group">
-                                 <label for="cgp-repo-alias-input">为图库指定一个简名</label>
+                                <label for="cgp-repo-alias-input">为图库指定一个简名</label>
                                 <div class="cgp-input-row">
                                     <div class="cgp-input-wrapper">
                                         <input type="text" id="cgp-repo-alias-input" placeholder="例如: 云露图库">
@@ -824,165 +961,163 @@
                     <div class="cgp-right-panel">
                         <h3>已安装的图库</h3>
                         <div class="cgp-gallery-grid">
-                            <div class="cgp-placeholder" id="cgp-empty-placeholder" style="display: none; grid-column: 1 / -1;">
+                            <div class="cgp-placeholder" id="cgp-empty-placeholder"
+                                style="display: none; grid-column: 1 / -1;">
                                 <div class="cgp-placeholder-icon">🎨</div>
                                 <p>还没有添加任何社区图库哦！<br>从左侧开始吧。</p>
                             </div>
                         </div>
                     </div>
-                    </div>
                 </div>
-            </div>
-
-            <div id="advancedManagementPane" class="tab-pane">
-                <div class="adv-mgmt-content">
-                    <div class="adv-mgmt-section">
-                        <h3 class="section-title">数据维护</h3>
-                        <div class="tool-grid">
-                            <div class="tool-card">
-                                <h4>孤立文件查找</h4>
-                                <p class="tool-description">查找存在于文件系统但未记录在 JSON 中的图片。</p>
-                                <button id="findOrphanedFilesBtn" class="tool-button-adv">开始查找</button>
-                                <div class="tool-output hidden">
-                                    <p>发现 <span id="orphanedCount">0</span> 个孤立文件:</p>
-                                    <textarea id="orphanedFilesList" readonly placeholder="孤立文件列表..."></textarea>
-                                    <button id="deleteOrphanedBtn" class="tool-button-adv danger disabled">删除选中
-                                        (待实现)</button>
-                                    <button id="importOrphanedBtn" class="tool-button-adv primary disabled">导入选中
-                                        (待实现)</button>
-                                </div>
-                            </div>
-                            <div class="tool-card">
-                                <h4>重复文件查找 (基于 MD5)</h4>
-                                <p class="tool-description">查找图库中 MD5 值完全相同的图片。</p>
-                                <button id="findDuplicateFilesBtn" class="tool-button-adv">开始查找</button>
-                                <div class="tool-output hidden">
-                                    <p>发现 <span id="duplicateSetsCount">0</span> 组重复文件:</p>
-                                    <div id="duplicateFilesList" class="scrollable-list-adv">重复文件列表...</div>
-                                    <button id="manageDuplicatesBtn" class="tool-button-adv primary disabled">管理重复项
-                                        (待实现)</button>
-                                </div>
-                            </div>
-                            <div class="tool-card">
-                                <h4>缩略图缓存管理</h4>
-                                <p class="tool-description">清理或重新生成图片缩略图缓存。</p>
-                                <p>缓存大小: <span id="thumbnailCacheSize">未知</span></p>
-                                <button id="clearThumbnailCacheBtn" class="tool-button-adv danger">清除缓存 (待实现)</button>
-                                <button id="regenerateThumbnailCacheBtn" class="tool-button-adv">重新生成 (待实现)</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="adv-mgmt-section">
-                        <h3 class="section-title">批量操作</h3>
-                        <div class="tool-grid">
-                            <div class="tool-card">
-                                <h4>批量属性编辑</h4>
-                                <p class="tool-description">批量修改指定文件夹或图库内图片的属性。</p>
-                                <button id="bulkEditAttributesBtn" class="tool-button-adv primary disabled">进入批量编辑
-                                    (待实现)</button>
-                            </div>
-                            <div class="tool-card">
-                                <h4>文件夹管理</h4>
-                                <p class="tool-description">重命名或移动角色文件夹 (高风险!)。</p>
-                                <button id="manageFoldersBtn" class="tool-button-adv warning disabled">管理文件夹
-                                    (待实现)</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="adv-mgmt-section">
-                        <h3 class="section-title">系统与配置</h3>
-                        <div class="tool-grid">
-                            <div class="tool-card">
-                                <h4>源目录管理</h4>
-                                <p class="tool-description">查看和编辑图库扫描的源目录。</p>
-                                <button id="manageSourceDirsBtn" class="tool-button-adv disabled">管理源目录 (待实现)</button>
-                            </div>
-                            <div class="tool-card">
-                                <h4>数据备份与恢复</h4>
-                                <p class="tool-description">备份或恢复核心 JSON 和配置文件。</p>
-                                <button id="backupDataBtn" class="tool-button-adv primary">立即备份 (待实现)</button>
-                                <button id="restoreDataBtn" class="tool-button-adv danger">从备份恢复 (待实现)</button>
-                            </div>
-                            <div class="tool-card">
-                                <h4>日志查看器</h4>
-                                <p class="tool-description">查看后端服务器运行日志。</p>
-                                <button id="viewLogsBtn" class="tool-button-adv disabled">查看日志 (待实现)</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="adv-mgmt-section danger-zone">
-                        <h3 class="section-title danger">危险操作区域</h3>
-                        <div class="tool-grid">
-                            <div class="tool-card">
-                                <h4>原始 JSON 编辑器</h4>
-                                <p class="tool-description">直接编辑 ImageData.json 等文件 (极高风险!)。</p>
-                                <button id="editRawJsonBtn" class="tool-button-adv danger disabled">打开编辑器 (待实现)</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div id="toast-container"></div>
-
-        <div id="editAttributeModal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <h4>修改图片属性</h4>
-                <div id="modalFilename" class="modal-filename">文件名: <span></span></div>
-                <input type="hidden" id="modalEntryPath">
-                <div class="modal-form">
-                    <div class="modal-group">
-                        <label class="modal-group-label">限制级:</label>
-                        <div class="options-container">
-                            <label><input type="radio" name="modalRating" value="none"> 无</label>
-                            <label><input type="radio" name="modalRating" value="px18"> Px18 (轻色情)</label>
-                            <label><input type="radio" name="modalRating" value="rx18"> Rx18 (重度色情)</label>
-                        </div>
-                    </div>
-                    <div class="modal-group">
-                        <label class="modal-group-label">构图:</label>
-                        <div class="options-container">
-                            <label><input type="radio" name="modalLayout" value="normal"> 人像图</label>
-                            <label><input type="radio" name="modalLayout" value="fullscreen"> 全屏图</label>
-                            <label><input type="radio" name="modalLayout" value="catcake"> [🐱猫猫糕🐱]</label>
-                        </div>
-                    </div>
-                    <div class="modal-group">
-                        <label class="modal-group-label">特殊:</label>
-                        <div class="options-container">
-                            <label><input type="checkbox" id="modalIsEasterEgg"> 彩蛋</label>
-                            <label><input type="checkbox" id="modalIsAiImage"> AI图</label>
-                            <label><input type="checkbox" id="modalisBan"> 封禁</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button id="modalSaveButton" class="modal-button modal-save">保存更改</button>
-                    <button id="modalCancelButton" class="modal-button modal-cancel">取消</button>
-                </div>
-                <div id="modalMessageArea" class="modal-message"></div>
             </div>
         </div>
 
-        <div id="imageModalOverlay" class="image-modal-overlay hidden">
-            <button id="modalCloseButton" class="modal-close-button">×</button>
-            <div class="image-modal-content">
-                <img id="modalImageViewer" src="" alt="放大的图片">
+        <div id="advancedManagementPane" class="tab-pane">
+            <div class="adv-mgmt-content">
+                <div class="adv-mgmt-section">
+                    <h3 class="section-title">数据维护</h3>
+                    <div class="tool-grid">
+                        <div class="tool-card">
+                            <h4>孤立文件查找</h4>
+                            <p class="tool-description">查找存在于文件系统但未记录在 JSON 中的图片。</p>
+                            <button id="findOrphanedFilesBtn" class="tool-button-adv">开始查找</button>
+                            <div class="tool-output hidden">
+                                <p>发现 <span id="orphanedCount">0</span> 个孤立文件:</p>
+                                <textarea id="orphanedFilesList" readonly placeholder="孤立文件列表..."></textarea>
+                                <button id="deleteOrphanedBtn" class="tool-button-adv danger disabled">删除选中
+                                    (待实现)</button>
+                                <button id="importOrphanedBtn" class="tool-button-adv primary disabled">导入选中
+                                    (待实现)</button>
+                            </div>
+                        </div>
+                        <div class="tool-card">
+                            <h4>重复文件查找 (基于 MD5)</h4>
+                            <p class="tool-description">查找图库中 MD5 值完全相同的图片。</p>
+                            <button id="findDuplicateFilesBtn" class="tool-button-adv">开始查找</button>
+                            <div class="tool-output hidden">
+                                <p>发现 <span id="duplicateSetsCount">0</span> 组重复文件:</p>
+                                <div id="duplicateFilesList" class="scrollable-list-adv">重复文件列表...</div>
+                                <button id="manageDuplicatesBtn" class="tool-button-adv primary disabled">管理重复项
+                                    (待实现)</button>
+                            </div>
+                        </div>
+                        <div class="tool-card">
+                            <h4>缩略图缓存管理</h4>
+                            <p class="tool-description">清理或重新生成图片缩略图缓存。</p>
+                            <p>缓存大小: <span id="thumbnailCacheSize">未知</span></p>
+                            <button id="clearThumbnailCacheBtn" class="tool-button-adv danger">清除缓存 (待实现)</button>
+                            <button id="regenerateThumbnailCacheBtn" class="tool-button-adv">重新生成 (待实现)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="adv-mgmt-section">
+                    <h3 class="section-title">批量操作</h3>
+                    <div class="tool-grid">
+                        <div class="tool-card">
+                            <h4>批量属性编辑</h4>
+                            <p class="tool-description">批量修改指定文件夹或图库内图片的属性。</p>
+                            <button id="bulkEditAttributesBtn" class="tool-button-adv primary disabled">进入批量编辑
+                                (待实现)</button>
+                        </div>
+                        <div class="tool-card">
+                            <h4>文件夹管理</h4>
+                            <p class="tool-description">重命名或移动角色文件夹 (高风险!)。</p>
+                            <button id="manageFoldersBtn" class="tool-button-adv warning disabled">管理文件夹
+                                (待实现)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="adv-mgmt-section">
+                    <h3 class="section-title">系统与配置</h3>
+                    <div class="tool-grid">
+                        <div class="tool-card">
+                            <h4>源目录管理</h4>
+                            <p class="tool-description">查看和编辑图库扫描的源目录。</p>
+                            <button id="manageSourceDirsBtn" class="tool-button-adv disabled">管理源目录 (待实现)</button>
+                        </div>
+                        <div class="tool-card">
+                            <h4>数据备份与恢复</h4>
+                            <p class="tool-description">备份或恢复核心 JSON 和配置文件。</p>
+                            <button id="backupDataBtn" class="tool-button-adv primary">立即备份 (待实现)</button>
+                            <button id="restoreDataBtn" class="tool-button-adv danger">从备份恢复 (待实现)</button>
+                        </div>
+                        <div class="tool-card">
+                            <h4>日志查看器</h4>
+                            <p class="tool-description">查看后端服务器运行日志。</p>
+                            <button id="viewLogsBtn" class="tool-button-adv disabled">查看日志 (待实现)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="adv-mgmt-section danger-zone">
+                    <h3 class="section-title danger">危险操作区域</h3>
+                    <div class="tool-grid">
+                        <div class="tool-card">
+                            <h4>原始 JSON 编辑器</h4>
+                            <p class="tool-description">直接编辑 ImageData.json 等文件 (极高风险!)。</p>
+                            <button id="editRawJsonBtn" class="tool-button-adv danger disabled">打开编辑器 (待实现)</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
     </div>
 
+    <div id="toast-container"></div>
 
+    <div id="editAttributeModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h4>修改图片属性</h4>
+            <div id="modalFilename" class="modal-filename">文件名: <span></span></div>
+            <input type="hidden" id="modalEntryPath">
+            <div class="modal-form">
+                <div class="modal-group">
+                    <label class="modal-group-label">限制级:</label>
+                    <div class="options-container">
+                        <label><input type="radio" name="modalRating" value="none"> 无</label>
+                        <label><input type="radio" name="modalRating" value="px18"> Px18 (轻色情)</label>
+                        <label><input type="radio" name="modalRating" value="rx18"> Rx18 (重度色情)</label>
+                    </div>
+                </div>
+                <div class="modal-group">
+                    <label class="modal-group-label">构图:</label>
+                    <div class="options-container">
+                        <label><input type="radio" name="modalLayout" value="normal"> 人像图</label>
+                        <label><input type="radio" name="modalLayout" value="fullscreen"> 全屏图</label>
+                        <label><input type="radio" name="modalLayout" value="catcake"> [🐱猫猫糕🐱]</label>
+                    </div>
+                </div>
+                <div class="modal-group">
+                    <label class="modal-group-label">特殊:</label>
+                    <div class="options-container">
+                        <label><input type="checkbox" id="modalIsEasterEgg"> 彩蛋</label>
+                        <label><input type="checkbox" id="modalIsAiImage"> AI图</label>
+                        <label><input type="checkbox" id="modalisBan"> 封禁</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="modalSaveButton" class="modal-button modal-save">保存更改</button>
+                <button id="modalCancelButton" class="modal-button modal-cancel">取消</button>
+            </div>
+            <div id="modalMessageArea" class="modal-message"></div>
+        </div>
+    </div>
+
+    <div id="imageModalOverlay" class="image-modal-overlay hidden">
+        <button id="modalCloseButton" class="modal-close-button">×</button>
+        <div class="image-modal-content">
+            <img id="modalImageViewer" src="" alt="放大的图片">
+        </div>
+    </div>
+
+    </div>
 
     <div id="steTagManagementModal" class="modal-overlay hidden">
         <div class="modal-content">
             <button id="steModalCloseBtn" class="modal-close-button">×</button>
             <h4>二级标签管理</h4>
             <div class="modal-form dual-column">
-
                 <div class="modal-column">
                     <div class="modal-form-section">
                         <h5>添加到现有分类</h5>
@@ -1010,21 +1145,15 @@
                         <button id="steModalAddNewCategoryBtn" class="tool-button-adv primary">新增分类和标签</button>
                     </div>
                 </div>
-
                 <div class="modal-column">
                     <div class="modal-form-section delete-section">
-                        <h5>删除标签 (不可恢复)</h5>
-                        <div class="modal-form-group">
-                            <label for="steModalDeleteCategorySelect">选择分类:</label>
-                            <select id="steModalDeleteCategorySelect" class="cartoon-select"></select>
-                        </div>
+                        <h5>删除标签 (点击标签上的 "×" 可移除)</h5>
                         <div id="tagsToDeleteContainer" class="tags-to-delete-container">
-                            <p>请先选择一个分类...</p>
+                            <p>正在加载标签...</p>
                         </div>
                         <button id="steModalSaveChangesBtn" class="tool-button-adv primary">保存更改</button>
                     </div>
                 </div>
-
             </div>
             <div id="steModalMessageArea" class="modal-message"></div>
         </div>

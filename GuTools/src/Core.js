@@ -148,10 +148,37 @@ const AppState = {
   isSwitchingTabs: false,
   messageClearTimer: null,
   currentGuToolMode: "generator",
+  galleryConfig: { TuKuOP: 1, PFL: 0 }, // galleryConfig 状态并设置默认值
   galleryImages: [], // 存储所有仓库的主图库图片列表
   userData: [], // 存储 ImageData.json 内容
   userDataPaths: new Set(), // 存储 ImageData.json 中图片的完整 Web 路径
   availableStorageBoxes: [], // 存储检测到的可用仓库名称列表
+};
+
+// 事件总线
+const AppEvents = {
+  listeners: {},
+  on(event, callback) {
+      if (!this.listeners[event]) {
+          this.listeners[event] = [];
+      }
+      this.listeners[event].push(callback);
+      console.log(`[AppEvents] Listener registered for event: "${event}"`);
+  },
+  emit(event, data) {
+      if (this.listeners[event]) {
+          console.log(`[AppEvents] Emitting event: "${event}" with data:`, data);
+          this.listeners[event].forEach(callback => {
+              try {
+                  callback(data);
+              } catch (error) {
+                  console.error(`[AppEvents] Error in listener for event "${event}":`, error);
+              }
+          });
+      } else {
+          console.log(`[AppEvents] Emitting event: "${event}", but no listeners found.`);
+      }
+  }
 };
 
 // --- DOM 元素引用缓存 DOM ---
@@ -369,12 +396,15 @@ function cacheDomElements() {
   DOM.steSearchWrapper = document.getElementById('steSearchWrapper');
   DOM.steSuggestions = document.getElementById('steSuggestions');
   DOM.steProgressDisplay = document.getElementById('steProgressDisplay');
-  DOM.stePredefinedTags = document.getElementById('stePredefinedTags');
+  DOM.steCategorizedTags = document.getElementById('steCategorizedTags'); 
   DOM.steManualTags = document.getElementById('steManualTags');
   DOM.steTagList = document.getElementById('steTagList');
   DOM.steTagInput = document.getElementById('steTagInput');
+  DOM.steTagInputSuggestions = document.getElementById('steTagInputSuggestions'); 
   DOM.steSkipButton = document.getElementById('steSkipButton');
   DOM.steSaveButton = document.getElementById('steSaveButton');
+  DOM.steManageTagsBtn = document.getElementById('steManageTagsBtn');
+  DOM.steThumbnailStripContainer = document.getElementById('steThumbnailStripContainer');
 
   // --- Data List 面板 ---
   DOM.dataListPane = document.getElementById("dataListPane");
@@ -1033,20 +1063,31 @@ async function initializeApplication() {
   else console.warn(`默认 Tab 面板 '${defaultTabId}' 未找到`);
   if (defaultButton) defaultButton.classList.add(UI_CLASSES.ACTIVE);
   else console.warn(`默认 Tab 按钮 '${defaultTabId}' 未找到`);
-
+  AppState.currentGuToolMode = "secondary_tag_editor";
   updateCurrentTimeDisplay();
   setInterval(updateCurrentTimeDisplay, 1000);
 
   displayGeneratorMessage("加载核心数据...", UI_CLASSES.INFO);
   let galleryImagesLoaded = false;
   let userDataLoaded = false;
+  
   try {
-    const [imagesResult, userdataResult, fileSizesResult] = await Promise.allSettled([
+    const [imagesResult, userdataResult, fileSizesResult, configResult] = await Promise.allSettled([
       fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_IMAGES),
       fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA),
-      fetchJsonData(API_ENDPOINTS.FETCH_FILE_SIZES)
+      fetchJsonData(API_ENDPOINTS.FETCH_FILE_SIZES),
+      fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_CONFIG) 
     ]);
 
+    if (configResult.status === 'fulfilled' && configResult.value.success) {
+      AppState.galleryConfig = configResult.value.config;
+      console.log(`核心配置: 加载成功，当前净化等级 (PFL) 为 ${AppState.galleryConfig.PFL}`);
+    } else {
+      console.warn("核心配置: 加载图库配置失败，将使用默认值。PFL 将为 0。");
+      // AppState.galleryConfig 已在声明时设置了默认值，此处无需操作
+    }
+
+    // 处理图库图片结果
     if (
       imagesResult.status === "fulfilled" &&
       Array.isArray(imagesResult.value)
@@ -1130,6 +1171,7 @@ async function initializeApplication() {
       }
     }
 
+    // 处理用户数据结果 
     if (
       userdataResult.status === "fulfilled" &&
       Array.isArray(userdataResult.value)
@@ -1154,7 +1196,6 @@ async function initializeApplication() {
             .replace(/\/{2,}/g, "/");
           AppState.userDataPaths.add(fullPath);
         } else {
-          // Warning for missing data is now handled in the previous block.
         }
       });
       userDataLoaded = true;
@@ -1189,7 +1230,8 @@ async function initializeApplication() {
       )
         populateMd5JsonList();
     }
-
+    
+    // 处理文件大小结果 
     if (fileSizesResult.status === 'fulfilled' && Array.isArray(fileSizesResult.value)) {
         const fileSizesData = fileSizesResult.value;
         fileSizesData.forEach(file => {
@@ -1202,6 +1244,7 @@ async function initializeApplication() {
         displayToast("未能加载文件大小信息", UI_CLASSES.WARNING);
     }
     
+    // 后续逻辑
     if (galleryImagesLoaded && userDataLoaded) {
       displayGeneratorMessage(
         "核心数据加载完毕！",

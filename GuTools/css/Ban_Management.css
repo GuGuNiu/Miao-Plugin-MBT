@@ -68,9 +68,11 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    padding: 4px; 
     min-height: 0;
     transition: all 0.4s ease-out;
     flex-grow: 1;
+    border: none;
 }
 
 .bm-controls-panel {
@@ -83,11 +85,45 @@
     box-shadow: 4px 4px 0px var(--bm-secondary-text);
 }
 
+.bm-panel-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column;
+    border: 2px solid transparent; 
+    border-radius: 12px; 
+}
+
+.bm-image-grid {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px; 
+    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    align-content: flex-start;
+}
+
 .bm-panel.is-primary {
     cursor: default;
     opacity: 1;
-    border-color: var(--bm-primary-text);
+    border: 3px dashed var(--bm-secondary-text);
     box-shadow: 0 8px 25px rgba(185, 28, 28, 0.15);
+}
+
+.bm-panel.is-primary .bm-panel-wrapper {
+    border: 2px solid var(--bm-select-border);
+}
+
+.bm-panel.is-secondary {
+    cursor: pointer;
+    opacity: 0.7;
+    border: 2px solid var(--bm-border-color);
+}
+
+.bm-panel.is-secondary:hover {
+    border-color: var(--bm-primary-text);
 }
 
 .bm-panel.is-secondary {
@@ -335,7 +371,7 @@
     border-color: var(--bm-secondary-text);
 }
 
-.filter-toggle-checkbox:checked+.filter-toggle-button {
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button {
     background-image: linear-gradient(to top, #fca5a5, #fee2e2);
     color: #991b1b;
     border-color: #f87171;
@@ -343,10 +379,54 @@
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
-.filter-toggle-checkbox:checked+.filter-toggle-button::before {
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button::before {
     content: "✔";
     color: #dc2626;
     transform: translateY(-50%) scale(1.1) rotate(10deg);
+}
+
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button:hover {
+    filter: brightness(103%);
+    box-shadow: 0 3px 6px rgba(239, 68, 68, 0.4);
+}
+
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-layout,
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-special,
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-ai {
+    background-image: none;
+    background-color: var(--bm-select-bg);    
+    color: var(--bm-primary-text);            
+    border-color: var(--bm-secondary-text);   
+    box-shadow: 0 1px 2px rgba(185, 28, 28, 0.05); 
+}
+
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-layout:hover,
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-special:hover,
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-ai:hover {
+    background-color: var(--bm-select-bg);
+    filter: brightness(95%);
+    box-shadow: 0 1px 2px rgba(185, 28, 28, 0.05);
+}
+
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-layout::before {
+    content: "🖼️";
+    color: var(--bm-secondary-text);
+    font-size: 1em;
+    transform: translateY(-50%) scale(1.2);
+}
+
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-special::before {
+    content: "🥚";
+    color: var(--bm-secondary-text);
+    font-size: 1em;
+    transform: translateY(-50%) scale(1.2);
+}
+
+#banManagementPane .filter-toggle-checkbox:checked+.filter-toggle-button.filter-toggle-ai::before {
+    content: "🤖";
+    color: var(--bm-secondary-text);
+    font-size: 1em;
+    transform: translateY(-50%) scale(1.2);
 }
 
 .bm-placeholder {
@@ -598,12 +678,6 @@
     margin-bottom: 8px;
 }
 
-#banManagementPane #bm-secondaryTagsDropdown .tags-dropdown-tags-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
 #banManagementPane #bm-secondaryTagsDropdown .tags-dropdown-tag-item {
     background-color: var(--bm-select-bg);
     color: var(--bm-primary-text);
@@ -685,9 +759,9 @@
 .bm-image-grid,
 .bm-image-card img {
     user-select: none;
-    -webkit-user-select: none; /* 兼容旧版 Chrome/Safari */
-    -moz-user-select: none;    /* 兼容 Firefox */
-    -ms-user-select: none;     /* 兼容 IE */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     -webkit-user-drag: none;
 }
 #banManagementPane,
@@ -696,4 +770,27 @@
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+}
+
+.bm-panel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pfl-indicator {
+    font-size: 12px;
+    font-weight: 600;
+    color: #d97706; 
+    background-color: rgba(251, 191, 36, 0.1);
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    margin-left: 1rem;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+}
+
+.pfl-indicator.hidden {
+    display: none;
 }
