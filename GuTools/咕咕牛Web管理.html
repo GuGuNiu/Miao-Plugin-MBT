@@ -103,7 +103,7 @@
                             <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="main-content">
@@ -165,7 +165,7 @@
                             <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="import-content-wrapper">
@@ -237,7 +237,7 @@
                             <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper md5-layout-wrapper">
@@ -294,7 +294,7 @@
                             <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper sequence-layout-wrapper">
@@ -328,7 +328,7 @@
                             <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper json-calibration-layout-wrapper">
@@ -371,7 +371,7 @@
                             <button data-mode="stockroom_go" class="mode-button active" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper stockroom-go-layout-wrapper">
@@ -415,7 +415,7 @@
                             <button data-mode="stockroom_go" class="mode-button" title="切换到仓库转移模式">仓库转移</button>
                             <button data-mode="storagebox_calibration" class="mode-button active"
                                 title="切换到仓库校准模式">仓库校准</button>
-                            <button data-mode="file_size_check" class="mode-button" title="切换到文件大小核查模式">文件大小核查</button>
+                            <button data-mode="file_size_check" class="mode-button" title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="sbxcal-layout-wrapper">
@@ -477,7 +477,7 @@
                             <button data-mode="storagebox_calibration" class="mode-button"
                                 title="切换到仓库校准模式">仓库校准</button>
                             <button data-mode="file_size_check" class="mode-button active"
-                                title="切换到文件大小核查模式">文件大小核查</button>
+                                title="切换到文件占用模式">文件占用</button>
                         </div>
                     </div>
                     <div class="tool-content-wrapper fs-layout-wrapper">
@@ -492,7 +492,7 @@
                                 <select id="fsStorageBoxFilter" class="cartoon-select"></select>
                             </div>
                             <div class="fs-filter-group">
-                                <label>按文件大小筛选:</label>
+                                <label>按文件占用筛选:</label>
                                 <div class="size-input-row">
                                     <input type="number" id="fsMinSizeInput" class="cartoon-input" placeholder="最小"
                                         min="0">
@@ -663,7 +663,7 @@
                 <div class="bm-layout-wrapper">
                     <div class="bm-left-column">
                         <div class="bm-panel bm-controls-panel">
-                             <h4 class="bm-panel-title">筛选与控制</h4>
+                            <h4 class="bm-panel-title">筛选与控制</h4>
                             <div class="bm-controls">
                                 <div class="bm-top-controls">
                                     <div class="bm-filter-row">
@@ -675,7 +675,9 @@
                                             <button id="bm-secondaryTagsFilterBtn" class="cartoon-select">二级标签</button>
                                             <div id="bm-secondaryTagsDropdown" class="custom-select-dropdown hidden">
                                                 <div class="tags-dropdown-header">按二级标签筛选</div>
-                                                <div class="tags-dropdown-content"><p>加载中...</p></div>
+                                                <div class="tags-dropdown-content">
+                                                    <p>加载中...</p>
+                                                </div>
                                                 <div class="tags-dropdown-footer">
                                                     <button id="bm-clearSecondaryTagsBtn" class="tool-button-adv abort-button">清空选择</button>
                                                 </div>
@@ -683,8 +685,7 @@
                                         </div>
                                     </div>
                                     <div class="search-input-wrapper">
-                                        <input type="search" id="bm-dataListSearchInput" class="cartoon-input search-input"
-                                        placeholder="搜索角色/GID..." autocomplete="off">
+                                        <input type="search" id="bm-dataListSearchInput" class="cartoon-input search-input" placeholder="搜索角色/GID..." autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="filter-controls">
@@ -697,22 +698,40 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="bm-banned-panel" class="bm-panel bm-banned-panel is-secondary">
-                             <div class="bm-panel-header">
-                                <h4 class="bm-panel-title">已封禁列表 (<span id="bm-banned-count">0</span>)</h4>
+                        <div id="bm-banned-header" class="bm-panel-header is-secondary-view">
+                            <h4 class="bm-panel-title">已封禁列表 (<span id="bm-banned-count">0</span>)</h4>
+                            <div class="game-stats-dashboard">
+                                <div class="game-stat-item" data-game="gs-character" style="--game-color: #a7d8f0; --game-text-color: #1c6a97;"><span class="game-name">原神</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="sr-character" style="--game-color: #565656; --game-text-color: #ffffff;"><span class="game-name">星铁</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="zzz-character" style="--game-color: #fe97e7; --game-text-color: #6a3838;"><span class="game-name">绝区零</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="waves-character" style="--game-color: #ffd600; --game-text-color: #383d41;"><span class="game-name">鸣潮</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="unknown" style="--game-color: #e0e0e0; --game-text-color: #616161;"><span class="game-name">未知</span><span class="game-count">0</span></div>
                             </div>
+                        </div>
+                        <div id="bm-banned-panel" class="bm-panel is-secondary">
                             <div id="bm-banned-grid" class="bm-image-grid">
-                                <div class="bm-placeholder"><p>这里将显示所有被封禁的图片</p></div>
+                                <div class="bm-placeholder">
+                                    <p>这里将显示所有被封禁的图片</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="bm-right-column">
-                        <div id="bm-unbanned-panel" class="bm-panel bm-unbanned-panel is-primary">
-                             <div class="bm-panel-header">
-                                <h4 class="bm-panel-title">未封禁列表 (<span id="bm-unbanned-count">0</span>)</h4>
+                        <div id="bm-unbanned-header" class="bm-panel-header">
+                            <h4 class="bm-panel-title">未封禁列表 (<span id="bm-unbanned-count">0</span>)</h4>
+                            <div class="game-stats-dashboard">
+                                <div class="game-stat-item" data-game="gs-character" style="--game-color: #a7d8f0; --game-text-color: #1c6a97;"><span class="game-name">原神</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="sr-character" style="--game-color: #565656; --game-text-color: #ffffff;"><span class="game-name">星铁</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="zzz-character" style="--game-color: #fe97e7; --game-text-color: #6a3838;"><span class="game-name">绝区零</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="waves-character" style="--game-color: #ffd600; --game-text-color: #383d41;"><span class="game-name">鸣潮</span><span class="game-count">0</span></div>
+                                <div class="game-stat-item" data-game="unknown" style="--game-color: #e0e0e0; --game-text-color: #616161;"><span class="game-name">未知</span><span class="game-count">0</span></div>
                             </div>
+                        </div>
+                        <div id="bm-unbanned-panel" class="bm-panel is-primary">
                             <div id="bm-unbanned-grid" class="bm-image-grid">
-                                <div class="bm-placeholder"><p>根据筛选条件显示图片</p></div>
+                                <div class="bm-placeholder">
+                                    <p>根据筛选条件显示图片</p>
+                                </div>
                             </div>
                         </div>
                     </div>

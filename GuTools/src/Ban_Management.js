@@ -6,24 +6,30 @@ const DOM_BM = {};
 
 function cacheBanManagementDOMElements() {
     DOM_BM.pane = document.getElementById('banManagementPane');
-    DOM_BM.layoutWrapper = DOM_BM.pane?.querySelector('.bm-layout-wrapper');
-    DOM_BM.leftColumn = DOM_BM.pane?.querySelector('.bm-left-column');
-    DOM_BM.rightColumn = DOM_BM.pane?.querySelector('.bm-right-column');
-    DOM_BM.controlsPanel = DOM_BM.pane?.querySelector('.bm-controls-panel');
-    DOM_BM.unbannedPanel = DOM_BM.pane?.querySelector('#bm-unbanned-panel');
-    DOM_BM.bannedPanel = DOM_BM.pane?.querySelector('#bm-banned-panel');
-    DOM_BM.unbannedGrid = DOM_BM.pane?.querySelector('#bm-unbanned-grid');
-    DOM_BM.bannedGrid = DOM_BM.pane?.querySelector('#bm-banned-grid');
-    DOM_BM.unbannedCount = DOM_BM.pane?.querySelector('#bm-unbanned-count');
-    DOM_BM.bannedCount = DOM_BM.pane?.querySelector('#bm-banned-count');
+    if (!DOM_BM.pane) { return false; }
 
-    DOM_BM.gameFilterBtn = DOM_BM.pane?.querySelector('#bm-filterGameBtn');
-    DOM_BM.gameFilterDropdown = DOM_BM.pane?.querySelector('#bm-filterGameDropdown');
-    DOM_BM.searchInput = DOM_BM.pane?.querySelector('#bm-dataListSearchInput');
-    DOM_BM.secondaryTagsBtn = DOM_BM.pane?.querySelector('#bm-secondaryTagsFilterBtn');
-    DOM_BM.secondaryTagsDropdown = DOM_BM.pane?.querySelector('#bm-secondaryTagsDropdown');
-    DOM_BM.clearSecondaryTagsBtn = DOM_BM.pane?.querySelector('#bm-clearSecondaryTagsBtn');
-    DOM_BM.filterCheckboxes = DOM_BM.pane?.querySelectorAll('.filter-controls .filter-toggle-checkbox');
+    DOM_BM.layoutWrapper = DOM_BM.pane.querySelector('.bm-layout-wrapper');
+    DOM_BM.leftColumn = DOM_BM.pane.querySelector('.bm-left-column');
+    DOM_BM.rightColumn = DOM_BM.pane.querySelector('.bm-right-column');
+    
+    DOM_BM.controlsPanel = document.getElementById('bm-controls-panel');
+    DOM_BM.unbannedPanel = document.getElementById('bm-unbanned-panel');
+    DOM_BM.bannedPanel = document.getElementById('bm-banned-panel');
+    DOM_BM.unbannedHeader = document.getElementById('bm-unbanned-header');
+    DOM_BM.bannedHeader = document.getElementById('bm-banned-header');
+    
+    DOM_BM.unbannedGrid = document.getElementById('bm-unbanned-grid');
+    DOM_BM.bannedGrid = document.getElementById('bm-banned-grid');
+    DOM_BM.unbannedCount = document.getElementById('bm-unbanned-count');
+    DOM_BM.bannedCount = document.getElementById('bm-banned-count');
+    
+    DOM_BM.gameFilterBtn = document.getElementById('bm-filterGameBtn');
+    DOM_BM.gameFilterDropdown = document.getElementById('bm-filterGameDropdown');
+    DOM_BM.searchInput = document.getElementById('bm-dataListSearchInput');
+    DOM_BM.secondaryTagsBtn = document.getElementById('bm-secondaryTagsFilterBtn');
+    DOM_BM.secondaryTagsDropdown = document.getElementById('bm-secondaryTagsDropdown');
+    DOM_BM.clearSecondaryTagsBtn = document.getElementById('bm-clearSecondaryTagsBtn');
+    DOM_BM.filterCheckboxes = DOM_BM.pane.querySelectorAll('.filter-controls .filter-toggle-checkbox');
 
     DOM_BM.bulkActionBar = document.getElementById('bm-bulk-action-bar');
     DOM_BM.bulkActionText = document.getElementById('bm-bulk-action-text');
@@ -32,8 +38,8 @@ function cacheBanManagementDOMElements() {
     DOM_BM.bulkBanBtn = document.getElementById('bm-bulk-ban-btn');
     DOM_BM.bulkUnbanBtn = document.getElementById('bm-bulk-unban-btn');
     DOM_BM.bulkCancelBtn = document.getElementById('bm-bulk-cancel-btn');
-
     DOM_BM.selectionBox = document.getElementById('bm-selection-box');
+    return true;
 }
 
 const BanManagementState = {
@@ -47,14 +53,14 @@ const BanManagementState = {
 async function initializeBanManagement() {
     if (BanManagementState.isInitialized) return;
     if (BanManagementState.isLoading) return;
-    BanManagementState.isLoading = true;
 
-    if (!DOM_BM.pane) {
-        cacheBanManagementDOMElements();
+    if (!DOM_BM.pane || !DOM_BM.unbannedHeader) {
+        if (!cacheBanManagementDOMElements()) return;
         setupBanManagementEventListeners();
         setupCustomGameFilterForBM('bm-filterGameBtn', 'bm-filterGameDropdown', applyBanFilters);
     }
     
+    BanManagementState.isLoading = true;
     DOM_BM.unbannedGrid.innerHTML = `<div class="bm-placeholder"><p>正在加载图库数据...</p></div>`;
     DOM_BM.bannedGrid.innerHTML = `<div class="bm-placeholder"><p>正在加载封禁列表...</p></div>`;
     
@@ -71,6 +77,7 @@ async function initializeBanManagement() {
         await fetchAndPopulateSecondaryTagsForBM();
         processAndSeparateImageData();
         applyBanFilters();
+        updatePanelTitles();
         DOM_BM.filterCheckboxes.forEach(cb => updateFilterToggleButtonTextForBM(cb.id));
 
         BanManagementState.isInitialized = true;
@@ -97,7 +104,7 @@ function applyBanFilters() {
     const selectedGame = DOM_BM.gameFilterBtn?.dataset.value || '';
     const filters = {};
     DOM_BM.filterCheckboxes?.forEach(cb => { filters[cb.id] = cb.checked; });
-    
+
     const filterFunction = entry => {
         if (!entry?.attributes) return false;
         if (searchTerm && !(entry.attributes.filename || '').toLowerCase().includes(searchTerm) && !(entry.gid || '').toString().toLowerCase().includes(searchTerm)) return false;
@@ -117,173 +124,84 @@ function applyBanFilters() {
         }
         return true;
     };
-    
-    const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains('is-primary');
 
+    const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains('is-primary');
+    
     if (isUnbannedPrimary) {
+        // 主视图是“未封禁”列表，只筛选它
         BanManagementState.filteredUnbanned = BanManagementState.unbannedImages.filter(filterFunction);
-        BanManagementState.filteredBanned = BanManagementState.bannedImages;
+        // 次要视图“已封禁”列表，重置为显示全部
+        BanManagementState.filteredBanned = [...BanManagementState.bannedImages];
     } else {
-        BanManagementState.filteredUnbanned = BanManagementState.unbannedImages;
+        // 主视图是“已封禁”列表，只筛选它
         BanManagementState.filteredBanned = BanManagementState.bannedImages.filter(filterFunction);
+        // 次要视图“未封禁”列表，重置为显示全部
+        BanManagementState.filteredUnbanned = [...BanManagementState.unbannedImages];
     }
 
-    const sortFunction = (a, b) =>
-        (a.attributes?.filename || '').localeCompare(b.attributes?.filename || '', undefined, { numeric: true, sensitivity: 'base' });
-    
+    const sortFunction = (a, b) => (a.attributes?.filename || '').localeCompare(b.attributes?.filename || '', undefined, { numeric: true, sensitivity: 'base' });
     BanManagementState.filteredUnbanned.sort(sortFunction);
     BanManagementState.filteredBanned.sort(sortFunction);
 
     renderUnbannedGrid();
     renderBannedGrid();
+    updatePanelTitles();
 }
 
 function renderUnbannedGrid() {
-    if (DOM_BM.unbannedCount) DOM_BM.unbannedCount.textContent = BanManagementState.filteredUnbanned.length;
+    DOM_BM.unbannedCount.textContent = BanManagementState.filteredUnbanned.length;
     renderGrid(DOM_BM.unbannedGrid, BanManagementState.filteredUnbanned, 'unbanned', BanManagementState.selectedUnbannedGids);
 }
 
 function renderBannedGrid() {
-    if (DOM_BM.bannedCount) DOM_BM.bannedCount.textContent = BanManagementState.filteredBanned.length;
+    DOM_BM.bannedCount.textContent = BanManagementState.filteredBanned.length;
     renderGrid(DOM_BM.bannedGrid, BanManagementState.filteredBanned, 'banned', BanManagementState.selectedBannedGids);
 }
 
 function renderGrid(gridElement, data, type, selectionSet) {
     if (!gridElement) return;
-
-    // --- 虚拟滚动核心状态 ---
-    const cardHeight = 180; // 卡片高度
-    const cardMinWidth = 140; // 卡片最小宽度
-    const cardGap = 16;     // 卡片间隙
+    const cardHeight = 180, cardMinWidth = 140, cardGap = 16;
     const scrollTop = gridElement.scrollTop;
     const containerHeight = gridElement.clientHeight;
-    const containerWidth = gridElement.clientWidth - 32; 
-
-    gridElement.innerHTML = ''; // 清理旧的DOM
-
-    // 如果没有数据，显示占位符并返回
+    const containerWidth = gridElement.clientWidth > 32 ? gridElement.clientWidth - 32 : gridElement.clientWidth;
+    gridElement.innerHTML = '';
     if (data.length === 0) {
         gridElement.innerHTML = `<div class="bm-placeholder"><p>${type === 'unbanned' ? '没有匹配的图片' : '暂无封禁图片'}</p></div>`;
         return;
     }
-
-    // 计算布局参数
     const columns = Math.max(1, Math.floor((containerWidth + cardGap) / (cardMinWidth + cardGap)));
     const cardWidth = (containerWidth - (columns - 1) * cardGap) / columns;
     const totalRows = Math.ceil(data.length / columns);
     const totalHeight = totalRows * (cardHeight + cardGap);
-
-    // 创建一个“撑高”的内部容器
     const spacer = document.createElement('div');
     spacer.style.position = 'relative';
     spacer.style.width = '100%';
     spacer.style.height = `${totalHeight}px`;
-
-    // 计算当前应该渲染的行范围
-    const startRow = Math.max(0, Math.floor(scrollTop / (cardHeight + cardGap)) - 1); // 向上多渲染1行作为缓冲区
-    const endRow = Math.min(totalRows - 1, Math.ceil((scrollTop + containerHeight) / (cardHeight + cardGap)) + 1); // 向下多渲染1行
-
-    // 只创建并渲染可见区域的卡片
-    const fragment = document.createDocumentFragment();
+    const startRow = Math.max(0, Math.floor(scrollTop / (cardHeight + cardGap)) - 1);
+    const endRow = Math.min(totalRows - 1, Math.ceil((scrollTop + containerHeight) / (cardHeight + cardGap)) + 1);
     const startIndex = startRow * columns;
     const endIndex = Math.min(data.length, (endRow + 1) * columns);
-
+    const fragment = document.createDocumentFragment();
     for (let i = startIndex; i < endIndex; i++) {
         const img = data[i];
         const row = Math.floor(i / columns);
         const col = i % columns;
-
         const card = document.createElement('div');
         card.className = 'bm-image-card';
         card.dataset.gid = img.gid;
-
-        // --- 使用精确的像素值进行绝对定位 ---
         card.style.position = 'absolute';
         card.style.top = `${row * (cardHeight + cardGap)}px`;
         card.style.left = `${col * (cardWidth + cardGap)}px`;
         card.style.width = `${cardWidth}px`;
         card.style.height = `${cardHeight}px`;
-        
         const thumbnailPath = getThumbnailPath(img);
         const filename = (img.attributes.filename || '未知文件').replace(/\.webp$/i, '');
         card.innerHTML = `<img src="${thumbnailPath}" alt="${filename}" loading="lazy" draggable="false" onerror="this.src='/placeholder.png'"><span class="bm-card-filename" title="${filename}">${filename}</span>`;
         if (selectionSet.has(String(img.gid))) card.classList.add('is-selected');
-        
         fragment.appendChild(card);
     }
-    
     spacer.appendChild(fragment);
     gridElement.appendChild(spacer);
-}
-
-function setupDragToSelect(gridElement, selectionSet, type) {
-    let startX, startY, isDragging = false;
-    
-    gridElement.addEventListener('mousedown', e => {
-        // 判断点击是否发生在滚动条上 或 不是鼠标左键，如果是则不启动拖选
-        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth) {
-            return;
-        }
-        
-        // 阻止默认行为，如文本选择
-        e.preventDefault();
-        isDragging = true;
-        BanManagementState.activeDragSelect = type;
-
-        const rect = gridElement.getBoundingClientRect();
-        // --- 将滚动条位置加入初始坐标计算 ---
-        startX = e.clientX - rect.left + gridElement.scrollLeft;
-        startY = e.clientY - rect.top + gridElement.scrollTop;
-        
-        DOM_BM.selectionBox.style.left = `${startX}px`; // 直接使用相对于 spacer 的坐标
-        DOM_BM.selectionBox.style.top = `${startY}px`;
-        DOM_BM.selectionBox.style.width = '0px';
-        DOM_BM.selectionBox.style.height = '0px';
-        
-        // 将选框添加到 spacer 内部
-        const spacer = gridElement.querySelector('div');
-        if (spacer) {
-            spacer.appendChild(DOM_BM.selectionBox);
-        }
-        DOM_BM.selectionBox.classList.remove('hidden');
-
-        // 如果没有按住 Ctrl/Meta 键，则清除之前的选择
-        if (!e.ctrlKey && !e.metaKey) {
-            clearSelection(type);
-        }
-    });
-
-    document.addEventListener('mousemove', e => {
-        if (!isDragging || BanManagementState.activeDragSelect !== type) return;
-        e.preventDefault();
-        const rect = gridElement.getBoundingClientRect();
-        // --- 同样在移动时考虑滚动条位置 ---
-        let currentX = e.clientX - rect.left + gridElement.scrollLeft;
-        let currentY = e.clientY - rect.top + gridElement.scrollTop;
-        
-        const boxX = Math.min(startX, currentX);
-        const boxY = Math.min(startY, currentY);
-        const boxWidth = Math.abs(currentX - startX);
-        const boxHeight = Math.abs(currentY - startY);
-
-        DOM_BM.selectionBox.style.left = `${boxX}px`;
-        DOM_BM.selectionBox.style.top = `${boxY}px`;
-        DOM_BM.selectionBox.style.width = `${boxWidth}px`;
-        DOM_BM.selectionBox.style.height = `${boxHeight}px`;
-
-        checkSelection(gridElement, selectionSet);
-    });
-
-    document.addEventListener('mouseup', e => {
-        if (!isDragging || BanManagementState.activeDragSelect !== type) return;
-        isDragging = false;
-        BanManagementState.activeDragSelect = null;
-        DOM_BM.selectionBox.classList.add('hidden');
-        if (DOM_BM.selectionBox.parentElement) {
-            DOM_BM.selectionBox.parentElement.removeChild(DOM_BM.selectionBox);
-        }
-        updateBulkActionBar();
-    });
 }
 
 function clearSelection(type) {
@@ -321,20 +239,14 @@ async function unbanSelected() { await performBanAction(Array.from(BanManagement
 async function performBanAction(gids, action) {
     if (gids.length === 0) return;
     const isBan = action === 'ban';
-    
     let newBanList = [...BanManagementState.banList];
     let changesMade = 0;
-
     if (isBan) {
         gids.forEach(gid => {
             if (!BanManagementState.banListGids.has(gid)) {
                 const imgData = BanManagementState.allImageData.find(img => String(img.gid) === gid);
                 if (imgData) {
-                    newBanList.push({
-                        gid: imgData.gid,
-                        path: imgData.path,
-                        timestamp: new Date().toISOString()
-                    });
+                    newBanList.push({ gid: imgData.gid, path: imgData.path, timestamp: new Date().toISOString() });
                     changesMade++;
                 }
             }
@@ -344,13 +256,11 @@ async function performBanAction(gids, action) {
         newBanList = newBanList.filter(item => !gidsToUnbanSet.has(String(item.gid)));
         changesMade = BanManagementState.banList.length - newBanList.length;
     }
-
     if (changesMade === 0) {
         displayToast(`没有需要${isBan ? '封禁' : '解禁'}的项目。`, 'info');
         clearAllSelections();
         return;
     }
-
     if (await updateBanListOnServer(newBanList)) {
         displayToast(`成功${isBan ? '封禁' : '解禁'} ${changesMade} 张图片`, 'success');
         BanManagementState.banList = newBanList;
@@ -408,8 +318,16 @@ function resetAllBanFilters() {
 }
 
 function handlePanelSwap(event) {
-    const clickedPanel = event.currentTarget;
-    if (clickedPanel.classList.contains('is-primary') || DOM_BM.layoutWrapper.classList.contains('is-animating')) {
+    const clickedElement = event.currentTarget;
+    const isHeaderClick = clickedElement.classList.contains('bm-panel-header');
+    const isPanelClick = clickedElement.classList.contains('bm-panel');
+
+    if ( (isHeaderClick && !clickedElement.classList.contains('is-secondary-view')) ||
+         (isPanelClick && !clickedElement.classList.contains('is-secondary')) ) {
+        return;
+    }
+    
+    if (DOM_BM.layoutWrapper.classList.contains('is-animating')) {
         return;
     }
 
@@ -418,39 +336,44 @@ function handlePanelSwap(event) {
 
     DOM_BM.layoutWrapper.classList.add('is-animating');
 
-    const isUnbannedClicked = clickedPanel.id === 'bm-unbanned-panel';
-    const primaryPanel = isUnbannedClicked ? DOM_BM.unbannedPanel : DOM_BM.bannedPanel;
-    const secondaryPanel = isUnbannedClicked ? DOM_BM.bannedPanel : DOM_BM.unbannedPanel;
+    const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains('is-primary');
 
+    const primaryPanel = isUnbannedPrimary ? DOM_BM.unbannedPanel : DOM_BM.bannedPanel;
+    const secondaryPanel = isUnbannedPrimary ? DOM_BM.bannedPanel : DOM_BM.unbannedPanel;
+    const primaryHeader = isUnbannedPrimary ? DOM_BM.unbannedHeader : DOM_BM.bannedHeader;
+    const secondaryHeader = isUnbannedPrimary ? DOM_BM.bannedHeader : DOM_BM.unbannedHeader;
+
+    primaryPanel.classList.add('animating-out');
     secondaryPanel.classList.add('animating-out');
 
     setTimeout(() => {
-        primaryPanel.classList.add('animating-in');
-    }, 200); // 增加延迟，让效果更明显
+        DOM_BM.rightColumn.appendChild(secondaryHeader);
+        DOM_BM.rightColumn.appendChild(secondaryPanel);
+        DOM_BM.leftColumn.appendChild(primaryHeader);
+        DOM_BM.leftColumn.appendChild(primaryPanel);
 
-    // 立即切换主/次状态类和移动DOM元素
-    primaryPanel.classList.add('is-primary');
-    primaryPanel.classList.remove('is-secondary');
-    secondaryPanel.classList.add('is-secondary');
-    secondaryPanel.classList.remove('is-primary');
-    
-    if (isUnbannedClicked) {
-        DOM_BM.rightColumn.appendChild(primaryPanel);
-        DOM_BM.leftColumn.appendChild(secondaryPanel);
-    } else {
-        DOM_BM.rightColumn.appendChild(primaryPanel);
-        DOM_BM.leftColumn.appendChild(secondaryPanel);
-    }
-    
-    DOM_BM.leftColumn.insertBefore(DOM_BM.controlsPanel, DOM_BM.leftColumn.firstChild);
-    const totalAnimationTime = 200 + 500; // 延迟时长 + CSS动画时长
+        primaryPanel.classList.remove('is-primary', 'animating-out');
+        primaryPanel.classList.add('is-secondary');
+        primaryHeader.classList.add('is-secondary-view');
+
+        secondaryPanel.classList.remove('is-secondary', 'animating-out');
+        secondaryPanel.classList.add('is-primary');
+        secondaryHeader.classList.remove('is-secondary-view');
+        
+        primaryPanel.classList.add('animating-in');
+        secondaryPanel.classList.add('animating-in');
+
+    }, 250);
+
+    const totalAnimationTime = 500;
     setTimeout(() => {
         primaryPanel.classList.remove('animating-in');
-        secondaryPanel.classList.remove('animating-out');
+        secondaryPanel.classList.remove('animating-in');
         DOM_BM.layoutWrapper.classList.remove('is-animating');
-    }, totalAnimationTime);
+        
+        applyBanFilters();
 
-    applyBanFilters();
+    }, totalAnimationTime);
 }
 
 function selectAllInCurrentView() {
@@ -458,7 +381,6 @@ function selectAllInCurrentView() {
     const targetSet = isUnbannedPrimary ? BanManagementState.selectedUnbannedGids : BanManagementState.selectedBannedGids;
     const sourceData = isUnbannedPrimary ? BanManagementState.filteredUnbanned : BanManagementState.filteredBanned;
     const grid = isUnbannedPrimary ? DOM_BM.unbannedGrid : DOM_BM.bannedGrid;
-
     sourceData.forEach(img => targetSet.add(String(img.gid)));
     grid.querySelectorAll('.bm-image-card').forEach(card => card.classList.add('is-selected'));
     updateBulkActionBar();
@@ -469,108 +391,24 @@ function invertSelectionInCurrentView() {
     const targetSet = isUnbannedPrimary ? BanManagementState.selectedUnbannedGids : BanManagementState.selectedBannedGids;
     const sourceData = isUnbannedPrimary ? BanManagementState.filteredUnbanned : BanManagementState.filteredBanned;
     const grid = isUnbannedPrimary ? DOM_BM.unbannedGrid : DOM_BM.bannedGrid;
-
     sourceData.forEach(img => {
         const gid = String(img.gid);
-        if (targetSet.has(gid)) {
-            targetSet.delete(gid);
-        } else {
-            targetSet.add(gid);
-        }
+        targetSet.has(gid) ? targetSet.delete(gid) : targetSet.add(gid);
     });
-
     grid.querySelectorAll('.bm-image-card').forEach(card => card.classList.toggle('is-selected'));
     updateBulkActionBar();
 }
 
-function setupDragToSelect(gridElement, selectionSet, type) {
-    let startX, startY, isDragging = false;
-    
-    gridElement.addEventListener('mousedown', e => {
-        if (e.target !== gridElement) return;
-        e.preventDefault();
-        isDragging = true;
-        BanManagementState.activeDragSelect = type;
-
-        const rect = gridElement.getBoundingClientRect();
-        const scrollLeft = gridElement.scrollLeft;
-        const scrollTop = gridElement.scrollTop;
-        startX = e.clientX - rect.left + scrollLeft;
-        startY = e.clientY - rect.top + scrollTop;
-        
-        DOM_BM.selectionBox.style.left = `${e.clientX - rect.left}px`;
-        DOM_BM.selectionBox.style.top = `${e.clientY - rect.top}px`;
-        DOM_BM.selectionBox.style.width = '0px';
-        DOM_BM.selectionBox.style.height = '0px';
-        DOM_BM.selectionBox.style.transform = `translate(0, 0)`;
-        gridElement.appendChild(DOM_BM.selectionBox);
-        DOM_BM.selectionBox.classList.remove('hidden');
-
-        if (!e.ctrlKey && !e.metaKey) {
-            clearSelection(type);
-        }
-    });
-
-    document.addEventListener('mousemove', e => {
-        if (!isDragging || BanManagementState.activeDragSelect !== type) return;
-        e.preventDefault();
-        const rect = gridElement.getBoundingClientRect();
-        const scrollLeft = gridElement.scrollLeft;
-        const scrollTop = gridElement.scrollTop;
-        let currentX = e.clientX - rect.left + scrollLeft;
-        let currentY = e.clientY - rect.top + scrollTop;
-        
-        const boxX = Math.min(startX, currentX);
-        const boxY = Math.min(startY, currentY);
-        const boxWidth = Math.abs(currentX - startX);
-        const boxHeight = Math.abs(currentY - startY);
-
-        DOM_BM.selectionBox.style.transform = `translate(${boxX - scrollLeft}px, ${boxY - scrollTop}px)`;
-        DOM_BM.selectionBox.style.width = `${boxWidth}px`;
-        DOM_BM.selectionBox.style.height = `${boxHeight}px`;
-
-        checkSelection(gridElement, selectionSet);
-    });
-
-    document.addEventListener('mouseup', e => {
-        if (!isDragging || BanManagementState.activeDragSelect !== type) return;
-        isDragging = false;
-        BanManagementState.activeDragSelect = null;
-        DOM_BM.selectionBox.classList.add('hidden');
-        DOM_BM.selectionBox.style.width = '0px';
-        DOM_BM.selectionBox.style.height = '0px';
-        if (DOM_BM.selectionBox.parentElement) {
-            DOM_BM.selectionBox.parentElement.removeChild(DOM_BM.selectionBox);
-        }
-        updateBulkActionBar();
-    });
-}
-
 function checkSelection(gridElement, selectionSet) {
     if (!DOM_BM.selectionBox.parentElement) return;
-
-    // 获取选框相对于 spacer 的位置
-    const boxLeft = parseFloat(DOM_BM.selectionBox.style.left);
-    const boxTop = parseFloat(DOM_BM.selectionBox.style.top);
-    const boxRight = boxLeft + parseFloat(DOM_BM.selectionBox.style.width);
-    const boxBottom = boxTop + parseFloat(DOM_BM.selectionBox.style.height);
-
-    const cards = gridElement.querySelectorAll('.bm-image-card');
-    
-    cards.forEach(card => {
-        // 获取卡片相对于 spacer 的位置
-        const cardLeft = parseFloat(card.style.left);
-        const cardTop = parseFloat(card.style.top);
-        const cardRight = cardLeft + card.offsetWidth;
-        const cardBottom = cardTop + card.offsetHeight;
+    const boxRect = DOM_BM.selectionBox.getBoundingClientRect();
+    gridElement.querySelectorAll('.bm-image-card').forEach(card => {
+        const cardRect = card.getBoundingClientRect();
         const gid = card.dataset.gid;
-        
-        // 矩形相交检测
-        const isIntersecting = !(boxRight < cardLeft || boxLeft > cardRight || boxBottom < cardTop || boxTop > cardBottom);
-
+        const isIntersecting = !(boxRect.right < cardRect.left || boxRect.left > cardRect.right || boxRect.bottom < cardRect.top || boxRect.top > cardRect.bottom);
         if (isIntersecting) {
             if (!selectionSet.has(gid)) { selectionSet.add(gid); card.classList.add('is-selected'); }
-        } else if (!document.body.classList.contains('ctrl-pressed')) { //  Ctrl 键多选逻辑
+        } else if (!document.body.classList.contains('ctrl-pressed')) {
              if (selectionSet.has(gid)) { selectionSet.delete(gid); card.classList.remove('is-selected'); }
         }
     });
@@ -620,6 +458,7 @@ async function fetchAndPopulateSecondaryTagsForBM() {
         console.error("加载二级标签失败:", error);
     }
 }
+
 function updateSecondaryTagsUIForBM() {
     const count = BanManagementState.selectedSecondaryTags.size;
     DOM_BM.secondaryTagsBtn.textContent = count > 0 ? `二级标签 (${count})` : '二级标签';
@@ -627,109 +466,79 @@ function updateSecondaryTagsUIForBM() {
 }
 
 function setupDragAndClick_BM(gridElement, selectionSet, type) {
-    let isMouseDown = false;
-    let isDragging = false;
-    let startX, startY;
+    let isMouseDown = false, isDragging = false, startX, startY;
 
     const handleMouseMove = (e) => {
         if (!isMouseDown) return;
-
-        // 首次移动时，判定为拖拽操作开始
-        if (!isDragging) {
+        if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
             isDragging = true;
             BanManagementState.activeDragSelect = type;
-
-            if (!e.ctrlKey && !e.metaKey) {
-                clearSelection(type);
-            }
+            if (!e.ctrlKey && !e.metaKey) clearSelection(type);
             
-            // 初始化并显示选框
-            const spacer = gridElement.querySelector('div');
-            if(spacer) spacer.appendChild(DOM_BM.selectionBox);
-            DOM_BM.selectionBox.style.left = `${startX}px`;
-            DOM_BM.selectionBox.style.top = `${startY}px`;
-            DOM_BM.selectionBox.style.width = '0px';
-            DOM_BM.selectionBox.style.height = '0px';
-            DOM_BM.selectionBox.classList.remove('hidden');
+            const spacer = gridElement.querySelector('div[style*="position: relative"]');
+            if(spacer) {
+                const gridRect = gridElement.getBoundingClientRect();
+                const initialLeft = startX - gridRect.left + gridElement.scrollLeft;
+                const initialTop = startY - gridRect.top + gridElement.scrollTop;
+                DOM_BM.selectionBox.style.left = `${initialLeft}px`;
+                DOM_BM.selectionBox.style.top = `${initialTop}px`;
+                DOM_BM.selectionBox.style.width = '0px';
+                DOM_BM.selectionBox.style.height = '0px';
+                spacer.appendChild(DOM_BM.selectionBox);
+                DOM_BM.selectionBox.classList.remove('hidden');
+            }
         }
-
-        // 仅在拖拽状态下更新选框
         if (isDragging) {
             const rect = gridElement.getBoundingClientRect();
             const currentX = e.clientX - rect.left + gridElement.scrollLeft;
             const currentY = e.clientY - rect.top + gridElement.scrollTop;
-
-            const boxX = Math.min(startX, currentX);
-            const boxY = Math.min(startY, currentY);
-            const boxWidth = Math.abs(currentX - startX);
-            const boxHeight = Math.abs(currentY - startY);
-
+            const initialX = startX - rect.left + gridElement.scrollLeft;
+            const initialY = startY - rect.top + gridElement.scrollTop;
+            const boxX = Math.min(initialX, currentX);
+            const boxY = Math.min(initialY, currentY);
+            const boxWidth = Math.abs(currentX - initialX);
+            const boxHeight = Math.abs(currentY - initialY);
             DOM_BM.selectionBox.style.left = `${boxX}px`;
             DOM_BM.selectionBox.style.top = `${boxY}px`;
             DOM_BM.selectionBox.style.width = `${boxWidth}px`;
             DOM_BM.selectionBox.style.height = `${boxHeight}px`;
-
             checkSelection(gridElement, selectionSet);
         }
     };
 
     const handleMouseUp = (e) => {
         if (!isMouseDown) return;
-
         if (isDragging) {
-            // 如果是拖拽操作，则在鼠标抬起时清理
             if (BanManagementState.activeDragSelect === type) {
                 DOM_BM.selectionBox.classList.add('hidden');
-                if (DOM_BM.selectionBox.parentElement) {
-                    DOM_BM.selectionBox.parentElement.removeChild(DOM_BM.selectionBox);
-                }
+                if (DOM_BM.selectionBox.parentElement) DOM_BM.selectionBox.parentElement.removeChild(DOM_BM.selectionBox);
                 updateBulkActionBar();
                 BanManagementState.activeDragSelect = null;
             }
         } else {
-            // 如果未拖拽，则是单击操作
             const card = e.target.closest('.bm-image-card');
             if (card) {
                 const gid = card.dataset.gid;
-                if (selectionSet.has(gid)) {
-                    selectionSet.delete(gid);
-                    card.classList.remove('is-selected');
-                } else {
-                    selectionSet.add(gid);
-                    card.classList.add('is-selected');
-                }
+                selectionSet.has(gid) ? selectionSet.delete(gid) : selectionSet.add(gid);
+                card.classList.toggle('is-selected');
                 updateBulkActionBar();
             } else if (!e.ctrlKey && !e.metaKey) {
-                // 点击在空白区域
-                clearSelection(type);
-                updateBulkActionBar();
+                clearAllSelections();
             }
         }
-
         isMouseDown = false;
         isDragging = false;
-        
-        // 移除 document 上的监听器
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
     };
 
     gridElement.addEventListener('mousedown', e => {
-        // 仅响应鼠标左键，并忽略滚动条区域
-        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth || e.offsetY >= gridElement.clientHeight) {
-            return;
-        }
-
+        if (e.button !== 0 || e.offsetX >= gridElement.clientWidth || e.offsetY >= gridElement.clientHeight) return;
         isMouseDown = true;
         isDragging = false;
-
-        const rect = gridElement.getBoundingClientRect();
-        startX = e.clientX - rect.left + gridElement.scrollLeft;
-        startY = e.clientY - rect.top + gridElement.scrollTop;
-        
+        startX = e.clientX;
+        startY = e.clientY;
         e.preventDefault();
-
-        // 绑定 document 级别的事件
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
     });
@@ -738,17 +547,14 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
 function setupBanManagementEventListeners() {
     DOM_BM.searchInput?.addEventListener('input', () => { clearTimeout(BanManagementState.searchDebounceTimer); BanManagementState.searchDebounceTimer = setTimeout(applyBanFilters, 300); });
     DOM_BM.filterCheckboxes?.forEach(cb => cb.addEventListener('change', () => { updateFilterToggleButtonTextForBM(cb.id); applyBanFilters(); }));
-    
-    if(DOM_BM.unbannedGrid) {
-        setupDragAndClick_BM(DOM_BM.unbannedGrid, BanManagementState.selectedUnbannedGids, 'unbanned');
-    }
-    if(DOM_BM.bannedGrid) {
-        setupDragAndClick_BM(DOM_BM.bannedGrid, BanManagementState.selectedBannedGids, 'banned');
-    }
+    if(DOM_BM.unbannedGrid) setupDragAndClick_BM(DOM_BM.unbannedGrid, BanManagementState.selectedUnbannedGids, 'unbanned');
+    if(DOM_BM.bannedGrid) setupDragAndClick_BM(DOM_BM.bannedGrid, BanManagementState.selectedBannedGids, 'banned');
     DOM_BM.unbannedGrid?.addEventListener('scroll', renderUnbannedGrid);
     DOM_BM.bannedGrid?.addEventListener('scroll', renderBannedGrid);
     DOM_BM.bannedPanel?.addEventListener('click', handlePanelSwap);
     DOM_BM.unbannedPanel?.addEventListener('click', handlePanelSwap);
+    DOM_BM.bannedHeader?.addEventListener('click', handlePanelSwap);
+    DOM_BM.unbannedHeader?.addEventListener('click', handlePanelSwap);
     DOM_BM.bulkSelectAllBtn?.addEventListener('click', selectAllInCurrentView);
     DOM_BM.bulkInvertBtn?.addEventListener('click', invertSelectionInCurrentView);
     DOM_BM.bulkBanBtn?.addEventListener('click', banSelected);
@@ -775,7 +581,23 @@ function setupBanManagementEventListeners() {
         if (DOM_BM.gameFilterDropdown && !DOM_BM.gameFilterDropdown.classList.contains('hidden') && !DOM_BM.gameFilterBtn.contains(e.target)) DOM_BM.gameFilterDropdown.classList.add('hidden');
         if (DOM_BM.secondaryTagsDropdown && !DOM_BM.secondaryTagsDropdown.classList.contains('hidden') && !DOM_BM.secondaryTagsBtn.contains(e.target) && !DOM_BM.secondaryTagsDropdown.contains(e.target)) DOM_BM.secondaryTagsDropdown.classList.add('hidden');
     });
-
     document.addEventListener('keydown', e => { if (e.key === 'Control' || e.key === 'Meta') document.body.classList.add('ctrl-pressed'); });
     document.addEventListener('keyup', e => { if (e.key === 'Control' || e.key === 'Meta') document.body.classList.remove('ctrl-pressed'); });
+}
+
+function updatePanelTitles() {
+    const updateHeader = (headerElement, imageDataSet) => {
+        if (!headerElement || !imageDataSet) return;
+        const counts = { 'gs-character': 0, 'sr-character': 0, 'zzz-character': 0, 'waves-character': 0, 'unknown': 0 };
+        imageDataSet.forEach(img => {
+            const game = img.sourceGallery;
+            if (counts.hasOwnProperty(game)) counts[game]++; else counts['unknown']++;
+        });
+        for (const [gameKey, count] of Object.entries(counts)) {
+            const countSpan = headerElement.querySelector(`.game-stat-item[data-game="${gameKey}"] .game-count`);
+            if (countSpan) countSpan.textContent = count;
+        }
+    };
+    updateHeader(DOM_BM.unbannedHeader, BanManagementState.unbannedImages);
+    updateHeader(DOM_BM.bannedHeader, BanManagementState.bannedImages);
 }
