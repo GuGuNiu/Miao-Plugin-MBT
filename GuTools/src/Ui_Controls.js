@@ -51,6 +51,7 @@ async function switchTab(targetTabId) {
         switch (targetTabId) {
             case 'homePane':
                 if (typeof updateGalleryStatusDisplay === "function") updateGalleryStatusDisplay();
+                if (typeof updateHomeStats === "function") updateHomeStats(); 
                 else console.warn("UI控件: updateGalleryStatusDisplay 未定义");
                 break;
 
@@ -237,6 +238,9 @@ async function updateGalleryStatusDisplay() {
             throw new Error(result?.error || "获取的配置数据格式无效");
         }
         const config = result.config;
+        if (elements.aiBtn) elements.aiBtn.classList.toggle('active', config.Ai === 1);
+        if (elements.eastereggBtn) elements.eastereggBtn.classList.toggle('active', config.EasterEgg === 1);
+        if (elements.layoutBtn) elements.layoutBtn.classList.toggle('active', config.layout === 1);
         console.log("UI控件: 获取到图库配置:", config);
 
         // 更新 TuKuOP 开关
@@ -262,6 +266,10 @@ async function updateGalleryStatusDisplay() {
             elements.pflText.textContent = `当前: ${pflDesc}`;
         }
 
+        if (elements.aiBtn) elements.aiBtn.classList.toggle('active', config.Ai === 1);
+        if (elements.eastereggBtn) elements.eastereggBtn.classList.toggle('active', config.EasterEgg === 1);
+        if (elements.layoutBtn) elements.layoutBtn.classList.toggle('active', config.layout === 1);
+        
         // 启用控件
         if (elements.tuKuOPSwitch) elements.tuKuOPSwitch.disabled = false;
         if (elements.pflRadio0) elements.pflRadio0.disabled = false;
@@ -311,6 +319,25 @@ async function handleGalleryControlChange(event) {
             document.getElementById('pflRadio1'),
             document.getElementById('pflRadio2')
         ];
+    } else if (controlElement.classList.contains('filter-button')) {
+        isButtonToggle = true;
+        controlElement.classList.toggle('active'); // 立即切换视觉状态
+        newValue = controlElement.classList.contains('active') ? 1 : 0;
+        switch (controlElement.id) {
+            case 'ai-filter-btn':
+                configKey = 'Ai';
+                controlName = 'AI 图片过滤';
+                break;
+            case 'easteregg-filter-btn':
+                configKey = 'EasterEgg';
+                controlName = '彩蛋图片过滤';
+                break;
+            case 'layout-filter-btn':
+                configKey = 'layout';
+                controlName = '横屏图过滤';
+                break;
+            default: return;
+        }
     } else {
         return;
     }
@@ -388,23 +415,75 @@ function setupHomePaneEventListeners() {
         // 监听 Radio Button 组需要监听每个 Radio
         document.getElementById('pflRadio0'),
         document.getElementById('pflRadio1'),
-        document.getElementById('pflRadio2')
+        document.getElementById('pflRadio2'),
+        DOM.aiFilterBtn, 
+        DOM.eastereggFilterBtn, 
+        DOM.layoutFilterBtn 
     ];
     let listenerCount = 0;
     controls.forEach(controlElement => {
         if (controlElement) {
-            controlElement.removeEventListener('change', handleGalleryControlChange);
-            controlElement.addEventListener('change', handleGalleryControlChange);
+            const eventType = controlElement.type === 'radio' || controlElement.type === 'checkbox' ? 'change' : 'click';
+            controlElement.removeEventListener(eventType, handleGalleryControlChange);
+            controlElement.addEventListener(eventType, handleGalleryControlChange);
             listenerCount++;
-        } else {
-            const missingId = controls.indexOf(controlElement) === 0 ? 'tuKuOPToggleSwitch' : `pflRadio${controls.indexOf(controlElement) - 1}`;
-            console.warn(`UI控件: Home 面板控件元素 #${missingId} 未找到`);
         }
     });
     if (listenerCount > 0) {
         console.log(`UI控件: 为 ${listenerCount} 个 Home 面板控件设置了监听器`);
-    } else {
-        console.error("UI控件: 未能为任何 Home 面板控件设置监听器！");
+    }
+}
+
+/**
+ * 获取并更新首页仓库卡片的统计数据
+ */
+async function updateHomeStats() {
+    console.log("UI控件: 正在更新 Home 面板仓库统计...");
+    try {
+        const result = await fetchJsonData(API_ENDPOINTS.FETCH_HOME_STATS);
+        if (!result?.success || !Array.isArray(result.stats)) {
+            throw new Error(result?.error || "获取的统计数据格式无效");
+        }
+
+        result.stats.forEach(repo => {
+            const card = DOM[`repoCard${repo.repo}`];
+            const statusEl = DOM[`repoStatus${repo.repo}`];
+            const messageEl = card.querySelector('.repo-card-message');
+
+            if (!card) return;
+
+            card.classList.remove('placeholder', 'exists', 'not-exists', 'not-required');
+
+            if (repo.status === 'exists') {
+                card.classList.add('exists');
+                statusEl.className = 'repo-card-status exists';
+                statusEl.textContent = `节点: ${repo.downloadNode || '未知'}`;
+                DOM[`repoRoles${repo.repo}`].textContent = repo.roles;
+                DOM[`repoImages${repo.repo}`].textContent = repo.images;
+                DOM[`repoSize${repo.repo}`].textContent = FormatBytes(repo.size);
+            } else if (repo.status === 'not-exists') {
+                card.classList.add('not-exists');
+                statusEl.className = 'repo-card-status not-exists';
+                statusEl.textContent = '未下载';
+                if (messageEl) messageEl.textContent = '未下载'; // 保持一致
+            } else if (repo.status === 'not-required') {
+                card.classList.add('not-required');
+                statusEl.className = 'repo-card-status not-required';
+                statusEl.textContent = '无需下载';
+                if (messageEl) messageEl.textContent = '无需下载';
+            }
+        });
+
+    } catch (error) {
+        console.error("UI控件: 更新仓库统计失败:", error);
+        displayToast('加载仓库统计数据失败', 'error');
+        for (let i = 1; i <= 4; i++) {
+            if(DOM[`repoCard${i}`]) DOM[`repoCard${i}`].classList.remove('placeholder');
+            if(DOM[`repoStatus${i}`]) {
+                DOM[`repoStatus${i}`].textContent = '加载失败';
+                DOM[`repoStatus${i}`].className = 'repo-card-status not-exists';
+            }
+        }
     }
 }
 

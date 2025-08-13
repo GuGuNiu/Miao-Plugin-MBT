@@ -58,31 +58,110 @@
 
         <div class="tab-content">
             <div id="homePane" class="tab-pane active">
-                <div class="sticky-note-container">
-                    <div id="tuKuOPStatusNote" class="sticky-note">
-                        <div class="sticky-note-title">图库状态</div>
-                        <div class="sticky-note-content">
-                            <p id="tuKuOPStatusText">加载中...</p>
-                            <label class="switch-large">
-                                <input type="checkbox" id="tuKuOPToggleSwitch">
-                                <span class="slider-large"></span>
-                            </label>
+                <div class="home-pane-layout">
+                    <!-- 左侧：仓库数据卡片 -->
+                    <div id="repository-cards-container">
+                        <!-- 卡片 1: 核心仓库 -->
+                        <div id="repo-card-1" class="repository-card placeholder">
+                            <div class="repo-card-content">
+                                <div class="repo-card-header">
+                                    <h3 class="repo-card-title">一号仓库 (核心)</h3>
+                                    <span id="repo-status-1" class="repo-card-status"></span>
+                                </div>
+                                <div class="repo-card-stats">
+                                    <div class="stat-item"><div id="repo-roles-1" class="stat-value">--</div><div class="stat-label">角色数</div></div>
+                                    <div class="stat-item"><div id="repo-images-1" class="stat-value">--</div><div class="stat-label">图片数</div></div>
+                                    <div class="stat-item" style="grid-column: 1 / -1;"><div id="repo-size-1" class="stat-value">--.- MB</div><div class="stat-label">占用空间</div></div>
+                                </div>
+                            </div>
+                            <div class="repo-card-message"></div>
+                        </div>
+                        <!-- 卡片 2: 原神仓库 -->
+                        <div id="repo-card-2" class="repository-card placeholder">
+                            <div class="repo-card-content">
+                                <div class="repo-card-header">
+                                    <h3 class="repo-card-title">二号仓库 (原神)</h3>
+                                    <span id="repo-status-2" class="repo-card-status"></span>
+                                </div>
+                                <div class="repo-card-stats">
+                                    <div class="stat-item"><div id="repo-roles-2" class="stat-value">--</div><div class="stat-label">角色数</div></div>
+                                    <div class="stat-item"><div id="repo-images-2" class="stat-value">--</div><div class="stat-label">图片数</div></div>
+                                    <div class="stat-item" style="grid-column: 1 / -1;"><div id="repo-size-2" class="stat-value">--.- MB</div><div class="stat-label">占用空间</div></div>
+                                </div>
+                            </div>
+                            <div class="repo-card-message"></div>
+                        </div>
+                        <!-- 卡片 3: 星铁仓库 -->
+                        <div id="repo-card-3" class="repository-card placeholder">
+                            <div class="repo-card-content">
+                                <div class="repo-card-header">
+                                    <h3 class="repo-card-title">三号仓库 (星铁)</h3>
+                                    <span id="repo-status-3" class="repo-card-status"></span>
+                                </div>
+                                <div class="repo-card-stats">
+                                    <div class="stat-item"><div id="repo-roles-3" class="stat-value">--</div><div class="stat-label">角色数</div></div>
+                                    <div class="stat-item"><div id="repo-images-3" class="stat-value">--</div><div class="stat-label">图片数</div></div>
+                                    <div class="stat-item" style="grid-column: 1 / -1;"><div id="repo-size-3" class="stat-value">--.- MB</div><div class="stat-label">占用空间</div></div>
+                                </div>
+                            </div>
+                            <div class="repo-card-message"></div>
+                        </div>
+                        <!-- 卡片 4: 鸣潮&绝区零仓库 -->
+                        <div id="repo-card-4" class="repository-card placeholder">
+                            <div class="repo-card-content">
+                                <div class="repo-card-header">
+                                    <h3 class="repo-card-title">四号仓库 (鸣潮&绝区零)</h3>
+                                    <span id="repo-status-4" class="repo-card-status"></span>
+                                </div>
+                                <div class="repo-card-stats">
+                                    <div class="stat-item"><div id="repo-roles-4" class="stat-value">--</div><div class="stat-label">角色数</div></div>
+                                    <div class="stat-item"><div id="repo-images-4" class="stat-value">--</div><div class="stat-label">图片数</div></div>
+                                    <div class="stat-item" style="grid-column: 1 / -1;"><div id="repo-size-4" class="stat-value">--.- MB</div><div class="stat-label">占用空间</div></div>
+                                </div>
+                            </div>
+                            <div class="repo-card-message"></div>
                         </div>
                     </div>
-                    <div id="pflStatusNote" class="sticky-note">
-                        <div class="sticky-note-title">净化等级</div>
-                        <div class="sticky-note-content">
-                            <p id="pflStatusText">加载中...</p>
-                            <div class="tri-state-switch-container">
-                                <input type="radio" id="pflRadio0" name="pflLevel" value="0" class="tri-state-radio"
-                                    checked>
-                                <input type="radio" id="pflRadio1" name="pflLevel" value="1" class="tri-state-radio">
-                                <input type="radio" id="pflRadio2" name="pflLevel" value="2" class="tri-state-radio">
-                                <div class="tri-state-switch">
-                                    <label for="pflRadio0" class="tri-state-label state-0">0</label>
-                                    <label for="pflRadio1" class="tri-state-label state-1">Low</label>
-                                    <label for="pflRadio2" class="tri-state-label state-2">MAX</label>
-                                    <span class="tri-state-slider"></span>
+            
+                    <!-- 右侧：设置卡片 -->
+                    <div id="settings-cards-container">
+                        <!-- 卡片 1: 图库开关 -->
+                        <div id="tuKuOPStatusNote" class="sticky-note">
+                            <div class="sticky-note-title">图库总开关</div>
+                            <div class="sticky-note-content">
+                                <p id="tuKuOPStatusText">加载中...</p>
+                                <label class="switch-large">
+                                    <input type="checkbox" id="tuKuOPToggleSwitch">
+                                    <span class="slider-large"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- 卡片 2: 净化等级 -->
+                        <div id="pflStatusNote" class="sticky-note">
+                            <div class="sticky-note-title">内容净化等级</div>
+                            <div class="sticky-note-content">
+                                <p id="pflStatusText">加载中...</p>
+                                <div class="tri-state-switch-container">
+                                    <input type="radio" id="pflRadio0" name="pflLevel" value="0" class="tri-state-radio" checked>
+                                    <input type="radio" id="pflRadio1" name="pflLevel" value="1" class="tri-state-radio">
+                                    <input type="radio" id="pflRadio2" name="pflLevel" value="2" class="tri-state-radio">
+                                    <div class="tri-state-switch">
+                                        <label for="pflRadio0" class="tri-state-label state-0">0</label>
+                                        <label for="pflRadio1" class="tri-state-label state-1">Low</label>
+                                        <label for="pflRadio2" class="tri-state-label state-2">MAX</label>
+                                        <span class="tri-state-slider"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 卡片 3: 内容过滤开关 -->
+                        <div id="contentFiltersNote" class="sticky-note">
+                            <div class="sticky-note-title">内容过滤开关</div>
+                            <div class="sticky-note-content-vertical">
+                                <div class="filter-buttons-container">
+                                    <button id="ai-filter-btn" class="filter-button">AI 图片</button>
+                                    <button id="easteregg-filter-btn" class="filter-button">彩蛋图片</button>
+                                    <button id="layout-filter-btn" class="filter-button">横屏图</button>
                                 </div>
                             </div>
                         </div>

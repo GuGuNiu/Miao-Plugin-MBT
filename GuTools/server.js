@@ -328,6 +328,43 @@ const findGalleryImagesRecursively = async (
 };
 
 /**
+ * 计算文件夹大小和文件/子目录数量
+ * @param {string} folderPath 文件夹路径
+ * @returns {Promise<{size: number, files: number, folders: number}>}
+ */
+const getFolderStats = async (folderPath) => {
+  let totalSize = 0;
+  let fileCount = 0;
+  let folderCount = 0;
+  const visited = new Set();
+
+  async function crawl(currentPath) {
+    if (visited.has(currentPath)) return;
+    visited.add(currentPath);
+
+    try {
+      const entries = await fs.readdir(currentPath, { withFileTypes: true });
+      for (const entry of entries) {
+        const entryPath = path.join(currentPath, entry.name);
+        if (entry.isDirectory()) {
+          folderCount++;
+          await crawl(entryPath);
+        } else if (entry.isFile()) {
+          fileCount++;
+          try {
+            const stats = await fs.stat(entryPath);
+            totalSize += stats.size;
+          } catch (statError) {  }
+        }
+      }
+    } catch (readError) {  }
+  }
+
+  await crawl(folderPath);
+  return { size: totalSize, files: fileCount, folders: folderCount };
+};
+
+/**
  * 扫描指定的外部插件图片目录
  * @param {string} sourceKey 来源标识 
  * @param {string} basePath 要扫描的插件图片目录的物理路径
@@ -687,6 +724,98 @@ const communityGalleryManager = {
   }
 };
 
+// [GET] /api/home-stats - 获取首页仓库统计数据
+app.get("/api/home-stats", async (req, res) => {
+  console.log("请求: [GET] /api/home-stats");
+  try {
+    // 检查 ZZZ 和 Waves 插件是否安装
+    const isPluginInstalled = async (pluginName) => {
+        try {
+            const pluginPath = path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName);
+            await fs.access(pluginPath);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+    const zzzInstalled = await isPluginInstalled('ZZZ-Plugin');
+    const wavesInstalled = await isPluginInstalled('waves-plugin');
+
+    const repoConfigs = [
+      { num: 1, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT')?.path },
+      { num: 2, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-2')?.path },
+      { num: 3, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-3')?.path },
+      { num: 4, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-4')?.path, requiredPlugins: zzzInstalled || wavesInstalled },
+    ];
+
+    let galleryConfig = {};
+    try {
+        const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, "utf8");
+        const loadedConfig = yaml.load(fileContents);
+        if(typeof loadedConfig === 'object' && loadedConfig !== null) galleryConfig = loadedConfig;
+    } catch (e) { }
+    const repoNodeInfo = galleryConfig.repoNodeInfo || {};
+
+    const statsPromises = repoConfigs.map(async (repo) => {
+      const result = {
+        repo: repo.num,
+        status: 'not-exists',
+        roles: 0,
+        images: 0,
+        size: 0,
+        downloadNode: repoNodeInfo[repo.num] || '未知'
+      };
+
+      if (repo.num === 4 && !repo.requiredPlugins) {
+        result.status = 'not-required';
+        return result;
+      }
+      
+      if (!repo.path) {
+        return result;
+      }
+
+      try {
+        await fs.access(repo.path);
+        result.status = 'exists';
+        const stats = await getFolderStats(repo.path);
+        result.size = stats.size;
+        
+        let rolesCount = 0;
+        let imagesCount = 0;
+        
+        for(const gallery of MAIN_GALLERY_FOLDERS){
+            const galleryPath = path.join(repo.path, gallery);
+            try {
+                await fs.access(galleryPath);
+                const roleDirs = await fs.readdir(galleryPath, { withFileTypes: true });
+                for(const roleDir of roleDirs){
+                    if(roleDir.isDirectory()){
+                        rolesCount++;
+                        const rolePath = path.join(galleryPath, roleDir.name);
+                        const imageFiles = await fs.readdir(rolePath);
+                        imagesCount += imageFiles.filter(f => ALLOWED_IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase())).length;
+                    }
+                }
+            } catch (e) {  }
+        }
+        result.roles = rolesCount;
+        result.images = imagesCount;
+
+      } catch {
+        // 状态默认为 not-exists
+      }
+      return result;
+    });
+
+    const results = await Promise.all(statsPromises);
+    res.json({ success: true, stats: results });
+
+  } catch (error) {
+    console.error('[API Home Stats] 获取统计数据出错:', error);
+    res.status(500).json({ success: false, error: '服务器获取统计数据时出错' });
+  }
+});
 
 // [GET] /api/aliases - 获取所有角色别名数据
 app.get("/api/aliases", async (req, res) => {
@@ -1056,24 +1185,26 @@ app.get("/api/gallery-config", async (req, res) => {
   }
 });
 
-// [POST] 更新图库配置项 (只允许 TuKuOP 和 PFL)
+// [POST] 更新图库配置项
 app.post('/api/update-gallery-config', async (req, res) => {
   console.log("请求: [POST] /api/update-gallery-config");
   const { configKey, newValue } = req.body;
   console.log(`  > 更新项: ${configKey}, 新值: ${newValue}`);
 
-  const allowedKeys = ['TuKuOP', 'PFL'];
+  // 扩展允许的键
+  const allowedKeys = ['TuKuOP', 'PFL', 'Ai', 'EasterEgg', 'layout'];
   if (!configKey || !allowedKeys.includes(configKey)) {
     console.error(`  > 错误: 无效的配置键: ${configKey}`);
     return res.status(400).json({ success: false, error: `无效的配置项: ${configKey}` });
   }
 
   let processedNewValue;
-  if (configKey === 'TuKuOP') {
+  // 根据不同的 key 处理新值
+  if (['TuKuOP', 'Ai', 'EasterEgg', 'layout'].includes(configKey)) {
     processedNewValue = Number(newValue);
     if (processedNewValue !== 0 && processedNewValue !== 1) {
-      console.error(`  > 错误: TuKuOP 值无效 (非0或1): ${processedNewValue}`);
-      return res.status(400).json({ success: false, error: "TuKuOP 状态值必须是 0 或 1。" });
+      console.error(`  > 错误: ${configKey} 值无效 (非0或1): ${processedNewValue}`);
+      return res.status(400).json({ success: false, error: `${configKey} 状态值必须是 0 或 1。` });
     }
   } else if (configKey === 'PFL') {
     processedNewValue = Number(newValue);
@@ -1086,26 +1217,20 @@ app.post('/api/update-gallery-config', async (req, res) => {
   }
 
   try {
-    let configData = { ...DEFAULT_GALLERY_CONFIG }; // 从默认值开始
+    let configData = { ...DEFAULT_GALLERY_CONFIG };
     try {
       const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, 'utf8');
       const loadedConfig = yaml.load(fileContents);
       if (typeof loadedConfig === 'object' && loadedConfig !== null) {
-        configData = { ...configData, ...loadedConfig }; // 合并加载的配置
-      } else {
-        console.warn(`配置文件 ${GALLERY_CONFIG_FILE} 格式无效，将覆盖为新配置`);
+        configData = { ...configData, ...loadedConfig };
       }
     } catch (readError) {
-      if (readError.code !== 'ENOENT') {
-        console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错，将覆盖:`, readError);
-      } else {
-        console.log(`配置文件 ${GALLERY_CONFIG_FILE} 不存在，将创建新文件`);
-      }
+      if (readError.code !== 'ENOENT') console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错:`, readError);
     }
 
-    configData[configKey] = processedNewValue; // 更新值
-    const newYamlContents = yaml.dump(configData, { indent: 2 }); // 转回 YAML
-    await fs.writeFile(GALLERY_CONFIG_FILE, newYamlContents, 'utf8'); // 写入文件
+    configData[configKey] = processedNewValue;
+    const newYamlContents = yaml.dump(configData, { indent: 2 });
+    await fs.writeFile(GALLERY_CONFIG_FILE, newYamlContents, 'utf8');
 
     console.log(`  > 成功更新 ${configKey} 为 ${processedNewValue}`);
     res.json({ success: true, message: `设置 '${configKey}' 成功！`, newConfig: configData });

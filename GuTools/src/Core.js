@@ -4,6 +4,7 @@
 
 // --- 常量定义 ---
 const API_ENDPOINTS = {
+  FETCH_HOME_STATS: "/api/home-stats",
   FETCH_GALLERY_IMAGES: "/api/images",
   FETCH_USER_DATA: "/api/userdata",
   UPDATE_USER_DATA: "/api/update-userdata",
@@ -228,6 +229,18 @@ function cacheDomElements() {
   DOM.tuKuOPStatusText = document.getElementById('tuKuOPStatusText');
   DOM.pflStatusText = document.getElementById('pflStatusText');
   DOM.tuKuOPToggleSwitch = document.getElementById('tuKuOPToggleSwitch');
+  DOM.repositoryCardsContainer = document.getElementById('repository-cards-container');
+  DOM.aiFilterBtn = document.getElementById('ai-filter-btn');
+  DOM.eastereggFilterBtn = document.getElementById('easteregg-filter-btn');
+  DOM.layoutFilterBtn = document.getElementById('layout-filter-btn');
+  for (let i = 1; i <= 4; i++) {
+    DOM[`repoCard${i}`] = document.getElementById(`repo-card-${i}`);
+    DOM[`repoStatus${i}`] = document.getElementById(`repo-status-${i}`);
+    DOM[`repoRoles${i}`] = document.getElementById(`repo-roles-${i}`);
+    DOM[`repoImages${i}`] = document.getElementById(`repo-images-${i}`);
+    DOM[`repoSize${i}`] = document.getElementById(`repo-size-${i}`);
+    DOM[`repoNode${i}`] = document.getElementById(`repo-node-${i}`);
+  }
 
   // --- GuTools 面板 (容器 & 视图) ---
   DOM.guToolsPane = document.getElementById("GuTools");
@@ -558,6 +571,18 @@ async function fetchJsonData(url, options = {}) {
     console.error(`处理请求 ${url} 出错:`, error.message);
     throw error;
   }
+}
+
+function FormatBytes(bytes, decimals = 1) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "? B";
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  let i = Math.floor(Math.log(bytes) / Math.log(k));
+  if (i >= sizes.length) i = sizes.length - 1;
+  const formattedValue = i === 0 ? bytes : parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
+  return `${formattedValue} ${sizes[i]}`;
 }
 
 /**

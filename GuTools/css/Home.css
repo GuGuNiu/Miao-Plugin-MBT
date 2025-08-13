@@ -3,51 +3,156 @@
 /* ===================================== */
 
 #homePane {
-  padding: 30px;
+  padding: 0;
   overflow-y: auto;
   background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23bce0f5' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   background-size: 60px 60px, cover;
   border-radius: 0 0 8px 8px;
 }
 
-#homePane h2 {
-  font-size: 1.8em;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 25px;
-  color: var(--text-color);
-  flex-shrink: 0;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-#homePane .sticky-note-container {
+/* --- 主布局 --- */
+.home-pane-layout {
   display: flex;
-  flex-wrap: wrap;
-  gap: 35px;
-  padding: 25px;
-  justify-content: center;
-  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
-.sticky-note {
-  font-family: "Baloo 2", cursive;
-  background-color: #fff7e0;
-  padding: 20px 25px 25px 25px;
-  border-radius: 12px 12px 15px 15px / 8px 8px 20px 20px;
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+#repository-cards-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+}
+
+#settings-cards-container {
+  flex: 0 0 260px; /* 右侧栏变得更窄 */
   min-width: 260px;
-  max-width: 320px;
-  min-height: 200px;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-  color: #5d4037;
-  position: relative;
-  border: 2px solid #ffe082;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- 左侧仓库卡片样式 (日漫风格) --- */
+.repository-card {
+  background: linear-gradient(145deg, #e3f2fd, #e8eaf6); /* 浅蓝到浅紫的柔和渐变 */
+  border-radius: 10px;
+  padding: 15px; /* 减小内边距使卡片变小 */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: all 0.3s ease;
+  border: 1px solid #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+.repository-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+}
+.repository-card.placeholder .repo-card-content {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
+.repo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.repo-card-title {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #37474f;
+}
+.repo-card-status {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.repo-card-status.exists {
+  background-color: #e0f2f1;
+  color: #00796b;
+  border-color: #b2dfdb;
+}
+.repo-card-status.not-exists {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border-color: #ffe0b2;
+}
+.repo-card-status.not-required {
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+  border-color: #e0e0e0;
+}
+
+.repo-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-item {
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #1a237e;
+}
+.stat-label {
+  font-size: 0.7em;
+  color: #546e7a;
+  margin-top: 1px;
+}
+
+/* "无需下载" 状态样式 */
+.repository-card .repo-card-message {
+  display: none;
+}
+.repository-card.not-required {
+  justify-content: center;
+  align-items: center;
+}
+.repository-card.not-required .repo-card-content {
+  display: none;
+}
+.repository-card.not-required .repo-card-message {
+  display: block;
+  font-size: 1.6em;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+/* --- 右侧设置卡片样式 (便利贴风格) --- */
+.sticky-note {
+  font-family: "Baloo 2", cursive;
+  padding: 20px;
+  border-radius: 12px 12px 15px 15px / 8px 8px 20px 20px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  color: #5d4037;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
 .sticky-note::before {
   content: "";
   position: absolute;
@@ -56,43 +161,45 @@
   transform: translateX(-50%);
   width: 20px;
   height: 20px;
-  background-color: #ff6f61;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 2px solid #fff;
-  z-index: 5; /* 确保图钉在便签纸上方 */
+  z-index: 5;
 }
-
 .sticky-note:hover {
   transform: translateY(-5px) scale(1.03);
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
-  z-index: 10; /* 确保悬停的便签在最上层 */
+  z-index: 10;
+}
+
+#tuKuOPStatusNote {
+  background-color: #fff7e0;
+  border: 2px solid #ffe082;
+}
+#tuKuOPStatusNote::before {
+  background-color: #ff6f61;
+}
+#tuKuOPStatusNote:hover {
   border-color: #ffd54f;
 }
-
-#homePane .sticky-note-container .sticky-note:nth-child(3n + 2) {
+#pflStatusNote {
   background-color: #e0f7fa;
-  border-color: #80deea;
+  border: 2px solid #80deea;
 }
-
-#homePane .sticky-note-container .sticky-note:nth-child(3n + 2)::before {
+#pflStatusNote::before {
   background-color: #4fc3f7;
 }
-
-#homePane .sticky-note-container .sticky-note:nth-child(3n + 2):hover {
+#pflStatusNote:hover {
   border-color: #4dd0e1;
 }
-
-#homePane .sticky-note-container .sticky-note:nth-child(3n + 3) {
+#contentFiltersNote {
   background-color: #fce4ec;
-  border-color: #f8bbd0;
+  border: 2px solid #f8bbd0;
 }
-
-#homePane .sticky-note-container .sticky-note:nth-child(3n + 3)::before {
+#contentFiltersNote::before {
   background-color: #ec407a;
 }
-
-#homePane .sticky-note-container .sticky-note:nth-child(3n + 3):hover {
+#contentFiltersNote:hover {
   border-color: #f48fb1;
 }
 
@@ -106,9 +213,8 @@
   text-align: center;
   flex-shrink: 0;
 }
-
-.sticky-note-content {
-  font-size: 1em;
+.sticky-note-content,
+.sticky-note-content-vertical {
   font-weight: 600;
   flex-grow: 1;
   display: flex;
@@ -116,31 +222,60 @@
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 5px 0;
+}
+.sticky-note-content p {
+  margin-bottom: 15px;
+  color: #795548;
+}
+
+/* --- 内容过滤按钮 (横向布局) --- */
+.filter-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
   padding: 10px 0;
 }
-
-.sticky-note-content p {
-  margin-bottom: 18px;
-  color: #795548;
+.filter-button {
+  flex: 1;
+  padding: 8px 5px;
+  font-family: "Baloo 2", cursive;
+  font-size: 0.9em;
   font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #795548;
+  border: 2px dashed rgba(121, 85, 72, 0.3);
+  box-shadow: none;
+}
+.filter-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(121, 85, 72, 0.5);
+}
+.filter-button.active {
+  background: linear-gradient(135deg, var(--sun-yellow), var(--sun-orange));
+  color: white;
+  border: 2px solid transparent;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 10px rgba(255, 171, 115, 0.4);
 }
 
-/* --- 三态开关 --- */
-
+/* --- 三态开关 & 大开关 (原始样式) --- */
 .tri-state-switch-container {
   margin-top: 18px;
   position: relative;
   display: inline-block;
 }
-
 .tri-state-radio {
   position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
-  pointer-events: none; /* 确保隐藏的 radio 不响应事件 */
+  pointer-events: none;
 }
-
 .tri-state-switch {
   display: flex;
   align-items: center;
@@ -153,26 +288,24 @@
   transition: background-color 0.3s ease;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid #bdbdbd;
-  overflow: hidden; /* 防止滑块溢出圆角 */
-  padding: 12px 0px 0px 0px; /* 调整内边距以影响内部元素位置，可能需要重新审视 */
+  overflow: hidden;
+  padding: 12px 0px 0px 0px;
 }
-
 .tri-state-label {
   flex: 1;
   text-align: center;
   font-size: 0.9em;
   font-weight: 700;
   color: #616161;
-  z-index: 1; /* 确保文字在滑块上方 */
+  z-index: 1;
   transition: color 0.3s ease;
   padding: 0 5px;
-  user-select: none; /* 防止用户选中文字 */
+  user-select: none;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
 }
-
 .tri-state-slider {
   position: absolute;
   top: 4px;
@@ -182,53 +315,42 @@
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  /* 使用回弹效果的 transition */
   transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
   z-index: 0;
 }
-
 .tri-state-radio[value="0"]:checked ~ .tri-state-switch {
   background-color: #f5f5f5;
   border-color: #e0e0e0;
 }
-
 .tri-state-radio[value="0"]:checked ~ .tri-state-switch .state-0 {
   color: #424242;
 }
-
 .tri-state-radio[value="0"]:checked ~ .tri-state-switch .tri-state-slider {
   transform: translateX(0%);
   background-color: #bdbdbd;
 }
-
 .tri-state-radio[value="1"]:checked ~ .tri-state-switch {
   background-color: #f3cea4;
   border-color: #d6cba5;
 }
-
 .tri-state-radio[value="1"]:checked ~ .tri-state-switch .state-1 {
   color: #88530e;
 }
-
 .tri-state-radio[value="1"]:checked ~ .tri-state-switch .tri-state-slider {
   transform: translateX(calc(100% + 7px));
   background-color: #ffa600;
 }
-
 .tri-state-radio[value="2"]:checked ~ .tri-state-switch {
   background-color: #f8bbd0;
   border-color: #f48fb1;
 }
-
 .tri-state-radio[value="2"]:checked ~ .tri-state-switch .state-2 {
   color: #880e4f;
 }
-
 .tri-state-radio[value="2"]:checked ~ .tri-state-switch .tri-state-slider {
   transform: translateX(calc(200% + 15px));
   background-color: #f06292;
 }
-
 .tri-state-switch-container input[type="radio"]:disabled ~ .tri-state-switch {
   cursor: not-allowed;
   opacity: 0.6;
@@ -236,12 +358,77 @@
   background-color: #eeeeee;
   border-color: #e0e0e0;
 }
-
 .tri-state-switch-container input[type="radio"]:disabled ~ .tri-state-switch .tri-state-label {
   color: #bdbdbd;
 }
-
 .tri-state-switch-container input[type="radio"]:disabled ~ .tri-state-switch .tri-state-slider {
   background-color: #f5f5f5;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.switch-large {
+  position: relative;
+  display: inline-block;
+  width: 140px;
+  height: 54px;
+  margin-top: 10px;
+}
+.switch-large input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider-large {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ffccbc;
+  border: 3px solid #ffab91;
+  transition: 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  border-radius: 54px;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.15);
+}
+.slider-large:before {
+  position: absolute;
+  content: "";
+  height: 44px;
+  width: 44px;
+  left: 5px;
+  bottom: 2px;
+  background-color: #ffffff;
+  background-image: linear-gradient(to bottom, #ffffff, #f0f0f0);
+  transition: 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.slider-large::after {
+  content: "❌";
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  transition: opacity 0.3s ease;
+}
+.switch-large input:checked + .slider-large {
+  background-color: #a5d6a7;
+  border-color: #81c784;
+}
+.switch-large input:checked + .slider-large::before {
+  transform: translateX(86px);
+}
+.switch-large input:checked + .slider-large::after {
+  content: "✔️";
+  left: 20px;
+  right: auto;
+  opacity: 1;
+}
+.switch-large input:disabled + .slider-large {
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: grayscale(50%);
 }
