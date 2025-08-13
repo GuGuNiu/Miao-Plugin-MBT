@@ -151,8 +151,19 @@
      
 -   **Q: 更新图库后，看不到新面板图？**
     -   **A:** 索引数据未更新导致的，所有操作都会依据imagedata.json，索引数据不会及时更新。
--   **Q: 更新图库后，看不到新面板图？**
-    -   **A:** 索引数据未更新导致的，所有操作都会依据imagedata.json，索引数据不会及时更新。
+
+-   **Q: 启动机器人或更新后，控制台出现 npm install 依赖安装失败的报错怎么办？**
+    -   **A:** 因为 Web 控制台 (GuTools) 的依赖未能自动安装，通常由网络问题或文件权限导致。请按以下步骤在Yunzai根目录安装：
+      
+推荐使用国内镜像源:
+```bash
+cd ./resources/Miao-Plugin-MBT/GuTools && npm install --prod --registry=https://registry.npmmirror.com
+```
+
+如果镜像源失败，可尝试官方源
+```bash
+cd ./resources/Miao-Plugin-MBT/GuTools && npm install --prod
+```
 
 -   **Q: 第三方/社区图库管理混乱？**
     -   **A:** 仅保证能用。
