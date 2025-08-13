@@ -3,59 +3,9 @@
 // ==========================================================================
 
 const DOM_BM = {};
-
-function cacheBanManagementDOMElements() {
-  DOM_BM.pane = document.getElementById("banManagementPane");
-  if (!DOM_BM.pane) {
-    return false;
-  }
-
-  DOM_BM.layoutWrapper = DOM_BM.pane.querySelector(".bm-layout-wrapper");
-  DOM_BM.leftColumn = DOM_BM.pane.querySelector(".bm-left-column");
-  DOM_BM.rightColumn = DOM_BM.pane.querySelector(".bm-right-column");
-
-  DOM_BM.controlsPanel = document.getElementById("bm-controls-panel");
-  DOM_BM.unbannedPanel = document.getElementById("bm-unbanned-panel");
-  DOM_BM.bannedPanel = document.getElementById("bm-banned-panel");
-  DOM_BM.unbannedHeader = document.getElementById("bm-unbanned-header");
-  DOM_BM.bannedHeader = document.getElementById("bm-banned-header");
-
-  DOM_BM.unbannedGrid = document.getElementById("bm-unbanned-grid");
-  DOM_BM.bannedGrid = document.getElementById("bm-banned-grid");
-  DOM_BM.unbannedCount = document.getElementById("bm-unbanned-count");
-  DOM_BM.bannedCount = document.getElementById("bm-banned-count");
-
-  DOM_BM.gameFilterBtn = document.getElementById("bm-filterGameBtn");
-  DOM_BM.gameFilterDropdown = document.getElementById("bm-filterGameDropdown");
-  DOM_BM.searchInput = document.getElementById("bm-dataListSearchInput");
-  DOM_BM.secondaryTagsBtn = document.getElementById("bm-secondaryTagsFilterBtn");
-  DOM_BM.secondaryTagsDropdown = document.getElementById("bm-secondaryTagsDropdown");
-  DOM_BM.clearSecondaryTagsBtn = document.getElementById("bm-clearSecondaryTagsBtn");
-  DOM_BM.filterCheckboxes = DOM_BM.pane.querySelectorAll(".filter-controls .filter-toggle-checkbox");
-
-  DOM_BM.bulkActionBar = document.getElementById("bm-bulk-action-bar");
-  DOM_BM.bulkActionText = document.getElementById("bm-bulk-action-text");
-  DOM_BM.bulkSelectAllBtn = document.getElementById("bm-bulk-select-all-btn");
-  DOM_BM.bulkInvertBtn = document.getElementById("bm-bulk-invert-btn");
-  DOM_BM.bulkBanBtn = document.getElementById("bm-bulk-ban-btn");
-  DOM_BM.bulkUnbanBtn = document.getElementById("bm-bulk-unban-btn");
-  DOM_BM.bulkCancelBtn = document.getElementById("bm-bulk-cancel-btn");
-  DOM_BM.selectionBox = document.getElementById("bm-selection-box");
-
-  if (DOM_BM.controlsPanel) {
-    DOM_BM.pflIndicator = DOM_BM.controlsPanel.querySelector("#bm-pfl-indicator");
-    if (!DOM_BM.pflIndicator) {
-      console.warn("[Ban Management] 警告: 未能缓存 #bm-pfl-indicator 元素，请检查HTML结构。");
-    }
-  } else {
-    console.warn("[Ban Management] 警告: 未能缓存 #bm-controls-panel 元素，请检查HTML ID。");
-  }
-
-  return true;
-}
-
 const BanManagementState = {
   isInitialized: false,
+  needsRefresh: false,
   warningShown: false,
   isLoading: false,
   allImageData: [],
@@ -71,35 +21,117 @@ const BanManagementState = {
   availableTags: {},
   searchDebounceTimer: null,
   activeDragSelect: null,
+  searchIndexMap: new Map(),
 };
 
-function updatePflIndicator_BM() {
-  if (!DOM_BM.pflIndicator) {
-    // 如果元素没找到，直接返回，避免错误
-    return;
-  }
+/**
+ * 缓存封禁管理面板的所有 DOM 元素引用
+ */
+function cacheBanManagementDOMElements() {
+  DOM_BM.pane = document.getElementById("banManagementPane");
+  if (!DOM_BM.pane) return false;
 
-  const pflLevel = AppState.galleryConfig?.PFL ?? 0;
+  DOM_BM.layoutWrapper = DOM_BM.pane.querySelector(".bm-layout-wrapper");
+  DOM_BM.leftColumn = DOM_BM.pane.querySelector(".bm-left-column");
+  DOM_BM.rightColumn = DOM_BM.pane.querySelector(".bm-right-column");
+  DOM_BM.controlsPanel = document.getElementById("bm-controls-panel");
+  DOM_BM.unbannedPanel = document.getElementById("bm-unbanned-panel");
+  DOM_BM.bannedPanel = document.getElementById("bm-banned-panel");
+  DOM_BM.unbannedHeader = document.getElementById("bm-unbanned-header");
+  DOM_BM.bannedHeader = document.getElementById("bm-banned-header");
+  DOM_BM.unbannedGrid = document.getElementById("bm-unbanned-grid");
+  DOM_BM.bannedGrid = document.getElementById("bm-banned-grid");
+  DOM_BM.unbannedCount = document.getElementById("bm-unbanned-count");
+  DOM_BM.bannedCount = document.getElementById("bm-banned-count");
+  DOM_BM.gameFilterBtn = document.getElementById("bm-filterGameBtn");
+  DOM_BM.gameFilterDropdown = document.getElementById("bm-filterGameDropdown");
+  DOM_BM.searchInput = document.getElementById("bm-dataListSearchInput");
+  DOM_BM.secondaryTagsBtn = document.getElementById("bm-secondaryTagsFilterBtn");
+  DOM_BM.secondaryTagsDropdown = document.getElementById("bm-secondaryTagsDropdown");
+  DOM_BM.clearSecondaryTagsBtn = document.getElementById("bm-clearSecondaryTagsBtn");
+  DOM_BM.filterCheckboxes = DOM_BM.pane.querySelectorAll(".filter-controls .filter-toggle-checkbox");
+  DOM_BM.bulkActionBar = document.getElementById("bm-bulk-action-bar");
+  DOM_BM.bulkActionText = document.getElementById("bm-bulk-action-text");
+  DOM_BM.bulkSelectAllBtn = document.getElementById("bm-bulk-select-all-btn");
+  DOM_BM.bulkInvertBtn = document.getElementById("bm-bulk-invert-btn");
+  DOM_BM.bulkBanBtn = document.getElementById("bm-bulk-ban-btn");
+  DOM_BM.bulkUnbanBtn = document.getElementById("bm-bulk-unban-btn");
+  DOM_BM.bulkCancelBtn = document.getElementById("bm-bulk-cancel-btn");
+  DOM_BM.selectionBox = document.getElementById("bm-selection-box");
 
-  if (pflLevel === 1) {
-    DOM_BM.pflIndicator.textContent = "净化等级: ①";
-    DOM_BM.pflIndicator.classList.remove("hidden");
-  } else if (pflLevel === 2) {
-    DOM_BM.pflIndicator.textContent = "净化等级: ②";
-    DOM_BM.pflIndicator.classList.remove("hidden");
-  } else {
-    DOM_BM.pflIndicator.classList.add("hidden");
-  }
+  return true;
 }
 
+/**
+ * 为封禁管理面板构建强大的搜索索引
+ */
+async function buildBanSearchIndex() {
+  if (typeof pinyinPro === 'undefined') {
+      console.error("BanManagement: pinyinPro 库未加载，无法构建搜索索引。");
+      return;
+  }
+  const { pinyin } = pinyinPro;
+  console.log("[封禁管理] 正在构建搜索索引...");
+
+  BanManagementState.searchIndexMap.clear();
+
+  // allImageData 包含了所有图片，无论是否封禁，都需要索引
+  for (const entry of BanManagementState.allImageData) {
+      if (!entry.attributes || !entry.gid) continue;
+
+      const textsToProcess = new Set();
+      // 角色名/父文件夹名，并查找别名
+      const characterName = entry.characterName || entry.attributes.parentFolder; 
+      if (characterName) {
+          textsToProcess.add(characterName);
+          const aliases = AppState.aliasData.mainToAliases[characterName];
+          if (Array.isArray(aliases)) {
+              aliases.forEach(alias => textsToProcess.add(alias));
+          }
+      }
+
+      // 文件名
+      if (entry.attributes.filename) {
+          textsToProcess.add(entry.attributes.filename.replace(/\.[^/.]+$/, ""));
+      }
+
+      // 二级标签
+      if (Array.isArray(entry.attributes.secondaryTags)) {
+          entry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
+      }
+
+      const combinedText = Array.from(textsToProcess).join(' ');
+      if (!combinedText) continue;
+
+      const lowerCaseText = combinedText.toLowerCase();
+      const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
+      const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
+
+      // 索引字符串包含 GID
+      const searchIndexString = `${entry.gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
+      BanManagementState.searchIndexMap.set(String(entry.gid), searchIndexString);
+  }
+  console.log(`[封禁管理] 搜索索引构建完成，共 ${BanManagementState.searchIndexMap.size} 条记录。`);
+}
+
+/**
+ * 初始化封禁管理面板，加载所有必要数据
+ */
 async function initializeBanManagement() {
-  if (BanManagementState.isInitialized) return;
   if (BanManagementState.isLoading) return;
 
-  if (!DOM_BM.pane || !DOM_BM.unbannedHeader) {
-    if (!cacheBanManagementDOMElements()) return;
+  if (!BanManagementState.isInitialized) {
+    console.log("[封禁管理] 首次初始化...");
+    if (!cacheBanManagementDOMElements()) {
+      console.error("[封禁管理] 致命错误：核心DOM元素缓存失败，初始化中止。");
+      return;
+    }
     setupBanManagementEventListeners();
     setupCustomGameFilterForBM("bm-filterGameBtn", "bm-filterGameDropdown", applyBanFilters);
+  }
+
+  if (BanManagementState.isInitialized && !AppState.banManagement.needsRefresh) {
+    return;
   }
 
   BanManagementState.isLoading = true;
@@ -114,35 +146,34 @@ async function initializeBanManagement() {
     BanManagementState.banListGids = new Set(BanManagementState.banList.map((item) => String(item.gid)));
 
     await fetchAndPopulateSecondaryTagsForBM();
-    processAndSeparateImageData();
-    applyBanFilters(); // 这个函数内部会调用 updatePflIndicator_BM
-    updatePanelTitles();
-    DOM_BM.filterCheckboxes.forEach((cb) => updateFilterToggleButtonTextForBM(cb.id));
 
-    const pflLevel = AppState.galleryConfig?.PFL ?? 0;
-    if ((pflLevel === 1 || pflLevel === 2) && !BanManagementState.warningShown) {
-      const levelText = pflLevel === 1 ? "①" : "②";
-      displayToast(`当前封禁管理受到来自净化等级(PFL)：${levelText} 的影响，部分图片不会展示出现`, "warning", 5000);
-      BanManagementState.warningShown = true;
+    processAndSeparateImageData();
+    applyBanFilters();
+    updatePanelTitles();
+
+    if (!BanManagementState.isInitialized) {
+      DOM_BM.filterCheckboxes.forEach((cb) => updateFilterToggleButtonTextForBM(cb.id));
     }
 
     BanManagementState.isInitialized = true;
+    AppState.banManagement.needsRefresh = false;
   } catch (error) {
     console.error("封禁管理面板初始化失败:", error);
     displayToast("加载封禁数据失败", "error");
-    if (DOM_BM.unbannedGrid) DOM_BM.unbannedGrid.innerHTML = `<div class="bm-placeholder"><p>数据加载失败，请检查后端服务。</p></div>`;
+    if (DOM_BM.unbannedGrid) DOM_BM.unbannedGrid.innerHTML = `<div class="bm-placeholder"><p>数据加载失败。</p></div>`;
     if (DOM_BM.bannedGrid) DOM_BM.bannedGrid.innerHTML = `<div class="bm-placeholder"><p>数据加载失败。</p></div>`;
   } finally {
     BanManagementState.isLoading = false;
   }
 }
 
+/**
+ * 根据PFL等级和封禁状态，将所有图片数据分离到两个列表中
+ */
 function processAndSeparateImageData() {
   const pflLevel = AppState.galleryConfig?.PFL ?? 0;
-
   const shouldFilter = (img) => {
-    if (pflLevel === 0) return false;
-    if (!img?.attributes) return false;
+    if (pflLevel === 0 || !img?.attributes) return false;
     if (pflLevel === 1 && img.attributes.isRx18) return true;
     if (pflLevel === 2 && (img.attributes.isRx18 || img.attributes.isPx18)) return true;
     return false;
@@ -153,17 +184,17 @@ function processAndSeparateImageData() {
 
   BanManagementState.allImageData.forEach((img) => {
     if (!img || !img.gid) return;
-    const isBanned = BanManagementState.banListGids.has(String(img.gid));
-    if (isBanned) {
+    if (BanManagementState.banListGids.has(String(img.gid))) {
       BanManagementState.bannedImages.push(img);
-    } else {
-      if (!shouldFilter(img)) {
-        BanManagementState.unbannedImages.push(img);
-      }
+    } else if (!shouldFilter(img)) {
+      BanManagementState.unbannedImages.push(img);
     }
   });
 }
 
+/**
+ * 应用所有当前过滤器并重新渲染列表
+ */
 function applyBanFilters() {
   const searchTerm = DOM_BM.searchInput?.value.toLowerCase().trim() || "";
   const selectedGame = DOM_BM.gameFilterBtn?.dataset.value || "";
@@ -174,17 +205,24 @@ function applyBanFilters() {
 
   const filterFunction = (entry) => {
     if (!entry?.attributes) return false;
-    if (searchTerm && !(entry.attributes.filename || "").toLowerCase().includes(searchTerm) && !(entry.gid || "").toString().toLowerCase().includes(searchTerm)) return false;
+
+    if (searchTerm) {
+      const searchIndexString = BanManagementState.searchIndexMap.get(String(entry.gid)) || "";
+      if (!searchIndexString.includes(searchTerm)) return false;
+    }
+
     if (filters["bm-filterPx18"] && !entry.attributes.isPx18) return false;
     if (filters["bm-filterRx18"] && !entry.attributes.isRx18) return false;
     if (filters["bm-filterNormal"] && entry.attributes.layout !== "normal") return false;
     if (filters["bm-filterFullscreen"] && entry.attributes.layout !== "fullscreen") return false;
     if (filters["bm-filterEasterEgg"] && !entry.attributes.isEasterEgg) return false;
     if (filters["bm-filterAiImage"] && !entry.attributes.isAiImage) return false;
+
     if (selectedGame) {
       if (selectedGame === "unknown" && ["gs-character", "sr-character", "zzz-character", "waves-character"].includes(entry.sourceGallery)) return false;
       else if (selectedGame !== "unknown" && entry.sourceGallery !== selectedGame) return false;
     }
+
     if (BanManagementState.selectedSecondaryTags.size > 0) {
       const entryTags = entry.attributes.secondaryTags || [];
       for (const tag of BanManagementState.selectedSecondaryTags) if (!entryTags.includes(tag)) return false;
@@ -193,7 +231,6 @@ function applyBanFilters() {
   };
 
   const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains("is-primary");
-
   if (isUnbannedPrimary) {
     BanManagementState.filteredUnbanned = BanManagementState.unbannedImages.filter(filterFunction);
     BanManagementState.filteredBanned = [...BanManagementState.bannedImages];
@@ -209,7 +246,55 @@ function applyBanFilters() {
   renderUnbannedGrid();
   renderBannedGrid();
   updatePanelTitles();
-  updatePflIndicator_BM();
+}
+
+/**
+ * 使用虚拟滚动渲染指定的网格
+ */
+function renderGrid(gridElement, data, type, selectionSet) {
+  if (!gridElement) return;
+  const cardHeight = 180,
+    cardMinWidth = 140,
+    cardGap = 16;
+  const scrollTop = gridElement.scrollTop;
+  const containerHeight = gridElement.clientHeight;
+  const containerWidth = gridElement.clientWidth > 32 ? gridElement.clientWidth - 32 : gridElement.clientWidth;
+
+  gridElement.innerHTML = "";
+  if (data.length === 0) {
+    gridElement.innerHTML = `<div class="bm-placeholder"><p>${type === "unbanned" ? "没有匹配的图片" : "暂无封禁图片"}</p></div>`;
+    return;
+  }
+
+  const columns = Math.max(1, Math.floor((containerWidth + cardGap) / (cardMinWidth + cardGap)));
+  const cardWidth = (containerWidth - (columns - 1) * cardGap) / columns;
+  const totalRows = Math.ceil(data.length / columns);
+  const totalHeight = totalRows * (cardHeight + cardGap);
+  const spacer = document.createElement("div");
+  spacer.style.cssText = `position: relative; width: 100%; height: ${totalHeight}px;`;
+
+  const startRow = Math.max(0, Math.floor(scrollTop / (cardHeight + cardGap)) - 1);
+  const endRow = Math.min(totalRows - 1, Math.ceil((scrollTop + containerHeight) / (cardHeight + cardGap)) + 1);
+  const startIndex = startRow * columns;
+  const endIndex = Math.min(data.length, (endRow + 1) * columns);
+
+  const fragment = document.createDocumentFragment();
+  for (let i = startIndex; i < endIndex; i++) {
+    const img = data[i];
+    const row = Math.floor(i / columns);
+    const col = i % columns;
+    const card = document.createElement("div");
+    card.className = "bm-image-card";
+    card.dataset.gid = img.gid;
+    card.style.cssText = `position: absolute; top: ${row * (cardHeight + cardGap)}px; left: ${col * (cardWidth + cardGap)}px; width: ${cardWidth}px; height: ${cardHeight}px;`;
+    const thumbnailPath = getThumbnailPath(img);
+    const filename = (img.attributes.filename || "未知文件").replace(/\.webp$/i, "");
+    card.innerHTML = `<img src="${thumbnailPath}" alt="${filename}" loading="lazy" draggable="false" onerror="this.src='/placeholder.png'"><span class="bm-card-filename" title="${filename}">${filename}</span>`;
+    if (selectionSet.has(String(img.gid))) card.classList.add("is-selected");
+    fragment.appendChild(card);
+  }
+  spacer.appendChild(fragment);
+  gridElement.appendChild(spacer);
 }
 
 function renderUnbannedGrid() {
@@ -220,52 +305,193 @@ function renderBannedGrid() {
   DOM_BM.bannedCount.textContent = BanManagementState.filteredBanned.length;
   renderGrid(DOM_BM.bannedGrid, BanManagementState.filteredBanned, "banned", BanManagementState.selectedBannedGids);
 }
-function renderGrid(gridElement, data, type, selectionSet) {
-  if (!gridElement) return;
-  const cardHeight = 180,
-    cardMinWidth = 140,
-    cardGap = 16;
-  const scrollTop = gridElement.scrollTop;
-  const containerHeight = gridElement.clientHeight;
-  const containerWidth = gridElement.clientWidth > 32 ? gridElement.clientWidth - 32 : gridElement.clientWidth;
-  gridElement.innerHTML = "";
-  if (data.length === 0) {
-    gridElement.innerHTML = `<div class="bm-placeholder"><p>${type === "unbanned" ? "没有匹配的图片" : "暂无封禁图片"}</p></div>`;
+
+/**
+ * 执行封禁或解禁操作
+ */
+async function performBanAction(gids, action) {
+  if (gids.length === 0) return;
+  const isBan = action === "ban";
+  let newBanList = [...BanManagementState.banList];
+  let changesMade = 0;
+
+  if (isBan) {
+    gids.forEach((gid) => {
+      if (!BanManagementState.banListGids.has(gid)) {
+        const imgData = BanManagementState.allImageData.find((img) => String(img.gid) === gid);
+        if (imgData) {
+          newBanList.push({ gid: imgData.gid, path: imgData.path, timestamp: new Date().toISOString() });
+          changesMade++;
+        }
+      }
+    });
+  } else {
+    const gidsToUnbanSet = new Set(gids);
+    newBanList = newBanList.filter((item) => !gidsToUnbanSet.has(String(item.gid)));
+    changesMade = BanManagementState.banList.length - newBanList.length;
+  }
+
+  if (changesMade === 0) {
+    displayToast(`没有需要${isBan ? "封禁" : "解禁"}的项目。`, "info");
+    clearAllSelections();
     return;
   }
-  const columns = Math.max(1, Math.floor((containerWidth + cardGap) / (cardMinWidth + cardGap)));
-  const cardWidth = (containerWidth - (columns - 1) * cardGap) / columns;
-  const totalRows = Math.ceil(data.length / columns);
-  const totalHeight = totalRows * (cardHeight + cardGap);
-  const spacer = document.createElement("div");
-  spacer.style.position = "relative";
-  spacer.style.width = "100%";
-  spacer.style.height = `${totalHeight}px`;
-  const startRow = Math.max(0, Math.floor(scrollTop / (cardHeight + cardGap)) - 1);
-  const endRow = Math.min(totalRows - 1, Math.ceil((scrollTop + containerHeight) / (cardHeight + cardGap)) + 1);
-  const startIndex = startRow * columns;
-  const endIndex = Math.min(data.length, (endRow + 1) * columns);
-  const fragment = document.createDocumentFragment();
-  for (let i = startIndex; i < endIndex; i++) {
-    const img = data[i];
-    const row = Math.floor(i / columns);
-    const col = i % columns;
-    const card = document.createElement("div");
-    card.className = "bm-image-card";
-    card.dataset.gid = img.gid;
-    card.style.position = "absolute";
-    card.style.top = `${row * (cardHeight + cardGap)}px`;
-    card.style.left = `${col * (cardWidth + cardGap)}px`;
-    card.style.width = `${cardWidth}px`;
-    card.style.height = `${cardHeight}px`;
-    const thumbnailPath = getThumbnailPath(img);
-    const filename = (img.attributes.filename || "未知文件").replace(/\.webp$/i, "");
-    card.innerHTML = `<img src="${thumbnailPath}" alt="${filename}" loading="lazy" draggable="false" onerror="this.src='/placeholder.png'"><span class="bm-card-filename" title="${filename}">${filename}</span>`;
-    if (selectionSet.has(String(img.gid))) card.classList.add("is-selected");
-    fragment.appendChild(card);
+
+  if (await updateBanListOnServer(newBanList)) {
+    displayToast(`成功${isBan ? "封禁" : "解禁"} ${changesMade} 张图片`, "success");
+    BanManagementState.banList = newBanList;
+    BanManagementState.banListGids = new Set(newBanList.map((item) => String(item.gid)));
+    processAndSeparateImageData();
+    applyBanFilters();
+    clearAllSelections();
+  } else {
+    displayToast(`${isBan ? "封禁" : "解禁"}操作失败`, "error");
   }
-  spacer.appendChild(fragment);
-  gridElement.appendChild(spacer);
+}
+
+async function banSelected() {
+  await performBanAction(Array.from(BanManagementState.selectedUnbannedGids), "ban");
+}
+async function unbanSelected() {
+  await performBanAction(Array.from(BanManagementState.selectedBannedGids), "unban");
+}
+
+/**
+ * 将更新后的封禁列表发送到服务器
+ */
+async function updateBanListOnServer(newList) {
+  try {
+    const result = await fetchJsonData("/api/update-ban-list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newList) });
+    return result.success;
+  } catch (error) {
+    console.error("更新封禁列表失败:", error);
+    return false;
+  }
+}
+
+/**
+ * 切换主次面板视图
+ */
+function handlePanelSwap(event) {
+  const clickedElement = event.currentTarget;
+  const isSecondaryView = clickedElement.classList.contains("is-secondary-view") || clickedElement.classList.contains("is-secondary");
+  if (!isSecondaryView || DOM_BM.layoutWrapper.classList.contains("is-animating")) {
+    return;
+  }
+  clearAllSelections();
+  resetAllBanFilters();
+  DOM_BM.layoutWrapper.classList.add("is-animating");
+  const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains("is-primary");
+  const primaryPanel = isUnbannedPrimary ? DOM_BM.unbannedPanel : DOM_BM.bannedPanel;
+  const secondaryPanel = isUnbannedPrimary ? DOM_BM.bannedPanel : DOM_BM.unbannedPanel;
+  const primaryHeader = isUnbannedPrimary ? DOM_BM.unbannedHeader : DOM_BM.bannedHeader;
+  const secondaryHeader = isUnbannedPrimary ? DOM_BM.bannedHeader : DOM_BM.unbannedHeader;
+
+  setTimeout(() => {
+    DOM_BM.rightColumn.append(secondaryHeader, secondaryPanel);
+    DOM_BM.leftColumn.append(primaryHeader, primaryPanel);
+    primaryPanel.classList.replace("is-primary", "is-secondary");
+    primaryHeader.classList.add("is-secondary-view");
+    secondaryPanel.classList.replace("is-secondary", "is-primary");
+    secondaryHeader.classList.remove("is-secondary-view");
+  }, 250);
+
+  setTimeout(() => {
+    DOM_BM.layoutWrapper.classList.remove("is-animating");
+    applyBanFilters();
+  }, 500);
+}
+
+/**
+ * 设置所有事件监听器
+ */
+function setupBanManagementEventListeners() {
+  DOM_BM.searchInput?.addEventListener("input", () => {
+    clearTimeout(BanManagementState.searchDebounceTimer);
+    BanManagementState.searchDebounceTimer = setTimeout(applyBanFilters, 300);
+  });
+  DOM_BM.filterCheckboxes?.forEach((cb) =>
+    cb.addEventListener("change", () => {
+      updateFilterToggleButtonTextForBM(cb.id);
+      applyBanFilters();
+    })
+  );
+  if (DOM_BM.unbannedGrid) setupDragAndClick_BM(DOM_BM.unbannedGrid, BanManagementState.selectedUnbannedGids, "unbanned");
+  if (DOM_BM.bannedGrid) setupDragAndClick_BM(DOM_BM.bannedGrid, BanManagementState.selectedBannedGids, "banned");
+  DOM_BM.unbannedGrid?.addEventListener("scroll", renderUnbannedGrid);
+  DOM_BM.bannedGrid?.addEventListener("scroll", renderBannedGrid);
+  DOM_BM.bannedPanel?.addEventListener("click", handlePanelSwap);
+  DOM_BM.unbannedPanel?.addEventListener("click", handlePanelSwap);
+  DOM_BM.bannedHeader?.addEventListener("click", handlePanelSwap);
+  DOM_BM.unbannedHeader?.addEventListener("click", handlePanelSwap);
+  DOM_BM.bulkSelectAllBtn?.addEventListener("click", selectAllInCurrentView);
+  DOM_BM.bulkInvertBtn?.addEventListener("click", invertSelectionInCurrentView);
+  DOM_BM.bulkBanBtn?.addEventListener("click", banSelected);
+  DOM_BM.bulkUnbanBtn?.addEventListener("click", unbanSelected);
+  DOM_BM.bulkCancelBtn?.addEventListener("click", clearAllSelections);
+  DOM_BM.secondaryTagsBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    DOM_BM.secondaryTagsDropdown.classList.toggle("hidden");
+  });
+  DOM_BM.secondaryTagsDropdown?.addEventListener("click", (e) => {
+    const tagEl = e.target.closest(".tags-dropdown-tag-item");
+    if (tagEl) {
+      const tag = tagEl.dataset.tag;
+      BanManagementState.selectedSecondaryTags.has(tag) ? BanManagementState.selectedSecondaryTags.delete(tag) : BanManagementState.selectedSecondaryTags.add(tag);
+      tagEl.classList.toggle("selected");
+      updateSecondaryTagsUIForBM();
+      applyBanFilters();
+    }
+  });
+  DOM_BM.clearSecondaryTagsBtn?.addEventListener("click", () => {
+    BanManagementState.selectedSecondaryTags.clear();
+    DOM_BM.secondaryTagsDropdown.querySelectorAll(".selected").forEach((el) => el.classList.remove("selected"));
+    updateSecondaryTagsUIForBM();
+    applyBanFilters();
+  });
+  document.addEventListener("click", (e) => {
+    if (DOM_BM.gameFilterDropdown && !DOM_BM.gameFilterDropdown.classList.contains("hidden") && !DOM_BM.gameFilterBtn.contains(e.target)) DOM_BM.gameFilterDropdown.classList.add("hidden");
+    if (DOM_BM.secondaryTagsDropdown && !DOM_BM.secondaryTagsDropdown.classList.contains("hidden") && !DOM_BM.secondaryTagsBtn.contains(e.target) && !DOM_BM.secondaryTagsDropdown.contains(e.target))
+      DOM_BM.secondaryTagsDropdown.classList.add("hidden");
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Control" || e.key === "Meta") document.body.classList.add("ctrl-pressed");
+  });
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "Control" || e.key === "Meta") document.body.classList.remove("ctrl-pressed");
+  });
+  const preventDrag = (e) => e.preventDefault();
+  DOM_BM.unbannedGrid?.addEventListener("dragstart", preventDrag);
+  DOM_BM.bannedGrid?.addEventListener("dragstart", preventDrag);
+  AppEvents.on("pflChanged", () => {
+    if (DOM_BM.pane?.classList.contains("active") && BanManagementState.isInitialized) {
+      processAndSeparateImageData();
+      applyBanFilters();
+      updatePanelTitles();
+      displayToast("净化等级已更新，列表已刷新。", "info", 3000);
+      BanManagementState.needsRefresh = false;
+    } else {
+      BanManagementState.needsRefresh = true;
+    }
+  });
+}
+
+// ==========================================================================
+// == UI 辅助函数
+// ==========================================================================
+function getThumbnailPath(img) {
+  const { storagebox, path } = img;
+  if (!storagebox || !path) return "/placeholder.png";
+  const originalCaseBox = AppState.availableStorageBoxes.find((b) => b.toLowerCase() === storagebox.toLowerCase()) || storagebox;
+  return `/api/thumbnail/${originalCaseBox}/${path}`.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+}
+function updateFilterToggleButtonTextForBM(checkboxId) {
+  const checkbox = document.getElementById(checkboxId);
+  const button = checkbox?.closest(".filter-toggle-label")?.querySelector(".filter-toggle-button");
+  if (checkbox && button) {
+    button.textContent = checkbox.checked ? button.dataset.on : button.dataset.off;
+    button.classList.toggle("active", checkbox.checked);
+  }
 }
 function clearSelection(type) {
   const selectionSet = type === "unbanned" ? BanManagementState.selectedUnbannedGids : BanManagementState.selectedBannedGids;
@@ -293,71 +519,6 @@ function updateBulkActionBar() {
   DOM_BM.bulkActionText.textContent = text;
   DOM_BM.bulkActionBar.classList.remove("hidden");
 }
-async function banSelected() {
-  await performBanAction(Array.from(BanManagementState.selectedUnbannedGids), "ban");
-}
-async function unbanSelected() {
-  await performBanAction(Array.from(BanManagementState.selectedBannedGids), "unban");
-}
-async function performBanAction(gids, action) {
-  if (gids.length === 0) return;
-  const isBan = action === "ban";
-  let newBanList = [...BanManagementState.banList];
-  let changesMade = 0;
-  if (isBan) {
-    gids.forEach((gid) => {
-      if (!BanManagementState.banListGids.has(gid)) {
-        const imgData = BanManagementState.allImageData.find((img) => String(img.gid) === gid);
-        if (imgData) {
-          newBanList.push({ gid: imgData.gid, path: imgData.path, timestamp: new Date().toISOString() });
-          changesMade++;
-        }
-      }
-    });
-  } else {
-    const gidsToUnbanSet = new Set(gids);
-    newBanList = newBanList.filter((item) => !gidsToUnbanSet.has(String(item.gid)));
-    changesMade = BanManagementState.banList.length - newBanList.length;
-  }
-  if (changesMade === 0) {
-    displayToast(`没有需要${isBan ? "封禁" : "解禁"}的项目。`, "info");
-    clearAllSelections();
-    return;
-  }
-  if (await updateBanListOnServer(newBanList)) {
-    displayToast(`成功${isBan ? "封禁" : "解禁"} ${changesMade} 张图片`, "success");
-    BanManagementState.banList = newBanList;
-    BanManagementState.banListGids = new Set(newBanList.map((item) => String(item.gid)));
-    processAndSeparateImageData();
-    applyBanFilters();
-    clearAllSelections();
-  } else {
-    displayToast(`${isBan ? "封禁" : "解禁"}操作失败`, "error");
-  }
-}
-async function updateBanListOnServer(newList) {
-  try {
-    const result = await fetchJsonData("/api/update-ban-list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newList) });
-    return result.success;
-  } catch (error) {
-    console.error("更新封禁列表失败:", error);
-    return false;
-  }
-}
-function getThumbnailPath(img) {
-  const { storagebox, path } = img;
-  if (!storagebox || !path) return "/placeholder.png";
-  const originalCaseBox = AppState.availableStorageBoxes.find((b) => b.toLowerCase() === storagebox.toLowerCase()) || storagebox;
-  return `/api/thumbnail/${originalCaseBox}/${path}`.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
-}
-function updateFilterToggleButtonTextForBM(checkboxId) {
-  const checkbox = document.getElementById(checkboxId);
-  const button = checkbox?.closest(".filter-toggle-label")?.querySelector(".filter-toggle-button");
-  if (checkbox && button) {
-    button.textContent = checkbox.checked ? button.dataset.on : button.dataset.off;
-    button.classList.toggle("active", checkbox.checked);
-  }
-}
 function resetAllBanFilters() {
   if (DOM_BM.searchInput) DOM_BM.searchInput.value = "";
   if (DOM_BM.gameFilterBtn) {
@@ -377,48 +538,6 @@ function resetAllBanFilters() {
     DOM_BM.secondaryTagsDropdown?.querySelectorAll(".selected").forEach((el) => el.classList.remove("selected"));
     updateSecondaryTagsUIForBM();
   }
-}
-function handlePanelSwap(event) {
-  const clickedElement = event.currentTarget;
-  const isHeaderClick = clickedElement.classList.contains("bm-panel-header");
-  const isPanelClick = clickedElement.classList.contains("bm-panel");
-  if ((isHeaderClick && !clickedElement.classList.contains("is-secondary-view")) || (isPanelClick && !clickedElement.classList.contains("is-secondary"))) {
-    return;
-  }
-  if (DOM_BM.layoutWrapper.classList.contains("is-animating")) {
-    return;
-  }
-  clearAllSelections();
-  resetAllBanFilters();
-  DOM_BM.layoutWrapper.classList.add("is-animating");
-  const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains("is-primary");
-  const primaryPanel = isUnbannedPrimary ? DOM_BM.unbannedPanel : DOM_BM.bannedPanel;
-  const secondaryPanel = isUnbannedPrimary ? DOM_BM.bannedPanel : DOM_BM.unbannedPanel;
-  const primaryHeader = isUnbannedPrimary ? DOM_BM.unbannedHeader : DOM_BM.bannedHeader;
-  const secondaryHeader = isUnbannedPrimary ? DOM_BM.bannedHeader : DOM_BM.unbannedHeader;
-  primaryPanel.classList.add("animating-out");
-  secondaryPanel.classList.add("animating-out");
-  setTimeout(() => {
-    DOM_BM.rightColumn.appendChild(secondaryHeader);
-    DOM_BM.rightColumn.appendChild(secondaryPanel);
-    DOM_BM.leftColumn.appendChild(primaryHeader);
-    DOM_BM.leftColumn.appendChild(primaryPanel);
-    primaryPanel.classList.remove("is-primary", "animating-out");
-    primaryPanel.classList.add("is-secondary");
-    primaryHeader.classList.add("is-secondary-view");
-    secondaryPanel.classList.remove("is-secondary", "animating-out");
-    secondaryPanel.classList.add("is-primary");
-    secondaryHeader.classList.remove("is-secondary-view");
-    primaryPanel.classList.add("animating-in");
-    secondaryPanel.classList.add("animating-in");
-  }, 250);
-  const totalAnimationTime = 500;
-  setTimeout(() => {
-    primaryPanel.classList.remove("animating-in");
-    secondaryPanel.classList.remove("animating-in");
-    DOM_BM.layoutWrapper.classList.remove("is-animating");
-    applyBanFilters();
-  }, totalAnimationTime);
 }
 function selectAllInCurrentView() {
   const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains("is-primary");
@@ -616,83 +735,6 @@ function setupDragAndClick_BM(gridElement, selectionSet, type) {
     document.addEventListener("mouseup", handleMouseUp);
   });
 }
-
-function setupBanManagementEventListeners() {
-  DOM_BM.searchInput?.addEventListener("input", () => {
-    clearTimeout(BanManagementState.searchDebounceTimer);
-    BanManagementState.searchDebounceTimer = setTimeout(applyBanFilters, 300);
-  });
-  DOM_BM.filterCheckboxes?.forEach((cb) =>
-    cb.addEventListener("change", () => {
-      updateFilterToggleButtonTextForBM(cb.id);
-      applyBanFilters();
-    })
-  );
-  if (DOM_BM.unbannedGrid) setupDragAndClick_BM(DOM_BM.unbannedGrid, BanManagementState.selectedUnbannedGids, "unbanned");
-  if (DOM_BM.bannedGrid) setupDragAndClick_BM(DOM_BM.bannedGrid, BanManagementState.selectedBannedGids, "banned");
-  DOM_BM.unbannedGrid?.addEventListener("scroll", renderUnbannedGrid);
-  DOM_BM.bannedGrid?.addEventListener("scroll", renderBannedGrid);
-  DOM_BM.bannedPanel?.addEventListener("click", handlePanelSwap);
-  DOM_BM.unbannedPanel?.addEventListener("click", handlePanelSwap);
-  DOM_BM.bannedHeader?.addEventListener("click", handlePanelSwap);
-  DOM_BM.unbannedHeader?.addEventListener("click", handlePanelSwap);
-  DOM_BM.bulkSelectAllBtn?.addEventListener("click", selectAllInCurrentView);
-  DOM_BM.bulkInvertBtn?.addEventListener("click", invertSelectionInCurrentView);
-  DOM_BM.bulkBanBtn?.addEventListener("click", banSelected);
-  DOM_BM.bulkUnbanBtn?.addEventListener("click", unbanSelected);
-  DOM_BM.bulkCancelBtn?.addEventListener("click", clearAllSelections);
-  DOM_BM.secondaryTagsBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    DOM_BM.secondaryTagsDropdown.classList.toggle("hidden");
-  });
-  DOM_BM.secondaryTagsDropdown?.addEventListener("click", (e) => {
-    const tagEl = e.target.closest(".tags-dropdown-tag-item");
-    if (tagEl) {
-      const tag = tagEl.dataset.tag;
-      BanManagementState.selectedSecondaryTags.has(tag) ? BanManagementState.selectedSecondaryTags.delete(tag) : BanManagementState.selectedSecondaryTags.add(tag);
-      tagEl.classList.toggle("selected");
-      updateSecondaryTagsUIForBM();
-      applyBanFilters();
-    }
-  });
-  DOM_BM.clearSecondaryTagsBtn?.addEventListener("click", () => {
-    BanManagementState.selectedSecondaryTags.clear();
-    DOM_BM.secondaryTagsDropdown.querySelectorAll(".selected").forEach((el) => el.classList.remove("selected"));
-    updateSecondaryTagsUIForBM();
-    applyBanFilters();
-  });
-  document.addEventListener("click", (e) => {
-    if (DOM_BM.gameFilterDropdown && !DOM_BM.gameFilterDropdown.classList.contains("hidden") && !DOM_BM.gameFilterBtn.contains(e.target)) DOM_BM.gameFilterDropdown.classList.add("hidden");
-    if (DOM_BM.secondaryTagsDropdown && !DOM_BM.secondaryTagsDropdown.classList.contains("hidden") && !DOM_BM.secondaryTagsBtn.contains(e.target) && !DOM_BM.secondaryTagsDropdown.contains(e.target))
-      DOM_BM.secondaryTagsDropdown.classList.add("hidden");
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Control" || e.key === "Meta") document.body.classList.add("ctrl-pressed");
-  });
-  document.addEventListener("keyup", (e) => {
-    if (e.key === "Control" || e.key === "Meta") document.body.classList.remove("ctrl-pressed");
-  });
-  const preventDrag = (e) => e.preventDefault();
-  DOM_BM.unbannedGrid?.addEventListener("dragstart", preventDrag);
-  DOM_BM.bannedGrid?.addEventListener("dragstart", preventDrag);
-
-  AppEvents.on("pflChanged", () => {
-    console.log("[Ban Management] 检测到 PFL 等级变化，准备刷新...");
-
-    if (DOM_BM.pane && DOM_BM.pane.classList.contains("active")) {
-      console.log("[Ban Management] 面板激活，立即刷新。");
-      if (BanManagementState.isInitialized) {
-        processAndSeparateImageData();
-        applyBanFilters();
-        updatePanelTitles();
-        displayToast("净化等级已更新，列表已刷新。", "info", 3000);
-      }
-    } else {
-      console.log("[Ban Management] 面板未激活，将在下次进入时自动更新。");
-    }
-  });
-}
-
 function updatePanelTitles() {
   const updateHeader = (headerElement, imageDataSet) => {
     if (!headerElement || !imageDataSet) return;

@@ -105,6 +105,7 @@ const AppState = {
   },
   banManagement: {
     isInitialized: false,
+    needsRefresh: false,
     isLoading: false,
     banListGids: new Set(),
     selectedUnbannedGids: new Set(),
@@ -126,6 +127,10 @@ const AppState = {
     totalPages: 1,
   },
   fileSizesMap: new Map(),
+  aliasData: { 
+    mainToAliases: {},
+    aliasToMain: {}
+  },
   dataList: {
     currentEditPath: null,
     currentSortOrder: 'default', 
@@ -157,26 +162,27 @@ const AppState = {
 
 // 事件总线
 const AppEvents = {
-  listeners: {},
+  listeners: {}, 
   on(event, callback) {
       if (!this.listeners[event]) {
           this.listeners[event] = [];
       }
       this.listeners[event].push(callback);
-      console.log(`[AppEvents] Listener registered for event: "${event}"`);
+      console.log(`[应用事件] 新的订阅者已注册，事件: "${event}"`);
   },
+
   emit(event, data) {
       if (this.listeners[event]) {
-          console.log(`[AppEvents] Emitting event: "${event}" with data:`, data);
+          console.log(`[应用事件] 正在广播事件: "${event}"`, data);
           this.listeners[event].forEach(callback => {
               try {
                   callback(data);
               } catch (error) {
-                  console.error(`[AppEvents] Error in listener for event "${event}":`, error);
+                  console.error(`[应用事件] 执行事件 "${event}" 的回调时出错:`, error);
               }
           });
       } else {
-          console.log(`[AppEvents] Emitting event: "${event}", but no listeners found.`);
+          console.log(`[应用事件] 广播事件: "${event}"，但当前无人订阅。`);
       }
   }
 };
@@ -1230,7 +1236,7 @@ async function initializeApplication() {
       )
         populateMd5JsonList();
     }
-    
+    await fetchAliasData();
     // 处理文件大小结果 
     if (fileSizesResult.status === 'fulfilled' && Array.isArray(fileSizesResult.value)) {
         const fileSizesData = fileSizesResult.value;
@@ -1359,6 +1365,26 @@ async function initializeApplication() {
   }
 }
 
+// 从后端获取所有角色别名数据
+async function fetchAliasData() {
+  console.log("Core: 正在获取角色别名数据...");
+  try {
+      const result = await fetchJsonData('/api/aliases');
+      if (result.success) {
+          AppState.aliasData = {
+              mainToAliases: result.mainToAliases || {},
+              aliasToMain: result.aliasToMain || {}
+          };
+          console.log(`Core: 成功加载 ${Object.keys(result.mainToAliases).length} 个角色的别名数据。`);
+      } else {
+          throw new Error(result.error || "获取别名数据失败");
+      }
+  } catch (error) {
+      console.error("Core: 加载角色别名数据失败:", error);
+      displayToast("加载角色别名失败，搜索功能受限！", UI_CLASSES.WARNING);
+  }
+}
+
 // 图片放大镜 
 function initializeImageViewer() {
   let currentZoom = 1;
@@ -1462,4 +1488,3 @@ if (document.readyState === "loading") {
   console.log("核心: DOM 已加载 直接运行初始化");
   initializeApplication();
 }
-

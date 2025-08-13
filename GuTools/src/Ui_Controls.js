@@ -127,12 +127,32 @@ async function switchTab(targetTabId) {
                 else console.warn("UI控件: clearPluginEditor 未定义 Plugin_Gallery.js");
                 break;
 
-            case 'banManagementPane':
-                if (typeof initializeBanManagement === "function") {
-                    initializeBanManagement();
-                } else {
-                    console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
-                }
+                case 'banManagementPane':
+    
+                    if (typeof BanManagementState !== 'undefined' && BanManagementState.needsRefresh) {
+                        console.log("[UI控件] 检测到封禁管理需要刷新，正在执行...");
+                        
+                        if (typeof initializeBanManagement === "function") {
+                            await initializeBanManagement(); 
+                        }
+                        
+                        if (BanManagementState.isInitialized) {
+                             processAndSeparateImageData();
+                             applyBanFilters();
+                             updatePanelTitles();
+                             displayToast("列表已根据最新的净化等级刷新。", "info", 3000);
+                        }
+                        
+                        BanManagementState.needsRefresh = false;
+    
+                    } else {
+                        console.log("[UI控件] 正常进入封禁管理，执行标准初始化。");
+                        if (typeof initializeBanManagement === "function") {
+                            initializeBanManagement();
+                        } else {
+                            console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
+                        }
+                    }
                 break;
             
             case 'advancedManagementPane':
@@ -327,7 +347,8 @@ async function handleGalleryControlChange(event) {
         }
         
         if (configKey === 'PFL') {
-            AppEvents.emit('pflChanged');
+            console.log('[应用事件] 正在广播 "pflChanged" 事件...');
+            AppEvents.emit('pflChanged'); 
         }
 
         if (statusElement) {

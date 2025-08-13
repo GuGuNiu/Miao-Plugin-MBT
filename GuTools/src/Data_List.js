@@ -5,10 +5,8 @@
 
 
 async function buildDataListSearchIndex() {
-    // 检查 pinyinPro 库是否已加载
     if (typeof pinyinPro === 'undefined') {
         console.error("DataList: pinyinPro 库未加载，无法构建拼音搜索索引。");
-        // 尝试等待一小段时间，以防万一
         await new Promise(resolve => setTimeout(resolve, 500)); 
         if (typeof pinyinPro === 'undefined') {
             displayToast("拼音库加载失败，搜索功能受限！", "error");
@@ -16,7 +14,6 @@ async function buildDataListSearchIndex() {
         }
     }
     
-    // 从 pinyinPro 全局对象中安全地解构出 pinyin 函数
     const { pinyin } = pinyinPro;
 
     console.log("DataList: 正在构建拼音搜索索引...");
@@ -31,20 +28,31 @@ async function buildDataListSearchIndex() {
             continue;
         }
 
-        const textsToProcess = [];
+        const textsToProcess = new Set(); // 使用 Set 避免重复
         
         // 添加角色名/父文件夹名
-        if (entry.attributes.parentFolder) {
-            textsToProcess.push(entry.attributes.parentFolder);
+        const characterName = entry.attributes.parentFolder;
+        if (characterName) {
+            textsToProcess.add(characterName);
+            // 添加所有别名
+            const aliases = AppState.aliasData.mainToAliases[characterName];
+            if (Array.isArray(aliases)) {
+                aliases.forEach(alias => textsToProcess.add(alias));
+            }
+        }
+        
+        // 添加文件名 (不含扩展名)
+        if (entry.attributes.filename) {
+            textsToProcess.add(entry.attributes.filename.replace(/\.[^/.]+$/, ""));
         }
 
         // 添加所有二级标签
         if (Array.isArray(entry.attributes.secondaryTags)) {
-            textsToProcess.push(...entry.attributes.secondaryTags);
+            entry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
         }
 
         // 如果没有任何可供索引的文本，则跳过此条目
-        const combinedText = textsToProcess.join(' ');
+        const combinedText = Array.from(textsToProcess).join(' ');
         if (!combinedText) {
             continue;
         }
@@ -52,7 +60,9 @@ async function buildDataListSearchIndex() {
         const lowerCaseText = combinedText.toLowerCase();
         const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
         const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
-        const searchIndexString = `${lowerCaseText} ${fullPinyin} ${initials}`;
+        
+        // 将 GID 也加入索引字符串
+        const searchIndexString = `${entry.gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
         AppState.dataList.searchIndexMap.set(entry.gid, searchIndexString);
     }
 
@@ -315,14 +325,8 @@ function filterUserDataEntries() {
 
         // 搜索词过滤
         if (searchTerm) {
-            // 独立检查 GID 是否匹配
-            const gidMatch = (entry.gid || '').toString().toLowerCase().includes(searchTerm);
-            
             const searchIndexString = AppState.dataList.searchIndexMap.get(entry.gid) || '';
-            const searchIndexMatch = searchIndexString.includes(searchTerm);
-
-            // GID 或 搜索索引 任意一个匹配即可
-            if (!gidMatch && !searchIndexMatch) {
+            if (!searchIndexString.includes(searchTerm)) {
                 return false;
             }
         }
@@ -1002,10 +1006,6 @@ function handleGlobalDropdownClose(event) {
  */
 async function setupDataListEventListeners() {
 
-    if (!AppState.dataList.searchIndexBuilt) {
-        await buildDataListSearchIndex();
-        AppState.dataList.searchIndexBuilt = true; // 设置标志位，防止重复构建
-    }
 
     // 定义过滤器控件和对应的互斥组
     const filterControlsConfig = [

@@ -19,6 +19,7 @@ const STEState = {
     allPredefinedTags: [], 
     activeSuggestionIndex: -1, 
     tagSearchIndex: [], 
+    searchIndexMap: new Map(),
 
     virtualStrip: {
         isInitialized: false,
@@ -157,6 +158,7 @@ async function initializeSecondaryTagEditorView() {
             initials: pinyin(tag, { pattern: 'first' }).replace(/\s/g, '').toLowerCase(),
             fullPinyin: pinyin(tag, { toneType: 'none', type: 'array' }).join('').toLowerCase()
         }));
+        await buildSTESearchIndex(); 
 
         STEState.isInitialized = true;
     } catch (error) {
@@ -670,7 +672,15 @@ function setupSecondaryTagEditorEventListeners() {
             STEState.searchDebounceTimer = setTimeout(() => {
                 const query = DOM.steSearchInput.value.toLowerCase().trim();
                 if (query) {
-                    const results = AppState.galleryImages.filter(img => img.fileName.toLowerCase().includes(query) || img.name.toLowerCase().includes(query));
+                    const results = [];
+                    for (const img of AppState.galleryImages) {
+                        const fullPath = buildFullWebPath(img.storageBox, img.urlPath);
+                        const searchString = STEState.searchIndexMap.get(fullPath) || '';
+                        if (searchString.includes(query)) {
+                            results.push(img);
+                        }
+                        if (results.length >= 20) break; // 限制建议数量
+                    }
                     displaySteSuggestions(results);
                 } else {
                     if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
@@ -959,4 +969,60 @@ function displayModalMessage(text, type) {
         area.textContent = text;
         area.className = `modal-message ${type} visible`;
     }
+}
+
+/**
+ * 为二级标签编辑器构建搜索索引
+ */
+async function buildSTESearchIndex() {
+    if (typeof pinyinPro === 'undefined') {
+        console.error("STE: pinyinPro 库未加载。");
+        return;
+    }
+    const { pinyin } = pinyinPro;
+    console.log("STE: 正在构建搜索索引...");
+
+    STEState.searchIndexMap.clear();
+    const dataToProcess = AppState.galleryImages;
+
+    for (const entry of dataToProcess) {
+        const fullPath = buildFullWebPath(entry.storageBox, entry.urlPath);
+        if (!fullPath) continue;
+
+        const textsToProcess = new Set();
+        const characterName = entry.name;
+        if (characterName) {
+            textsToProcess.add(characterName);
+            const aliases = AppState.aliasData.mainToAliases[characterName];
+            if (Array.isArray(aliases)) {
+                aliases.forEach(alias => textsToProcess.add(alias));
+            }
+        }
+        if (entry.fileName) {
+            textsToProcess.add(entry.fileName.replace(/\.[^/.]+$/, ""));
+        }
+        
+        // 二级标签编辑器的搜索也应该能搜到已有的二级标签
+        const userDataEntry = AppState.userData.find(ud => ud.path === entry.urlPath && ud.storagebox?.toLowerCase() === entry.storageBox.toLowerCase());
+        if (userDataEntry && Array.isArray(userDataEntry.attributes.secondaryTags)) {
+            userDataEntry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
+        }
+
+        const combinedText = Array.from(textsToProcess).join(' ');
+        if (!combinedText) continue;
+
+        const lowerCaseText = combinedText.toLowerCase();
+        const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
+        const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
+
+        // GID 也需要被索引
+        let gid = '0';
+        if (userDataEntry && userDataEntry.gid) {
+            gid = userDataEntry.gid;
+        }
+
+        const searchIndexString = `${gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
+        STEState.searchIndexMap.set(fullPath, searchIndexString);
+    }
+    console.log(`STE: 搜索索引构建完成，共 ${STEState.searchIndexMap.size} 条记录。`);
 }
