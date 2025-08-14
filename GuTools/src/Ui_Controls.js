@@ -51,7 +51,7 @@ async function switchTab(targetTabId) {
         switch (targetTabId) {
             case 'homePane':
                 if (typeof updateGalleryStatusDisplay === "function") updateGalleryStatusDisplay();
-                if (typeof updateHomeStats === "function") updateHomeStats(); 
+                if (typeof updateHomeStats === "function") updateHomeStats();
                 else console.warn("UI控件: updateGalleryStatusDisplay 未定义");
                 break;
 
@@ -128,34 +128,34 @@ async function switchTab(targetTabId) {
                 else console.warn("UI控件: clearPluginEditor 未定义 Plugin_Gallery.js");
                 break;
 
-                case 'banManagementPane':
-    
-                    if (typeof BanManagementState !== 'undefined' && BanManagementState.needsRefresh) {
-                        console.log("[UI控件] 检测到封禁管理需要刷新，正在执行...");
-                        
-                        if (typeof initializeBanManagement === "function") {
-                            await initializeBanManagement(); 
-                        }
-                        
-                        if (BanManagementState.isInitialized) {
-                             processAndSeparateImageData();
-                             applyBanFilters();
-                             updatePanelTitles();
-                             displayToast("列表已根据最新的净化等级刷新。", "info", 3000);
-                        }
-                        
-                        BanManagementState.needsRefresh = false;
-    
-                    } else {
-                        console.log("[UI控件] 正常进入封禁管理，执行标准初始化。");
-                        if (typeof initializeBanManagement === "function") {
-                            initializeBanManagement();
-                        } else {
-                            console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
-                        }
+            case 'banManagementPane':
+
+                if (typeof BanManagementState !== 'undefined' && BanManagementState.needsRefresh) {
+                    console.log("[UI控件] 检测到封禁管理需要刷新，正在执行...");
+
+                    if (typeof initializeBanManagement === "function") {
+                        await initializeBanManagement();
                     }
+
+                    if (BanManagementState.isInitialized) {
+                        processAndSeparateImageData();
+                        applyBanFilters();
+                        updatePanelTitles();
+                        displayToast("列表已根据最新的净化等级刷新。", "info", 3000);
+                    }
+
+                    BanManagementState.needsRefresh = false;
+
+                } else {
+                    console.log("[UI控件] 正常进入封禁管理，执行标准初始化。");
+                    if (typeof initializeBanManagement === "function") {
+                        initializeBanManagement();
+                    } else {
+                        console.warn("UI控件: initializeBanManagement 未定义 Ban_Management.js");
+                    }
+                }
                 break;
-            
+
             case 'advancedManagementPane':
                 console.log("UI控件: 切换到高级管理面板");
                 break;
@@ -206,31 +206,36 @@ function setupTabNavigation() {
 async function updateGalleryStatusDisplay() {
     console.log("UI控件: 更新 Home 面板状态...");
 
-
     const elements = {
-        tuKuOPText: DOM.tuKuOPStatusText, // 确认使用 DOM 对象
-        pflText: DOM.pflStatusText,       // 确认使用 DOM 对象
-        tuKuOPSwitch: DOM.tuKuOPToggleSwitch, // 确认使用 DOM 对象
-        pflRadio0: document.getElementById('pflRadio0'), // 直接获取
-        pflRadio1: document.getElementById('pflRadio1'), // 直接获取
-        pflRadio2: document.getElementById('pflRadio2'), // 直接获取
-        pflContainer: document.querySelector('.tri-state-switch-container') // 直接获取
+        tuKuOPText: DOM.tuKuOPStatusText,
+        pflText: DOM.pflStatusText,
+        tuKuOPSwitch: DOM.tuKuOPToggleSwitch,
+        pflRadio0: document.getElementById('pflRadio0'),
+        pflRadio1: document.getElementById('pflRadio1'),
+        pflRadio2: document.getElementById('pflRadio2'),
+        pflContainer: document.querySelector('.tri-state-switch-container'),
+        aiBtn: DOM.aiFilterBtn,
+        eastereggBtn: DOM.eastereggFilterBtn,
+        layoutBtn: DOM.layoutFilterBtn
     };
 
-    // 确认这里的检查逻辑是正确的
     if (!elements.tuKuOPText || !elements.pflText || !elements.tuKuOPSwitch || !elements.pflRadio0 || !elements.pflRadio1 || !elements.pflRadio2 || !elements.pflContainer) {
-        console.error("UI控件: Home 面板部分状态元素未找到"); // 报错来源
+        console.error("UI控件: Home 面板部分状态元素未找到");
+        return;
     }
 
     // 设置加载中状态
-    if (elements.tuKuOPText) elements.tuKuOPText.textContent = '加载中...';
-    if (elements.pflText) elements.pflText.textContent = '加载中...';
-    if (elements.tuKuOPSwitch) { elements.tuKuOPSwitch.checked = false; elements.tuKuOPSwitch.disabled = true; }
-    // 禁用所有 radio 和容器
-    if (elements.pflRadio0) elements.pflRadio0.disabled = true;
-    if (elements.pflRadio1) elements.pflRadio1.disabled = true;
-    if (elements.pflRadio2) elements.pflRadio2.disabled = true;
-    if (elements.pflContainer) elements.pflContainer.classList.add('disabled'); // 添加禁用样式类
+    elements.tuKuOPText.textContent = '加载中...';
+    elements.pflText.textContent = '加载中...';
+    elements.tuKuOPSwitch.checked = false;
+    elements.tuKuOPSwitch.disabled = true;
+    elements.pflRadio0.disabled = true;
+    elements.pflRadio1.disabled = true;
+    elements.pflRadio2.disabled = true;
+    elements.pflContainer.classList.add('disabled');
+    if (elements.aiBtn) elements.aiBtn.disabled = true;
+    if (elements.eastereggBtn) elements.eastereggBtn.disabled = true;
+    if (elements.layoutBtn) elements.layoutBtn.disabled = true;
 
     try {
         const result = await fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_CONFIG);
@@ -238,54 +243,48 @@ async function updateGalleryStatusDisplay() {
             throw new Error(result?.error || "获取的配置数据格式无效");
         }
         const config = result.config;
-        if (elements.aiBtn) elements.aiBtn.classList.toggle('active', config.Ai === 1);
-        if (elements.eastereggBtn) elements.eastereggBtn.classList.toggle('active', config.EasterEgg === 1);
-        if (elements.layoutBtn) elements.layoutBtn.classList.toggle('active', config.layout === 1);
         console.log("UI控件: 获取到图库配置:", config);
 
         // 更新 TuKuOP 开关
         const tuKuOPValue = Number(config.TuKuOP ?? 0);
-        if (elements.tuKuOPText) elements.tuKuOPText.textContent = tuKuOPValue ? '已启用' : '已关闭';
-        if (elements.tuKuOPSwitch) elements.tuKuOPSwitch.checked = !!tuKuOPValue;
+        elements.tuKuOPText.textContent = tuKuOPValue ? '已启用' : '已关闭';
+        elements.tuKuOPSwitch.checked = !!tuKuOPValue;
 
         // 更新 PFL 三态开关
         const pflValue = Number(config.PFL ?? 0);
         const pflRadioToCheck = document.getElementById(`pflRadio${pflValue}`);
         if (pflRadioToCheck) {
-            pflRadioToCheck.checked = true; // 选中对应的 radio
+            pflRadioToCheck.checked = true;
         } else {
             console.warn(`UI控件: 未找到 PFL 等级 ${pflValue} 对应的 Radio Button`);
-            if (elements.pflRadio0) elements.pflRadio0.checked = true; // 默认选中 0
-        }
-        // 更新状态文本
-        if (elements.pflText) {
-            let pflDesc = '未知';
-            if (pflValue === 0) pflDesc = '关闭净化';
-            else if (pflValue === 1) pflDesc = '仅过滤R18';
-            else if (pflValue === 2) pflDesc = '过滤全部敏感数据';
-            elements.pflText.textContent = `当前: ${pflDesc}`;
+            elements.pflRadio0.checked = true; // 默认选中 0
         }
 
+        const pflDesc = { 0: '关闭净化', 1: '仅过滤R18', 2: '过滤全部敏感数据' }[pflValue] || '未知';
+        elements.pflText.textContent = `当前: ${pflDesc}`;
+
+        // 更新内容过滤按钮状态
         if (elements.aiBtn) elements.aiBtn.classList.toggle('active', config.Ai === 1);
         if (elements.eastereggBtn) elements.eastereggBtn.classList.toggle('active', config.EasterEgg === 1);
         if (elements.layoutBtn) elements.layoutBtn.classList.toggle('active', config.layout === 1);
-        
-        // 启用控件
-        if (elements.tuKuOPSwitch) elements.tuKuOPSwitch.disabled = false;
-        if (elements.pflRadio0) elements.pflRadio0.disabled = false;
-        if (elements.pflRadio1) elements.pflRadio1.disabled = false;
-        if (elements.pflRadio2) elements.pflRadio2.disabled = false;
-        if (elements.pflContainer) elements.pflContainer.classList.remove('disabled');
+
+        // 启用所有控件
+        elements.tuKuOPSwitch.disabled = false;
+        elements.pflRadio0.disabled = false;
+        elements.pflRadio1.disabled = false;
+        elements.pflRadio2.disabled = false;
+        elements.pflContainer.classList.remove('disabled');
+        if (elements.aiBtn) elements.aiBtn.disabled = false;
+        if (elements.eastereggBtn) elements.eastereggBtn.disabled = false;
+        if (elements.layoutBtn) elements.layoutBtn.disabled = false;
 
         console.log("UI控件: Home 面板状态更新完成");
 
     } catch (error) {
         console.error("UI控件: 加载图库配置失败:", error);
-        if (elements.tuKuOPText) elements.tuKuOPText.textContent = '加载失败';
-        if (elements.pflText) elements.pflText.textContent = '加载失败';
+        elements.tuKuOPText.textContent = '加载失败';
+        elements.pflText.textContent = '加载失败';
         displayToast('加载配置出错', UI_CLASSES.ERROR, DELAYS.TOAST_ERROR_DURATION);
-        // 确保控件在出错时仍然是禁用的
-        if (elements.pflContainer) elements.pflContainer.classList.add('disabled');
     }
 }
 
@@ -300,6 +299,7 @@ async function handleGalleryControlChange(event) {
 
     let configKey, newValue, statusElement, controlName, valueMap, isRadioGroup = false;
     let radioElements = [];
+    let isButtonToggle = false;
 
     if (controlElement.id === 'tuKuOPToggleSwitch' && controlElement.type === 'checkbox') {
         configKey = 'TuKuOP';
@@ -342,7 +342,7 @@ async function handleGalleryControlChange(event) {
         return;
     }
 
-    if (!statusElement) {
+    if (!statusElement && !isButtonToggle) {
         console.warn(`UI控件: 未找到控件 ${controlElement.id || controlElement.name} 对应的状态文本元素`);
     }
 
@@ -372,10 +372,10 @@ async function handleGalleryControlChange(event) {
             AppState.galleryConfig = result.newConfig;
             console.log("UI控件: 全局 AppState.galleryConfig 已更新为:", AppState.galleryConfig);
         }
-        
+
         if (configKey === 'PFL') {
             console.log('[应用事件] 正在广播 "pflChanged" 事件...');
-            AppEvents.emit('pflChanged'); 
+            AppEvents.emit('pflChanged');
         }
 
         if (statusElement) {
@@ -416,9 +416,9 @@ function setupHomePaneEventListeners() {
         document.getElementById('pflRadio0'),
         document.getElementById('pflRadio1'),
         document.getElementById('pflRadio2'),
-        DOM.aiFilterBtn, 
-        DOM.eastereggFilterBtn, 
-        DOM.layoutFilterBtn 
+        DOM.aiFilterBtn,
+        DOM.eastereggFilterBtn,
+        DOM.layoutFilterBtn
     ];
     let listenerCount = 0;
     controls.forEach(controlElement => {
@@ -445,32 +445,55 @@ async function updateHomeStats() {
             throw new Error(result?.error || "获取的统计数据格式无效");
         }
 
-        result.stats.forEach(repo => {
-            const card = DOM[`repoCard${repo.repo}`];
-            const statusEl = DOM[`repoStatus${repo.repo}`];
-            const messageEl = card.querySelector('.repo-card-message');
+        if (result.fromCache) {
+            displayToast("仓库数据从缓存加载", "info", 1500);
+        }
 
-            if (!card) return;
+        result.stats.forEach(repo => {
+            const card = document.getElementById(`repo-card-${repo.repo}`);
+            const statusEl = document.getElementById(`repo-status-${repo.repo}`);
+            const rolesEl = document.getElementById(`repo-roles-${repo.repo}`);
+            const imagesEl = document.getElementById(`repo-images-${repo.repo}`);
+            const sizeEl = document.getElementById(`repo-size-${repo.repo}`);
+            const lastUpdatedEl = document.getElementById(`repo-last-updated-${repo.repo}`);
+            const shaEl = document.getElementById(`repo-sha-${repo.repo}`);
+            const messageEl = card?.querySelector('.repo-card-message');
+
+            if (!card || !statusEl || !rolesEl || !imagesEl || !sizeEl || !lastUpdatedEl || !shaEl) {
+                console.warn(`UI控件: 未找到仓库 ${repo.repo} 的部分卡片元素`);
+                return;
+            }
 
             card.classList.remove('placeholder', 'exists', 'not-exists', 'not-required');
+            const contentEl = card.querySelector('.repo-card-content');
+            if (contentEl) contentEl.style.display = 'flex';
+            if (messageEl) messageEl.style.display = 'none';
 
             if (repo.status === 'exists') {
                 card.classList.add('exists');
                 statusEl.className = 'repo-card-status exists';
                 statusEl.textContent = `节点: ${repo.downloadNode || '未知'}`;
-                DOM[`repoRoles${repo.repo}`].textContent = repo.roles;
-                DOM[`repoImages${repo.repo}`].textContent = repo.images;
-                DOM[`repoSize${repo.repo}`].textContent = FormatBytes(repo.size);
+                rolesEl.textContent = repo.roles;
+                imagesEl.textContent = repo.images;
+                sizeEl.textContent = FormatBytes(repo.size);
+                lastUpdatedEl.textContent = formatTimestamp(repo.lastUpdate) || '未知';
+                shaEl.textContent = repo.sha || '获取失败';
             } else if (repo.status === 'not-exists') {
                 card.classList.add('not-exists');
                 statusEl.className = 'repo-card-status not-exists';
                 statusEl.textContent = '未下载';
-                if (messageEl) messageEl.textContent = '未下载'; // 保持一致
+                rolesEl.textContent = '--';
+                imagesEl.textContent = '--';
+                sizeEl.textContent = '--.- MB';
+                lastUpdatedEl.textContent = 'N/A';
+                shaEl.textContent = 'N/A';
             } else if (repo.status === 'not-required') {
                 card.classList.add('not-required');
-                statusEl.className = 'repo-card-status not-required';
-                statusEl.textContent = '无需下载';
-                if (messageEl) messageEl.textContent = '无需下载';
+                if (contentEl) contentEl.style.display = 'none';
+                if (messageEl) {
+                    messageEl.style.display = 'block';
+                    messageEl.textContent = '无需下载';
+                }
             }
         });
 
@@ -478,10 +501,12 @@ async function updateHomeStats() {
         console.error("UI控件: 更新仓库统计失败:", error);
         displayToast('加载仓库统计数据失败', 'error');
         for (let i = 1; i <= 4; i++) {
-            if(DOM[`repoCard${i}`]) DOM[`repoCard${i}`].classList.remove('placeholder');
-            if(DOM[`repoStatus${i}`]) {
-                DOM[`repoStatus${i}`].textContent = '加载失败';
-                DOM[`repoStatus${i}`].className = 'repo-card-status not-exists';
+            const card = document.getElementById(`repo-card-${i}`);
+            const statusEl = document.getElementById(`repo-status-${i}`);
+            if (card) card.classList.remove('placeholder');
+            if (statusEl) {
+                statusEl.textContent = '加载失败';
+                statusEl.className = 'repo-card-status not-exists';
             }
         }
     }

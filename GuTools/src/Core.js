@@ -239,7 +239,6 @@ function cacheDomElements() {
     DOM[`repoRoles${i}`] = document.getElementById(`repo-roles-${i}`);
     DOM[`repoImages${i}`] = document.getElementById(`repo-images-${i}`);
     DOM[`repoSize${i}`] = document.getElementById(`repo-size-${i}`);
-    DOM[`repoNode${i}`] = document.getElementById(`repo-node-${i}`);
   }
 
   // --- GuTools 面板 (容器 & 视图) ---
@@ -1033,7 +1032,7 @@ async function initializeApplication() {
   cacheDomElements();
 
   if (DOM.appVersionElement) {
-    DOM.appVersionElement.textContent = "咕咕牛Web管理器 v2.8";
+    DOM.appVersionElement.textContent = "咕咕牛Web管理器 v2.9";
   }
 
   try {
@@ -1359,6 +1358,11 @@ async function initializeApplication() {
     if (typeof updateGalleryStatusDisplay === "function")
       updateGalleryStatusDisplay();
     else console.warn("核心: updateGalleryStatusDisplay 未定义 Ui_Controls.js");
+    if (typeof updateHomeStats === "function") {
+      updateHomeStats();
+    } else {
+      console.warn("核心: updateHomeStats 未定义 Ui_Controls.js");
+    }
     const filterToggleIds = [
       "dataListFilterPx18",
       "dataListFilterRx18",

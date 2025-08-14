@@ -10,149 +10,46 @@
   border-radius: 0 0 8px 8px;
 }
 
-/* --- 主布局 --- */
 .home-pane-layout {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  gap: 25px;
   padding: 20px;
-  height: 100%;
   box-sizing: border-box;
 }
 
 #repository-cards-container {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  width: 100%;
+  height: 290px;
+  flex-shrink: 0;
 }
 
 #settings-cards-container {
-  flex: 0 0 260px; /* 右侧栏变得更窄 */
-  min-width: 260px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* --- 左侧仓库卡片样式 (日漫风格) --- */
-.repository-card {
-  background: linear-gradient(145deg, #e3f2fd, #e8eaf6); /* 浅蓝到浅紫的柔和渐变 */
-  border-radius: 10px;
-  padding: 15px; /* 减小内边距使卡片变小 */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: all 0.3s ease;
-  border: 1px solid #ffffff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), inset 0 1px 2px rgba(255, 255, 255, 0.7);
-  position: relative;
-  overflow: hidden;
-}
-.repository-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7);
-}
-.repository-card.placeholder .repo-card-content {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.repo-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.repo-card-title {
-  font-size: 1.1em;
-  font-weight: 700;
-  color: #37474f;
-}
-.repo-card-status {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.75em;
-  font-weight: 600;
-  border: 1px solid transparent;
-}
-.repo-card-status.exists {
-  background-color: #e0f2f1;
-  color: #00796b;
-  border-color: #b2dfdb;
-}
-.repo-card-status.not-exists {
-  background-color: #fff3e0;
-  color: #f57c00;
-  border-color: #ffe0b2;
-}
-.repo-card-status.not-required {
-  background-color: #f5f5f5;
-  color: #9e9e9e;
-  border-color: #e0e0e0;
-}
-
-.repo-card-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.stat-item {
-  background-color: rgba(255, 255, 255, 0.6);
-  border-radius: 6px;
-  padding: 8px;
-  text-align: center;
-}
-.stat-value {
-  font-size: 1.4em;
-  font-weight: 700;
-  color: #1a237e;
-}
-.stat-label {
-  font-size: 0.7em;
-  color: #546e7a;
-  margin-top: 1px;
-}
-
-/* "无需下载" 状态样式 */
-.repository-card .repo-card-message {
-  display: none;
-}
-.repository-card.not-required {
   justify-content: center;
-  align-items: center;
-}
-.repository-card.not-required .repo-card-content {
-  display: none;
-}
-.repository-card.not-required .repo-card-message {
-  display: block;
-  font-size: 1.6em;
-  font-weight: bold;
-  color: rgba(0, 0, 0, 0.2);
+  gap: 25px;
+  width: 100%;
+  height: 250px;
+  flex-shrink: 0;
 }
 
-/* --- 右侧设置卡片样式 (便利贴风格) --- */
 .sticky-note {
   font-family: "Baloo 2", cursive;
   padding: 20px;
-  border-radius: 12px 12px 15px 15px / 8px 8px 20px 20px;
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   color: #5d4037;
   position: relative;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  width: 280px; /* <-- 修改此处：从 320px 收窄到 280px */
+  flex-shrink: 0;
 }
+
 .sticky-note::before {
   content: "";
   position: absolute;
@@ -166,9 +63,10 @@
   border: 2px solid #fff;
   z-index: 5;
 }
+
 .sticky-note:hover {
   transform: translateY(-5px) scale(1.03);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }
 
@@ -179,9 +77,6 @@
 #tuKuOPStatusNote::before {
   background-color: #ff6f61;
 }
-#tuKuOPStatusNote:hover {
-  border-color: #ffd54f;
-}
 #pflStatusNote {
   background-color: #e0f7fa;
   border: 2px solid #80deea;
@@ -189,30 +84,33 @@
 #pflStatusNote::before {
   background-color: #4fc3f7;
 }
-#pflStatusNote:hover {
-  border-color: #4dd0e1;
-}
 #contentFiltersNote {
-  background-color: #fce4ec;
-  border: 2px solid #f8bbd0;
+  background-color: #f3e5f5;
+  border: 2px solid #e1bee7;
 }
 #contentFiltersNote::before {
   background-color: #ec407a;
-}
-#contentFiltersNote:hover {
-  border-color: #f48fb1;
 }
 
 .sticky-note-title {
   font-weight: 700;
   font-size: 1.25em;
-  color: #4e342e;
   margin-bottom: 15px;
   padding-bottom: 8px;
   border-bottom: 2px dashed rgba(0, 0, 0, 0.1);
   text-align: center;
   flex-shrink: 0;
 }
+#tuKuOPStatusNote .sticky-note-title {
+  color: #8d5c00;
+}
+#pflStatusNote .sticky-note-title {
+  color: #006064;
+}
+#contentFiltersNote .sticky-note-title {
+  color: #6a1b9a;
+}
+
 .sticky-note-content,
 .sticky-note-content-vertical {
   font-weight: 600;
@@ -222,53 +120,58 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 5px 0;
+  gap: 10px;
 }
 .sticky-note-content p {
   margin-bottom: 15px;
   color: #795548;
 }
 
-/* --- 内容过滤按钮 (横向布局) --- */
-.filter-buttons-container {
+.filter-buttons-container-row {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 10px 0;
 }
 .filter-button {
   flex: 1;
-  padding: 8px 5px;
+  padding: 10px 5px;
   font-family: "Baloo 2", cursive;
-  font-size: 0.9em;
+  font-size: 0.95em;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease-out;
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #795548;
-  border: 2px dashed rgba(121, 85, 72, 0.3);
-  box-shadow: none;
+  background-color: rgba(255, 255, 255, 0.6);
+  color: #8e24aa;
+  border: 2px solid #ce93d8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 .filter-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-color: rgba(121, 85, 72, 0.5);
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: #ba68c8;
 }
 .filter-button.active {
-  background: linear-gradient(135deg, var(--sun-yellow), var(--sun-orange));
+  background: linear-gradient(135deg, #ab47bc, #8e24aa);
   color: white;
-  border: 2px solid transparent;
+  border-color: transparent;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 10px rgba(255, 171, 115, 0.4);
+  box-shadow: 0 4px 10px rgba(142, 36, 170, 0.4);
 }
 
-/* --- 三态开关 & 大开关 (原始样式) --- */
 .tri-state-switch-container {
   margin-top: 18px;
-  position: relative;
-  display: inline-block;
 }
+.tri-state-switch {
+  width: 190px;
+  height: 55px;
+}
+.switch-large {
+  width: 140px;
+  height: 54px;
+  margin-top: 10px;
+}
+
 .tri-state-radio {
   position: absolute;
   opacity: 0;
@@ -280,8 +183,6 @@
   display: flex;
   align-items: center;
   position: relative;
-  width: 190px;
-  height: 55px;
   background-color: #e0e0e0;
   border-radius: 10px;
   cursor: pointer;
@@ -351,26 +252,9 @@
   transform: translateX(calc(200% + 15px));
   background-color: #f06292;
 }
-.tri-state-switch-container input[type="radio"]:disabled ~ .tri-state-switch {
+.tri-state-switch-container.disabled .tri-state-switch {
   cursor: not-allowed;
   opacity: 0.6;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  background-color: #eeeeee;
-  border-color: #e0e0e0;
-}
-.tri-state-switch-container input[type="radio"]:disabled ~ .tri-state-switch .tri-state-label {
-  color: #bdbdbd;
-}
-.tri-state-switch-container input[type="radio"]:disabled ~ .tri-state-switch .tri-state-slider {
-  background-color: #f5f5f5;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-.switch-large {
-  position: relative;
-  display: inline-block;
-  width: 140px;
-  height: 54px;
-  margin-top: 10px;
 }
 .switch-large input {
   opacity: 0;
@@ -431,4 +315,160 @@
   cursor: not-allowed;
   opacity: 0.6;
   filter: grayscale(50%);
+}
+
+.repository-card {
+  flex: 1;
+  background: linear-gradient(145deg, #e3f2fd, #e8eaf6);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+.repository-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.repo-card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%; 
+}
+.repo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.repo-card-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #37474f;
+}
+.repo-card-status {
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.8em;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.repo-card-status.exists {
+  background-color: #e0f2f1;
+  color: #00796b;
+  border-color: #b2dfdb;
+}
+.repo-card-status.not-exists {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border-color: #ffe0b2;
+}
+.repo-card-status.not-required {
+  background-color: #f5f5f5;
+  color: #9e9e9e;
+  border-color: #e0e0e0;
+}
+
+.repo-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.stats-top-row {
+  display: flex;
+  gap: 12px;
+}
+.stat-item {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+.stat-item:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+.stat-value {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: #3f51b5;
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 0.75em;
+  color: #546e7a;
+  margin-top: 4px;
+}
+.stats-top-row + .stat-item .stat-value {
+  font-size: 1.1em;
+  color: #455a64;
+}
+
+.repo-card-footer {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px dashed #c5cae9;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.8em;
+}
+.footer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-label {
+  color: #546e7a;
+  font-weight: 600;
+}
+.footer-value {
+  color: #3f51b5;
+  font-weight: 700;
+}
+.footer-value.sha {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9em;
+  color: #607d8b;
+}
+
+.repository-card.placeholder .repo-card-content {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.repository-card .repo-card-message {
+  display: none;
+}
+.repository-card.not-required {
+  justify-content: center;
+  align-items: center;
+}
+.repository-card.not-required .repo-card-content {
+  display: none;
+}
+.repository-card.not-required .repo-card-message {
+  display: block;
+  font-size: 1.6em;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.2);
 }

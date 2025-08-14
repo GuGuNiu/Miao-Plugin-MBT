@@ -1,6 +1,6 @@
 {
   "name": "gutools",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "咕咕牛图库管理器-web",
   "main": "server.js",
   "type": "commonjs",

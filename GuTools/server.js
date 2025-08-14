@@ -4,13 +4,14 @@
 // ==========================================================================
 
 const express = require("express");
+const { exec } = require('child_process');
 const fs = require("fs").promises;
 const path = require("path");
 const yaml = require("js-yaml");
 const crypto = require("crypto");
 const sharp = require("sharp");
 const favicon = require('serve-favicon');
-const http = require('http');
+const http =require('http');
 const ws = require('ws');
 const { WebSocketServer } = ws;
 const { GitManager } = require('./src/Git.js');
@@ -152,11 +153,28 @@ const GALLERY_CONFIG_FILE = path.join(
   USER_DATA_DIRECTORY,
   "GalleryConfig.yaml"
 );
+const REPO_STATS_CACHE_FILE = path.join(
+  USER_DATA_DIRECTORY, 
+  "RepoStatsCache.json"
+);
 const BAN_LIST_FILE = path.join(
   USER_DATA_DIRECTORY,
   "banlist.json"
 );
 const redis = new Redis();
+
+function executeCommand(command, options) {
+    return new Promise((resolve, reject) => {
+        exec(command, options, (error, stdout, stderr) => {
+            if (error) {
+                console.warn(`[Git SHA] 执行命令失败: ${command}`, stderr);
+                return resolve(null);
+            }
+            resolve(stdout.trim());
+        });
+    });
+}
+
 
 // 外部插件图片资源路径
 const PLUGIN_IMAGE_PATHS = {
@@ -328,40 +346,55 @@ const findGalleryImagesRecursively = async (
 };
 
 /**
- * 计算文件夹大小和文件/子目录数量
+ * 计算文件夹大小和文件/子目录数量 (增强版，更健壮)
  * @param {string} folderPath 文件夹路径
  * @returns {Promise<{size: number, files: number, folders: number}>}
  */
 const getFolderStats = async (folderPath) => {
-  let totalSize = 0;
-  let fileCount = 0;
-  let folderCount = 0;
-  const visited = new Set();
-
-  async function crawl(currentPath) {
-    if (visited.has(currentPath)) return;
-    visited.add(currentPath);
-
+    let totalSize = 0;
+    let imageCount = 0;
+    let roleCount = 0;
+    
     try {
-      const entries = await fs.readdir(currentPath, { withFileTypes: true });
-      for (const entry of entries) {
-        const entryPath = path.join(currentPath, entry.name);
-        if (entry.isDirectory()) {
-          folderCount++;
-          await crawl(entryPath);
-        } else if (entry.isFile()) {
-          fileCount++;
-          try {
-            const stats = await fs.stat(entryPath);
-            totalSize += stats.size;
-          } catch (statError) {  }
+        const galleryFolders = await fs.readdir(folderPath, { withFileTypes: true });
+        for (const galleryEntry of galleryFolders) {
+            if (galleryEntry.isDirectory() && MAIN_GALLERY_FOLDERS.includes(galleryEntry.name)) {
+                const galleryPath = path.join(folderPath, galleryEntry.name);
+                try {
+                    const roleFolders = await fs.readdir(galleryPath, { withFileTypes: true });
+                    for (const roleEntry of roleFolders) {
+                        if (roleEntry.isDirectory()) {
+                            roleCount++;
+                            const rolePath = path.join(galleryPath, roleEntry.name);
+                            try {
+                                const files = await fs.readdir(rolePath, { withFileTypes: true });
+                                for (const fileEntry of files) {
+                                    if (fileEntry.isFile() && ALLOWED_IMAGE_EXTENSIONS.has(path.extname(fileEntry.name).toLowerCase())) {
+                                        imageCount++;
+                                        try {
+                                            const filePath = path.join(rolePath, fileEntry.name);
+                                            const stats = await fs.stat(filePath);
+                                            totalSize += stats.size;
+                                        } catch (statError) {
+                                            console.warn(`[Stat Error]无法获取文件状态: ${path.join(rolePath, fileEntry.name)}`, statError.code);
+                                        }
+                                    }
+                                }
+                            } catch (readDirError) {
+                                console.warn(`[ReadDir Error] 无法读取角色目录: ${rolePath}`, readDirError.code);
+                            }
+                        }
+                    }
+                } catch (readDirError) {
+                    console.warn(`[ReadDir Error] 无法读取图库目录: ${galleryPath}`, readDirError.code);
+                }
+            }
         }
-      }
-    } catch (readError) {  }
-  }
-
-  await crawl(folderPath);
-  return { size: totalSize, files: fileCount, folders: folderCount };
+    } catch (readDirError) {
+        console.warn(`[ReadDir Error] 无法读取仓库根目录: ${folderPath}`, readDirError.code);
+    }
+    
+    return { size: totalSize, images: imageCount, roles: roleCount };
 };
 
 /**
@@ -728,88 +761,143 @@ const communityGalleryManager = {
 app.get("/api/home-stats", async (req, res) => {
   console.log("请求: [GET] /api/home-stats");
   try {
-    // 检查 ZZZ 和 Waves 插件是否安装
+    const CACHE_TTL = 60 * 60 * 1000; 
+
+    try {
+      const cacheContent = await fs.readFile(REPO_STATS_CACHE_FILE, 'utf-8');
+      const parsedCache = JSON.parse(cacheContent);
+      const cacheTime = new Date(parsedCache.lastUpdated).getTime();
+      
+      if (Date.now() - cacheTime < CACHE_TTL && parsedCache['1'] && parsedCache['1'].sha !== '获取失败') {
+        console.log("  > [Web API] 命中有效缓存，直接返回数据。");
+        
+        const isPluginInstalled = async (pluginName) => {
+            try {
+                await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
+                return true;
+            } catch { return false; }
+        };
+        const zzzInstalled = await isPluginInstalled('ZZZ-Plugin');
+        const wavesInstalled = await isPluginInstalled('waves-plugin');
+        
+        const repoConfigs = [
+            { num: 1 },
+            { num: 2 },
+            { num: 3 },
+            { num: 4, requiredPlugins: zzzInstalled || wavesInstalled }
+        ];
+        
+        const results = repoConfigs.map(repoConfig => {
+            const repoCache = parsedCache[repoConfig.num] || {};
+            let status = (repoCache.size > 0) ? 'exists' : 'not-exists';
+            
+            // 如果是4号仓库且所需插件未安装，则标记为'not-required'
+            if (repoConfig.num === 4 && !repoConfig.requiredPlugins) {
+                status = 'not-required';
+            }
+
+            return {
+                repo: repoConfig.num,
+                status: status,
+                roles: repoCache.roles || 0,
+                images: repoCache.images || 0,
+                size: repoCache.size || 0,
+                downloadNode: repoCache.nodeName || '未知', // 映射 nodeName -> downloadNode
+                lastUpdate: repoCache.lastUpdate || 'N/A',
+                sha: repoCache.sha || '获取失败'
+            };
+        });
+        
+        // 直接返回格式化后的缓存数据
+        return res.json({ success: true, stats: results, fromCache: true });
+      }
+    } catch (err) {
+       // 如果缓存读取或解析失败，不做任何事，继续执行实时扫描
+       console.warn("  > [Web API] 缓存无效或不存在，将执行实时扫描。");
+    }
+
+    console.log("  > [Web API] 执行实时扫描以生成或刷新数据...");
     const isPluginInstalled = async (pluginName) => {
-        try {
-            const pluginPath = path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName);
-            await fs.access(pluginPath);
-            return true;
-        } catch {
-            return false;
-        }
+      try {
+        await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
+        return true;
+      } catch { return false; }
     };
     const zzzInstalled = await isPluginInstalled('ZZZ-Plugin');
     const wavesInstalled = await isPluginInstalled('waves-plugin');
 
-    const repoConfigs = [
-      { num: 1, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT')?.path },
-      { num: 2, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-2')?.path },
-      { num: 3, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-3')?.path },
-      { num: 4, path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-4')?.path, requiredPlugins: zzzInstalled || wavesInstalled },
+    const repoConfigsForScan = [
+      { num: 1, name: 'Miao-Plugin-MBT', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT')?.path },
+      { num: 2, name: 'Miao-Plugin-MBT-2', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-2')?.path },
+      { num: 3, name: 'Miao-Plugin-MBT-3', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-3')?.path },
+      { num: 4, name: 'Miao-Plugin-MBT-4', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-4')?.path, requiredPlugins: zzzInstalled || wavesInstalled },
     ];
+    
+    const newCacheData = {}; // 用于存储新的扫描结果
+    const { execSync } = require('child_process');
 
-    let galleryConfig = {};
-    try {
-        const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, "utf8");
-        const loadedConfig = yaml.load(fileContents);
-        if(typeof loadedConfig === 'object' && loadedConfig !== null) galleryConfig = loadedConfig;
-    } catch (e) { }
-    const repoNodeInfo = galleryConfig.repoNodeInfo || {};
-
-    const statsPromises = repoConfigs.map(async (repo) => {
-      const result = {
-        repo: repo.num,
-        status: 'not-exists',
-        roles: 0,
-        images: 0,
-        size: 0,
-        downloadNode: repoNodeInfo[repo.num] || '未知'
-      };
-
-      if (repo.num === 4 && !repo.requiredPlugins) {
-        result.status = 'not-required';
-        return result;
-      }
-      
-      if (!repo.path) {
-        return result;
-      }
-
-      try {
-        await fs.access(repo.path);
-        result.status = 'exists';
-        const stats = await getFolderStats(repo.path);
-        result.size = stats.size;
-        
-        let rolesCount = 0;
-        let imagesCount = 0;
-        
-        for(const gallery of MAIN_GALLERY_FOLDERS){
-            const galleryPath = path.join(repo.path, gallery);
-            try {
-                await fs.access(galleryPath);
-                const roleDirs = await fs.readdir(galleryPath, { withFileTypes: true });
-                for(const roleDir of roleDirs){
-                    if(roleDir.isDirectory()){
-                        rolesCount++;
-                        const rolePath = path.join(galleryPath, roleDir.name);
-                        const imageFiles = await fs.readdir(rolePath);
-                        imagesCount += imageFiles.filter(f => ALLOWED_IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase())).length;
+    const getGitRemoteNode = async (repoPath) => {
+        try {
+            const configContent = await fs.readFile(path.join(repoPath, '.git', 'config'), 'utf-8');
+            const urlMatch = configContent.match(/url\s*=\s*(.+)/);
+            if (urlMatch && urlMatch[1]) {
+                const remoteUrl = urlMatch[1];
+                for (const proxy of DEFAULT_CONFIG_FOR_SERVER.proxies) {
+                    if (proxy.cloneUrlPrefix && remoteUrl.startsWith(proxy.cloneUrlPrefix)) {
+                        return proxy.name;
                     }
                 }
-            } catch (e) {  }
-        }
-        result.roles = rolesCount;
-        result.images = imagesCount;
+                if (remoteUrl.includes("github.com")) return "GitHub";
+            }
+        } catch (err) {}
+        return "未知";
+    };
 
-      } catch {
-        // 状态默认为 not-exists
+    const resultsPromises = repoConfigsForScan.map(async (repo) => {
+      const result = { repo: repo.num, status: 'not-exists', roles: 0, images: 0, size: 0, downloadNode: '未知', lastUpdate: 'N/A', sha: '获取失败' };
+      
+      if (repo.num === 4 && !repo.requiredPlugins) {
+        result.status = 'not-required';
+      } else if (repo.path) {
+        try {
+          await fs.access(repo.path);
+          result.status = 'exists';
+          
+          // 使用 getFolderStats 获取统计数据
+          const stats = await getFolderStats(repo.path);
+          result.size = stats.size;
+          result.roles = stats.roles;
+          result.images = stats.images;
+
+          // 获取 Git 信息
+          try {
+            result.sha = execSync('git rev-parse HEAD', { cwd: repo.path, encoding: 'utf-8', stdio: 'pipe' }).trim().substring(0, 20);
+            result.lastUpdate = execSync('git log -1 --pretty=format:%cd --date=format:"%Y-%m-%d %H:%M"', { cwd: repo.path, encoding: 'utf-8', stdio: 'pipe' }).trim();
+          } catch (gitErr) {
+             console.warn(`[Git Info] 获取仓库 ${repo.name} 的git信息失败:`, gitErr.message);
+          }
+          
+          result.downloadNode = await getGitRemoteNode(repo.path);
+        } catch { /* 路径不存在，保持 not-exists 状态 */ }
       }
+      
+      // 将扫描结果存入待写入缓存的对象
+      newCacheData[repo.num] = { ...result, nodeName: result.downloadNode };
       return result;
     });
 
-    const results = await Promise.all(statsPromises);
-    res.json({ success: true, stats: results });
+    const finalResults = await Promise.all(resultsPromises);
+    
+    newCacheData.lastUpdated = new Date().toISOString();
+    try {
+      await fs.writeFile(REPO_STATS_CACHE_FILE, JSON.stringify(newCacheData, null, 2), 'utf-8');
+       console.log("  > [Web API] 实时扫描完成，并已成功更新缓存文件。");
+    } catch (writeErr) {
+      console.error("  > [Web API] 写入仓库统计缓存失败:", writeErr);
+    }
+    
+    // 返回实时扫描的结果
+    res.json({ success: true, stats: finalResults });
 
   } catch (error) {
     console.error('[API Home Stats] 获取统计数据出错:', error);
