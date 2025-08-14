@@ -11,7 +11,7 @@ const yaml = require("js-yaml");
 const crypto = require("crypto");
 const sharp = require("sharp");
 const favicon = require('serve-favicon');
-const http =require('http');
+const http = require('http');
 const ws = require('ws');
 const { WebSocketServer } = ws;
 const { GitManager } = require('./src/Git.js');
@@ -154,7 +154,7 @@ const GALLERY_CONFIG_FILE = path.join(
   "GalleryConfig.yaml"
 );
 const REPO_STATS_CACHE_FILE = path.join(
-  USER_DATA_DIRECTORY, 
+  USER_DATA_DIRECTORY,
   "RepoStatsCache.json"
 );
 const BAN_LIST_FILE = path.join(
@@ -164,15 +164,15 @@ const BAN_LIST_FILE = path.join(
 const redis = new Redis();
 
 function executeCommand(command, options) {
-    return new Promise((resolve, reject) => {
-        exec(command, options, (error, stdout, stderr) => {
-            if (error) {
-                console.warn(`[Git SHA] 执行命令失败: ${command}`, stderr);
-                return resolve(null);
-            }
-            resolve(stdout.trim());
-        });
+  return new Promise((resolve, reject) => {
+    exec(command, options, (error, stdout, stderr) => {
+      if (error) {
+        console.warn(`[Git SHA] 执行命令失败: ${command}`, stderr);
+        return resolve(null);
+      }
+      resolve(stdout.trim());
     });
+  });
 }
 
 
@@ -351,50 +351,50 @@ const findGalleryImagesRecursively = async (
  * @returns {Promise<{size: number, files: number, folders: number}>}
  */
 const getFolderStats = async (folderPath) => {
-    let totalSize = 0;
-    let imageCount = 0;
-    let roleCount = 0;
-    
-    try {
-        const galleryFolders = await fs.readdir(folderPath, { withFileTypes: true });
-        for (const galleryEntry of galleryFolders) {
-            if (galleryEntry.isDirectory() && MAIN_GALLERY_FOLDERS.includes(galleryEntry.name)) {
-                const galleryPath = path.join(folderPath, galleryEntry.name);
-                try {
-                    const roleFolders = await fs.readdir(galleryPath, { withFileTypes: true });
-                    for (const roleEntry of roleFolders) {
-                        if (roleEntry.isDirectory()) {
-                            roleCount++;
-                            const rolePath = path.join(galleryPath, roleEntry.name);
-                            try {
-                                const files = await fs.readdir(rolePath, { withFileTypes: true });
-                                for (const fileEntry of files) {
-                                    if (fileEntry.isFile() && ALLOWED_IMAGE_EXTENSIONS.has(path.extname(fileEntry.name).toLowerCase())) {
-                                        imageCount++;
-                                        try {
-                                            const filePath = path.join(rolePath, fileEntry.name);
-                                            const stats = await fs.stat(filePath);
-                                            totalSize += stats.size;
-                                        } catch (statError) {
-                                            console.warn(`[Stat Error]无法获取文件状态: ${path.join(rolePath, fileEntry.name)}`, statError.code);
-                                        }
-                                    }
-                                }
-                            } catch (readDirError) {
-                                console.warn(`[ReadDir Error] 无法读取角色目录: ${rolePath}`, readDirError.code);
-                            }
-                        }
+  let totalSize = 0;
+  let imageCount = 0;
+  let roleCount = 0;
+
+  try {
+    const galleryFolders = await fs.readdir(folderPath, { withFileTypes: true });
+    for (const galleryEntry of galleryFolders) {
+      if (galleryEntry.isDirectory() && MAIN_GALLERY_FOLDERS.includes(galleryEntry.name)) {
+        const galleryPath = path.join(folderPath, galleryEntry.name);
+        try {
+          const roleFolders = await fs.readdir(galleryPath, { withFileTypes: true });
+          for (const roleEntry of roleFolders) {
+            if (roleEntry.isDirectory()) {
+              roleCount++;
+              const rolePath = path.join(galleryPath, roleEntry.name);
+              try {
+                const files = await fs.readdir(rolePath, { withFileTypes: true });
+                for (const fileEntry of files) {
+                  if (fileEntry.isFile() && ALLOWED_IMAGE_EXTENSIONS.has(path.extname(fileEntry.name).toLowerCase())) {
+                    imageCount++;
+                    try {
+                      const filePath = path.join(rolePath, fileEntry.name);
+                      const stats = await fs.stat(filePath);
+                      totalSize += stats.size;
+                    } catch (statError) {
+                      console.warn(`[Stat Error]无法获取文件状态: ${path.join(rolePath, fileEntry.name)}`, statError.code);
                     }
-                } catch (readDirError) {
-                    console.warn(`[ReadDir Error] 无法读取图库目录: ${galleryPath}`, readDirError.code);
+                  }
                 }
+              } catch (readDirError) {
+                console.warn(`[ReadDir Error] 无法读取角色目录: ${rolePath}`, readDirError.code);
+              }
             }
+          }
+        } catch (readDirError) {
+          console.warn(`[ReadDir Error] 无法读取图库目录: ${galleryPath}`, readDirError.code);
         }
-    } catch (readDirError) {
-        console.warn(`[ReadDir Error] 无法读取仓库根目录: ${folderPath}`, readDirError.code);
+      }
     }
-    
-    return { size: totalSize, images: imageCount, roles: roleCount };
+  } catch (readDirError) {
+    console.warn(`[ReadDir Error] 无法读取仓库根目录: ${folderPath}`, readDirError.code);
+  }
+
+  return { size: totalSize, images: imageCount, roles: roleCount };
 };
 
 /**
@@ -761,62 +761,82 @@ const communityGalleryManager = {
 app.get("/api/home-stats", async (req, res) => {
   console.log("请求: [GET] /api/home-stats");
   try {
-    const CACHE_TTL = 60 * 60 * 1000; 
+    const CACHE_TTL = 60 * 60 * 1000;
 
     try {
       const cacheContent = await fs.readFile(REPO_STATS_CACHE_FILE, 'utf-8');
       const parsedCache = JSON.parse(cacheContent);
       const cacheTime = new Date(parsedCache.lastUpdated).getTime();
-      
+
       if (Date.now() - cacheTime < CACHE_TTL && parsedCache['1'] && parsedCache['1'].sha !== '获取失败') {
         console.log("  > [Web API] 命中有效缓存，直接返回数据。");
-        
+
         const isPluginInstalled = async (pluginName) => {
-            try {
-                await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
-                return true;
-            } catch { return false; }
+          try {
+            await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
+            return true;
+          } catch { return false; }
         };
         const zzzInstalled = await isPluginInstalled('ZZZ-Plugin');
         const wavesInstalled = await isPluginInstalled('waves-plugin');
-        
-        const repoConfigs = [
-            { num: 1 },
-            { num: 2 },
-            { num: 3 },
-            { num: 4, requiredPlugins: zzzInstalled || wavesInstalled }
-        ];
-        
-        const results = repoConfigs.map(repoConfig => {
-            const repoCache = parsedCache[repoConfig.num] || {};
-            let status = (repoCache.size > 0) ? 'exists' : 'not-exists';
-            
-            // 如果是4号仓库且所需插件未安装，则标记为'not-required'
-            if (repoConfig.num === 4 && !repoConfig.requiredPlugins) {
-                status = 'not-required';
-            }
 
-            return {
-                repo: repoConfig.num,
-                status: status,
-                roles: repoCache.roles || 0,
-                images: repoCache.images || 0,
-                size: repoCache.size || 0,
-                downloadNode: repoCache.nodeName || '未知', // 映射 nodeName -> downloadNode
-                lastUpdate: repoCache.lastUpdate || 'N/A',
-                sha: repoCache.sha || '获取失败'
-            };
+        const repoConfigs = [
+          { num: 1 },
+          { num: 2 },
+          { num: 3 },
+          { num: 4, requiredPlugins: zzzInstalled || wavesInstalled }
+        ];
+
+        const results = repoConfigs.map(repoConfig => {
+          const repoCache = parsedCache[repoConfig.num] || {};
+          let status = (repoCache.size > 0) ? 'exists' : 'not-exists';
+
+          if (repoConfig.num === 4 && !repoConfig.requiredPlugins) {
+            status = 'not-required';
+          }
+
+          return {
+            repo: repoConfig.num,
+            status: status,
+            roles: repoCache.roles || 0,
+            images: repoCache.images || 0,
+            size: repoCache.size || 0,
+            filesSize: repoCache.filesSize || 0,
+            gitSize: repoCache.gitSize || 0,
+            downloadNode: repoCache.nodeName || '未知',
+            lastUpdate: repoCache.lastUpdate || 'N/A',
+            sha: repoCache.sha || '获取失败'
+          };
         });
-        
-        // 直接返回格式化后的缓存数据
+
         return res.json({ success: true, stats: results, fromCache: true });
       }
     } catch (err) {
-       // 如果缓存读取或解析失败，不做任何事，继续执行实时扫描
-       console.warn("  > [Web API] 缓存无效或不存在，将执行实时扫描。");
+      console.warn("  > [Web API] 缓存无效或不存在，将执行实时扫描。");
     }
 
     console.log("  > [Web API] 执行实时扫描以生成或刷新数据...");
+    const { execSync } = require('child_process');
+
+    const getDirectorySize = async (dirPath) => {
+      let totalSize = 0;
+      try {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            totalSize += await getDirectorySize(fullPath);
+          } else {
+            try {
+              const stats = await fs.stat(fullPath);
+              totalSize += stats.size;
+            } catch { }
+          }
+        }
+      } catch { }
+      return totalSize;
+    };
+
     const isPluginInstalled = async (pluginName) => {
       try {
         await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
@@ -832,71 +852,76 @@ app.get("/api/home-stats", async (req, res) => {
       { num: 3, name: 'Miao-Plugin-MBT-3', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-3')?.path },
       { num: 4, name: 'Miao-Plugin-MBT-4', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-4')?.path, requiredPlugins: zzzInstalled || wavesInstalled },
     ];
-    
-    const newCacheData = {}; // 用于存储新的扫描结果
-    const { execSync } = require('child_process');
+
+    const newCacheData = {};
 
     const getGitRemoteNode = async (repoPath) => {
-        try {
-            const configContent = await fs.readFile(path.join(repoPath, '.git', 'config'), 'utf-8');
-            const urlMatch = configContent.match(/url\s*=\s*(.+)/);
-            if (urlMatch && urlMatch[1]) {
-                const remoteUrl = urlMatch[1];
-                for (const proxy of DEFAULT_CONFIG_FOR_SERVER.proxies) {
-                    if (proxy.cloneUrlPrefix && remoteUrl.startsWith(proxy.cloneUrlPrefix)) {
-                        return proxy.name;
-                    }
-                }
-                if (remoteUrl.includes("github.com")) return "GitHub";
-            }
-        } catch (err) {}
-        return "未知";
+      try {
+        const configContent = await fs.readFile(path.join(repoPath, '.git', 'config'), 'utf-8');
+        const urlMatch = configContent.match(/url\s*=\s*(.+)/);
+        if (urlMatch && urlMatch[1]) {
+          const remoteUrl = urlMatch[1];
+          for (const proxy of DEFAULT_CONFIG_FOR_SERVER.proxies) {
+            if (proxy.cloneUrlPrefix && remoteUrl.startsWith(proxy.cloneUrlPrefix)) return proxy.name;
+          }
+          if (remoteUrl.includes("github.com")) return "GitHub";
+        }
+      } catch (err) { }
+      return "未知";
     };
 
     const resultsPromises = repoConfigsForScan.map(async (repo) => {
-      const result = { repo: repo.num, status: 'not-exists', roles: 0, images: 0, size: 0, downloadNode: '未知', lastUpdate: 'N/A', sha: '获取失败' };
-      
+      const result = { repo: repo.num, status: 'not-exists', roles: 0, images: 0, size: 0, filesSize: 0, gitSize: 0, downloadNode: '未知', lastUpdate: 'N/A', sha: '获取失败' };
+
       if (repo.num === 4 && !repo.requiredPlugins) {
         result.status = 'not-required';
       } else if (repo.path) {
         try {
           await fs.access(repo.path);
           result.status = 'exists';
-          
-          // 使用 getFolderStats 获取统计数据
+
           const stats = await getFolderStats(repo.path);
-          result.size = stats.size;
+          const gitPath = path.join(repo.path, '.git');
+          result.gitSize = await getDirectorySize(gitPath);
+          result.filesSize = stats.size;
+          result.size = result.filesSize + result.gitSize;
           result.roles = stats.roles;
           result.images = stats.images;
 
-          // 获取 Git 信息
           try {
             result.sha = execSync('git rev-parse HEAD', { cwd: repo.path, encoding: 'utf-8', stdio: 'pipe' }).trim().substring(0, 20);
             result.lastUpdate = execSync('git log -1 --pretty=format:%cd --date=format:"%Y-%m-%d %H:%M"', { cwd: repo.path, encoding: 'utf-8', stdio: 'pipe' }).trim();
           } catch (gitErr) {
-             console.warn(`[Git Info] 获取仓库 ${repo.name} 的git信息失败:`, gitErr.message);
+            console.warn(`[Git Info] 获取仓库 ${repo.name} 的git信息失败:`, gitErr.message);
           }
-          
+
           result.downloadNode = await getGitRemoteNode(repo.path);
         } catch { /* 路径不存在，保持 not-exists 状态 */ }
       }
-      
-      // 将扫描结果存入待写入缓存的对象
-      newCacheData[repo.num] = { ...result, nodeName: result.downloadNode };
+
+      newCacheData[repo.num] = {
+        roles: result.roles,
+        images: result.images,
+        size: result.size,
+        gitSize: result.gitSize,
+        filesSize: result.filesSize,
+        lastUpdate: result.lastUpdate,
+        sha: result.sha,
+        nodeName: result.downloadNode
+      };
       return result;
     });
 
     const finalResults = await Promise.all(resultsPromises);
-    
+
     newCacheData.lastUpdated = new Date().toISOString();
     try {
       await fs.writeFile(REPO_STATS_CACHE_FILE, JSON.stringify(newCacheData, null, 2), 'utf-8');
-       console.log("  > [Web API] 实时扫描完成，并已成功更新缓存文件。");
+      console.log("  > [Web API] 实时扫描完成，并已成功更新缓存文件。");
     } catch (writeErr) {
       console.error("  > [Web API] 写入仓库统计缓存失败:", writeErr);
     }
-    
-    // 返回实时扫描的结果
+
     res.json({ success: true, stats: finalResults });
 
   } catch (error) {
@@ -1279,15 +1304,13 @@ app.post('/api/update-gallery-config', async (req, res) => {
   const { configKey, newValue } = req.body;
   console.log(`  > 更新项: ${configKey}, 新值: ${newValue}`);
 
-  // 扩展允许的键
-  const allowedKeys = ['TuKuOP', 'PFL', 'Ai', 'EasterEgg', 'layout'];
+  const allowedKeys = ['TuKuOP', 'PFL', 'Ai', 'EasterEgg', 'layout', 'Execution_Mode', 'Load_Level'];
   if (!configKey || !allowedKeys.includes(configKey)) {
     console.error(`  > 错误: 无效的配置键: ${configKey}`);
     return res.status(400).json({ success: false, error: `无效的配置项: ${configKey}` });
   }
 
   let processedNewValue;
-  // 根据不同的 key 处理新值
   if (['TuKuOP', 'Ai', 'EasterEgg', 'layout'].includes(configKey)) {
     processedNewValue = Number(newValue);
     if (processedNewValue !== 0 && processedNewValue !== 1) {
@@ -1299,6 +1322,18 @@ app.post('/api/update-gallery-config', async (req, res) => {
     if (![0, 1, 2].includes(processedNewValue)) {
       console.error(`  > 错误: PFL 值无效 (非0,1,2): ${processedNewValue}`);
       return res.status(400).json({ success: false, error: "PFL 净化等级值必须是 0, 1 或 2。" });
+    }
+  } else if (configKey === 'Execution_Mode') { 
+    if (newValue !== 'Batch' && newValue !== 'Serial') {
+        console.error(`  > 错误: Execution_Mode 值无效 (非'Batch'或'Serial'): ${newValue}`);
+        return res.status(400).json({ success: false, error: "Execution_Mode 模式值必须是 'Batch' 或 'Serial'。" });
+    }
+    processedNewValue = newValue;
+  } else if (configKey === 'Load_Level') { 
+    processedNewValue = Number(newValue);
+    if (![1, 2, 3].includes(processedNewValue)) {
+        console.error(`  > 错误: Load_Level 值无效 (非1,2,3): ${processedNewValue}`);
+        return res.status(400).json({ success: false, error: "Load_Level 负载等级值必须是 1, 2 或 3。" });
     }
   } else {
     return res.status(400).json({ success: false, error: `未知的配置项: ${configKey}` });

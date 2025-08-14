@@ -66,6 +66,9 @@ let lazyLoadObserver = null;
 const AppState = {
   isSettingInputProgrammatically: false,
   isProcessingSelection: false,
+  home: { 
+    sliderDebounceTimer: null,
+  },
   generator: {
     isShowingFolderSuggestions: false,
     showingRelatedImages: false,
@@ -128,16 +131,16 @@ const AppState = {
     totalPages: 1,
   },
   fileSizesMap: new Map(),
-  aliasData: { 
+  aliasData: {
     mainToAliases: {},
     aliasToMain: {}
   },
   dataList: {
     currentEditPath: null,
-    currentSortOrder: 'default', 
+    currentSortOrder: 'default',
     searchDebounceTimer: null,
     searchIndexBuilt: false,
-    searchIndexMap: new Map(), 
+    searchIndexMap: new Map(),
     virtualScrollInfo: {
       container: null,
       innerSpacer: null,
@@ -163,28 +166,28 @@ const AppState = {
 
 // 事件总线
 const AppEvents = {
-  listeners: {}, 
+  listeners: {},
   on(event, callback) {
-      if (!this.listeners[event]) {
-          this.listeners[event] = [];
-      }
-      this.listeners[event].push(callback);
-      console.log(`[应用事件] 新的订阅者已注册，事件: "${event}"`);
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event].push(callback);
+    console.log(`[应用事件] 新的订阅者已注册，事件: "${event}"`);
   },
 
   emit(event, data) {
-      if (this.listeners[event]) {
-          console.log(`[应用事件] 正在广播事件: "${event}"`, data);
-          this.listeners[event].forEach(callback => {
-              try {
-                  callback(data);
-              } catch (error) {
-                  console.error(`[应用事件] 执行事件 "${event}" 的回调时出错:`, error);
-              }
-          });
-      } else {
-          console.log(`[应用事件] 广播事件: "${event}"，但当前无人订阅。`);
-      }
+    if (this.listeners[event]) {
+      console.log(`[应用事件] 正在广播事件: "${event}"`, data);
+      this.listeners[event].forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`[应用事件] 执行事件 "${event}" 的回调时出错:`, error);
+        }
+      });
+    } else {
+      console.log(`[应用事件] 广播事件: "${event}"，但当前无人订阅。`);
+    }
   }
 };
 
@@ -233,6 +236,11 @@ function cacheDomElements() {
   DOM.aiFilterBtn = document.getElementById('ai-filter-btn');
   DOM.eastereggFilterBtn = document.getElementById('easteregg-filter-btn');
   DOM.layoutFilterBtn = document.getElementById('layout-filter-btn');
+  DOM.executionModeToggleSwitch = document.getElementById('executionModeToggleSwitch');
+  DOM.executionModeStatusText = document.getElementById('executionModeStatusText');
+  DOM.loadLevelSliderContainer = document.getElementById('loadLevelSliderContainer');
+  DOM.loadLevelSlider = document.getElementById('loadLevelSlider');
+  DOM.loadLevelValueDisplay = document.getElementById('loadLevelValueDisplay');
   for (let i = 1; i <= 4; i++) {
     DOM[`repoCard${i}`] = document.getElementById(`repo-card-${i}`);
     DOM[`repoStatus${i}`] = document.getElementById(`repo-status-${i}`);
@@ -414,11 +422,11 @@ function cacheDomElements() {
   DOM.steSearchWrapper = document.getElementById('steSearchWrapper');
   DOM.steSuggestions = document.getElementById('steSuggestions');
   DOM.steProgressDisplay = document.getElementById('steProgressDisplay');
-  DOM.steCategorizedTags = document.getElementById('steCategorizedTags'); 
+  DOM.steCategorizedTags = document.getElementById('steCategorizedTags');
   DOM.steManualTags = document.getElementById('steManualTags');
   DOM.steTagList = document.getElementById('steTagList');
   DOM.steTagInput = document.getElementById('steTagInput');
-  DOM.steTagInputSuggestions = document.getElementById('steTagInputSuggestions'); 
+  DOM.steTagInputSuggestions = document.getElementById('steTagInputSuggestions');
   DOM.steSkipButton = document.getElementById('steSkipButton');
   DOM.steSaveButton = document.getElementById('steSaveButton');
   DOM.steManageTagsBtn = document.getElementById('steManageTagsBtn');
@@ -573,15 +581,26 @@ async function fetchJsonData(url, options = {}) {
 }
 
 function FormatBytes(bytes, decimals = 1) {
-  if (!Number.isFinite(bytes) || bytes < 0) return "? B";
+  if (!Number.isFinite(bytes) || bytes < 0 || bytes === null || bytes === undefined) return "? B";
   if (bytes === 0) return "0 B";
+
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
-  let i = Math.floor(Math.log(bytes) / Math.log(k));
-  if (i >= sizes.length) i = sizes.length - 1;
-  const formattedValue = i === 0 ? bytes : parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
-  return `${formattedValue} ${sizes[i]}`;
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  let num = parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
+  let unit = sizes[i];
+  if (unit === "MB" && num > 999.9) {
+    num = parseFloat((bytes / Math.pow(k, i + 1)).toFixed(dm));
+    unit = sizes[i + 1];
+  }
+
+  if (i >= sizes.length) {
+    unit = sizes[sizes.length - 1];
+  }
+
+  return `${num} ${unit}`;
 }
 
 /**
@@ -1100,13 +1119,13 @@ async function initializeApplication() {
   displayGeneratorMessage("加载核心数据...", UI_CLASSES.INFO);
   let galleryImagesLoaded = false;
   let userDataLoaded = false;
-  
+
   try {
     const [imagesResult, userdataResult, fileSizesResult, configResult] = await Promise.allSettled([
       fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_IMAGES),
       fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA),
       fetchJsonData(API_ENDPOINTS.FETCH_FILE_SIZES),
-      fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_CONFIG) 
+      fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_CONFIG)
     ]);
 
     if (configResult.status === 'fulfilled' && configResult.value.success) {
@@ -1170,8 +1189,7 @@ async function initializeApplication() {
         ),
       ].sort();
       console.log(
-        `核心数据: 加载 ${AppState.galleryImages.length} 图库信息 来自 ${
-          AppState.availableStorageBoxes.length
+        `核心数据: 加载 ${AppState.galleryImages.length} 图库信息 来自 ${AppState.availableStorageBoxes.length
         } 个仓库: ${AppState.availableStorageBoxes.join(", ")}`
       );
       if (DOM.generatorSearchInput) {
@@ -1263,17 +1281,17 @@ async function initializeApplication() {
     await fetchAliasData();
     // 处理文件大小结果 
     if (fileSizesResult.status === 'fulfilled' && Array.isArray(fileSizesResult.value)) {
-        const fileSizesData = fileSizesResult.value;
-        fileSizesData.forEach(file => {
-            const fullWebPath = buildFullWebPath(file.storageBox, file.urlPath);
-            AppState.fileSizesMap.set(fullWebPath, file.sizeInBytes);
-        });
-        console.log(`核心数据: 成功加载并映射了 ${AppState.fileSizesMap.size} 个文件的大小信息`);
+      const fileSizesData = fileSizesResult.value;
+      fileSizesData.forEach(file => {
+        const fullWebPath = buildFullWebPath(file.storageBox, file.urlPath);
+        AppState.fileSizesMap.set(fullWebPath, file.sizeInBytes);
+      });
+      console.log(`核心数据: 成功加载并映射了 ${AppState.fileSizesMap.size} 个文件的大小信息`);
     } else {
-        console.error("核心数据: 加载文件大小信息失败:", fileSizesResult.reason || "未知错误");
-        displayToast("未能加载文件大小信息", UI_CLASSES.WARNING);
+      console.error("核心数据: 加载文件大小信息失败:", fileSizesResult.reason || "未知错误");
+      displayToast("未能加载文件大小信息", UI_CLASSES.WARNING);
     }
-    
+
     // 后续逻辑
     if (galleryImagesLoaded && userDataLoaded) {
       displayGeneratorMessage(
@@ -1334,7 +1352,7 @@ async function initializeApplication() {
       },
       { name: "setupJsonCalibratorEventListeners", file: "GuTools_JsonCal.js" },
       { name: 'setupStockroomGoEventListeners', file: 'GuTools_StockroomGo.js' },
-      { name: 'setupStorageboxCalibratorEventListeners', file: 'GuTools_StorageboxCal.js' }, 
+      { name: 'setupStorageboxCalibratorEventListeners', file: 'GuTools_StorageboxCal.js' },
       { name: 'setupFileSizeCheckerEventListeners', file: 'GuTools_FileSize.js' },
       { name: 'setupSecondaryTagEditorEventListeners', file: 'GuTools_SecondaryTagEditor.js' },
       { name: "setupDataListEventListeners", file: "Data_List.js" },
@@ -1398,19 +1416,19 @@ async function initializeApplication() {
 async function fetchAliasData() {
   console.log("Core: 正在获取角色别名数据...");
   try {
-      const result = await fetchJsonData('/api/aliases');
-      if (result.success) {
-          AppState.aliasData = {
-              mainToAliases: result.mainToAliases || {},
-              aliasToMain: result.aliasToMain || {}
-          };
-          console.log(`Core: 成功加载 ${Object.keys(result.mainToAliases).length} 个角色的别名数据。`);
-      } else {
-          throw new Error(result.error || "获取别名数据失败");
-      }
+    const result = await fetchJsonData('/api/aliases');
+    if (result.success) {
+      AppState.aliasData = {
+        mainToAliases: result.mainToAliases || {},
+        aliasToMain: result.aliasToMain || {}
+      };
+      console.log(`Core: 成功加载 ${Object.keys(result.mainToAliases).length} 个角色的别名数据。`);
+    } else {
+      throw new Error(result.error || "获取别名数据失败");
+    }
   } catch (error) {
-      console.error("Core: 加载角色别名数据失败:", error);
-      displayToast("加载角色别名失败，搜索功能受限！", UI_CLASSES.WARNING);
+    console.error("Core: 加载角色别名数据失败:", error);
+    displayToast("加载角色别名失败，搜索功能受限！", UI_CLASSES.WARNING);
   }
 }
 
