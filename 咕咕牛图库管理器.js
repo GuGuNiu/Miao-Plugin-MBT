@@ -41,7 +41,6 @@ class ProcessManager {
       if (proc && proc.pid && !proc.killed) {
         try {
           if (process.platform === "win32") {
-            const { spawn } = require('node:child_process');
             spawn('taskkill', ['/pid', proc.pid, '/f', '/t']);
           } else {
             process.kill(proc.pid, signal);
@@ -2556,6 +2555,10 @@ class MiaoPluginMBT extends plugin {
     statsCache.lastUpdated = new Date().toISOString();
 
     try {
+
+      const cacheDir = path.dirname(MiaoPluginMBT.paths.repoStatsCachePath);
+      await fsPromises.mkdir(cacheDir, { recursive: true });
+
       await fsPromises.writeFile(MiaoPluginMBT.paths.repoStatsCachePath, JSON.stringify(statsCache, null, 2), "utf-8");
       const duration = Date.now() - startTime;
       // logger.info(`${logPrefix}仓库统计缓存更新成功！耗时 ${duration}ms。`);
@@ -4998,6 +5001,15 @@ class MiaoPluginMBT extends plugin {
     const msg = e.msg.trim();
     if (msg !== "#重置咕咕牛") return false;
 
+    if (MiaoPluginMBT._guToolsProcess && !MiaoPluginMBT._guToolsProcess.killed) {
+      this.logger.info(`${this.logPrefix} [重置] 检测到 GuTools Web 后台服务正在运行，正在强制终止...`);
+      //await e.reply("检测到后台服务正在运行，将先进行关闭...", true);
+
+      MiaoPluginMBT.processManager.killAll('SIGKILL', '执行 #重置咕咕牛 操作');
+
+      await common.sleep(2000); 
+      //this.logger.info(`${this.logPrefix} [重置] 后台服务已发送关闭信号，继续执行清理流程。`);
+    }
 
     if (MiaoPluginMBT._configWatcher) {
       MiaoPluginMBT._configWatcher.close();
