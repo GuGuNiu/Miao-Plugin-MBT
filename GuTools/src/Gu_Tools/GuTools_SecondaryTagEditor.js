@@ -19,7 +19,6 @@ const STEState = {
     allPredefinedTags: [], 
     activeSuggestionIndex: -1, 
     tagSearchIndex: [], 
-    searchIndexMap: new Map(),
 
     virtualStrip: {
         isInitialized: false,
@@ -101,7 +100,6 @@ function waitForPinyin(timeout = 5000) {
 
 async function initializeSecondaryTagEditorView() {
     if (STEState.isInitialized) {
-        // 如果已经初始化，可能只是切换回这个视图，确保UI是正确的
         if (STEState.currentImageList.length === 0) {
             loadNextImage();
         }
@@ -158,8 +156,7 @@ async function initializeSecondaryTagEditorView() {
             initials: pinyin(tag, { pattern: 'first' }).replace(/\s/g, '').toLowerCase(),
             fullPinyin: pinyin(tag, { toneType: 'none', type: 'array' }).join('').toLowerCase()
         }));
-        await buildSTESearchIndex(); 
-
+        
         STEState.isInitialized = true;
     } catch (error) {
         console.error("加载二级标签失败:", error);
@@ -373,6 +370,13 @@ function loadNextImage() {
     const mode = STEState.currentMode;
     const searchKeyword = DOM.steSearchInput.value.toLowerCase().trim();
 
+    if (mode === 'all' && searchKeyword && searchWorker) {
+        STEState.lastSearchKeyword = searchKeyword;
+        STEState.lastBuiltMode = mode;
+        searchWorker.postMessage({ type: 'search', payload: { query: searchKeyword } });
+        return;
+    }
+
     const shouldRebuildList = STEState.currentImageList.length === 0 ||
         mode !== STEState.lastBuiltMode ||
         (mode === 'all' && searchKeyword !== STEState.lastSearchKeyword);
@@ -389,9 +393,7 @@ function loadNextImage() {
                 return !userDataEntry || !userDataEntry.attributes.secondaryTags || userDataEntry.attributes.secondaryTags.length === 0;
             });
         } else if (mode === 'all') {
-            STEState.currentImageList = searchKeyword ?
-                AppState.galleryImages.filter(img => img.fileName.toLowerCase().includes(searchKeyword) || img.name.toLowerCase().includes(searchKeyword)) :
-                [...AppState.galleryImages];
+            STEState.currentImageList = [...AppState.galleryImages];
         }
 
         initializeVirtualStrip();
@@ -581,9 +583,14 @@ function displaySteSuggestions(results) {
         item.title = `${imgInfo.storageBox}/${imgInfo.folderName}/${imgInfo.fileName}`;
         item.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            DOM.steSearchInput.value = imgInfo.fileName;
-            DOM.steSuggestions.classList.add('hidden');
-            STEState.currentImageList = []; 
+            if (DOM.steSearchInput) DOM.steSearchInput.value = imgInfo.fileName;
+            if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
+            STEState.currentImageList = [imgInfo];
+            STEState.lastBuiltMode = 'all';
+            STEState.lastSearchKeyword = imgInfo.fileName.toLowerCase();
+            STEState.currentIndex = -1;
+            STEState.virtualStrip.isInitialized = false;
+            initializeVirtualStrip();
             loadNextImage();
         });
         fragment.appendChild(item);
@@ -657,9 +664,9 @@ function setupSecondaryTagEditorEventListeners() {
             STEState.currentMode = e.target.value;
             STEState.currentImageList = [];
             STEState.currentIndex = -1;
-            DOM.steSearchInput.disabled = (STEState.currentMode !== 'all');
+            if (DOM.steSearchInput) DOM.steSearchInput.disabled = (STEState.currentMode !== 'all');
             if (STEState.currentMode !== 'all') {
-                DOM.steSearchInput.value = '';
+                if (DOM.steSearchInput) DOM.steSearchInput.value = '';
                 if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
             }
             loadNextImage();
@@ -670,18 +677,9 @@ function setupSecondaryTagEditorEventListeners() {
         DOM.steSearchInput.addEventListener('input', () => {
             clearTimeout(STEState.searchDebounceTimer);
             STEState.searchDebounceTimer = setTimeout(() => {
-                const query = DOM.steSearchInput.value.toLowerCase().trim();
-                if (query) {
-                    const results = [];
-                    for (const img of AppState.galleryImages) {
-                        const fullPath = buildFullWebPath(img.storageBox, img.urlPath);
-                        const searchString = STEState.searchIndexMap.get(fullPath) || '';
-                        if (searchString.includes(query)) {
-                            results.push(img);
-                        }
-                        if (results.length >= 20) break; // 限制建议数量
-                    }
-                    displaySteSuggestions(results);
+                const query = DOM.steSearchInput.value.trim();
+                if (query && searchWorker) {
+                    searchWorker.postMessage({ type: 'search', payload: { query, dataSource: 'physical' } });
                 } else {
                     if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
                 }
@@ -690,7 +688,6 @@ function setupSecondaryTagEditorEventListeners() {
         DOM.steSearchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
-                STEState.currentImageList = [];
                 loadNextImage();
             }
         });
@@ -971,58 +968,3 @@ function displayModalMessage(text, type) {
     }
 }
 
-/**
- * 为二级标签编辑器构建搜索索引
- */
-async function buildSTESearchIndex() {
-    if (typeof pinyinPro === 'undefined') {
-        console.error("STE: pinyinPro 库未加载。");
-        return;
-    }
-    const { pinyin } = pinyinPro;
-    console.log("STE: 正在构建搜索索引...");
-
-    STEState.searchIndexMap.clear();
-    const dataToProcess = AppState.galleryImages;
-
-    for (const entry of dataToProcess) {
-        const fullPath = buildFullWebPath(entry.storageBox, entry.urlPath);
-        if (!fullPath) continue;
-
-        const textsToProcess = new Set();
-        const characterName = entry.name;
-        if (characterName) {
-            textsToProcess.add(characterName);
-            const aliases = AppState.aliasData.mainToAliases[characterName];
-            if (Array.isArray(aliases)) {
-                aliases.forEach(alias => textsToProcess.add(alias));
-            }
-        }
-        if (entry.fileName) {
-            textsToProcess.add(entry.fileName.replace(/\.[^/.]+$/, ""));
-        }
-        
-        // 二级标签编辑器的搜索也应该能搜到已有的二级标签
-        const userDataEntry = AppState.userData.find(ud => ud.path === entry.urlPath && ud.storagebox?.toLowerCase() === entry.storageBox.toLowerCase());
-        if (userDataEntry && Array.isArray(userDataEntry.attributes.secondaryTags)) {
-            userDataEntry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
-        }
-
-        const combinedText = Array.from(textsToProcess).join(' ');
-        if (!combinedText) continue;
-
-        const lowerCaseText = combinedText.toLowerCase();
-        const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
-        const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
-
-        // GID 也需要被索引
-        let gid = '0';
-        if (userDataEntry && userDataEntry.gid) {
-            gid = userDataEntry.gid;
-        }
-
-        const searchIndexString = `${gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
-        STEState.searchIndexMap.set(fullPath, searchIndexString);
-    }
-    console.log(`STE: 搜索索引构建完成，共 ${STEState.searchIndexMap.size} 条记录。`);
-}

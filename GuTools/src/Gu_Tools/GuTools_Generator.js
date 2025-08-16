@@ -900,18 +900,14 @@ function initializeGeneratorSearchWorker() {
         const segments = fullPath.startsWith("/")
           ? fullPath.substring(1).split("/")
           : fullPath.split("/");
-        // 提取相对路径 (从第二个 / 之后的部分 假设格式 /仓库/分类/...)
         return segments.length >= 2 ? segments.slice(1).join("/") : null;
       })
       .filter(Boolean);
 
-    AppState.generator.backgroundWorker.postMessage({
-      type: "loadData",
-      payload: {
-        availableImages: AppState.galleryImages, // 包含相对 urlPath 和原始大小写 storageBox
-        existingPaths: relativeUserDataPaths, // 发送相对路径数组
-      },
-    });
+      AppState.generator.backgroundWorker.postMessage({
+        type: "search",
+        payload: { query: query, dataSource: 'physical' }, 
+      });
     if (DOM.generatorSearchInput) {
       DOM.generatorSearchInput.disabled = false;
       DOM.generatorSearchInput.placeholder = `搜索 ${AppState.galleryImages.length} 张图片...`;

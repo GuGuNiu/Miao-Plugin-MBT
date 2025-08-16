@@ -3,73 +3,6 @@
 //       和属性编辑模态框
 // ==========================================================================
 
-
-async function buildDataListSearchIndex() {
-    if (typeof pinyinPro === 'undefined') {
-        console.error("DataList: pinyinPro 库未加载，无法构建拼音搜索索引。");
-        await new Promise(resolve => setTimeout(resolve, 500)); 
-        if (typeof pinyinPro === 'undefined') {
-            displayToast("拼音库加载失败，搜索功能受限！", "error");
-            return;
-        }
-    }
-    
-    const { pinyin } = pinyinPro;
-
-    console.log("DataList: 正在构建拼音搜索索引...");
-    const startTime = performance.now();
-
-    // 在构建新索引前，先清空旧的 Map
-    AppState.dataList.searchIndexMap.clear();
-
-    for (const entry of AppState.userData) {
-        // 必须有 gid 作为 Map 的唯一键，否则跳过
-        if (!entry.attributes || !entry.gid) {
-            continue;
-        }
-
-        const textsToProcess = new Set(); // 使用 Set 避免重复
-        
-        // 添加角色名/父文件夹名
-        const characterName = entry.attributes.parentFolder;
-        if (characterName) {
-            textsToProcess.add(characterName);
-            // 添加所有别名
-            const aliases = AppState.aliasData.mainToAliases[characterName];
-            if (Array.isArray(aliases)) {
-                aliases.forEach(alias => textsToProcess.add(alias));
-            }
-        }
-        
-        // 添加文件名 (不含扩展名)
-        if (entry.attributes.filename) {
-            textsToProcess.add(entry.attributes.filename.replace(/\.[^/.]+$/, ""));
-        }
-
-        // 添加所有二级标签
-        if (Array.isArray(entry.attributes.secondaryTags)) {
-            entry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
-        }
-
-        // 如果没有任何可供索引的文本，则跳过此条目
-        const combinedText = Array.from(textsToProcess).join(' ');
-        if (!combinedText) {
-            continue;
-        }
-
-        const lowerCaseText = combinedText.toLowerCase();
-        const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
-        const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
-        
-        // 将 GID 也加入索引字符串
-        const searchIndexString = `${entry.gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
-        AppState.dataList.searchIndexMap.set(entry.gid, searchIndexString);
-    }
-
-    const duration = performance.now() - startTime;
-    console.log(`DataList: 拼音搜索索引构建完成，共处理 ${AppState.dataList.searchIndexMap.size} 条记录，耗时 ${duration.toFixed(2)} ms。`);
-}
-
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -210,7 +143,6 @@ function populateSecondaryTagsDropdown() {
 
 /**
  * 切换二级标签筛选下拉框的显示/隐藏状态
- * @param {MouseEvent} [event] - The click event, used to stop propagation.
  */
 function toggleSecondaryTagsDropdown(event) {
     if (event) {
@@ -308,8 +240,6 @@ function hideDataListSuggestions() {
  * @returns {Array<object>} 过滤并排序后的数据条目数组
  */
 function filterUserDataEntries() {
-    // 获取所有过滤控件的值
-    const searchTerm = DOM.dataListSearchInput?.value.toLowerCase().trim() || '';
     const showPx18 = DOM.dataListFilterPx18?.checked ?? false;
     const showRx18 = DOM.dataListFilterRx18?.checked ?? false;
     const showAiImage = DOM.dataListFilterAiImage?.checked ?? false;
@@ -320,18 +250,12 @@ function filterUserDataEntries() {
     const selectedGame = DOM.filterGameBtn?.dataset.value || '';
     const selectedTags = AppState.dataList.secondaryTagsFilter?.selectedTags ?? new Set();
     const currentSortOrder = AppState.dataList.currentSortOrder || 'default';
-    const filteredEntries = AppState.userData.filter(entry => {
+
+    const dataToFilter = AppState.dataList.workerSearchResults || AppState.userData;
+
+    const filteredEntries = dataToFilter.filter(entry => {
         if (!entry?.attributes) return false;
 
-        // 搜索词过滤
-        if (searchTerm) {
-            const searchIndexString = AppState.dataList.searchIndexMap.get(entry.gid) || '';
-            if (!searchIndexString.includes(searchTerm)) {
-                return false;
-            }
-        }
-
-        // 属性过滤
         if (showBan && entry.attributes.isBan !== true) return false;
         if (showAiImage && entry.attributes.isAiImage !== true) return false;
         if (showEasterEgg && entry.attributes.isEasterEgg !== true) return false;
@@ -340,7 +264,6 @@ function filterUserDataEntries() {
         if (showNormal && entry.attributes.layout !== 'normal') return false;
         if (showFullscreen && entry.attributes.layout !== 'fullscreen') return false;
 
-        // 游戏来源过滤
         if (selectedGame) {
             if (selectedGame === 'unknown') {
                 const knownGames = ['gs-character', 'sr-character', 'zzz-character', 'waves-character'];
@@ -350,7 +273,6 @@ function filterUserDataEntries() {
             }
         }
 
-        // 二级标签过滤
         if (selectedTags.size > 0) {
             const entryTags = entry.attributes.secondaryTags;
             if (!Array.isArray(entryTags) || entryTags.length === 0) {
@@ -366,7 +288,6 @@ function filterUserDataEntries() {
         return true;
     });
 
-    // 排序逻辑
     filteredEntries.sort((a, b) => {
         switch (currentSortOrder) {
             case 'size_desc':
@@ -396,44 +317,17 @@ function filterUserDataEntries() {
  * 应用当前的过滤器 并使用过滤后的数据重新渲染数据列表
  */
 function applyFiltersAndRenderDataList() {
-    // 检查必要的 DOM
-    const requiredElementsMap = {
-        dataListSearchInput: DOM.dataListSearchInput,
-        dataListFilterPx18: DOM.dataListFilterPx18,
-        dataListFilterRx18: DOM.dataListFilterRx18,
-        dataListFilterIsBan: DOM.dataListFilterIsBan,
-        dataListFilterNormal: DOM.dataListFilterNormal,
-        dataListFilterFullscreen: DOM.dataListFilterFullscreen,
-        dataListFilterEasterEgg: DOM.dataListFilterEasterEgg,
-        dataListFilterAiImage: DOM.dataListFilterAiImage,
-        filterGameBtn: DOM.filterGameBtn,
-        dataListContainer: DOM.dataListContainer,
-        dataListCountDisplay: DOM.dataListCountDisplay
-    };
-
-    const missingElements = Object.entries(requiredElementsMap)
-        .filter(([key, element]) => !element)
-        .map(([key]) => key);
-
-    if (missingElements.length > 0) {
-        console.error(`DataList: 缺少必要的过滤或列表容器元素: ${missingElements.join(', ')}`);
-        if (DOM.dataListContainer) {
-            DOM.dataListContainer.innerHTML = `<p class="no-results" style="display:block;">错误：界面控件加载不完整，无法显示列表。</p>`;
-        }
-        return;
+    const searchTerm = DOM.dataListSearchInput?.value.trim() || '';
+    if (!searchTerm) {
+      AppState.dataList.workerSearchResults = null;
     }
-
-    console.log("DataList: 应用过滤器并渲染列表...");
-    const filteredData = filterUserDataEntries(); // 获取过滤后的数据
-
-    // 更新计数显示
-    DOM.dataListCountDisplay.textContent = `当前显示: ${filteredData.length} 条`;
-
-    // 设置并渲染虚拟滚动列表
+    
+    const filteredData = filterUserDataEntries();
+    if(DOM.dataListCountDisplay) DOM.dataListCountDisplay.textContent = `当前显示: ${filteredData.length} 条`;
     setupVirtualScroll(DOM.dataListContainer, filteredData);
 }
 
-//  虚拟滚动实现 Virtual Scroll 
+//  虚拟滚动实现
 /**
  * 设置虚拟滚动列表
  * @param {HTMLElement} containerElement 列表容器元素
@@ -1005,46 +899,23 @@ function handleGlobalDropdownClose(event) {
  * 设置云端Json数据页面的事件监听器
  */
 async function setupDataListEventListeners() {
+    const debouncedSearch = () => {
+        clearTimeout(AppState.dataList.searchDebounceTimer);
+        AppState.dataList.searchDebounceTimer = setTimeout(() => {
+            const query = DOM.dataListSearchInput.value.trim();
+            if (query && searchWorker) {
+                searchWorker.postMessage({ type: 'search', payload: { query, dataSource: 'indexed' } });
+            } else {
+                AppState.dataList.workerSearchResults = null;
+                applyFiltersAndRenderDataList();
+            }
+        }, DELAYS.DATA_LIST_SEARCH_DEBOUNCE);
+    };
 
-
-    // 定义过滤器控件和对应的互斥组
-    const filterControlsConfig = [
-        { element: DOM.dataListSearchInput, event: 'input', group: null, debounce: true },
-        { element: DOM.dataListFilterPx18, event: 'change', group: 'rating' },
-        { element: DOM.dataListFilterRx18, event: 'change', group: 'rating' },
-        { element: DOM.dataListFilterNormal, event: 'change', group: 'layout' },
-        { element: DOM.dataListFilterFullscreen, event: 'change', group: 'layout' },
-        { element: DOM.dataListFilterEasterEgg, event: 'change', group: null },
-        { element: DOM.dataListFilterAiImage, event: 'change', group: null },
-        { element: DOM.dataListFilterIsBan, event: 'change', group: null }
-    ];
-
-    filterControlsConfig.forEach(config => {
-        if (config.element) {
-            const handler = (event) => {
-                const targetElement = event.target;
-                if (config.group && targetElement.checked) {
-                    filterControlsConfig.forEach(otherConfig => {
-                        if (otherConfig.group === config.group && otherConfig.element !== targetElement && otherConfig.element?.checked) {
-                            otherConfig.element.checked = false;
-                            updateFilterToggleButtonText(otherConfig.element.id);
-                        }
-                    });
-                }
-                if (targetElement.type === 'checkbox') {
-                    updateFilterToggleButtonText(targetElement.id);
-                }
-                if (config.debounce) {
-                    clearTimeout(AppState.dataList.searchDebounceTimer);
-                    AppState.dataList.searchDebounceTimer = setTimeout(applyFiltersAndRenderDataList, DELAYS.DATA_LIST_SEARCH_DEBOUNCE);
-                } else {
-                    applyFiltersAndRenderDataList();
-                }
-            };
-            config.element.removeEventListener(config.event, handler);
-            config.element.addEventListener(config.event, handler);
-        }
-    });
+    if (DOM.dataListSearchInput) {
+        DOM.dataListSearchInput.removeEventListener('input', debouncedSearch); 
+        DOM.dataListSearchInput.addEventListener('input', debouncedSearch); 
+    }
 
     if (DOM.dataListSearchInput) {
         DOM.dataListSearchInput.addEventListener('focus', () => {
@@ -1056,7 +927,16 @@ async function setupDataListEventListeners() {
         });
     }
 
-    // --- 初始化二级标签筛选状态 ---
+    const attributeFilters = document.querySelectorAll('#dataListPane .filter-toggle-checkbox');
+    attributeFilters.forEach(el => {
+        const handler = () => {
+            updateFilterToggleButtonText(el.id);
+            applyFiltersAndRenderDataList();
+        };
+        el.removeEventListener('change', handler);
+        el.addEventListener('change', handler);
+    });
+
     if (!AppState.dataList.secondaryTagsFilter) {
         AppState.dataList.secondaryTagsFilter = {
             availableTags: {},
@@ -1064,7 +944,6 @@ async function setupDataListEventListeners() {
         };
     }
 
-    // --- 二级标签筛选功能 ---
     if (DOM.secondaryTagsFilterBtn && DOM.secondaryTagsDropdown) {
         fetchSecondaryTagsForFilter();
         DOM.secondaryTagsFilterBtn.removeEventListener('click', toggleSecondaryTagsDropdown);
@@ -1073,10 +952,8 @@ async function setupDataListEventListeners() {
         DOM.secondaryTagsDropdown.addEventListener('click', handleTagDropdownClick);
     }
 
-    // --- 游戏筛选功能 ---
     setupCustomGameFilter();
 
-    // --- 排序方式下拉框的事件处理 ---
     const sortOrderBtn = document.getElementById('sortOrderFilterBtn');
     const sortOrderDropdown = document.getElementById('sortOrderDropdown');
     if (sortOrderBtn && sortOrderDropdown) {
@@ -1099,11 +976,9 @@ async function setupDataListEventListeners() {
         });
     }
 
-    // --- 统一的“点击外部关闭所有下拉框”逻辑 ---
-    document.removeEventListener('click', handleGlobalDropdownClose); // 先移除旧的，防止重复
+    document.removeEventListener('click', handleGlobalDropdownClose);
     document.addEventListener('click', handleGlobalDropdownClose);
 
-    // 列表项点击事件 (事件代理)
     if (DOM.dataListContainer) {
         const visibleItemsCont = DOM.dataListContainer.querySelector('#visibleItemsContainer');
         if (visibleItemsCont) {

@@ -66,24 +66,13 @@ const broadcast = (data) => {
 console.log('[WebSocket] 服务已启动并附加到 HTTP 服务器。');
 
 // --- 核心常量与配置 ---
-const ALLOWED_IMAGE_EXTENSIONS = new Set([
-  ".webp",
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".gif",
-]);
+const ALLOWED_IMAGE_EXTENSIONS = new Set([".webp", ".png", ".jpg", ".jpeg", ".gif"]);
 const IMGTEMP_DIRECTORY_NAME = "imgtemp";
 const USER_DATA_FOLDER_NAME = "GuGuNiu-Gallery";
 const THUMBNAIL_DIRECTORY_NAME = "thumbnails";
-const THUMBNAIL_WIDTH = 350;  //缩略图分辨率
+const THUMBNAIL_WIDTH = 350;
 const DEFAULT_GALLERY_CONFIG = { TuKuOP: 1, PFL: 0 };
-const MAIN_GALLERY_FOLDERS = [
-  "gs-character",
-  "sr-character",
-  "zzz-character",
-  "waves-character",
-];
+const MAIN_GALLERY_FOLDERS = ["gs-character", "sr-character", "zzz-character", "waves-character"];
 
 // --- 全局缓存与索引 ---
 const _physicalPathIndex = new Map();
@@ -94,73 +83,37 @@ const _preScannedData = {
   characterFolders: new Set(),
 };
 
-// --- 环境检测与路径设置 ---
+// --- 环境检测与路径设置 (最终注入版) ---
 console.log("🐂 GuGuNiu Tools Backend: 环境检测启动...");
 const GU_TOOLS_DIR = __dirname;
-const MAIN_REPO_DIR = path.resolve(GU_TOOLS_DIR, "..");
-const PARENT_OF_MAIN_REPO = path.resolve(MAIN_REPO_DIR, "..");
-const PARENT_DIR_NAME = path.basename(PARENT_OF_MAIN_REPO);
-
+let YUNZAI_ROOT_DIR = process.env.GUGUNIU_YUNZAI_PATH;
 let ENV_MODE = "robot";
-let YUNZAI_ROOT_DIR = path.resolve(PARENT_OF_MAIN_REPO, "..");
-let RESOURCES_DIR = PARENT_OF_MAIN_REPO;
-let USER_DATA_BASE_DIR = RESOURCES_DIR;
-let REPO_BASE_DIR = RESOURCES_DIR;
 
-if (PARENT_DIR_NAME !== "resources") {
+if (!YUNZAI_ROOT_DIR) {
+  console.log("⚠️ 未从环境变量中获取 Yunzai 根目录，启动本地开发模式回退。");
   ENV_MODE = "local";
-  console.log("⚠️ 检测到本地开发环境 (父目录非 'resources')");
-  USER_DATA_BASE_DIR = MAIN_REPO_DIR;
-  REPO_BASE_DIR = PARENT_OF_MAIN_REPO;
-  YUNZAI_ROOT_DIR = path.resolve(REPO_BASE_DIR, "..");
-  RESOURCES_DIR = path.join(YUNZAI_ROOT_DIR, "resources");
-} else {
-  console.log("✅ 检测到机器人框架环境 ('resources' 父目录)");
+  YUNZAI_ROOT_DIR = path.resolve(GU_TOOLS_DIR, "..", "..", "..");
 }
 
+const RESOURCES_DIR = process.env.GUGUNIU_RESOURCES_PATH || path.resolve(YUNZAI_ROOT_DIR, "resources");
+const MAIN_REPO_DIR = path.resolve(RESOURCES_DIR, "Miao-Plugin-MBT");
+const USER_DATA_BASE_DIR = RESOURCES_DIR;
+const REPO_BASE_DIR = RESOURCES_DIR;
+
 // --- 多仓库定义 ---
-const REPO_NAMES = [
-  "Miao-Plugin-MBT",
-  "Miao-Plugin-MBT-2",
-  "Miao-Plugin-MBT-3",
-  "Miao-Plugin-MBT-4",
-];
-const REPO_ROOTS = REPO_NAMES.map((name) => ({
-  name: name,
-  path: path.resolve(REPO_BASE_DIR, name),
-}));
+const REPO_NAMES = ["Miao-Plugin-MBT", "Miao-Plugin-MBT-2", "Miao-Plugin-MBT-3", "Miao-Plugin-MBT-4"];
+const REPO_ROOTS = REPO_NAMES.map(name => ({ name: name, path: path.resolve(REPO_BASE_DIR, name) }));
 
 // --- 最终路径计算 ---
-const USER_DATA_DIRECTORY = path.join(
-  USER_DATA_BASE_DIR,
-  USER_DATA_FOLDER_NAME
-);
+const USER_DATA_DIRECTORY = path.join(USER_DATA_BASE_DIR, USER_DATA_FOLDER_NAME);
 const IMGTEMP_DIRECTORY = path.join(GU_TOOLS_DIR, IMGTEMP_DIRECTORY_NAME);
-const THUMBNAIL_DIRECTORY = ENV_MODE === 'local'
-  ? path.join(GU_TOOLS_DIR, THUMBNAIL_DIRECTORY_NAME)
-  : path.join(USER_DATA_DIRECTORY, THUMBNAIL_DIRECTORY_NAME);
-const IMG_DIRECTORY = path.join(GU_TOOLS_DIR, "img");
-const INTERNAL_USER_DATA_FILE = path.join(
-  MAIN_REPO_DIR,
-  "GuGuNiu-Gallery",
-  "ImageData.json"
-);
-const EXTERNAL_USER_DATA_FILE = path.join(
-  USER_DATA_DIRECTORY,
-  "ExternalImageData.json"
-);
-const GALLERY_CONFIG_FILE = path.join(
-  USER_DATA_DIRECTORY,
-  "GalleryConfig.yaml"
-);
-const REPO_STATS_CACHE_FILE = path.join(
-  USER_DATA_DIRECTORY,
-  "RepoStatsCache.json"
-);
-const BAN_LIST_FILE = path.join(
-  USER_DATA_DIRECTORY,
-  "banlist.json"
-);
+const THUMBNAIL_DIRECTORY = ENV_MODE === 'local' ? path.join(GU_TOOLS_DIR, THUMBNAIL_DIRECTORY_NAME) : path.join(USER_DATA_DIRECTORY, THUMBNAIL_DIRECTORY_NAME);
+const IMG_DIRECTORY = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "html", "img");
+const INTERNAL_USER_DATA_FILE = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "ImageData.json");
+const EXTERNAL_USER_DATA_FILE = path.join(USER_DATA_DIRECTORY, "ExternalImageData.json");
+const GALLERY_CONFIG_FILE = path.join(USER_DATA_DIRECTORY, "GalleryConfig.yaml");
+const REPO_STATS_CACHE_FILE = path.join(USER_DATA_DIRECTORY, "RepoStatsCache.json");
+const BAN_LIST_FILE = path.join(USER_DATA_DIRECTORY, "banlist.json");
 const redis = new Redis();
 
 function executeCommand(command, options) {
@@ -200,7 +153,7 @@ console.log("--- 服务器路径配置 ---");
 console.log(`环境模式: ${ENV_MODE}`);
 console.log(`工具目录: ${GU_TOOLS_DIR}`);
 console.log(`仓库基础目录: ${REPO_BASE_DIR}`);
-console.log(`模拟 Yunzai 根目录: ${YUNZAI_ROOT_DIR}`);
+console.log(`Yunzai 根目录: ${YUNZAI_ROOT_DIR}`);
 console.log(`用户数据目录: ${USER_DATA_DIRECTORY}`);
 console.log(`主数据文件: ${INTERNAL_USER_DATA_FILE}`);
 console.log(`外数据文件: ${EXTERNAL_USER_DATA_FILE}`);
@@ -220,35 +173,38 @@ app.use(express.json({ limit: "10mb" }));
 
 // --- 令牌验证中间件 ---
 const tokenAuthMiddleware = async (req, res, next) => {
+  if (ENV_MODE === 'robot') {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/external/') || path.extname(req.path)) {
+      return next();
+    }
+
+    const token = req.path.substring(1);
+    if (!token || !/^[A-Za-z0-9]{6}$/.test(token)) {
+      return res.status(403).send("<h1>访问令牌无效或缺失</h1><p>请通过机器人获取有效的临时登录链接。</p>");
+    }
+
+    const redisKey = `Yz:GuGuNiu:GuTools:LoginToken:${token}`;
+    try {
+      const userId = await redis.get(redisKey);
+      if (userId) {
+        // 验证成功，放行
+        return next();
+      } else {
+        // 令牌不存在或已过期
+        return res.status(403).send("<h1>访问令牌无效或已过期</h1><p>请通过机器人重新获取登录链接。</p>");
+      }
+    } catch (error) {
+      console.error('[Token Auth] Redis 验证出错:', error);
+      return res.status(500).send("<h1>服务器验证时出错</h1><p>无法连接到 Redis 服务进行令牌验证。</p>");
+    }
+  }
+
   if (ENV_MODE === 'local') {
     console.log('[Token Auth] 开发环境，跳过令牌验证。');
     return next();
   }
 
-  if (req.path.startsWith('/api/') || req.path.startsWith('/external/') || path.extname(req.path)) {
-    return next();
-  }
-
-  // 检查主页面的访问令牌
-  const token = req.path.substring(1);
-  if (!token || !/^[A-Za-z0-9]{6}$/.test(token)) {
-    return res.status(403).send("<h1>访问令牌无效或缺失</h1><p>请通过机器人获取有效的临时登录链接。</p>");
-  }
-
-  const redisKey = `Yz:GuGuNiu:GuTools:LoginToken:${token}`;
-
-  try {
-    const userId = await redis.get(redisKey);
-    if (userId) {
-      // 验证成功，放行
-      return next();
-    } else {
-      return res.status(403).send("<h1>访问令牌无效或已过期</h1><p>请通过机器人重新获取登录链接。</p>");
-    }
-  } catch (error) {
-    console.error('[Token Auth] Redis 验证出错:', error);
-    return res.status(500).send("<h1>服务器验证时出错</h1><p>无法连接到 Redis 服务进行令牌验证。</p>");
-  }
+  next();
 };
 
 app.use(tokenAuthMiddleware);
@@ -643,24 +599,15 @@ REPO_ROOTS.forEach(async (repo) => {
   try {
     const stats = await fs.stat(repo.path);
     if (!stats.isDirectory()) {
-      console.warn(`[静态服务] 警告: 仓库目录 ${repo.path} 不是一个目录，跳过。`);
       return;
     }
   } catch {
-    console.warn(`[静态服务] 警告: 仓库目录 ${repo.path} 无效，跳过。`);
     return;
   }
-  MAIN_GALLERY_FOLDERS.forEach(async (gallery) => {
-    const galleryPhysicalPath = path.join(repo.path, gallery);
-    const routePath = `/${repo.name}/${gallery}`; // 使用原始大小写仓库名
-    try {
-      const stats = await fs.stat(galleryPhysicalPath);
-      if (stats.isDirectory()) {
-        app.use(routePath, express.static(galleryPhysicalPath));
-        console.log(`[静态服务] OK: ${routePath} -> ${galleryPhysicalPath}`);
-      }
-    } catch { }
-  });
+
+  const routePath = `/${repo.name}`;
+  app.use(routePath, express.static(repo.path));
+  console.log(`[静态服务] OK: ${routePath} -> ${repo.path}`);
 });
 (async () => {
   const routePath = `/${IMGTEMP_DIRECTORY_NAME}`;
@@ -1323,17 +1270,17 @@ app.post('/api/update-gallery-config', async (req, res) => {
       console.error(`  > 错误: PFL 值无效 (非0,1,2): ${processedNewValue}`);
       return res.status(400).json({ success: false, error: "PFL 净化等级值必须是 0, 1 或 2。" });
     }
-  } else if (configKey === 'Execution_Mode') { 
+  } else if (configKey === 'Execution_Mode') {
     if (newValue !== 'Batch' && newValue !== 'Serial') {
-        console.error(`  > 错误: Execution_Mode 值无效 (非'Batch'或'Serial'): ${newValue}`);
-        return res.status(400).json({ success: false, error: "Execution_Mode 模式值必须是 'Batch' 或 'Serial'。" });
+      console.error(`  > 错误: Execution_Mode 值无效 (非'Batch'或'Serial'): ${newValue}`);
+      return res.status(400).json({ success: false, error: "Execution_Mode 模式值必须是 'Batch' 或 'Serial'。" });
     }
     processedNewValue = newValue;
-  } else if (configKey === 'Load_Level') { 
+  } else if (configKey === 'Load_Level') {
     processedNewValue = Number(newValue);
     if (![1, 2, 3].includes(processedNewValue)) {
-        console.error(`  > 错误: Load_Level 值无效 (非1,2,3): ${processedNewValue}`);
-        return res.status(400).json({ success: false, error: "Load_Level 负载等级值必须是 1, 2 或 3。" });
+      console.error(`  > 错误: Load_Level 值无效 (非1,2,3): ${processedNewValue}`);
+      return res.status(400).json({ success: false, error: "Load_Level 负载等级值必须是 1, 2 或 3。" });
     }
   } else {
     return res.status(400).json({ success: false, error: `未知的配置项: ${configKey}` });
@@ -2583,8 +2530,12 @@ const initializeServer = async () => {
       await fs.access(INTERNAL_USER_DATA_FILE);
       console.log(`[启动检查] 内部用户数据文件 OK.`);
     } catch {
-      await fs.writeFile(INTERNAL_USER_DATA_FILE, "[]", "utf-8");
-      console.log(`[启动检查] 创建了空的内部用户数据文件: ${INTERNAL_USER_DATA_FILE}`);
+      if (ENV_MODE !== 'local') {
+        await fs.writeFile(INTERNAL_USER_DATA_FILE, "[]", "utf-8");
+        console.log(`[启动检查] 创建了空的内部用户数据文件: ${INTERNAL_USER_DATA_FILE}`);
+      } else {
+        console.log(`[启动检查] 内部用户数据文件在本地开发模式下不存在，跳过创建。`);
+      }
     }
     try {
       await fs.access(GALLERY_CONFIG_FILE);

@@ -23,6 +23,7 @@ const API_ENDPOINTS = {
   FETCH_FOLDER_CONTENTS: "/api/folder-contents",
   BATCH_UPDATE_STORAGEBOX: "/api/batch-update-storagebox",
   FETCH_FILE_SIZES: "/api/file-sizes",
+  FETCH_ALIASES: "/api/aliases",
 };
 
 const DELAYS = {
@@ -61,12 +62,13 @@ const PAGINATION = {
 };
 
 let lazyLoadObserver = null;
+let searchWorker = null;
 
 // --- 全局状态管理  ---
 const AppState = {
   isSettingInputProgrammatically: false,
   isProcessingSelection: false,
-  home: { 
+  home: {
     sliderDebounceTimer: null,
   },
   generator: {
@@ -111,13 +113,20 @@ const AppState = {
     isInitialized: false,
     needsRefresh: false,
     isLoading: false,
+    allImageData: [],
+    banList: [],
     banListGids: new Set(),
+    unbannedImages: [],
+    bannedImages: [],
+    filteredUnbanned: [],
+    filteredBanned: [],
     selectedUnbannedGids: new Set(),
     selectedBannedGids: new Set(),
     selectedSecondaryTags: new Set(),
     availableTags: {},
     searchDebounceTimer: null,
     activeDragSelect: null,
+    workerSearchResults: null,
   },
   md5Checker: { isRunning: false, isAborted: false },
   sequenceManager: { isRunning: false },
@@ -137,10 +146,10 @@ const AppState = {
   },
   dataList: {
     currentEditPath: null,
+    currentEditStoragebox: null,
     currentSortOrder: 'default',
     searchDebounceTimer: null,
-    searchIndexBuilt: false,
-    searchIndexMap: new Map(),
+    workerSearchResults: null,
     virtualScrollInfo: {
       container: null,
       innerSpacer: null,
@@ -1042,6 +1051,100 @@ async function ensureCoreDataLoaded() {
   }
 }
 
+function initializeSearchWorker() {
+  if (typeof Worker === "undefined") {
+      console.warn("核心: 浏览器不支持 Web Worker，搜索功能将受限。");
+      displayToast("后台搜索功能不可用", UI_CLASSES.WARNING);
+      return;
+  }
+  if (searchWorker) {
+      searchWorker.terminate();
+  }
+
+  try {
+      searchWorker = new Worker("searchworker.js");
+      searchWorker.onmessage = handleWorkerMessage;
+      searchWorker.onerror = handleWorkerError;
+
+      console.log("核心: Web Worker 初始化成功。正在发送已索引的 JSON 数据...");
+
+      searchWorker.postMessage({
+        type: 'loadData',
+        payload: {
+            indexedData: AppState.userData,      
+            physicalData: AppState.galleryImages 
+        }
+    });
+
+      searchWorker.postMessage({
+          type: 'loadAliasData',
+          payload: {
+              aliasData: AppState.aliasData
+          }
+      });
+
+  } catch (error) {
+      console.error("核心: 创建 Web Worker 失败:", error);
+      displayToast("后台搜索初始化失败", UI_CLASSES.ERROR);
+      searchWorker = null;
+  }
+}
+
+function handleWorkerMessage(event) {
+  const { type, payload } = event.data;
+  if (!type) return;
+
+  const activeTabId = document.querySelector('.tab-pane.active')?.id;
+  const activeGuToolMode = AppState.currentGuToolMode;
+
+  switch (type) {
+    case 'searchResults':
+      if (payload.dataSource === 'indexed') {
+          if (activeTabId === 'dataListPane') {
+              AppState.dataList.workerSearchResults = payload.results;
+              applyFiltersAndRenderDataList();
+          } else if (activeTabId === 'banManagementPane') {
+              BanManagementState.workerSearchResults = payload.results;
+              applyBanFilters();
+          }
+      } else if (payload.dataSource === 'physical') {
+          if (activeTabId === 'GuTools' && activeGuToolMode === 'generator') {
+              displaySuggestions(payload.results, false);
+          } else if (activeTabId === 'GuTools' && activeGuToolMode === 'secondary_tag_editor') {
+              displaySteSuggestions(payload.results);
+          }
+      }
+      break;
+
+    case 'unsavedResults':
+      if (activeTabId === 'GuTools' && (activeGuToolMode === 'generator' || activeGuToolMode === 'import')) {
+        displaySuggestions(payload.results, false);
+      }
+      break;
+
+    case 'dataLoaded':
+      console.log("核心: Worker 确认数据加载完毕。");
+      break;
+
+    case 'error':
+      console.error("核心: Worker 报告错误:", payload.message, payload.error);
+      displayToast(`后台搜索出错: ${payload.message || '未知错误'}`, UI_CLASSES.ERROR);
+      break;
+
+    default:
+      console.warn("核心: 收到未处理的 Worker 消息:", type);
+  }
+}
+
+function handleWorkerError(error) {
+  console.error("核心: Web Worker 发生严重错误:", error.message);
+  displayToast("后台搜索发生严重错误，已禁用", UI_CLASSES.ERROR);
+  if (searchWorker) {
+    searchWorker.terminate();
+    searchWorker = null;
+  }
+}
+
 // --- 初始化框架 ---
 /**
  * 页面加载时执行的主要初始化函数
@@ -1117,225 +1220,66 @@ async function initializeApplication() {
   setInterval(updateCurrentTimeDisplay, 1000);
 
   displayGeneratorMessage("加载核心数据...", UI_CLASSES.INFO);
-  let galleryImagesLoaded = false;
-  let userDataLoaded = false;
 
   try {
-    const [imagesResult, userdataResult, fileSizesResult, configResult] = await Promise.allSettled([
+    const [
+      imagesResult,
+      userdataResult,
+      pluginImagesResult,
+      externalUserdataResult,
+      fileSizesResult,
+      configResult,
+      aliasResult
+    ] = await Promise.allSettled([
       fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_IMAGES),
       fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA),
+      fetchJsonData(API_ENDPOINTS.FETCH_PLUGIN_IMAGES),
+      fetchJsonData(API_ENDPOINTS.FETCH_EXTERNAL_USER_DATA),
       fetchJsonData(API_ENDPOINTS.FETCH_FILE_SIZES),
-      fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_CONFIG)
+      fetchJsonData(API_ENDPOINTS.FETCH_GALLERY_CONFIG),
+      fetchJsonData(API_ENDPOINTS.FETCH_ALIASES)
     ]);
 
     if (configResult.status === 'fulfilled' && configResult.value.success) {
       AppState.galleryConfig = configResult.value.config;
-      console.log(`核心配置: 加载成功，当前净化等级 (PFL) 为 ${AppState.galleryConfig.PFL}`);
-    } else {
-      console.warn("核心配置: 加载图库配置失败，将使用默认值。PFL 将为 0。");
-      // AppState.galleryConfig 已在声明时设置了默认值，此处无需操作
     }
 
-    // 处理图库图片结果
-    if (
-      imagesResult.status === "fulfilled" &&
-      Array.isArray(imagesResult.value)
-    ) {
-      AppState.galleryImages = imagesResult.value.map((img, index) => {
-        let currentStorageBox = img.storageBox || img.storagebox;
-        let originalUrlPath = img.urlPath || "";
-        let relativePath = "";
-
-        if (!currentStorageBox) {
-          console.warn(
-            `Core: galleryImage[${index}] 缺少 storageBox/storagebox:`,
-            img
-          );
-          currentStorageBox = "unknown";
-        }
-
-        let pathWithoutRepo = originalUrlPath;
-        if (typeof pathWithoutRepo !== "string") pathWithoutRepo = "";
-
-        const escapedStorageBox = currentStorageBox.replace(
-          /[-\/\\^$*+?.()|[\]{}]/g,
-          "\\$&"
-        );
-        const repoPrefixRegex = new RegExp(`^/?(${escapedStorageBox})/`, "i");
-
-        if (pathWithoutRepo.match(repoPrefixRegex)) {
-          pathWithoutRepo = pathWithoutRepo.replace(repoPrefixRegex, "");
-        } else if (pathWithoutRepo.startsWith("/")) {
-          pathWithoutRepo = pathWithoutRepo.substring(1);
-        }
-        relativePath = pathWithoutRepo;
-
-        const finalRelativePath = relativePath
-          .replace(/\\/g, "/")
-          .replace(/\/{2,}/g, "/");
-
-        return {
-          ...img,
-          storageBox: currentStorageBox,
-          urlPath: finalRelativePath,
-          storagebox: undefined,
-        };
-      });
-
-      galleryImagesLoaded = true;
-      AppState.availableStorageBoxes = [
-        ...new Set(
-          AppState.galleryImages.map((img) => img.storageBox).filter(Boolean)
-        ),
-      ].sort();
-      console.log(
-        `核心数据: 加载 ${AppState.galleryImages.length} 图库信息 来自 ${AppState.availableStorageBoxes.length
-        } 个仓库: ${AppState.availableStorageBoxes.join(", ")}`
-      );
-      if (DOM.generatorSearchInput) {
-        DOM.generatorSearchInput.placeholder = `搜索 ${AppState.galleryImages.length} 图片...`;
-      }
-      if (DOM.generatorAttributesPanel)
-        DOM.generatorAttributesPanel.classList.remove(
-          UI_CLASSES.INITIALLY_HIDDEN
-        );
-      if (DOM.importerStorageBoxSelect)
-        populateStorageBoxSelect(DOM.importerStorageBoxSelect, false);
-      if (DOM.sequenceStorageBoxSelect)
-        populateStorageBoxSelect(DOM.sequenceStorageBoxSelect, false);
-    } else {
-      console.error(
-        "核心数据: 加载图库列表失败:",
-        imagesResult.reason || "未知"
-      );
-      displayToast(
-        "加载图库列表失败",
-        UI_CLASSES.ERROR,
-        DELAYS.TOAST_ERROR_DURATION
-      );
-      if (DOM.generatorSearchInput) {
-        DOM.generatorSearchInput.placeholder = "列表加载失败";
-        DOM.generatorSearchInput.disabled = true;
-      }
+    if (imagesResult.status === "fulfilled" && Array.isArray(imagesResult.value)) {
+      AppState.galleryImages = imagesResult.value;
+      AppState.availableStorageBoxes = [...new Set(AppState.galleryImages.map(img => img.storageBox).filter(Boolean))].sort();
     }
 
-    // 处理用户数据结果 
-    if (
-      userdataResult.status === "fulfilled" &&
-      Array.isArray(userdataResult.value)
-    ) {
+    if (userdataResult.status === "fulfilled" && Array.isArray(userdataResult.value)) {
       AppState.userData = userdataResult.value;
-      console.log(
-        "Core: 开始构建 userDataPaths (包含原始大小写 storageBox 的完整 Web 路径)..."
-      );
-      AppState.userDataPaths = new Set();
-      AppState.userData.forEach((e, index) => {
-        const originalCaseStorageBox = AppState.availableStorageBoxes.find(
-          (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
-        );
-        if (e.path && originalCaseStorageBox) {
-          const fullPath = `/${originalCaseStorageBox}/${e.path}`
-            .replace(/\\/g, "/")
-            .replace(/\/{2,}/g, "/");
-          AppState.userDataPaths.add(fullPath);
-        } else if (e.path && e.storagebox) {
-          const fullPath = `/${e.storagebox}/${e.path}`
-            .replace(/\\/g, "/")
-            .replace(/\/{2,}/g, "/");
-          AppState.userDataPaths.add(fullPath);
-        } else {
-        }
-      });
-      userDataLoaded = true;
-      console.log(
-        `核心数据: 加载 ${AppState.userData.length} 用户数据 已缓存 ${AppState.userDataPaths.size} 个有效路径`
-      );
-
-      if (typeof updateGeneratorEntryCount === "function")
-        updateGeneratorEntryCount();
-      if (
-        AppState.currentGuToolMode === "md5" &&
-        typeof populateMd5JsonList === "function"
-      )
-        populateMd5JsonList();
-    } else {
-      console.error(
-        "核心数据: 加载用户数据失败:",
-        userdataResult.reason || "未知"
-      );
-      displayToast(
-        "加载 JSON 数据失败",
-        UI_CLASSES.ERROR,
-        DELAYS.TOAST_ERROR_DURATION
-      );
-      AppState.userData = [];
-      AppState.userDataPaths = new Set();
-      if (typeof updateGeneratorEntryCount === "function")
-        updateGeneratorEntryCount();
-      if (
-        AppState.currentGuToolMode === "md5" &&
-        typeof populateMd5JsonList === "function"
-      )
-        populateMd5JsonList();
+      AppState.userDataPaths = new Set(AppState.userData.map(e => e.path));
     }
-    await fetchAliasData();
-    // 处理文件大小结果 
+
+    if (pluginImagesResult.status === "fulfilled" && Array.isArray(pluginImagesResult.value)) {
+      AppState.pluginGallery.allImages = pluginImagesResult.value;
+    }
+
+    if (externalUserdataResult.status === 'fulfilled' && Array.isArray(externalUserdataResult.value)) {
+      AppState.pluginGallery.savedEntries = externalUserdataResult.value;
+      AppState.pluginGallery.savedPaths = new Set(AppState.pluginGallery.savedEntries.map(e => e.path));
+    }
+
+    if (aliasResult.status === 'fulfilled' && aliasResult.value.success) {
+      AppState.aliasData = {
+        mainToAliases: aliasResult.value.mainToAliases || {},
+        aliasToMain: aliasResult.value.aliasToMain || {}
+      };
+    }
+
     if (fileSizesResult.status === 'fulfilled' && Array.isArray(fileSizesResult.value)) {
-      const fileSizesData = fileSizesResult.value;
-      fileSizesData.forEach(file => {
+      fileSizesResult.value.forEach(file => {
         const fullWebPath = buildFullWebPath(file.storageBox, file.urlPath);
         AppState.fileSizesMap.set(fullWebPath, file.sizeInBytes);
       });
-      console.log(`核心数据: 成功加载并映射了 ${AppState.fileSizesMap.size} 个文件的大小信息`);
-    } else {
-      console.error("核心数据: 加载文件大小信息失败:", fileSizesResult.reason || "未知错误");
-      displayToast("未能加载文件大小信息", UI_CLASSES.WARNING);
     }
 
-    // 后续逻辑
-    if (galleryImagesLoaded && userDataLoaded) {
-      displayGeneratorMessage(
-        "核心数据加载完毕！",
-        UI_CLASSES.SUCCESS,
-        DELAYS.MESSAGE_CLEAR_DEFAULT
-      );
-    } else if (galleryImagesLoaded) {
-      displayGeneratorMessage(
-        "图库加载成功 JSON 数据加载失败",
-        UI_CLASSES.WARNING,
-        DELAYS.MESSAGE_CLEAR_DEFAULT + 1000
-      );
-    } else if (userDataLoaded) {
-      displayGeneratorMessage(
-        "JSON 数据加载成功 图库加载失败",
-        UI_CLASSES.WARNING,
-        DELAYS.MESSAGE_CLEAR_DEFAULT + 1000
-      );
-    } else {
-      displayGeneratorMessage("核心数据加载失败！", UI_CLASSES.ERROR);
-    }
+    initializeSearchWorker();
 
-    if (galleryImagesLoaded && typeof Worker !== "undefined") {
-      if (typeof initializeGeneratorSearchWorker === "function")
-        initializeGeneratorSearchWorker();
-      else
-        console.warn(
-          "Core: initializeGeneratorSearchWorker 未定义 GuTools_Generator.js"
-        );
-    } else if (typeof Worker === "undefined") {
-      console.warn("核心: 不支持 Worker");
-      displayToast("不支持后台搜索", UI_CLASSES.WARNING);
-      if (DOM.generatorSearchInput && !DOM.generatorSearchInput.disabled) {
-        DOM.generatorSearchInput.placeholder = "搜索不可用";
-        DOM.generatorSearchInput.disabled = true;
-      }
-    } else {
-      console.warn("核心: 图库加载失败 Worker 未初始化");
-      if (DOM.generatorSearchInput && !DOM.generatorSearchInput.disabled) {
-        DOM.generatorSearchInput.placeholder = "搜索不可用 数据错误";
-        DOM.generatorSearchInput.disabled = true;
-      }
-    }
+    hideGeneratorMessage();
 
     console.log("核心: 设置事件监听器...");
     const setupFunctions = [

@@ -21,7 +21,7 @@ const BanManagementState = {
   availableTags: {},
   searchDebounceTimer: null,
   activeDragSelect: null,
-  searchIndexMap: new Map(),
+  workerSearchResults: null,
 };
 
 /**
@@ -63,58 +63,6 @@ function cacheBanManagementDOMElements() {
 }
 
 /**
- * 为封禁管理面板构建强大的搜索索引
- */
-async function buildBanSearchIndex() {
-  if (typeof pinyinPro === 'undefined') {
-      console.error("BanManagement: pinyinPro 库未加载，无法构建搜索索引。");
-      return;
-  }
-  const { pinyin } = pinyinPro;
-  console.log("[封禁管理] 正在构建搜索索引...");
-
-  BanManagementState.searchIndexMap.clear();
-
-  // allImageData 包含了所有图片，无论是否封禁，都需要索引
-  for (const entry of BanManagementState.allImageData) {
-      if (!entry.attributes || !entry.gid) continue;
-
-      const textsToProcess = new Set();
-      // 角色名/父文件夹名，并查找别名
-      const characterName = entry.characterName || entry.attributes.parentFolder; 
-      if (characterName) {
-          textsToProcess.add(characterName);
-          const aliases = AppState.aliasData.mainToAliases[characterName];
-          if (Array.isArray(aliases)) {
-              aliases.forEach(alias => textsToProcess.add(alias));
-          }
-      }
-
-      // 文件名
-      if (entry.attributes.filename) {
-          textsToProcess.add(entry.attributes.filename.replace(/\.[^/.]+$/, ""));
-      }
-
-      // 二级标签
-      if (Array.isArray(entry.attributes.secondaryTags)) {
-          entry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
-      }
-
-      const combinedText = Array.from(textsToProcess).join(' ');
-      if (!combinedText) continue;
-
-      const lowerCaseText = combinedText.toLowerCase();
-      const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
-      const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
-
-      // 索引字符串包含 GID
-      const searchIndexString = `${entry.gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
-      BanManagementState.searchIndexMap.set(String(entry.gid), searchIndexString);
-  }
-  console.log(`[封禁管理] 搜索索引构建完成，共 ${BanManagementState.searchIndexMap.size} 条记录。`);
-}
-
-/**
  * 初始化封禁管理面板，加载所有必要数据
  */
 async function initializeBanManagement() {
@@ -130,7 +78,7 @@ async function initializeBanManagement() {
     setupCustomGameFilterForBM("bm-filterGameBtn", "bm-filterGameDropdown", applyBanFilters);
   }
 
-  if (BanManagementState.isInitialized && !AppState.banManagement.needsRefresh) {
+  if (BanManagementState.isInitialized && !BanManagementState.needsRefresh) {
     return;
   }
 
@@ -179,10 +127,12 @@ function processAndSeparateImageData() {
     return false;
   };
 
+  const dataToProcess = BanManagementState.workerSearchResults || BanManagementState.allImageData;
+  
   BanManagementState.unbannedImages = [];
   BanManagementState.bannedImages = [];
 
-  BanManagementState.allImageData.forEach((img) => {
+  dataToProcess.forEach((img) => {
     if (!img || !img.gid) return;
     if (BanManagementState.banListGids.has(String(img.gid))) {
       BanManagementState.bannedImages.push(img);
@@ -196,56 +146,60 @@ function processAndSeparateImageData() {
  * 应用所有当前过滤器并重新渲染列表
  */
 function applyBanFilters() {
-  const searchTerm = DOM_BM.searchInput?.value.toLowerCase().trim() || "";
-  const selectedGame = DOM_BM.gameFilterBtn?.dataset.value || "";
-  const filters = {};
-  DOM_BM.filterCheckboxes?.forEach((cb) => {
-    filters[cb.id] = cb.checked;
-  });
-
-  const filterFunction = (entry) => {
-    if (!entry?.attributes) return false;
-
-    if (searchTerm) {
-      const searchIndexString = BanManagementState.searchIndexMap.get(String(entry.gid)) || "";
-      if (!searchIndexString.includes(searchTerm)) return false;
-    }
-
-    if (filters["bm-filterPx18"] && !entry.attributes.isPx18) return false;
-    if (filters["bm-filterRx18"] && !entry.attributes.isRx18) return false;
-    if (filters["bm-filterNormal"] && entry.attributes.layout !== "normal") return false;
-    if (filters["bm-filterFullscreen"] && entry.attributes.layout !== "fullscreen") return false;
-    if (filters["bm-filterEasterEgg"] && !entry.attributes.isEasterEgg) return false;
-    if (filters["bm-filterAiImage"] && !entry.attributes.isAiImage) return false;
-
-    if (selectedGame) {
-      if (selectedGame === "unknown" && ["gs-character", "sr-character", "zzz-character", "waves-character"].includes(entry.sourceGallery)) return false;
-      else if (selectedGame !== "unknown" && entry.sourceGallery !== selectedGame) return false;
-    }
-
-    if (BanManagementState.selectedSecondaryTags.size > 0) {
-      const entryTags = entry.attributes.secondaryTags || [];
-      for (const tag of BanManagementState.selectedSecondaryTags) if (!entryTags.includes(tag)) return false;
-    }
-    return true;
-  };
-
-  const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains("is-primary");
-  if (isUnbannedPrimary) {
-    BanManagementState.filteredUnbanned = BanManagementState.unbannedImages.filter(filterFunction);
-    BanManagementState.filteredBanned = [...BanManagementState.bannedImages];
-  } else {
-    BanManagementState.filteredBanned = BanManagementState.bannedImages.filter(filterFunction);
-    BanManagementState.filteredUnbanned = [...BanManagementState.unbannedImages];
+  const searchTerm = DOM_BM.searchInput?.value.trim() || "";
+  if (!searchTerm) {
+    BanManagementState.workerSearchResults = null;
   }
+  
+  processAndSeparateImageData();
+  filterAndRenderBanGrids();
+}
 
-  const sortFunction = (a, b) => (a.attributes?.filename || "").localeCompare(b.attributes?.filename || "", undefined, { numeric: true, sensitivity: "base" });
-  BanManagementState.filteredUnbanned.sort(sortFunction);
-  BanManagementState.filteredBanned.sort(sortFunction);
+function filterAndRenderBanGrids() {
+    const selectedGame = DOM_BM.gameFilterBtn?.dataset.value || "";
+    const filters = {};
+    DOM_BM.filterCheckboxes?.forEach((cb) => {
+        filters[cb.id] = cb.checked;
+    });
 
-  renderUnbannedGrid();
-  renderBannedGrid();
-  updatePanelTitles();
+    const filterFunction = (entry) => {
+        if (!entry?.attributes) return false;
+
+        if (filters["bm-filterPx18"] && !entry.attributes.isPx18) return false;
+        if (filters["bm-filterRx18"] && !entry.attributes.isRx18) return false;
+        if (filters["bm-filterNormal"] && entry.attributes.layout !== "normal") return false;
+        if (filters["bm-filterFullscreen"] && entry.attributes.layout !== "fullscreen") return false;
+        if (filters["bm-filterEasterEgg"] && !entry.attributes.isEasterEgg) return false;
+        if (filters["bm-filterAiImage"] && !entry.attributes.isAiImage) return false;
+
+        if (selectedGame) {
+            if (selectedGame === "unknown" && ["gs-character", "sr-character", "zzz-character", "waves-character"].includes(entry.sourceGallery)) return false;
+            else if (selectedGame !== "unknown" && entry.sourceGallery !== selectedGame) return false;
+        }
+
+        if (BanManagementState.selectedSecondaryTags.size > 0) {
+            const entryTags = entry.attributes.secondaryTags || [];
+            for (const tag of BanManagementState.selectedSecondaryTags) if (!entryTags.includes(tag)) return false;
+        }
+        return true;
+    };
+
+    const isUnbannedPrimary = DOM_BM.unbannedPanel.classList.contains("is-primary");
+    if (isUnbannedPrimary) {
+        BanManagementState.filteredUnbanned = BanManagementState.unbannedImages.filter(filterFunction);
+        BanManagementState.filteredBanned = [...BanManagementState.bannedImages];
+    } else {
+        BanManagementState.filteredBanned = BanManagementState.bannedImages.filter(filterFunction);
+        BanManagementState.filteredUnbanned = [...BanManagementState.unbannedImages];
+    }
+
+    const sortFunction = (a, b) => (a.attributes?.filename || "").localeCompare(b.attributes?.filename || "", undefined, { numeric: true, sensitivity: "base" });
+    BanManagementState.filteredUnbanned.sort(sortFunction);
+    BanManagementState.filteredBanned.sort(sortFunction);
+
+    renderUnbannedGrid();
+    renderBannedGrid();
+    updatePanelTitles();
 }
 
 /**
@@ -342,7 +296,7 @@ async function performBanAction(gids, action) {
     BanManagementState.banList = newBanList;
     BanManagementState.banListGids = new Set(newBanList.map((item) => String(item.gid)));
     processAndSeparateImageData();
-    applyBanFilters();
+    filterAndRenderBanGrids();
     clearAllSelections();
   } else {
     displayToast(`${isBan ? "封禁" : "解禁"}操作失败`, "error");
@@ -408,7 +362,15 @@ function handlePanelSwap(event) {
 function setupBanManagementEventListeners() {
   DOM_BM.searchInput?.addEventListener("input", () => {
     clearTimeout(BanManagementState.searchDebounceTimer);
-    BanManagementState.searchDebounceTimer = setTimeout(applyBanFilters, 300);
+    BanManagementState.searchDebounceTimer = setTimeout(() => {
+      const query = DOM_BM.searchInput.value.trim();
+      if (query && searchWorker) {
+        searchWorker.postMessage({ type: 'search', payload: { query, dataSource: 'indexed' } });
+      } else {
+        BanManagementState.workerSearchResults = null;
+        applyBanFilters();
+      }
+    }, 300);
   });
   DOM_BM.filterCheckboxes?.forEach((cb) =>
     cb.addEventListener("change", () => {
@@ -752,3 +714,4 @@ function updatePanelTitles() {
   updateHeader(DOM_BM.unbannedHeader, BanManagementState.unbannedImages);
   updateHeader(DOM_BM.bannedHeader, BanManagementState.bannedImages);
 }
+
