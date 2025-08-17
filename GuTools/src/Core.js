@@ -1052,42 +1052,58 @@ async function ensureCoreDataLoaded() {
 }
 
 function initializeSearchWorker() {
-  if (typeof Worker === "undefined") {
+  return new Promise((resolve, reject) => {
+    if (typeof Worker === "undefined") {
       console.warn("核心: 浏览器不支持 Web Worker，搜索功能将受限。");
       displayToast("后台搜索功能不可用", UI_CLASSES.WARNING);
-      return;
-  }
-  if (searchWorker) {
+      return resolve(false);
+    }
+    if (searchWorker) {
       searchWorker.terminate();
-  }
+    }
 
-  try {
+    try {
       searchWorker = new Worker("searchworker.js");
-      searchWorker.onmessage = handleWorkerMessage;
-      searchWorker.onerror = handleWorkerError;
 
-      console.log("核心: Web Worker 初始化成功。正在发送已索引的 JSON 数据...");
+      const handleLoadConfirmation = (event) => {
+        if (event.data.type === 'dataLoaded') {
+          console.log("核心: Worker 确认数据加载与索引构建完毕。");
+          searchWorker.removeEventListener('message', handleLoadConfirmation); // 清理监听器
+          resolve(true);
+        }
+      };
+
+      searchWorker.addEventListener('message', handleLoadConfirmation);
+      searchWorker.addEventListener('message', handleWorkerMessage); // 保留通用消息处理器
+      searchWorker.addEventListener('error', (error) => {
+        handleWorkerError(error);
+        reject(error);
+      });
+
+      console.log("核心: Web Worker 初始化成功。正在发送数据...");
 
       searchWorker.postMessage({
         type: 'loadData',
         payload: {
-            indexedData: AppState.userData,      
-            physicalData: AppState.galleryImages 
+          indexedData: AppState.userData,
+          physicalData: AppState.galleryImages
         }
-    });
-
-      searchWorker.postMessage({
-          type: 'loadAliasData',
-          payload: {
-              aliasData: AppState.aliasData
-          }
       });
 
-  } catch (error) {
+      searchWorker.postMessage({
+        type: 'loadAliasData',
+        payload: {
+          aliasData: AppState.aliasData
+        }
+      });
+
+    } catch (error) {
       console.error("核心: 创建 Web Worker 失败:", error);
       displayToast("后台搜索初始化失败", UI_CLASSES.ERROR);
       searchWorker = null;
-  }
+      reject(error);
+    }
+  });
 }
 
 function handleWorkerMessage(event) {
@@ -1100,19 +1116,19 @@ function handleWorkerMessage(event) {
   switch (type) {
     case 'searchResults':
       if (payload.dataSource === 'indexed') {
-          if (activeTabId === 'dataListPane') {
-              AppState.dataList.workerSearchResults = payload.results;
-              applyFiltersAndRenderDataList();
-          } else if (activeTabId === 'banManagementPane') {
-              BanManagementState.workerSearchResults = payload.results;
-              applyBanFilters();
-          }
-      } else if (payload.dataSource === 'physical') {
-          if (activeTabId === 'GuTools' && activeGuToolMode === 'generator') {
-              displaySuggestions(payload.results, false);
-          } else if (activeTabId === 'GuTools' && activeGuToolMode === 'secondary_tag_editor') {
-              displaySteSuggestions(payload.results);
-          }
+        if (activeTabId === 'dataListPane') {
+          AppState.dataList.workerSearchResults = payload.results;
+          applyFiltersAndRenderDataList();
+        } else if (activeTabId === 'banManagementPane') {
+          BanManagementState.workerSearchResults = payload.results;
+          applyBanFilters();
+        }
+      } else if (payload.dataSource === 'physical' || payload.dataSource === 'unsaved_physical') {
+        if (activeTabId === 'GuTools' && activeGuToolMode === 'generator') {
+          displaySuggestions(payload.results, false);
+        } else if (activeTabId === 'GuTools' && activeGuToolMode === 'secondary_tag_editor') {
+          displaySteSuggestions(payload.results);
+        }
       }
       break;
 
@@ -1251,7 +1267,17 @@ async function initializeApplication() {
 
     if (userdataResult.status === "fulfilled" && Array.isArray(userdataResult.value)) {
       AppState.userData = userdataResult.value;
-      AppState.userDataPaths = new Set(AppState.userData.map(e => e.path));
+      AppState.userDataPaths = new Set();
+      AppState.userData.forEach(e => {
+          const originalCaseStorageBox = AppState.availableStorageBoxes.find(
+              (box) => box.toLowerCase() === e.storagebox?.toLowerCase()
+          );
+          let storageBoxForPath = originalCaseStorageBox || e.storagebox;
+          if (e.path && storageBoxForPath) {
+              const fullPath = `/${storageBoxForPath}/${e.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+              AppState.userDataPaths.add(fullPath);
+          }
+      });
     }
 
     if (pluginImagesResult.status === "fulfilled" && Array.isArray(pluginImagesResult.value)) {
@@ -1280,6 +1306,19 @@ async function initializeApplication() {
     initializeSearchWorker();
 
     hideGeneratorMessage();
+
+    const workerInitialized = await initializeSearchWorker();
+
+    if (workerInitialized) {
+      hideGeneratorMessage();
+      if (DOM.generatorSearchInput) {
+        DOM.generatorSearchInput.disabled = false;
+        DOM.generatorSearchInput.placeholder = `在 ${AppState.galleryImages.length} 张图片中搜索...`;
+      }
+      displayToast("核心数据与后台搜索已就绪！", UI_CLASSES.SUCCESS, 2000);
+    } else {
+      throw new Error("后台搜索 Worker 未能成功初始化。");
+    }
 
     console.log("核心: 设置事件监听器...");
     const setupFunctions = [
@@ -1344,6 +1383,10 @@ async function initializeApplication() {
           );
       }
     });
+
+    if (DOM.generatorAttributesPanel) {
+      DOM.generatorAttributesPanel.classList.remove(UI_CLASSES.INITIALLY_HIDDEN);
+    }
 
     console.log("应用初始化流程完成");
   } catch (error) {

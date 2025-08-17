@@ -373,7 +373,7 @@ function loadNextImage() {
     if (mode === 'all' && searchKeyword && searchWorker) {
         STEState.lastSearchKeyword = searchKeyword;
         STEState.lastBuiltMode = mode;
-        searchWorker.postMessage({ type: 'search', payload: { query: searchKeyword } });
+        searchWorker.postMessage({ type: 'search', payload: { query: searchKeyword, dataSource: 'physical' } });
         return;
     }
 
@@ -560,8 +560,23 @@ async function saveAndNext() {
 
 function displaySteSuggestions(results) {
     if (!DOM.steSuggestions) return;
+
+    const currentSearchTerm = DOM.steSearchInput.value.trim();
+
     DOM.steSuggestions.innerHTML = '';
-    if (results.length === 0) { DOM.steSuggestions.classList.add('hidden'); return; }
+    if (results.length === 0) {
+        DOM.steSuggestions.classList.add('hidden');
+        STEState.currentImageList = [];
+        loadNextImage();
+        return;
+    }
+    
+    STEState.currentImageList = results;
+    STEState.lastBuiltMode = 'all';
+    STEState.lastSearchKeyword = currentSearchTerm.toLowerCase();
+    STEState.virtualStrip.isInitialized = false;
+    initializeVirtualStrip();
+
     const fragment = document.createDocumentFragment();
     results.slice(0, 20).forEach(imgInfo => {
         const item = document.createElement('div');
@@ -583,20 +598,20 @@ function displaySteSuggestions(results) {
         item.title = `${imgInfo.storageBox}/${imgInfo.folderName}/${imgInfo.fileName}`;
         item.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            if (DOM.steSearchInput) DOM.steSearchInput.value = imgInfo.fileName;
             if (DOM.steSuggestions) DOM.steSuggestions.classList.add('hidden');
-            STEState.currentImageList = [imgInfo];
-            STEState.lastBuiltMode = 'all';
-            STEState.lastSearchKeyword = imgInfo.fileName.toLowerCase();
-            STEState.currentIndex = -1;
-            STEState.virtualStrip.isInitialized = false;
-            initializeVirtualStrip();
-            loadNextImage();
+            const selectedIndex = STEState.currentImageList.findIndex(i => i.urlPath === imgInfo.urlPath && i.storageBox === imgInfo.storageBox);
+            if (selectedIndex > -1) {
+                switchToImageByIndex(selectedIndex);
+            }
         });
         fragment.appendChild(item);
     });
     DOM.steSuggestions.appendChild(fragment);
     DOM.steSuggestions.classList.remove('hidden');
+
+    if (currentSearchTerm.length > 0) {
+        switchToImageByIndex(0);
+    }
 }
 
 
@@ -967,4 +982,3 @@ function displayModalMessage(text, type) {
         area.className = `modal-message ${type} visible`;
     }
 }
-

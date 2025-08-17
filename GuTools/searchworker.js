@@ -9,6 +9,7 @@ let _indexedEntries = [];
 let _physicalImages = [];
 let _aliasData = { mainToAliases: {}, aliasToMain: {} };
 const _searchIndexMap = new Map();
+let _existingImagePaths = new Set();
 
 function buildWorkerSearchIndex() {
     if (typeof pinyinPro === 'undefined') return;
@@ -59,16 +60,25 @@ function buildWorkerSearchIndex() {
     }
 }
 
-function findUnsavedImages() {
-    if (!_availableImages || _availableImages.length === 0) return [];
-    return _availableImages.filter(img => img && img.urlPath && !_existingImagePaths.has(img.urlPath));
-}
-
 function filterImages(query, dataSource = 'indexed') {
     const lowerQuery = query.trim().toLowerCase();
-    if (!lowerQuery) return [];
 
-    const sourceArray = dataSource === 'physical' ? _physicalImages : _indexedEntries;
+    let sourceArray;
+    if (dataSource === 'physical') {
+        sourceArray = _physicalImages;
+    } else if (dataSource === 'unsaved_physical') {
+        sourceArray = _physicalImages.filter(img => {
+            if (!img || !img.urlPath || !img.storageBox) return false;
+            const key = `${String(img.storageBox).toLowerCase()}/${img.urlPath}`;
+            return !_existingImagePaths.has(key);
+        });
+    } else {
+        sourceArray = _indexedEntries;
+    }
+
+    if (!lowerQuery) {
+        return sourceArray;
+    }
 
     return sourceArray.filter(item => {
         const key = item.urlPath || item.path;
@@ -86,6 +96,14 @@ self.onmessage = function (event) {
             case 'loadData':
                 _indexedEntries = payload.indexedData || [];
                 _physicalImages = payload.physicalData || [];
+
+                _existingImagePaths.clear();
+                _indexedEntries.forEach(entry => {
+                    if (entry && entry.path && entry.storagebox) {
+                        _existingImagePaths.add(`${String(entry.storagebox).toLowerCase()}/${entry.path}`);
+                    }
+                });
+
                 buildWorkerSearchIndex();
                 self.postMessage({ type: 'dataLoaded' });
                 break;
