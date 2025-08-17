@@ -331,17 +331,90 @@ async function applyFiltersAndRenderDataList() {
         }
     }
     const installedReposSet = AppState.dataList.installedRepos;
-    const originalUserData = AppState.userData;
-    AppState.userData = originalUserData.filter(entry => installedReposSet.has(entry.storagebox));
+    // 每次过滤前，都从完整的 AppState.userData 原始数据开始，并根据已安装仓库进行筛选
+    const originalUserData = AppState.userData; // 这是从 Core.js 来的完整数据
+    const filteredByInstalledRepos = originalUserData.filter(entry => installedReposSet.has(entry.storagebox));
 
     const searchTerm = DOM.dataListSearchInput?.value.trim() || '';
-    if (!searchTerm) {
-        AppState.dataList.workerSearchResults = null;
+    let dataToProcess;
+    if (searchTerm && AppState.dataList.workerSearchResults) {
+        // 如果有搜索结果，也需要根据已安装仓库再过滤一遍
+        dataToProcess = AppState.dataList.workerSearchResults.filter(entry => installedReposSet.has(entry.storagebox));
+    } else {
+        dataToProcess = filteredByInstalledRepos;
     }
 
-    const filteredData = filterUserDataEntries();
-    if (DOM.dataListCountDisplay) DOM.dataListCountDisplay.textContent = `当前显示: ${filteredData.length} 条`;
+    const filteredData = filterAndSort(dataToProcess); // 将过滤和排序逻辑封装
+    if(DOM.dataListCountDisplay) DOM.dataListCountDisplay.textContent = `当前显示: ${filteredData.length} 条`;
     setupVirtualScroll(DOM.dataListContainer, filteredData);
+}
+
+function filterAndSort(dataToProcess) {
+    const showPx18 = DOM.dataListFilterPx18?.checked ?? false;
+    const showRx18 = DOM.dataListFilterRx18?.checked ?? false;
+    const showAiImage = DOM.dataListFilterAiImage?.checked ?? false;
+    const showBan = DOM.dataListFilterIsBan?.checked ?? false;
+    const showNormal = DOM.dataListFilterNormal?.checked ?? false;
+    const showFullscreen = DOM.dataListFilterFullscreen?.checked ?? false;
+    const showEasterEgg = DOM.dataListFilterEasterEgg?.checked ?? false;
+    const selectedGame = DOM.filterGameBtn?.dataset.value || '';
+    const selectedTags = AppState.dataList.secondaryTagsFilter?.selectedTags ?? new Set();
+    const currentSortOrder = AppState.dataList.currentSortOrder || 'default';
+
+    const filteredEntries = dataToProcess.filter(entry => {
+        if (!entry?.attributes) return false;
+
+        if (showBan && entry.attributes.isBan !== true) return false;
+        if (showAiImage && entry.attributes.isAiImage !== true) return false;
+        if (showEasterEgg && entry.attributes.isEasterEgg !== true) return false;
+        if (showPx18 && entry.attributes.isPx18 !== true) return false;
+        if (showRx18 && entry.attributes.isRx18 !== true) return false;
+        if (showNormal && entry.attributes.layout !== 'normal') return false;
+        if (showFullscreen && entry.attributes.layout !== 'fullscreen') return false;
+
+        if (selectedGame) {
+            if (selectedGame === 'unknown') {
+                const knownGames = ['gs-character', 'sr-character', 'zzz-character', 'waves-character'];
+                if (knownGames.includes(entry.sourceGallery)) return false;
+            } else {
+                if (entry.sourceGallery !== selectedGame) return false;
+            }
+        }
+
+        if (selectedTags.size > 0) {
+            const entryTags = entry.attributes.secondaryTags;
+            if (!Array.isArray(entryTags) || entryTags.length === 0) {
+                return false;
+            }
+            for (const selectedTag of selectedTags) {
+                if (!entryTags.includes(selectedTag)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    });
+
+    filteredEntries.sort((a, b) => {
+        switch (currentSortOrder) {
+            case 'size_desc':
+            case 'size_asc':
+                const pathA = buildFullWebPath(a.storagebox, a.path);
+                const pathB = buildFullWebPath(b.storagebox, b.path);
+                const sizeA = AppState.fileSizesMap.get(pathA) || 0;
+                const sizeB = AppState.fileSizesMap.get(pathB) || 0;
+                return currentSortOrder === 'size_desc' ? sizeB - sizeA : sizeA - sizeB;
+            case 'date_desc':
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            case 'date_asc':
+                return new Date(a.timestamp) - new Date(b.timestamp);
+            case 'default':
+            default:
+                return (a.attributes?.filename || '').localeCompare(b.attributes?.filename || '', undefined, { numeric: true, sensitivity: 'base' });
+        }
+    });
+
+    return filteredEntries;
 }
 
 //  虚拟滚动实现
@@ -930,8 +1003,8 @@ async function setupDataListEventListeners() {
     };
 
     if (DOM.dataListSearchInput) {
-        DOM.dataListSearchInput.removeEventListener('input', debouncedSearch);
-        DOM.dataListSearchInput.addEventListener('input', debouncedSearch);
+        DOM.dataListSearchInput.removeEventListener('input', debouncedSearch); 
+        DOM.dataListSearchInput.addEventListener('input', debouncedSearch); 
     }
 
     if (DOM.dataListSearchInput) {

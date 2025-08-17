@@ -1,3 +1,4 @@
+
 try {
     self.importScripts('https://cdn.jsdelivr.net/npm/pinyin-pro@3.27.0/dist/index.min.js');
 } catch (e) {
@@ -20,45 +21,62 @@ function buildWorkerSearchIndex() {
     for (const entry of _indexedEntries) {
         if (!entry || !entry.attributes) continue;
         const textsToProcess = new Set();
+        
         if (entry.characterName) textsToProcess.add(entry.characterName);
         if (entry.attributes.filename) textsToProcess.add(entry.attributes.filename.replace(/\.[^/.]+$/, ""));
         if (entry.attributes.parentFolder) textsToProcess.add(entry.attributes.parentFolder);
         if (Array.isArray(entry.attributes.secondaryTags)) {
             entry.attributes.secondaryTags.forEach(tag => textsToProcess.add(tag));
         }
+
         const mainName = _aliasData.aliasToMain[String(entry.characterName).toLowerCase()] || entry.characterName;
         if (mainName && _aliasData.mainToAliases[mainName]) {
             _aliasData.mainToAliases[mainName].forEach(alias => textsToProcess.add(alias));
         }
+
         const combinedText = Array.from(textsToProcess).join(' ');
         if (!combinedText) continue;
+        
         const lowerCaseText = combinedText.toLowerCase();
         const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
         const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
         const gid = entry.gid || '';
+        
         const searchIndexString = `${gid} ${lowerCaseText} ${fullPinyin} ${initials}`;
-        if (entry.path) _searchIndexMap.set(entry.path, searchIndexString);
+        
+        if (entry.path) {
+             _searchIndexMap.set(entry.path, searchIndexString);
+        }
     }
 
     for (const img of _physicalImages) {
-        if (!img || !img.urlPath || _searchIndexMap.has(img.urlPath)) continue;
+        if (!img || !img.urlPath) continue;
+        if (_searchIndexMap.has(img.urlPath)) continue;
+
         const textsToProcess = new Set();
+        
         if (img.name) textsToProcess.add(img.name);
         if (img.fileName) textsToProcess.add(img.fileName.replace(/\.[^/.]+$/, ""));
         if (img.folderName) textsToProcess.add(img.folderName);
+        
         const mainName = _aliasData.aliasToMain[String(img.name).toLowerCase()] || img.name;
         if (mainName && _aliasData.mainToAliases[mainName]) {
             _aliasData.mainToAliases[mainName].forEach(alias => textsToProcess.add(alias));
         }
+
         const combinedText = Array.from(textsToProcess).join(' ');
         if (!combinedText) continue;
+
         const lowerCaseText = combinedText.toLowerCase();
         const fullPinyin = pinyin(combinedText, { toneType: 'none', type: 'array' }).join('').toLowerCase();
         const initials = pinyin(combinedText, { pattern: 'first' }).replace(/\s/g, '').toLowerCase();
+        
         const searchIndexString = `${lowerCaseText} ${fullPinyin} ${initials}`;
-        if (img.urlPath) _searchIndexMap.set(img.urlPath, searchIndexString);
+        
+        _searchIndexMap.set(img.urlPath, searchIndexString);
     }
 }
+
 
 function filterImages(query, dataSource = 'indexed') {
     const lowerQuery = query.trim().toLowerCase();
@@ -69,8 +87,8 @@ function filterImages(query, dataSource = 'indexed') {
     } else if (dataSource === 'unsaved_physical') {
         sourceArray = _physicalImages.filter(img => {
             if (!img || !img.urlPath || !img.storageBox) return false;
-            const key = `${String(img.storageBox).toLowerCase()}/${img.urlPath}`;
-            return !_existingImagePaths.has(key);
+            const fullWebPath = `/${img.storageBox}/${img.urlPath}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+            return !_existingImagePaths.has(fullWebPath);
         });
     } else {
         sourceArray = _indexedEntries;
@@ -81,7 +99,7 @@ function filterImages(query, dataSource = 'indexed') {
     }
 
     return sourceArray.filter(item => {
-        const key = item.urlPath || item.path;
+        const key = item.path || item.urlPath;
         if (!key) return false;
 
         const searchIndexString = _searchIndexMap.get(key);
@@ -100,7 +118,8 @@ self.onmessage = function (event) {
                 _existingImagePaths.clear();
                 _indexedEntries.forEach(entry => {
                     if (entry && entry.path && entry.storagebox) {
-                        _existingImagePaths.add(`${String(entry.storagebox).toLowerCase()}/${entry.path}`);
+                         const fullWebPath = `/${entry.storagebox}/${entry.path}`.replace(/\\/g, '/').replace(/\/{2,}/g, '/');
+                        _existingImagePaths.add(fullWebPath);
                     }
                 });
 

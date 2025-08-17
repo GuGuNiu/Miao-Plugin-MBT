@@ -909,7 +909,7 @@ app.get("/api/aliases", async (req, res) => {
     const aliasSources = [
       { key: "gs", path: path.join(YUNZAI_ROOT_DIR, "plugins", "miao-plugin", "resources", "meta-gs", "character", "alias.js"), type: "js" },
       { key: "sr", path: path.join(YUNZAI_ROOT_DIR, "plugins", "miao-plugin", "resources", "meta-sr", "character", "alias.js"), type: "js" },
-      { key: "zzz", path: path.join(YUNZAI_ROOT_DIR, "plugins", "ZZZ-Plugin", "defset", "alias.yaml"), type: "yaml" }, // 修正了 defSet -> defset
+      { key: "zzz", path: path.join(YUNZAI_ROOT_DIR, "plugins", "ZZZ-Plugin", "defset", "alias.yaml"), type: "yaml" },
       { key: "waves", path: path.join(YUNZAI_ROOT_DIR, "plugins", "waves-plugin", "resources", "Alias", "role.yaml"), type: "yaml" },
     ];
 
@@ -922,7 +922,6 @@ app.get("/api/aliases", async (req, res) => {
         if (type === "yaml") {
           data = yaml.load(content) || {};
         } else if (type === "js") {
-          // 使用更安全的 Function 构造函数代替 eval 来解析 JS 对象
           const match = content.match(/export const alias\s*=\s*({[\s\S]*?});/);
           if (match && match[1]) {
             try {
@@ -944,11 +943,15 @@ app.get("/api/aliases", async (req, res) => {
     const aliasToMain = {};
 
     for (const mainName in combinedAliases) {
-      const aliases = Array.isArray(combinedAliases[mainName]) ? combinedAliases[mainName] : [String(combinedAliases[mainName])];
-      mainToAliases[mainName] = [mainName, ...aliases]; // 主名本身也算一个别名
-      aliasToMain[mainName.toLowerCase()] = mainName;
-      aliases.forEach(alias => {
-        aliasToMain[String(alias).toLowerCase()] = mainName;
+      const aliases = Array.isArray(combinedAliases[mainName]) 
+        ? combinedAliases[mainName] 
+        : String(combinedAliases[mainName]).split(',').map(s => s.trim());
+      
+      const allNames = [mainName, ...aliases];
+      mainToAliases[mainName] = allNames;
+      
+      allNames.forEach(name => {
+        aliasToMain[String(name).toLowerCase()] = mainName;
       });
     }
 

@@ -96,8 +96,9 @@ async function initializeBanManagement() {
     
     BanManagementState.installedRepos = new Set(repoData.repos || []);
     const allRawImageData = Array.isArray(userData) ? userData : [];
+    // 过滤出只属于已安装仓库的数据
     BanManagementState.allImageData = allRawImageData.filter(entry => BanManagementState.installedRepos.has(entry.storagebox));
-
+    
     BanManagementState.banList = Array.isArray(banListData) ? banListData : [];
     BanManagementState.banListGids = new Set(BanManagementState.banList.map((item) => String(item.gid)));
 
@@ -135,7 +136,9 @@ function processAndSeparateImageData() {
     return false;
   };
 
-  const dataToProcess = BanManagementState.workerSearchResults || BanManagementState.allImageData;
+  const dataToProcess = BanManagementState.workerSearchResults 
+    ? BanManagementState.workerSearchResults.filter(entry => BanManagementState.installedRepos.has(entry.storagebox))
+    : BanManagementState.allImageData;
   
   BanManagementState.unbannedImages = [];
   BanManagementState.bannedImages = [];

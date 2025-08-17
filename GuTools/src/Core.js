@@ -1303,8 +1303,6 @@ async function initializeApplication() {
       });
     }
 
-    initializeSearchWorker();
-
     hideGeneratorMessage();
 
     const workerInitialized = await initializeSearchWorker();
