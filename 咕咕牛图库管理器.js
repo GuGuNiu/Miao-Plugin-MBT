@@ -4980,7 +4980,7 @@ class MiaoPluginMBT extends plugin {
       const sourceHtmlPath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "update_report.html");
       try {
         await fsPromises.access(sourceHtmlPath);
-        imageBuffer = await renderPageToImage("update-report", { tplFile: sourceHtmlPath, data: reportData, imgType: "png", pageGotoParams: { waitUntil: "networkidle0" }, pageBoundingRect: { selector: ".container" }, }, this);
+        imageBuffer = await renderPageToImage("update-report", { tplFile: sourceHtmlPath, data: reportData, imgType: "png", pageGotoParams: { waitUntil: "networkidle0" }, pageBoundingRect: { selector: ".wrapper" }, }, this);
       } catch (accessOrRenderError) {
         logger.error(`${Default_Config.logPrefix}模板访问或渲染时出错:`, accessOrRenderError);
       }
