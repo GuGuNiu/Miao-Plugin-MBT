@@ -22,6 +22,7 @@ const BanManagementState = {
   searchDebounceTimer: null,
   activeDragSelect: null,
   workerSearchResults: null,
+  installedRepos: null,
 };
 
 /**
@@ -87,9 +88,16 @@ async function initializeBanManagement() {
   DOM_BM.bannedGrid.innerHTML = `<div class="bm-placeholder"><p>正在加载封禁列表...</p></div>`;
 
   try {
-    const [userData, banListData] = await Promise.all([fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA), fetchJsonData("/api/ban-list")]);
+    const [userData, banListData, repoData] = await Promise.all([
+        fetchJsonData(API_ENDPOINTS.FETCH_USER_DATA),
+        fetchJsonData("/api/ban-list"),
+        fetchJsonData("/api/installed-repos")
+    ]);
+    
+    BanManagementState.installedRepos = new Set(repoData.repos || []);
+    const allRawImageData = Array.isArray(userData) ? userData : [];
+    BanManagementState.allImageData = allRawImageData.filter(entry => BanManagementState.installedRepos.has(entry.storagebox));
 
-    BanManagementState.allImageData = Array.isArray(userData) ? userData : [];
     BanManagementState.banList = Array.isArray(banListData) ? banListData : [];
     BanManagementState.banListGids = new Set(BanManagementState.banList.map((item) => String(item.gid)));
 
@@ -714,4 +722,3 @@ function updatePanelTitles() {
   updateHeader(DOM_BM.unbannedHeader, BanManagementState.unbannedImages);
   updateHeader(DOM_BM.bannedHeader, BanManagementState.bannedImages);
 }
-

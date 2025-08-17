@@ -704,6 +704,31 @@ const communityGalleryManager = {
   }
 };
 
+// [GET] /api/installed-repos - 获取服务器上实际安装的仓库列表
+app.get("/api/installed-repos", async (req, res) => {
+    console.log("请求: [GET] /api/installed-repos");
+    if (ENV_MODE === 'local') {
+        console.log("  > 本地开发模式，返回所有理论仓库。");
+        return res.json({ success: true, repos: REPO_NAMES });
+    }
+    try {
+        const installedRepos = [];
+        for (const repo of REPO_ROOTS) {
+            try {
+                await fs.access(repo.path);
+                installedRepos.push(repo.name);
+            } catch (error) {
+                // 目录不存在，忽略
+            }
+        }
+        console.log(`  > 机器人模式，检测到 ${installedRepos.length} 个已安装仓库。`);
+        res.json({ success: true, repos: installedRepos });
+    } catch (error) {
+        console.error("[API Installed Repos] 检测已安装仓库时出错:", error);
+        res.status(500).json({ success: false, error: "服务器检测仓库时出错。" });
+    }
+});
+
 // [GET] /api/home-stats - 获取首页仓库统计数据
 app.get("/api/home-stats", async (req, res) => {
   console.log("请求: [GET] /api/home-stats");

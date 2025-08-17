@@ -3,6 +3,10 @@
 //       和属性编辑模态框
 // ==========================================================================
 
+const API_ENDPOINTS_EXT = {
+    FETCH_INSTALLED_REPOS: "/api/installed-repos",
+};
+
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -316,14 +320,27 @@ function filterUserDataEntries() {
 /**
  * 应用当前的过滤器 并使用过滤后的数据重新渲染数据列表
  */
-function applyFiltersAndRenderDataList() {
+async function applyFiltersAndRenderDataList() {
+    if (!AppState.dataList.installedRepos) {
+        try {
+            const repoData = await fetchJsonData(API_ENDPOINTS_EXT.FETCH_INSTALLED_REPOS);
+            AppState.dataList.installedRepos = new Set(repoData.repos || []);
+        } catch (e) {
+            console.error("无法获取已安装仓库列表，将显示所有数据。");
+            AppState.dataList.installedRepos = new Set(AppState.availableStorageBoxes);
+        }
+    }
+    const installedReposSet = AppState.dataList.installedRepos;
+    const originalUserData = AppState.userData;
+    AppState.userData = originalUserData.filter(entry => installedReposSet.has(entry.storagebox));
+
     const searchTerm = DOM.dataListSearchInput?.value.trim() || '';
     if (!searchTerm) {
-      AppState.dataList.workerSearchResults = null;
+        AppState.dataList.workerSearchResults = null;
     }
-    
+
     const filteredData = filterUserDataEntries();
-    if(DOM.dataListCountDisplay) DOM.dataListCountDisplay.textContent = `当前显示: ${filteredData.length} 条`;
+    if (DOM.dataListCountDisplay) DOM.dataListCountDisplay.textContent = `当前显示: ${filteredData.length} 条`;
     setupVirtualScroll(DOM.dataListContainer, filteredData);
 }
 
@@ -913,8 +930,8 @@ async function setupDataListEventListeners() {
     };
 
     if (DOM.dataListSearchInput) {
-        DOM.dataListSearchInput.removeEventListener('input', debouncedSearch); 
-        DOM.dataListSearchInput.addEventListener('input', debouncedSearch); 
+        DOM.dataListSearchInput.removeEventListener('input', debouncedSearch);
+        DOM.dataListSearchInput.addEventListener('input', debouncedSearch);
     }
 
     if (DOM.dataListSearchInput) {
