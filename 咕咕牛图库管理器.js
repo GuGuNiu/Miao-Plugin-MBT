@@ -898,57 +898,6 @@ class MiaoPluginMBT extends plugin {
     });
   }
 
-  async accept(old_this) {
-    //this.logger.info("『咕咕牛🐂』检测到管理器热重载，开始处理...");
-    if (old_this && typeof old_this.destroy === 'function') {
-      await old_this.destroy();
-    }
-  }
-
-  async destroy() {
-    //this.logger.warn(`${this.logPrefix}开始销毁插件资源并重置所有静态状态...`);
-
-    const hookManager = ProcessHookManager.getInstance();
-    hookManager.unregisterShutdownCallback(this.shutdownHandler);
-    hookManager.unregisterExceptionCallback(this.uncaughtExceptionHandler);
-
-    if (this.task) {
-      this.task.forEach(t => { if (t.cron) { try { require('node-schedule').cancelJob(t.name); } catch (e) { } } });
-      this.task = null;
-    }
-
-    MiaoPluginMBT.processManager.killAll('SIGKILL', '插件热重载或销毁');
-    if (MiaoPluginMBT._guToolsProcess) {
-      MiaoPluginMBT._guToolsProcess.removeAllListeners();
-      MiaoPluginMBT._guToolsProcess = null;
-    }
-
-    if (MiaoPluginMBT._loadMonitorInterval) {
-      clearInterval(MiaoPluginMBT._loadMonitorInterval);
-      MiaoPluginMBT._loadMonitorInterval = null;
-    }
-
-    MiaoPluginMBT.isGloballyInitialized = false;
-    MiaoPluginMBT.initializationPromise = null;
-    MiaoPluginMBT.isInitializing = false;
-    MiaoPluginMBT.MBTConfig = {};
-    MiaoPluginMBT._imgDataCache = Object.freeze([]);
-    MiaoPluginMBT._userBanSet = new Set();
-    MiaoPluginMBT._activeBanSet = new Set();
-    MiaoPluginMBT._aliasData = null;
-    MiaoPluginMBT._wavesRoleDataMap = null;
-    MiaoPluginMBT._zzzAvatarMap = null;
-    MiaoPluginMBT._remoteBanCount = 0;
-    MiaoPluginMBT._indexByGid.clear();
-    MiaoPluginMBT._indexByCharacter.clear();
-    MiaoPluginMBT._indexByTag.clear();
-    MiaoPluginMBT._characterGameMap.clear();
-    MiaoPluginMBT._systemLoadState = { level: 'NORMAL', lastCheck: 0, autoSwitchLock: false };
-    MiaoPluginMBT._secondaryTagsCache = [];
-
-    this.isPluginInited = false;
-  }
-
   static async _installGuToolsDependencies(logger = global.logger || console) {
     const guToolsDir = this.paths.guToolsPath;
     const packageJsonPath = path.join(guToolsDir, 'package.json');
@@ -963,10 +912,12 @@ class MiaoPluginMBT extends plugin {
 
     // 依赖检查
     try {
-      require.resolve('express', { paths: [guToolsDir] });
-      require.resolve('sharp', { paths: [guToolsDir] });
+      const expressPath = path.join(guToolsDir, 'node_modules', 'express');
+      const sharpPath = path.join(guToolsDir, 'node_modules', 'sharp');
+      await fsPromises.access(expressPath);
+      await fsPromises.access(sharpPath);
       return true;
-    } catch (e) {
+    } catch (error) {
       logger.info(`${logPrefix}[GuTools Web] 依赖缺失，开始自动安装...`);
     }
 
@@ -1094,7 +1045,7 @@ class MiaoPluginMBT extends plugin {
       GUGUNIU_WAVES_PATH: this.paths.target.wavesChar,
     };
     const options = { cwd: path.dirname(serverScriptPath), stdio: ['ignore', 'pipe', 'pipe'], env: env };
-    
+
     return new Promise((resolve, reject) => {
       //logger.info(`${Default_Config.logPrefix}正在后台启动 GuTools 服务...`);
       const child = spawn('node', [serverScriptPath], options);
@@ -3441,14 +3392,18 @@ class MiaoPluginMBT extends plugin {
         return false;
       }
 
-      //logger.info(`${Default_Config.logPrefix} 检测到插件核心逻辑已更新，将在30秒后执行覆盖...`);
-      await common.sleep(30000);
-
-      //logger.info(`${Default_Config.logPrefix} 延迟结束，开始执行覆盖操作...`);
+      logger.info(`${Default_Config.logPrefix}检测到插件核心逻辑已更新，准备执行覆盖...`);
+      // await common.sleep(30000);
       await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-      //logger.info(`${Default_Config.logPrefix} 核心管理器文件覆盖完成。该操作将触发插件热重载。`);
+      logger.info(`${Default_Config.logPrefix}核心管理器文件覆盖完成。该操作将触发插件热重载。`);
+      const restartMessage = `${Default_Config.logPrefix}检测到插件核心逻辑已更新！为确保所有新功能稳定生效，强烈建议稍后重启机器人。`;
+      setImmediate(() => {
+        MiaoPluginMBT.SendMasterMsg(restartMessage, null, 1000, logger).catch(err => {
+          logger.error(`${Default_Config.logPrefix}发送重启引导消息失败:`, err);
+        });
+      });
 
-      return true; // 返回 true 表示执行了更新
+      return true;
 
     } catch (error) {
       if (error.code !== 'ENOENT') {
@@ -3585,15 +3540,26 @@ class MiaoPluginMBT extends plugin {
         } catch (err) {
           currentPullError = err;
           logger.warn(`${Default_Config.logPrefix}${RepoName} 'git pull --ff-only' 失败，错误码: ${err.code}`);
-          if (err.code !== 0 && ((err.stderr || "").includes("Not possible to fast-forward") || (err.stderr || "").includes("diverging") || (err.stderr || "").includes("unrelated histories") || (err.stderr || "").includes("commit your changes or stash them") || (err.stderr || "").includes("needs merge") || (err.stderr || "").includes("lock file") || (err.message || "").includes("failed"))) {
+
+          const stderr = (err.stderr || "").toLowerCase();
+          const errorKeywords = [
+            "not possible to fast-forward",
+            "diverging branches",
+            "unrelated histories",
+            "commit your changes or stash them",
+            "needs merge"
+          ];
+
+          if (err.code !== 0 && errorKeywords.some(keyword => stderr.includes(keyword))) {
             needsReset = true;
           } else {
+            // 如果不是上述冲突错误例如网络错误，则直接标记为失败并向上抛出
             currentSuccess = false;
           }
         }
 
         if (needsReset && !currentSuccess) {
-          logger.warn(`${Default_Config.logPrefix}${RepoName} 正在执行强制重置 (git fetch & git reset --hard)...`);
+          logger.warn(`${Default_Config.logPrefix}${RepoName} 检测到本地仓库与远程存在冲突或分叉，正在执行强制重置 (git fetch & git reset --hard)...`);
           try {
             await ExecuteCommand("git", ["fetch", "origin"], { cwd: localPath }, Default_Config.gitPullTimeout);
             await ExecuteCommand("git", ["reset", "--hard", `origin/${branch}`], { cwd: localPath });
@@ -3608,6 +3574,7 @@ class MiaoPluginMBT extends plugin {
           }
         }
 
+        // 如果更新成功无论是正常pull还是强制reset，则检查变更
         if (currentSuccess) {
           let newCommit = "";
           try {
@@ -3620,6 +3587,7 @@ class MiaoPluginMBT extends plugin {
           if ((oldCommit && newCommit && oldCommit !== newCommit) || currentWasForceReset) {
             currentHasChanges = true;
 
+            // 计算差异统计
             diffStat = { insertions: 0, deletions: 0 };
             if (oldCommit && newCommit && oldCommit !== newCommit) {
               try {
@@ -3636,6 +3604,7 @@ class MiaoPluginMBT extends plugin {
               }
             }
 
+            // 计算新提交的数量
             if (currentWasForceReset || !oldCommit) {
               newCommitsCount = 1;
             } else {
@@ -3650,7 +3619,15 @@ class MiaoPluginMBT extends plugin {
             }
           }
         }
-        return { success: currentSuccess, hasChanges: currentHasChanges, error: currentPullError, wasForceReset: currentWasForceReset, newCommitsCount: newCommitsCount, diffStat: diffStat };
+
+        return {
+          success: currentSuccess,
+          hasChanges: currentHasChanges,
+          error: currentPullError,
+          wasForceReset: currentWasForceReset,
+          newCommitsCount: newCommitsCount,
+          diffStat: diffStat
+        };
 
       } catch (innerError) {
         return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0, diffStat: null };
@@ -3757,39 +3734,39 @@ class MiaoPluginMBT extends plugin {
             const headerLine = lines.shift() || "";
             let subjectLine = lines.shift() || "";
             const bodyContent = lines.join('\n').trim();
-    
+
             const commitData = {
               hash: 'N/A', date: '', isDescription: true, displayParts: [],
-              commitPrefix: null, commitScope: null, commitScopeClass: 'scope-default', 
+              commitPrefix: null, commitScope: null, commitScopeClass: 'scope-default',
               commitTitle: "", descriptionBodyHtml: ''
             };
-            
+
             const dateMatch = headerLine.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
             if (dateMatch) { commitData.date = `[${dateMatch[1]}]`; }
             const hashMatch = headerLine.match(/\[([a-f0-9]{7,40})\]/);
             if (hashMatch) { commitData.hash = hashMatch[1]; }
-    
+
             const unifiedRegex = /^([a-zA-Z]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/;
             const match = subjectLine.match(unifiedRegex);
 
             if (match) {
-                commitData.commitPrefix = match[1].toLowerCase();
-                commitData.commitScope = match[2] || match[3]; // Group 2 for (scope), Group 3 for [scope]
-                commitData.commitTitle = match[4].trim();
+              commitData.commitPrefix = match[1].toLowerCase();
+              commitData.commitScope = match[2] || match[3];
+              commitData.commitTitle = match[4].trim();
             } else {
-                commitData.commitTitle = subjectLine.trim();
+              commitData.commitTitle = subjectLine.trim();
             }
-            
+
             if (commitData.commitScope) {
-                const lowerScope = commitData.commitScope.toLowerCase();
-                if (lowerScope.includes('web')) {
-                    commitData.commitScopeClass = 'scope-web';
-                } else if (lowerScope.includes('core')) {
-                    commitData.commitScopeClass = 'scope-core';
-                }
-                commitData.commitScope = commitData.commitScope.replace(/\s+/g, '&nbsp;');
+              const lowerScope = commitData.commitScope.toLowerCase();
+              if (lowerScope.includes('web')) {
+                commitData.commitScopeClass = 'scope-web';
+              } else if (lowerScope.includes('core')) {
+                commitData.commitScopeClass = 'scope-core';
+              }
+              commitData.commitScope = commitData.commitScope.replace(/\s+/g, '&nbsp;');
             }
-            
+
             if (bodyContent) {
               let htmlBody = bodyContent
                 .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
@@ -3811,14 +3788,14 @@ class MiaoPluginMBT extends plugin {
               if (listOpen) htmlBody += '</ul>';
               commitData.descriptionBodyHtml = htmlBody;
             }
-    
+
             const gamePrefixes = [
               { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
               { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
               { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
               { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
             ];
-            
+
             const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(commitData.commitTitle));
             if (isCharacterUpdate) {
               commitData.isDescription = false;
@@ -3872,7 +3849,7 @@ class MiaoPluginMBT extends plugin {
             } else {
               commitData.isDescription = true;
             }
-    
+
             return commitData;
           }));
         } else {
@@ -7282,65 +7259,65 @@ class MiaoPluginMBT extends plugin {
           }
           case 'CONVENTIONAL_COMMITS_MOCK': {
             const mockCommitsData = [
-                { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。'},
-                { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。'},
-                { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。'},
-                { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。'},
-                { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。'},
-                { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。'},
-                { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。'},
-                { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。'},
-                { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。'},
-                { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。'},
-                { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。'}
+              { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。' },
+              { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。' },
+              { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。' },
+              { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。' },
+              { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。' },
+              { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。' },
+              { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。' },
+              { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。' },
+              { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。' },
+              { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。' },
+              { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。' }
             ];
 
             const mockLog = mockCommitsData.map((item, index) => {
-                let simplifiedScope = null;
-                let scopeClass = 'scope-default';
+              let simplifiedScope = null;
+              let scopeClass = 'scope-default';
 
-                if (item.scope) {
-                    const lowerScope = item.scope.toLowerCase();
-                    if (lowerScope.includes('web')) {
-                        simplifiedScope = 'WEB';
-                        scopeClass = 'scope-web';
-                    } else if (lowerScope.includes('core')) {
-                        simplifiedScope = 'CORE';
-                        scopeClass = 'scope-core';
-                    }
+              if (item.scope) {
+                const lowerScope = item.scope.toLowerCase();
+                if (lowerScope.includes('web')) {
+                  simplifiedScope = 'WEB';
+                  scopeClass = 'scope-web';
+                } else if (lowerScope.includes('core')) {
+                  simplifiedScope = 'CORE';
+                  scopeClass = 'scope-core';
                 }
+              }
 
-                return {
-                    isDescription: true,
-                    date: `[${index + 1} hours ago]`,
-                    commitPrefix: item.prefix,
-                    commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
-                    commitScopeClass: scopeClass,
-                    commitTitle: item.title,
-                    descriptionBodyHtml: `<p>${item.body}</p>`
-                };
+              return {
+                isDescription: true,
+                date: `[${index + 1} hours ago]`,
+                commitPrefix: item.prefix,
+                commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
+                commitScopeClass: scopeClass,
+                commitTitle: item.title,
+                descriptionBodyHtml: `<p>${item.body}</p>`
+              };
             });
 
             return {
-                ...baseData,
-                overallSuccess: true,
-                overallHasChanges: true,
-                duration: '1.0',
-                reportTime: new Date().toLocaleString(),
-                results: [
-                    {
-                        name: "一号仓库",
-                        statusText: "更新成功",
-                        statusClass: "status-ok",
-                        hasChanges: true,
-                        newCommitsCount: mockLog.length,
-                        log: mockLog,
-                        commitSha: 'c0nv3nt10n4l',
-                        hasValidLogs: true,
-                        shouldHighlight: true
-                    },
-                    { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
-                ]
+              ...baseData,
+              overallSuccess: true,
+              overallHasChanges: true,
+              duration: '1.0',
+              reportTime: new Date().toLocaleString(),
+              results: [
+                {
+                  name: "一号仓库",
+                  statusText: "更新成功",
+                  statusClass: "status-ok",
+                  hasChanges: true,
+                  newCommitsCount: mockLog.length,
+                  log: mockLog,
+                  commitSha: 'c0nv3nt10n4l',
+                  hasValidLogs: true,
+                  shouldHighlight: true
+                },
+                { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
+              ]
             };
           }
           case 'UP_REPORT_FULL_MOCK': {
