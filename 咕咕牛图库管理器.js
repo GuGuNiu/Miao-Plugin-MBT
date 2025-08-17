@@ -3672,7 +3672,18 @@ class MiaoPluginMBT extends plugin {
       const isNetworkError = (err) => {
         if (!err) return false;
         const errorString = ((err.stderr || "") + (err.message || "")).toLowerCase();
-        return errorString.includes("connection was reset") || errorString.includes("connection timed out") || errorString.includes("could not resolve host");
+        const networkErrorKeywords = [
+          "connection timed out",
+          "connection was reset",
+          "could not resolve host",
+          "unable to access",
+          "handshake failed",
+          "error: 502",
+          "error: 522",
+          "error: 504",
+          "etimedout"
+        ];
+        return networkErrorKeywords.some(keyword => errorString.includes(keyword));
       };
 
       if (!updateResult.success && isNetworkError(updateResult.error)) {
