@@ -3746,32 +3746,39 @@ class MiaoPluginMBT extends plugin {
             const headerLine = lines.shift() || "";
             let subjectLine = lines.shift() || "";
             const bodyContent = lines.join('\n').trim();
-
+    
             const commitData = {
-              hash: 'N/A', date: '', isDescription: false, displayParts: [], groupedDisplayParts: [],
-              commitPrefix: null, commitScope: null, commitTitle: '', descriptionBodyHtml: ''
+              hash: 'N/A', date: '', isDescription: true, displayParts: [],
+              commitPrefix: null, commitScope: null, commitScopeClass: 'scope-default', 
+              commitTitle: "", descriptionBodyHtml: ''
             };
-
+            
             const dateMatch = headerLine.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})\s+/);
             if (dateMatch) { commitData.date = `[${dateMatch[1]}]`; }
             const hashMatch = headerLine.match(/\[([a-f0-9]{7,40})\]/);
             if (hashMatch) { commitData.hash = hashMatch[1]; }
+    
+            const unifiedRegex = /^([a-zA-Z]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/;
+            const match = subjectLine.match(unifiedRegex);
 
-            const prefixMatch = subjectLine.match(/^([a-zA-Z]+)(?:\((.+?)\))?[:：]\s*(.+)/);
-            if (prefixMatch) {
-              commitData.commitPrefix = prefixMatch[1].toLowerCase();
-              commitData.commitScope = prefixMatch[2] ? prefixMatch[2].replace(/\s+/g, '&nbsp;') : null;
-              subjectLine = prefixMatch[3].trim();
+            if (match) {
+                commitData.commitPrefix = match[1].toLowerCase();
+                commitData.commitScope = match[2] || match[3]; // Group 2 for (scope), Group 3 for [scope]
+                commitData.commitTitle = match[4].trim();
+            } else {
+                commitData.commitTitle = subjectLine.trim();
             }
-            commitData.commitTitle = subjectLine;
-
-            const gamePrefixes = [
-              { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
-              { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
-              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
-              { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
-            ];
-
+            
+            if (commitData.commitScope) {
+                const lowerScope = commitData.commitScope.toLowerCase();
+                if (lowerScope.includes('web')) {
+                    commitData.commitScopeClass = 'scope-web';
+                } else if (lowerScope.includes('core')) {
+                    commitData.commitScopeClass = 'scope-core';
+                }
+                commitData.commitScope = commitData.commitScope.replace(/\s+/g, '&nbsp;');
+            }
+            
             if (bodyContent) {
               let htmlBody = bodyContent
                 .replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>')
@@ -3793,7 +3800,14 @@ class MiaoPluginMBT extends plugin {
               if (listOpen) htmlBody += '</ul>';
               commitData.descriptionBodyHtml = htmlBody;
             }
-
+    
+            const gamePrefixes = [
+              { prefixPattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, gameType: "gs" },
+              { prefixPattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, gameType: "sr" },
+              { prefixPattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, gameType: "zzz" },
+              { prefixPattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, gameType: "waves" },
+            ];
+            
             const isCharacterUpdate = gamePrefixes.some(entry => entry.prefixPattern.test(commitData.commitTitle));
             if (isCharacterUpdate) {
               commitData.isDescription = false;
@@ -3847,7 +3861,7 @@ class MiaoPluginMBT extends plugin {
             } else {
               commitData.isDescription = true;
             }
-
+    
             return commitData;
           }));
         } else {
