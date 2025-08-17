@@ -3760,7 +3760,7 @@ class MiaoPluginMBT extends plugin {
             const prefixMatch = subjectLine.match(/^([a-zA-Z]+)(?:\((.+?)\))?[:：]\s*(.+)/);
             if (prefixMatch) {
               commitData.commitPrefix = prefixMatch[1].toLowerCase();
-              commitData.commitScope = prefixMatch[2];
+              commitData.commitScope = prefixMatch[2] ? prefixMatch[2].replace(/\s+/g, '&nbsp;') : null;
               subjectLine = prefixMatch[3].trim();
             }
             commitData.commitTitle = subjectLine;
@@ -7255,6 +7255,69 @@ class MiaoPluginMBT extends plugin {
               ]
             };
           }
+          case 'CONVENTIONAL_COMMITS_MOCK': {
+            const mockCommitsData = [
+                { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。'},
+                { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。'},
+                { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。'},
+                { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。'},
+                { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。'},
+                { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。'},
+                { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。'},
+                { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。'},
+                { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。'},
+                { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。'},
+                { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。'}
+            ];
+
+            const mockLog = mockCommitsData.map((item, index) => {
+                let simplifiedScope = null;
+                let scopeClass = 'scope-default';
+
+                if (item.scope) {
+                    const lowerScope = item.scope.toLowerCase();
+                    if (lowerScope.includes('web')) {
+                        simplifiedScope = 'WEB';
+                        scopeClass = 'scope-web';
+                    } else if (lowerScope.includes('core')) {
+                        simplifiedScope = 'CORE';
+                        scopeClass = 'scope-core';
+                    }
+                }
+
+                return {
+                    isDescription: true,
+                    date: `[${index + 1} hours ago]`,
+                    commitPrefix: item.prefix,
+                    commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
+                    commitScopeClass: scopeClass,
+                    commitTitle: item.title,
+                    descriptionBodyHtml: `<p>${item.body}</p>`
+                };
+            });
+
+            return {
+                ...baseData,
+                overallSuccess: true,
+                overallHasChanges: true,
+                duration: '1.0',
+                reportTime: new Date().toLocaleString(),
+                results: [
+                    {
+                        name: "一号仓库",
+                        statusText: "更新成功",
+                        statusClass: "status-ok",
+                        hasChanges: true,
+                        newCommitsCount: mockLog.length,
+                        log: mockLog,
+                        commitSha: 'c0nv3nt10n4l',
+                        hasValidLogs: true,
+                        shouldHighlight: true
+                    },
+                    { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
+                ]
+            };
+          }
           case 'UP_REPORT_FULL_MOCK': {
             const mockFaceUrl = `file://${MiaoPluginMBT.paths.repoGalleryPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
             const repo1Log = [
@@ -7520,6 +7583,8 @@ class MiaoPluginMBT extends plugin {
         } else if (coreType === 'SPEEDTEST_SUCCESS') {
           templateFileName = 'speedtest';
         } else if (coreType === 'DIFFSTAT_MOCK') {
+          templateFileName = 'update_report';
+        } else if (coreType === 'CONVENTIONAL_COMMITS_MOCK') {
           templateFileName = 'update_report';
         }
         if (!templateFileName) throw new Error(`未找到核心类型 '${coreType}' 的模板映射。`);
@@ -8881,6 +8946,7 @@ const TRIGGERABLE_ITEMS = Object.freeze([
   { id: 38, name: "更新报告: 失败并生成详细错误消息", category: "核心图片报告模拟", description: "模拟核心库更新失败，并触发生成详细的合并转发错误报告。", type: "SIM_UPDATE_FAIL_WITH_DETAILS" },
   { id: 39, name: "更新报告: 完整效果模拟", category: "核心图片报告模拟", description: "模拟一张包含多条高亮、多种提交类型的完整更新报告。", type: "SIM_TPL_UP_REPORT_FULL_MOCK_LOCAL" },
   { id: 40, name: "更新报告: 差异统计(独立模拟)", category: "核心图片报告模拟", description: "生成一个包含多种差异统计情况的完整报告，用于功能展示。", type: "SIM_TPL_DIFFSTAT_MOCK_LOCAL" },
+  { id: 41, name: "更新报告: Conventional Commits 规范全家桶", category: "核心图片报告模拟", description: "生成一个包含所有 Conventional Commits 规范类型的更新报告，用于展示不同标签的样式效果。", type: "SIM_TPL_CONVENTIONAL_COMMITS_MOCK_LOCAL" },
   { id: 50, name: "逻辑: 截图过程返回空值", category: "业务逻辑状态", description: "模拟任何截图操作后，Puppeteer未抛错但返回了null/undefined (可能是空白图)。预期：插件记录错误，可能回复用户生成失败。", type: "THROW_RENDER_NULL_BUFFER" },
   { id: 51, name: "逻辑: 配置文件恢复并通知", category: "业务逻辑状态", description: "模拟配置加载时触发恢复，成功恢复并(尝试)通知主人。预期：日志记录，主人收到私聊。", type: "THROW_CONFIG_RECOVERY_NOTICE" },
   { id: 52, name: "报告: 聚合下载进度(随机)", category: "核心图片报告模拟", description: "生成并发送一张模拟的聚合下载进度报告，核心库100%，附属库随机进度。", type: "SIM_TPL_DL_PROGRESS_REMOTE" },

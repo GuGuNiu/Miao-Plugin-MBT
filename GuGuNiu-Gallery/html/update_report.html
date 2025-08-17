@@ -734,51 +734,48 @@
             letter-spacing: 0.5px;
             border-bottom: 2px solid rgba(0, 0, 0, 0.1);
         }
+        
+        .commit-scope {
+            display: inline-block!important;
+            font-size: 9px!important;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 8px;
+            border: 1.5px solid;
+            margin-right: 3px;
+            line-height: 1;
+            vertical-align: middle;
+            text-transform: uppercase;
+        }
+        
+        .scope-core { border-color: #64748b; background-color: #f1f5f9; color: #475569; }
+        .scope-web { border-color: #4338ca; background-color: #eef2ff; color: #4338ca; }
+        .scope-default { border-color: #64748b; background-color: #f8fafc; color: #64748b; }
 
         .prefix-feat {
             background-color: #28a745 !important;
             color: white !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
         }
-
         .prefix-fix {
             background-color: #fd7e14 !important;
             color: #ffe663 !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+        
+        .prefix-docs { background-color: #3b82f6 !important; color: #ffffff !important; }
+        .prefix-style { background-color: #a855f7 !important; color: #ffffff !important; }
+        .prefix-refactor { background-color: #ff9800 !important; color: #1f2937 !important; }
+        .prefix-perf { background-color: #dc2626 !important; color: #ffffff !important; }
+        .prefix-test { background-color: #ec4899 !important; color: #1f2937 !important; }
+        .prefix-build { background-color: #06b6d4 !important; color: #1f2937 !important; }
+        .prefix-ci { background-color: #60a5fa !important; color: #1e3a8a !important; }
+        .prefix-chore { background-color: #d1d5db !important; color: #1f2937 !important; }
+        .prefix-revert { background-color: #1f2937 !important; color: #ffffff !important; }
+        
+        .prefix-feat, .prefix-fix, .prefix-docs, .prefix-style, .prefix-refactor,
+        .prefix-perf, .prefix-test, .prefix-build, .prefix-ci, .prefix-chore, .prefix-revert {
+             background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
         }
 
-        .prefix-perf {
-            background-color: #007bff !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
-        }
-
-        .prefix-refactor {
-            background-color: #ffc107 !important;
-            color: #212529;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%);
-        }
-
-        .prefix-style {
-            background-color: #6f42c1 !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%);
-        }
-
-        .prefix-docs {
-            background-color: #17a2b8 !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 50%);
-        }
-
-        .prefix-test {
-            background-color: #e83e8c !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
-        }
-
-        .prefix-chore,
-        .prefix-build,
-        .prefix-ci {
-            background-color: #6c757d !important;
-            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
-        }
     </style>
 </head>
 
@@ -862,9 +859,8 @@
                                             {{ if commit.isDescription }}
                                             <div class="description-commit">
                                                 <div class="title">
-                                                    {{ if commit.commitPrefix }}<span
-                                                        class="commit-prefix prefix-{{commit.commitPrefix}}">{{
-                                                        commit.commitPrefix }}</span>{{ /if }}
+                                                    {{ if commit.commitPrefix }}<span class="commit-prefix prefix-{{commit.commitPrefix}}">{{ commit.commitPrefix }}</span>{{ /if }}
+                                                    {{ if commit.commitScope }}<span class="commit-scope {{ commit.commitScopeClass }}">{{@ commit.commitScope }}</span>{{ /if }}
                                                     <span>{{@ commit.commitTitle }}</span>
                                                 </div>
                                                 {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
@@ -897,9 +893,8 @@
                                         {{ if commit.isDescription }}
                                         <div class="description-commit">
                                             <div class="title">
-                                                {{ if commit.commitPrefix }}<span
-                                                    class="commit-prefix prefix-{{commit.commitPrefix}}">{{
-                                                    commit.commitPrefix }}</span>{{ /if }}
+                                                {{ if commit.commitPrefix }}<span class="commit-prefix prefix-{{commit.commitPrefix}}">{{ commit.commitPrefix }}</span>{{ /if }}
+                                                {{ if commit.commitScope }}<span class="commit-scope {{ commit.commitScopeClass }}">{{@ commit.commitScope }}</span>{{ /if }}
                                                 <span>{{@ commit.commitTitle }}</span>
                                             </div>
                                             {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
