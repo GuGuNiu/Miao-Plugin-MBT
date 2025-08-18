@@ -6522,8 +6522,11 @@ class MiaoPluginMBT extends plugin {
     const lowerInput = inputName.toLowerCase();
     const tagInfo = VALID_TAGS[lowerInput];
 
+    // 检查输入是否为二级标签
+    const isSecondaryTag = MiaoPluginMBT._secondaryTagsCache.includes(inputName);
+
     if (tagInfo) {
-      // 逻辑分支1：处理标签查询
+      // 逻辑分支1：处理一级标签查询
       const tagName = inputName.toUpperCase();
       const filteredImages = MiaoPluginMBT._indexByTag.get(tagInfo.key) || [];
 
@@ -6572,7 +6575,7 @@ class MiaoPluginMBT extends plugin {
         }
       }
 
-    } else if (SECONDARY_TAGS_LIST.includes(inputName)) {
+    } else if (isSecondaryTag) {
       // 逻辑分支1.1：处理二级标签查询
       const tagName = inputName;
       const filteredImages = MiaoPluginMBT._imgDataCache.filter(item =>
