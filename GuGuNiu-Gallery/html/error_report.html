@@ -5,7 +5,9 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>咕咕牛 - 错误报告</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+	<link
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap"
+		rel="stylesheet">
 	<style>
 		:root {
 			--bg-color: #f8f9fa;
@@ -25,13 +27,13 @@
 			--error-summary-bg: #fff6f6;
 			--error-summary-border: #f5c6cb;
 		}
-		
+
 		* {
 			box-sizing: border-box;
 			margin: 0;
 			padding: 0;
 		}
-		
+
 		body {
 			font-family: 'Noto Sans SC', sans-serif;
 			background-color: var(--bg-color);
@@ -42,7 +44,7 @@
 			font-size: 16px;
 			line-height: 1.7;
 		}
-		
+
 		.container {
 			background-color: var(--container-bg);
 			border: 2px solid var(--text-highlight);
@@ -50,27 +52,27 @@
 			border-radius: 12px;
 			overflow: hidden;
 		}
-		
+
 		.header {
 			background: var(--header-bg);
 			padding: 30px 35px;
 			color: #fff;
 			text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 		}
-		
+
 		.header h1 {
 			font-family: 'Orbitron', sans-serif;
 			font-size: 28px;
 			margin-bottom: 8px;
 		}
-		
+
 		.main-content {
 			padding: 25px;
 			display: flex;
 			flex-direction: column;
 			gap: 20px;
 		}
-		
+
 		.section {
 			background: var(--card-base-bg);
 			border: 1px solid var(--border-color-subtle);
@@ -80,7 +82,7 @@
 			position: relative;
 			overflow: hidden;
 		}
-		
+
 		.section::before {
 			content: '';
 			position: absolute;
@@ -91,7 +93,7 @@
 			background: linear-gradient(90deg, var(--text-highlight) 0%, rgba(255, 107, 107, 0) 100%);
 			opacity: 0.7;
 		}
-		
+
 		.section h2 {
 			font-size: 20px;
 			color: var(--text-primary);
@@ -99,7 +101,7 @@
 			padding-bottom: 8px;
 			position: relative;
 		}
-		
+
 		.section h2::after {
 			content: '';
 			position: absolute;
@@ -111,23 +113,23 @@
 			border-radius: 1px;
 			opacity: 0.8;
 		}
-		
+
 		.section.error-summary {
 			background-color: var(--error-summary-bg);
 			border-color: var(--error-summary-border);
 		}
-		
+
 		.section.ai-solution {
 			background: var(--ai-bg-color);
 			border: 1px solid #d6dbe1;
 			padding: 0;
 			box-shadow: 0 4px 15px rgba(44, 62, 80, 0.08);
 		}
-		
+
 		.section.ai-solution::before {
 			display: none;
 		}
-		
+
 		.ai-header {
 			background-color: var(--ai-header-bg);
 			color: #fff;
@@ -137,48 +139,47 @@
 			gap: 12px;
 			border-radius: 8px 8px 0 0;
 		}
-		
+
 		.ai-header svg {
 			width: 28px;
 			height: 28px;
 			flex-shrink: 0;
 		}
-		
+
 		.ai-header h2 {
 			font-size: 20px;
 			color: #fff;
 			margin: 0;
 			padding: 0;
 		}
-		
+
 		.ai-header h2::after {
 			display: none;
 		}
-		
+
 		.ai-content {
 			padding: 20px 25px;
 		}
-		
+
 		.ai-content-inner {
 			font-family: 'Noto Sans SC', sans-serif;
 			font-size: 1em;
 			line-height: 1.8;
 			color: var(--ai-text-color);
 			margin: 0;
-			/* [关键修改] 使用 pre-line 来保留换行符并智能换行 */
 			white-space: pre-line;
 			overflow-wrap: break-word;
 		}
-		
+
 		.ai-content-inner strong {
 			font-weight: 600;
 			color: #2c3e50;
 		}
-		
+
 		.error-message-content {
 			overflow-wrap: break-word;
 		}
-		
+
 		.error-message-content .code {
 			font-family: monospace;
 			background-color: #f1f1f1;
@@ -187,18 +188,29 @@
 			color: var(--inline-code-color);
 			font-size: 0.9em;
 		}
-		
+
 		.suggestions-list {
-			list-style-type: disc;
-			padding-left: 20px;
+			list-style-type: none;
+			padding-left: 0;
 			color: var(--text-secondary);
 			line-height: 1.8;
 		}
-		
+
 		.suggestions-list li {
 			margin-bottom: 8px;
+			padding-left: 20px;
+			position: relative;
 		}
-		
+
+		.suggestions-list li::before {
+			content: '•';
+			position: absolute;
+			left: 0;
+			top: 0;
+			color: var(--text-highlight);
+			font-weight: bold;
+		}
+
 		.details-code {
 			background: var(--code-bg);
 			border: 1px solid rgba(0, 0, 0, 0.1);
@@ -212,13 +224,75 @@
 			font-size: 14px;
 			color: #343a40;
 		}
-		
+
 		footer {
 			text-align: center;
 			padding: 0px 0px 20px 0px;
 			font-size: 14px;
 			color: var(--text-secondary);
 			font-family: 'Orbitron', monospace;
+		}
+
+		.snapshot-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 20px;
+		}
+
+		.snapshot-item {
+			background-color: var(--card-base-bg);
+			padding: 20px;
+			border-radius: 8px;
+			border: 1px solid var(--border-color-subtle);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+			border-top: 4px solid var(--text-highlight);
+		}
+
+		.snapshot-item .label {
+			display: block;
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--text-secondary);
+			margin-bottom: 8px;
+		}
+
+		.snapshot-item .value {
+			font-size: 16px;
+			font-weight: 500;
+			color: var(--text-primary);
+			font-family: 'Rajdhani', sans-serif;
+			line-height: 1.4;
+			word-break: break-all;
+		}
+
+		.sync-details {
+			margin-top: 15px;
+			padding-top: 15px;
+			border-top: 1px dashed var(--error-summary-border);
+		}
+
+		.sync-details h3 {
+			font-size: 16px;
+			color: var(--text-primary);
+			margin-bottom: 10px;
+		}
+
+		.sync-details ul {
+			list-style-type: none;
+			padding-left: 0;
+		}
+
+		.sync-details li {
+			background-color: #ffffff;
+			padding: 8px 12px;
+			border-radius: 4px;
+			margin-bottom: 5px;
+			font-family: monospace;
+			font-size: 14px;
+			color: var(--text-highlight);
+			border: 1px solid var(--error-summary-border);
+			font-weight: 500;
+			word-break: break-all;
 		}
 	</style>
 </head>
@@ -235,13 +309,44 @@
 				<div class="error-message-content">
 					{{ errorMessage }} <span class="code">({{ errorCode }})</span>
 				</div>
+
+				{{if error && error.syncDetails && error.syncDetails.files}}
+				<div class="sync-details">
+					<h3>可能涉及的资源文件 ({{error.syncDetails.count || 0}}项):</h3>
+					<ul>
+						{{each error.syncDetails.files}}
+						<li>{{$value}}</li>
+						{{/each}}
+					</ul>
+				</div>
+				{{/if}}
 			</div>
+
+			{{if snapshot}}
+			<div class="section">
+				<h2>环境快照</h2>
+				<div class="snapshot-grid">
+					<div class="snapshot-item">
+						<span class="label">主仓库 (MBT)</span>
+						<span class="value">{{snapshot.git.branch}} @ {{snapshot.git.sha}}</span>
+					</div>
+					<div class="snapshot-item">
+						<span class="label">核心JS文件</span>
+						<span class="value">{{snapshot.file.size}}<br>{{snapshot.file.mtime}}</span>
+					</div>
+					<div class="snapshot-item">
+						<span class="label">运行环境</span>
+						<span class="value">{{snapshot.system.yunzai}}<br>Node.js {{snapshot.system.node}}<br>{{snapshot.system.platform}}</span>
+					</div>
+				</div>
+			</div>
+			{{/if}}
 
 			<div class="section ai-solution">
 				<div class="ai-header">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff">
-						<path d="M19.5 10c.17 0 .33.01.5.02C19.99 7.12 17.76 4.62 15 4.07V2h-2v2.07C10.24 4.62 8.01 7.12 8 10.01c.17-.01.33-.02.5-.02H12v2H9.5c-.5 0-1 .01-1.5.02C8.01 15.38 10.24 18 13 18.07V22h2v-3.93c2.76-.55 4.99-3.05 5-5.94-.17.01-.33.02-.5.02H15v-2h4.5zM4.5 10H7v2H4.5c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4c0 .17-.01.33-.02.5C8.01 7.12 5.76 4.62 3 4.07V2H1v2.07C3.76 4.62 5.99 7.12 6 10.01c-.17-.01-.33-.02-.5-.02z"
-						/>
+						<path
+							d="M19.5 10c.17 0 .33.01.5.02C19.99 7.12 17.76 4.62 15 4.07V2h-2v2.07C10.24 4.62 8.01 7.12 8 10.01c.17-.01.33-.02.5-.02H12v2H9.5c-.5 0-1 .01-1.5.02C8.01 15.38 10.24 18 13 18.07V22h2v-3.93c2.76-.55 4.99-3.05 5-5.94-.17.01-.33.02-.5.02H15v-2h4.5zM4.5 10H7v2H4.5c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4c0 .17-.01.33-.02.5C8.01 7.12 5.76 4.62 3 4.07V2H1v2.07C3.76 4.62 5.99 7.12 6 10.01c-.17-.01-.33-.02-.5-.02z" />
 					</svg>
 					<h2>云露智能体-错误分析&解决方案</h2>
 				</div>
@@ -259,12 +364,16 @@
 					{{ /each }}
 				</ul>
 			</div>
-			{{ /if }} {{ if contextInfo && contextInfo.trim() !== '（无额外上下文信息）' }}
+			{{ /if }}
+
+			{{ if contextInfo && contextInfo.trim() !== '（无额外上下文信息）' }}
 			<div class="section">
 				<h2>执行上下文</h2>
 				<div class="details-code">{{ contextInfo }}</div>
 			</div>
-			{{ /if }} {{ if stackTrace && stackTrace.trim() !== '（调用栈信息丢失，大概是飞升了）' }}
+			{{ /if }}
+
+			{{ if stackTrace && stackTrace.trim() !== '（调用栈信息丢失，大概是飞升了）' }}
 			<div class="section">
 				<h2>技术细节 - 调用栈</h2>
 				<div class="details-code">{{ stackTrace }}</div>

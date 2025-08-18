@@ -3191,24 +3191,77 @@ class MiaoPluginMBT extends plugin {
       logger = global.logger || console;
       logPrefix = Default_Config.logPrefix;
     }
-
-    const Report = MiaoPluginMBT.FormatError(operationName, error, context, logPrefix);
-    logger.error(`${logPrefix} [${operationName}] 操作失败:`, error?.message || error, error?.stack ? `\nStack(部分): ${error.stack.substring(0, 500)}...` : "", context ? `\nContext: ${context}` : "");
-
+  
+    let finalContext = context || "（无额外上下文信息）";
+    if (error?.syncDetails && typeof error.syncDetails === 'object') {
+      finalContext += "\n\n--- 资源同步详情 ---";
+      finalContext += `\n检测到 ${error.syncDetails.count || '多个'} 个文件可能存在问题。`;
+      if (Array.isArray(error.syncDetails.files)) {
+        finalContext += "\n涉及文件列表（部分）:\n - " + error.syncDetails.files.slice(0, 5).join("\n - ");
+      }
+    }
+  
+    const Report = MiaoPluginMBT.FormatError(operationName, error, finalContext, logPrefix);
+    logger.error(`${logPrefix} [${operationName}] 操作失败:`, error?.message || error, error?.stack ? `\nStack(部分): ${error.stack.substring(0, 500)}...` : "", finalContext ? `\nContext: ${finalContext}` : "");
+  
     let mainReportSent = false;
     let fallbackMessages = [];
-
+    let aiSolutionRawText = ""; 
+  
     try {
       const shortMessage = `${logPrefix} 执行 ${operationName} 操作时遇到点问题！(错误码: ${error?.code || "未知"})`;
       await e.reply(shortMessage, true);
-
-      let aiSolutionRawText = "云露分析服务暂时无法提供解决方案。";
+  
+      const getSnapshot = async () => {
+        const snapshot = { git: {}, file: {}, system: {} };
+        const mainRepoPath = MiaoPluginMBT.paths.LocalTuKuPath;
+        const pluginJsPath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
+        
+        try {
+          const [sha, branch] = await Promise.all([
+            ExecuteCommand("git", ["rev-parse", "--short=10", "HEAD"], { cwd: mainRepoPath }, 2000).then(r => r.stdout.trim()).catch(() => '获取失败'),
+            ExecuteCommand("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: mainRepoPath }, 2000).then(r => r.stdout.trim()).catch(() => '获取失败')
+          ]);
+          snapshot.git = { sha, branch };
+        } catch (gitErr) { snapshot.git = { error: '获取Git信息失败' }; }
+  
+        try {
+          const stats = await fsPromises.stat(pluginJsPath);
+          snapshot.file = {
+            size: FormatBytes(stats.size),
+            mtime: new Date(stats.mtime).toLocaleString('zh-CN', { hour12: false })
+          };
+        } catch (fileErr) { snapshot.file = { error: '获取文件信息失败' }; }
+        
+        try {
+          const yunzaiPkgPath = path.join(MiaoPluginMBT.paths.YunzaiPath, 'package.json');
+          await fsPromises.access(yunzaiPkgPath);
+          const yunzaiPkg = JSON.parse(await fsPromises.readFile(yunzaiPkgPath, 'utf-8'));
+          
+          let yunzaiType = 'Miao-Yunzai';
+          if (yunzaiPkg.name === 'trss-yunzai') {
+              yunzaiType = 'TRSS-Yunzai';
+          }
+  
+          snapshot.system = {
+            node: process.version,
+            platform: os.platform(),
+            yunzai: `${yunzaiType} ${yunzaiPkg.version || ''}`.trim()
+          };
+        } catch (sysErr) { snapshot.system = { error: '获取系统信息失败' }; }
+        
+        return snapshot;
+      };
+      
+      const snapshotData = await getSnapshot();
+  
+      aiSolutionRawText = "云露分析服务暂时无法提供解决方案。";
       try {
         aiSolutionRawText = await MiaoPluginMBT.getSpark(operationName, error, Report.contextInfo, logger);
       } catch (aiCallError) {
         logger.error(`${logPrefix} 调用云露分析失败:`, aiCallError);
       }
-
+  
       const localTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "error_report.html");
       const remoteTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/error_report.html";
       let templateHtml = "";
@@ -3223,17 +3276,24 @@ class MiaoPluginMBT extends plugin {
           throw localError;
         }
       }
-
+  
       const renderData = {
-        pluginVersion: Version, scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(), operationName: operationName,
-        errorMessage: error.message || "未知错误信息", errorCode: error.code || "N/A", contextInfo: Report.contextInfo,
+        pluginVersion: Version,
+        scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+        operationName: operationName,
+        errorMessage: error.message || "未知错误信息",
+        errorCode: error.code || "N/A",
+        contextInfo: Report.contextInfo,
         suggestions: Report.suggestions.split('\n').filter(line => line.trim() !== ''),
         aiSolutionText: aiSolutionRawText,
         stackTrace: Report.stack ? (Report.stack.length > 1200 ? Report.stack.substring(0, 1200) + "..." : Report.stack) : null,
+        snapshot: snapshotData,
+        guguniu_res_path: `file://${MiaoPluginMBT.paths.repoGalleryPath}/`.replace(/\\/g, '/'),
+        error: error
       };
-
+  
       const imageBuffer = await renderPageToImage("error-report", { htmlContent: templateHtml, data: renderData, imgType: "png" }, this);
-
+  
       if (imageBuffer) {
         await e.reply(imageBuffer);
         mainReportSent = true;
@@ -3248,7 +3308,7 @@ class MiaoPluginMBT extends plugin {
       if (Report.summary) fallbackMessages.push(Report.summary);
       if (Report.suggestions) fallbackMessages.push(`**可能原因与建议**\n${Report.suggestions}`);
     }
-
+  
     if (!mainReportSent && fallbackMessages.length > 0) {
       if (common?.makeForwardMsg) {
         try {
@@ -3264,80 +3324,92 @@ class MiaoPluginMBT extends plugin {
   }
 
   static FormatError(operationName, error, context = "", logPrefixForMsg = Default_Config.logPrefix) {
-    const Report = { summary: `${logPrefixForMsg} 操作 [${operationName}] 失败了！`, contextInfo: context || "（无额外上下文信息）", suggestions: "", stack: error?.stack || "（调用栈信息丢失，大概是飞升了）", };
+    const Report = {
+      summary: `${logPrefixForMsg} 操作 [${operationName}] 失败了！`,
+      contextInfo: context || "（无额外上下文信息）",
+      suggestions: "",
+      stack: error?.stack || "（调用栈信息丢失，大概是飞升了）",
+    };
+    
     if (error?.message) Report.summary += `\n错误信息: ${error.message}`;
     if (error?.code) Report.summary += ` (Code: ${error.code})`;
     if (error?.signal) Report.summary += ` (Signal: ${error.signal})`;
-
-    let matchedSuggestion = null;
-    if (error?.code === ERROR_CODES.Timeout || String(error?.code).toUpperCase() === 'ETIMEDOUT') {
-      matchedSuggestion = "操作超时了，等太久了...";
-    }
-
-    // 如果没有通过错误码匹配到，再走原来的关键字匹配逻辑
-    if (!matchedSuggestion) {
-      const errorStringForSuggestions = `${error?.message || ""} ${error?.stderr || ""} ${String(error?.code) || ""} ${context || ""}`.toLowerCase();
-      const suggestionsMap = {
-        "could not resolve host": "网络问题: 是不是 DNS 解析不了主机？检查下网络和 DNS 设置。",
-        "connection timed out": "网络问题: 连接超时了，网不好或者对面服务器挂了？",
-        "connection refused": "网络问题: 对面服务器拒绝连接，端口对吗？防火墙开了？",
-        "ssl certificate problem": "网络问题: SSL 证书有问题，系统时间对不对？或者需要更新证书？",
-        "403 forbidden": "访问被拒 (403): 没权限访问这个地址哦。",
-        "404 not found": "资源未找到 (404): URL 写错了或者文件真的没了。",
-        "unable to access": "Git 访问失败: 检查网络、URL、代理设置对不，或者的手动测速查看问题",
-        "authentication failed": "Git 认证失败: 用户名密码或者 Token 不对吧？",
-        "permission denied": "权限问题: Yunzai 没权限读写文件或目录，检查下文件夹权限。",
-        "index file corrupt": "Git 仓库可能坏了: 试试清理 `.git/index` 文件？不行就得 #重置咕咕牛 了。",
-        "lock file|index.lock": "Git 正忙着呢: 等一下下，或者手动清理 `.git/index.lock` 文件（小心点！）",
-        "commit your changes or stash them": "Git 冲突: 本地文件改动了和远程对不上，试试 #更新咕咕牛 强制覆盖？",
-        "not a git repository": "Git: 这地方不是个 Git 仓库啊。",
-        "unrelated histories": "Git 历史冲突: 这个得 #重置咕咕牛 才能解决了。",
-        "not possible to fast-forward": "Git: 无法快进合并，#更新咕咕牛 强制覆盖试试。",
-        [ERROR_CODES.NotFound]: "文件系统: 找不到文件或目录，路径对吗？",
-        [ERROR_CODES.Access]: "文件系统: 没权限访问这个文件或目录。",
-        [ERROR_CODES.Busy]: "文件系统: 文件或目录正被占用，稍后再试试？",
-        [ERROR_CODES.NotEmpty]: "文件系统: 文件夹里还有东西，删不掉。",
-        [ERROR_CODES.ConnReset]: "网络: 连接突然断了。",
-        "json.parse": "数据问题: JSON 文件格式不对，检查下 `ImageData.json` 或 `banlist.json`。",
-        "yaml.parse": "配置问题: YAML 文件格式不对，检查下 `GalleryConfig.yaml`。",
-      };
-
-      if (error instanceof ReferenceError && error.message?.includes("is not defined")) {
-        matchedSuggestion = "代码出错了: 引用了不存在的变量或函数。如果没改过代码，可能是插件Bug，快去反馈！";
-      } else {
-        for (const keyword in suggestionsMap) {
-          const keywordToTest = ERROR_CODES[keyword] || keyword;
-          const escapedKeyword = String(keywordToTest).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const regex = new RegExp(escapedKeyword, "i");
-          if (regex.test(errorStringForSuggestions)) {
-            matchedSuggestion = suggestionsMap[keyword];
-            break;
-          }
-        }
+  
+    const errorString = `${error?.message || ""} ${error?.stderr || ""} ${String(error?.code) || ""} ${context || ""}`.toLowerCase();
+    
+    const errorTypes = {
+      NETWORK: /could not resolve host|connection timed out|connection refused|ssl certificate|403 forbidden|404 not found|econnreset|etimedout/i,
+      GIT: /unable to access|authentication failed|permission denied|index file corrupt|lock file|index.lock|commit your changes|not a git repository|unrelated histories|not possible to fast-forward/i,
+      FILESYSTEM: /eacces|eperm|ebusy|enotempty|enoent/i,
+      CONFIG: /json.parse|yaml.parse/i,
+      CODE: /referenceerror|typeerror/i
+    };
+  
+    let detectedType = null;
+    for (const type in errorTypes) {
+      if (errorTypes[type].test(errorString)) {
+        detectedType = type;
+        break;
       }
     }
-
-    let finalSuggestionsArray = [];
-    if (matchedSuggestion) {
-      finalSuggestionsArray.push(`- ${matchedSuggestion}`);
-    } else {
-      finalSuggestionsArray.push("- 暂时没有针对此错误的特定建议，请尝试以下通用排查方法。");
-    }
-
-    finalSuggestionsArray.push("- 请检查你的网络连接是否通畅。", "- 请检查 Yunzai-Bot 目录及插件相关目录的文件/文件夹权限。", "- 请仔细查看控制台输出的详细错误日志，特别是本条错误上下的内容。", "- 尝试重启 Yunzai-Bot 程序。");
-    if (operationName.toLowerCase().includes("下载") || operationName.toLowerCase().includes("更新")) { finalSuggestionsArray.push("- 确保你的设备上已正确安装 Git，并且 Git 的路径已添加到系统环境变量中。", "- 尝试执行 `#咕咕牛测速` 命令检查网络节点状况。"); }
-    if (!operationName.toLowerCase().includes("重置")) { finalSuggestionsArray.push("- 如果问题持续存在，作为最终手段，你可以尝试执行 `#重置咕咕牛` 命令，然后重新 `#下载咕咕牛` (请注意：这将清除所有咕咕牛图库相关数据和配置)。"); }
-    Report.suggestions = finalSuggestionsArray.join("\n");
-
-    const stderr = error?.stderr || ""; const stdout = error?.stdout || "";
+  
+    const suggestionsMap = {
+      NETWORK: [
+        "- **首要建议**：执行 `#咕咕牛测速` 命令，诊断所有网络节点的实时状况。",
+        "- 请检查服务器网络连接、DNS设置以及防火墙规则。",
+        "- 如果使用了代理，请确认代理服务工作正常。"
+      ],
+      GIT: [
+        "- 如果提示冲突，请尝试执行 `#更新咕咕牛`，新版逻辑会自动尝试强制同步。",
+        "- 严重损坏时，可能需要执行 `#重置咕咕牛`。"
+      ],
+      FILESYSTEM: [
+        "- **权限问题**：请检查 Yunzai-Bot 目录及所有插件相关目录的文件/文件夹权限，确保机器人有权读写。",
+        "- **文件占用**：如果提示文件繁忙 (EBUSY)，请稍后再试或检查是否有其他程序正在使用该文件。"
+      ],
+      CONFIG: [
+        "- **配置文件损坏**：请检查 `GuGuNiu-Gallery` 目录下的 `GalleryConfig.yaml` 或 `banlist.json` 等文件是否存在语法错误。",
+        "- 可以尝试删除损坏的配置文件，然后重启机器人让插件生成默认配置。"
+      ],
+      CODE: [
+        "- **插件内部错误**：这通常是插件代码本身的Bug。请将此错误报告完整截图，并反馈给开发者。",
+        "- 尝试重启 Yunzai-Bot 程序，有时可以解决临时的状态异常问题。"
+      ]
+    };
+  
+    let finalSuggestionsArray = suggestionsMap[detectedType] || [];
+    
+    finalSuggestionsArray.push(...[
+      "- 请仔细查看控制台输出的详细错误日志，特别是本条错误上下的内容。",
+      "- 尝试重启 Yunzai-Bot 程序。",
+      "- 如果问题持续存在，且上述建议无效，最终手段是执行 `#重置咕咕牛` 后重新 `#下载咕咕牛`。"
+    ]);
+    
+    Report.suggestions = [...new Set(finalSuggestionsArray)].join("\n"); // 去重后合并
+  
+    // 处理Git/命令的输出
+    const stderr = error?.stderr || ""; 
+    const stdout = error?.stdout || "";
     if (stdout || stderr) {
       Report.contextInfo += "\n\n--- Git/命令输出信息 ---";
       const maxLen = 700;
-      if (stdout.trim()) { Report.contextInfo += `\n[stdout]:\n${stdout.substring(0, maxLen)}${stdout.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`; }
+      if (stdout.trim()) { 
+        Report.contextInfo += `\n[stdout]:\n${stdout.substring(0, maxLen)}${stdout.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`; 
+      }
       if (stderr.trim()) {
         Report.contextInfo += `\n[stderr]:\n${stderr.substring(0, maxLen)}${stderr.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`;
-        const criticalStderrLines = stderr.split("\n").filter(line => /fatal:|error:|warning:/i.test(line) && !/Cloning into/i.test(line) && !/^\s*$/.test(line) && !["trace:", "http.c:", "ssl.c:", "git.c:", "run-command.c:", "credential.c:", "config.c:", "advice.c:", "pktline.c:", "pack.c:", "sha1_file.c:", "remote.c:", "connect.c:", "version.c:", "sequencer.c:", "refs.c:", "commit.c:", "diff.c:", "unpack-trees.c:", "resolve-undo.c:", "notes-utils.c:"].some(p => line.trim().startsWith(p)) && !/^\s*(?:default|hint|Performance)\s/i.test(line) && !/== Info:|\s*Trying\s|\s*Connected to\s|Receiving objects:|Resolving deltas:|remote: Compressing objects:|remote: Total|remote: Enumerating objects:|remote: Counting objects:/i.test(line)).map(line => line.replace(/^remote:\s*/, "").trim()).filter(Boolean).slice(0, 5).join("\n");
-        if (criticalStderrLines.trim()) Report.summary += `\nGit关键消息: ${(criticalStderrLines.length > 200 ? criticalStderrLines.substring(0, 200) + "..." : criticalStderrLines).trim()}`;
+        const criticalStderrLines = stderr.split("\n").filter(line => 
+          /fatal:|error:|warning:/i.test(line) && 
+          !/Cloning into/i.test(line) && 
+          !/^\s*$/.test(line) && 
+          !["trace:", "http.c:", "ssl.c:", "git.c:", "run-command.c:", "credential.c:", "config.c:", "advice.c:", "pktline.c:", "pack.c:", "sha1_file.c:", "remote.c:", "connect.c:", "version.c:", "sequencer.c:", "refs.c:", "commit.c:", "diff.c:", "unpack-trees.c:", "resolve-undo.c:", "notes-utils.c:"].some(p => line.trim().startsWith(p)) && 
+          !/^\s*(?:default|hint|Performance)\s/i.test(line) && 
+          !/== Info:|\s*Trying\s|\s*Connected to\s|Receiving objects:|Resolving deltas:|remote: Compressing objects:|remote: Total|remote: Enumerating objects:|remote: Counting objects:/i.test(line)
+        ).map(line => line.replace(/^remote:\s*/, "").trim()).filter(Boolean).slice(0, 5).join("\n");
+        
+        if (criticalStderrLines.trim()) {
+          Report.summary += `\nGit关键消息: ${(criticalStderrLines.length > 200 ? criticalStderrLines.substring(0, 200) + "..." : criticalStderrLines).trim()}`;
+        }
       }
     }
     return Report;
@@ -3724,8 +3796,9 @@ class MiaoPluginMBT extends plugin {
         finalDiffStat = updateResult.diffStat;
       }
 
+      const logCount = (RepoNum === 1) ? 5 : 3; 
       const format = "%cd [%h]%n%s%n%b";
-      const gitLogArgs = ["log", `-n 3`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
+      const gitLogArgs = ["log", `-n ${logCount}`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
       let rawLogString = "";
       try {
         const logResult = await ExecuteCommand("git", gitLogArgs, { cwd: localPath }, 5000);
@@ -4860,8 +4933,8 @@ class MiaoPluginMBT extends plugin {
 
       let statusText = "";
       if (result.success) {
-        if (result.autoSwitchedNode) statusText = `更新成功 (切换至${result.autoSwitchedNode})`;
-        else if (result.wasForceReset) statusText = "本地冲突 (强制同步)";
+        if (result.autoSwitchedNode) statusText = `更新成功(切换至${result.autoSwitchedNode})`;
+        else if (result.wasForceReset) statusText = "本地冲突(强制同步)";
         else if (result.hasChanges) statusText = "更新成功";
         else statusText = "已是最新";
       } else statusText = "更新失败";
@@ -7125,15 +7198,454 @@ class MiaoPluginMBT extends plugin {
     const match = e.msg.match(/#咕咕牛触发(?:\s*([a-zA-Z0-9_-]+))?/i);
     const triggerInput = match?.[1]?.trim() || "";
     this.logger.warn(`${Default_Config.logPrefix}用户 ${e.user_id} 触发模拟指令，输入: "${triggerInput}"`);
-
+  
     let itemToTrigger = null;
     if (triggerInput) {
       const lowerInput = triggerInput.toLowerCase();
       itemToTrigger = TRIGGERABLE_ITEMS.find(item => String(item.id) === triggerInput);
       if (!itemToTrigger) itemToTrigger = TRIGGERABLE_ITEMS.find(item => item.name.toLowerCase().includes(lowerInput));
     }
-
-    if (!itemToTrigger) {
+  
+    if (itemToTrigger) {
+      await e.reply(`${Default_Config.logPrefix}正在模拟: [${itemToTrigger.id}] ${itemToTrigger.name}...`, true);
+      
+      try {
+        const renderEngine = async (templateFileName, mockDataType, source) => {
+          const TEMPLATE_BASE_URL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/";
+          const localTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", `${templateFileName}.html`);
+          const remoteTemplateUrl = `${TEMPLATE_BASE_URL}${templateFileName}.html`;
+          let templateHtml = "";
+          try {
+            if (source === 'remote') {
+              const response = await fetch(remoteTemplateUrl, { timeout: 10000 });
+              if (!response.ok) throw new Error(`请求在线模板 '${remoteTemplateUrl}' 失败: ${response.status}`);
+              templateHtml = await response.text();
+            } else {
+              templateHtml = await fsPromises.readFile(localTemplatePath, 'utf-8');
+            }
+            if (!templateHtml) throw new Error("模板内容为空");
+          } catch (err) {
+            throw new Error(`无法加载模板 '${templateFileName}.html' (来源: ${source}): ${err.message}`);
+          }
+  
+          const getMockData = async (type) => {
+            const baseData = {
+              pluginVersion: Version,
+              scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
+              isArray: Array.isArray,
+              duration: (Math.random() * 20 + 10).toFixed(1),
+              reportTime: new Date().toLocaleString()
+            };
+            const mockLog = [{ date: "刚刚", displayParts: [{ type: 'text', content: `feat: 模拟更新 (${type})` }] }];
+            const repoNames = { 1: "一号仓库 (核心)", 2: "二号仓库 (原神)", 3: "三号仓库 (星铁)", 4: "四号仓库 (鸣潮&绝区零)" };
+            const getStatusInfo = (result) => {
+              const repoName = repoNames[result.repo] || `仓库 ${result.repo}`;
+              if (result.nodeName === '本地') return { name: repoName, text: '已存在', statusClass: 'status-local', nodeName: '本地' };
+              if (result.success) return { name: repoName, text: result.repo === 1 ? '下载/部署成功' : '下载成功', statusClass: 'status-ok', nodeName: result.nodeName };
+              return { name: repoName, text: '下载失败', statusClass: 'status-fail', nodeName: result.nodeName || '执行异常' };
+            };
+  
+            const buildReportData = (results, overallSuccess) => {
+              const successCount = results.filter(r => r.statusClass === 'status-ok' || r.statusClass === 'status-local').length;
+              const totalCount = results.length;
+              const percent = totalCount > 0 ? Math.round((successCount / totalCount) * 100) : 0;
+              return {
+                ...baseData,
+                results: results,
+                overallSuccess: overallSuccess,
+                successCount: successCount,
+                totalConfigured: totalCount,
+                successRate: percent,
+                successRateRounded: percent,
+              };
+            };
+  
+            const mockFaceUrl = `file://${MiaoPluginMBT.paths.repoGalleryPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
+  
+            switch (type) {
+              case 'DIFFSTAT_MOCK': {
+                const mockLogEntry = { date: "刚刚", isDescription: true, descriptionTitle: "feat: 功能变更", descriptionBodyHtml: "<p>本次更新包含文件变更。</p>" };
+                const noChangeLog = [{ date: "昨天", isDescription: true, descriptionTitle: "fix: 常规修复", descriptionBodyHtml: "" }];
+  
+                return {
+                  ...baseData,
+                  overallSuccess: true,
+                  overallHasChanges: true,
+                  duration: '42.0',
+                  reportTime: new Date().toLocaleString(),
+                  results: [
+                    {
+                      name: "一号仓库", statusText: "更新成功", statusClass: "status-ok",
+                      hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'a1b2c3d',
+                      diffStat: { insertions: 27, deletions: 24 }
+                    },
+                    {
+                      name: "二号仓库", statusText: "更新成功", statusClass: "status-ok",
+                      hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'b4c5d6e',
+                      diffStat: { insertions: 158, deletions: 0 }
+                    },
+                    {
+                      name: "三号仓库", statusText: "本地冲突 (强制同步)", statusClass: "status-force-synced",
+                      hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'c7d8e9f',
+                      diffStat: { insertions: 0, deletions: 99 }
+                    },
+                    {
+                      name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change",
+                      hasChanges: false, newCommitsCount: 0, log: noChangeLog, commitSha: 'd1e2f3g',
+                      diffStat: null
+                    }
+                  ]
+                };
+              }
+              case 'CONVENTIONAL_COMMITS_MOCK': {
+                const mockCommitsData = [
+                    { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。'},
+                    { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。'},
+                    { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。'},
+                    { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。'},
+                    { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。'},
+                    { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。'},
+                    { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。'},
+                    { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。'},
+                    { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。'},
+                    { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。'},
+                    { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。'}
+                ];
+  
+                const mockLog = mockCommitsData.map((item, index) => {
+                    let simplifiedScope = null;
+                    let scopeClass = 'scope-default';
+  
+                    if (item.scope) {
+                        const lowerScope = item.scope.toLowerCase();
+                        if (lowerScope.includes('web')) {
+                            simplifiedScope = 'WEB';
+                            scopeClass = 'scope-web';
+                        } else if (lowerScope.includes('core')) {
+                            simplifiedScope = 'CORE';
+                            scopeClass = 'scope-core';
+                        }
+                    }
+  
+                    return {
+                        isDescription: true,
+                        date: `[${index + 1} hours ago]`,
+                        commitPrefix: item.prefix,
+                        commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
+                        commitScopeClass: scopeClass,
+                        commitTitle: item.title,
+                        descriptionBodyHtml: `<p>${item.body}</p>`
+                    };
+                });
+  
+                return {
+                    ...baseData,
+                    overallSuccess: true,
+                    overallHasChanges: true,
+                    duration: '1.0',
+                    reportTime: new Date().toLocaleString(),
+                    results: [
+                        {
+                            name: "一号仓库",
+                            statusText: "更新成功",
+                            statusClass: "status-ok",
+                            hasChanges: true,
+                            newCommitsCount: mockLog.length,
+                            log: mockLog,
+                            commitSha: 'c0nv3nt10n4l',
+                            hasValidLogs: true,
+                            shouldHighlight: true
+                        },
+                        { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
+                    ]
+                };
+              }
+              case 'UP_REPORT_FULL_MOCK': {
+                const repo1Log = [
+                  { hash: "fakehash1", isDescription: false, date: '[07-07 14:47]', displayParts: [{ name: '橘福福', imageUrl: mockFaceUrl }, { name: '伊芙琳', imageUrl: mockFaceUrl }, { name: '柏妮思', imageUrl: mockFaceUrl }, { name: '辉嘉音', imageUrl: mockFaceUrl }] },
+                  { hash: "fakehash2", isDescription: false, date: '[07-07 13:59]', displayParts: [{ name: '橘福福', imageUrl: mockFaceUrl }, { name: '爱丽丝', imageUrl: mockFaceUrl }, { name: '浮波柚叶', imageUrl: mockFaceUrl }] },
+                  { hash: "fakehash3", isDescription: true, date: '[07-07 11:00]', descriptionTitle: 'Feat: 增加配置文件自动修复能力并优化更新逻辑', descriptionBodyHtml: '<p>实现本地配置自愈：</p><p>通过本地规则即可从损坏的 GalleryConfig.yaml 中抢救并恢复有效设置。</p><p>优化JS更新延迟：</p><p>解决了核心JS文件更新时，30秒延迟被后续操作覆盖的逻辑冲突，确保插件热重载行为正确。</p><p>优化报告渲染：</p><p>更新报告图片只在手动触发或定时任务有实际内容时才生成，避免了不必要的性能开销。</p>' }
+                ];
+                const repo2Log = [
+                  { hash: "fakehash4", isDescription: false, date: '[07-06 10:30]', displayParts: [{ name: '可莉', imageUrl: mockFaceUrl }, { name: '妮露', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '菲谢尔', imageUrl: mockFaceUrl }] },
+                  { hash: "fakehash5", isDescription: true, date: '[07-05 01:30]', descriptionTitle: 'Fix: 仓库重构了' },
+                  { hash: "fakehash6", isDescription: false, date: '[06-19 13:01]', displayParts: [{ name: '雷电将军', imageUrl: mockFaceUrl }, { name: '莱欧斯利', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '枫原万叶', imageUrl: mockFaceUrl }, { name: '希格雯', imageUrl: mockFaceUrl }, { name: '克洛琳德', imageUrl: mockFaceUrl }, { name: '甘雨', imageUrl: mockFaceUrl }, { name: '艾梅莉埃', imageUrl: mockFaceUrl }, { name: '优菈', imageUrl: mockFaceUrl }] }
+                ];
+                const repo3Log = [
+                  { hash: "fakehash7", isDescription: false, date: '[07-06 10:29]', displayParts: [{ name: '黑塔', imageUrl: mockFaceUrl }, { name: '花火', imageUrl: mockFaceUrl }] },
+                  { hash: "fakehash8", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
+                  { hash: "fakehash9", isDescription: false, date: '[06-16 11:41]', displayParts: [{ name: '黑塔', imageUrl: mockFaceUrl }, { name: '托帕&账账', imageUrl: mockFaceUrl }] }
+                ];
+                const repo4Log = [
+                  { hash: "fakehash10", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
+                  { hash: "fakehash11", isDescription: true, date: '[06-11 11:16]', descriptionTitle: '♥ READMEEE' }
+                ];
+  
+                const baseResults = {
+                  ...baseData,
+                  overallSuccess: true,
+                  overallHasChanges: true,
+                  duration: '84.7',
+                  reportTime: '2025-07-07 15:08',
+                  results: [
+                    { name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", newCommitsCount: 2, log: repo1Log, hasChanges: true, commitSha: 'a1b2c3d' },
+                    { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo2Log, hasChanges: false, commitSha: 'e4f5g6h' },
+                    { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo3Log, hasChanges: false, commitSha: 'i7j8k9l' },
+                    { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log, hasChanges: false, commitSha: 'm1n2o3p' }
+                  ]
+                };
+  
+                if (itemToTrigger && itemToTrigger.id === 40) {
+                  baseResults.results[0].diffStat = { insertions: 27, deletions: 24 };
+                  baseResults.results[2].hasChanges = true;
+                  baseResults.results[2].statusText = "更新成功";
+                  baseResults.results[2].statusClass = "status-ok";
+                  baseResults.results[2].newCommitsCount = 1;
+                  baseResults.results[2].diffStat = { insertions: 158, deletions: 0 };
+                }
+  
+                return baseResults;
+              }
+              case 'DL_REPORT_SUCCESS': {
+                const results = [
+                  getStatusInfo({ repo: 1, success: true, nodeName: 'Ghfast(代理)' }),
+                  getStatusInfo({ repo: 2, success: true, nodeName: '本地' }),
+                  getStatusInfo({ repo: 3, success: true, nodeName: 'Ghproxy(代理)' }),
+                  getStatusInfo({ repo: 4, success: true, nodeName: 'Ghproxy(代理)' }),
+                ];
+                return buildReportData(results, true);
+              }
+              case 'DL_REPORT_MIXED': {
+                const results = [
+                  getStatusInfo({ repo: 1, success: true, nodeName: 'Ghfast(代理)' }),
+                  getStatusInfo({ repo: 2, success: true, nodeName: '本地' }),
+                  getStatusInfo({ repo: 3, success: false, nodeName: 'GitHub(直连)' }),
+                  getStatusInfo({ repo: 4, success: true, nodeName: 'Ghproxy(代理)' }),
+                ];
+                return buildReportData(results, false);
+              }
+              case 'DL_REPORT_FAIL': {
+                const results = [
+                  getStatusInfo({ repo: 1, success: false, nodeName: 'GitHub(直连)' }),
+                  getStatusInfo({ repo: 2, success: false, nodeName: 'Ghproxy(代理)' }),
+                  getStatusInfo({ repo: 3, success: false, nodeName: 'Moeyy(代理)' }),
+                  getStatusInfo({ repo: 4, success: false, nodeName: '所有节点失败' }),
+                ];
+                return buildReportData(results, false);
+              }
+              case 'DL_PROGRESS': return { ...baseData, title: "正在下载依赖...", subtitle: "(附属仓库聚合下载)", nodeName: "多节点并发", progress: 68, statusMessage: "接收数据中..." };
+              case 'UP_REPORT_NOCHANGE': return { ...baseData, overallSuccess: true, overallHasChanges: false, results: [{ name: "一号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" }, { name: "四号仓库", statusText: "未下载 (插件未安装)", statusClass: "status-skipped" }] };
+              case 'UP_REPORT_CORE_CHANGE': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
+              case 'UP_REPORT_FORCE_SYNC': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "本地冲突 (强制同步)", statusClass: "status-force-synced", log: mockLog }, { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
+              case 'UP_REPORT_CORE_FAIL': return { ...baseData, overallSuccess: false, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟核心更新失败" } }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
+              case 'UP_REPORT_ALL_FAIL': return { ...baseData, overallSuccess: false, overallHasChanges: false, results: [{ name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟一号仓失败" } }, { name: "二号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟二号仓失败" } }, { name: "三号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟三号仓失败" } }, { name: "四号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟四号仓失败" } }] };
+              case 'UP_REPORT_ALL_CHANGES': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "四号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }] };
+              case 'UP_REPORT_AUTOSWITCH_SUCCESS': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新成功 (切换至Ghfast)", statusClass: "status-auto-switch", log: mockLog }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
+              case 'UP_REPORT_AUTOSWITCH_FAIL': return { ...baseData, overallSuccess: false, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "切换节点后依旧失败" } }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
+              case 'HELP': { const mockPictureBasePath = `file://${MiaoPluginMBT.paths.backgroundImgPath.replace(/\\/g, '/')}/picture/`; const mockRandomIconPaths = Array(15).fill('').map((_, i) => `${mockPictureBasePath}simulated_icon_${i + 1}.png`); return { ...baseData, installedDays: "999", randomIconPaths: mockRandomIconPaths }; }
+              case 'SPEEDTEST_SUCCESS': return { ...baseData, best1Display: "Ghfast(1416ms)", duration: "5.0", speeds: { priority1: [{ id: '02', name: 'Ghfast', statusText: '1416ms', barColorClass: 'bar-green', priority: 10 }, { id: '09', name: 'GhproxyNet', statusText: '1511ms', barColorClass: 'bar-green', priority: 50 }], priority2: [{ id: '13', name: 'GitHub', statusText: '2121ms', barColorClass: 'bar-yellow', priority: 300 }], priority3: [{ id: '11', name: 'GitClone', statusText: 'N/A', barColorClass: 'bar-gray', priority: 320 }] } };
+              default: return baseData;
+            }
+          };
+  
+          const mockData = await getMockData(mockDataType);
+          const imageBuffer = await renderPageToImage(`sim-${templateFileName}-${mockDataType}-${source}`, {
+            htmlContent: templateHtml, data: mockData, pageGotoParams: { waitUntil: "networkidle0" }, screenshotOptions: { fullPage: true }
+          }, this);
+          if (imageBuffer) {
+            return imageBuffer;
+          } else {
+            throw new Error("生成模拟图片失败 (返回空)");
+          }
+        };
+        
+        const type = itemToTrigger.type;
+        if (type === 'SIMULATE_ERROR_WITH_LOG_CONTEXT') {
+          const operationName = "模拟下载失败";
+          const startTime = Date.now();
+          await common.sleep(500);
+          const mockError = new Error("这是一个在流程中模拟的顶层执行错误！");
+          mockError.code = 'MOCK_E_123';
+          const endTime = Date.now();
+          await MiaoPluginMBT.ReportError(e, operationName, mockError, "这是一个由触发器#13生成的模拟上下文", this, { startTime, endTime });
+          return true;
+        }
+        if (type === 'TRIGGER_DOWNLOAD_TYPEERROR_WITH_CONTEXT') {
+          const mockError = new TypeError("Cannot read properties of undefined (reading 'success')");
+          const allRepoStatus = [
+            { repo: 1, success: true, nodeName: 'Ghfast(代理)', toDownload: false },
+            { repo: 2, success: true, nodeName: '本地', toDownload: false },
+            undefined,
+            { repo: 4, nodeName: '未配置', success: true, toDownload: false }
+          ];
+          const statusSummary = allRepoStatus.map((s, i) => {
+            if (!s) return `  - 仓库索引 ${i}: 状态对象为 undefined (这很可能是错误的直接原因)`;
+            return `  - 仓库 ${s.repo || '未知'}: toDownload=${s.toDownload === undefined ? 'N/A' : s.toDownload}, success=${s.success === undefined ? 'N/A' : s.success}, node=${s.nodeName || 'N/A'}`;
+          }).join('\n');
+          const context = `下载流程在最终报告生成前发生意外。\n当前各仓库状态快照:\n${statusSummary}`;
+          await this.ReportError(e, "下载流程", mockError, context);
+        }
+        else if (type === 'TRIGGER_GIT_FAIL_WITH_FULL_DETAILS') {
+          const mockError = new Error("Command failed with code 128: git clone https://github.com/user/repo");
+          mockError.code = 128;
+          mockError.signal = 'SIGTERM';
+          mockError.stderr = "fatal: Authentication failed for 'https://github.com/...'\nfatal: could not read from remote repository.";
+          mockError.stdout = "Cloning into 'Miao-Plugin-MBT'...";
+          await this.ReportError(e, "模拟Git认证失败", mockError, "这是一个由触发器生成的模拟上下文");
+        }
+        else if (type === 'THROW_SYNC_FILES_FAILED') {
+          const mockError = new Error("一个或多个关键资源同步失败，可能是仓库文件不完整。");
+          mockError.code = 'SYNC_FAILED';
+          mockError.syncDetails = {
+            count: 5,
+            files: [
+              "GuGuNiu-Gallery/html/img/...",
+              "GuGuNiu-Gallery/html/fonts/...",
+              "GuGuNiu-Gallery/html/search_helper.html",
+              "GuGuNiu-Gallery/html/status.html",
+              "GuGuNiu-Gallery/html/visualize.html"
+            ]
+          };
+          throw mockError;
+        }
+  
+        if (type === "SIM_UPDATE_FAIL_WITH_DETAILS") {
+          const originalUpdateTuKu = this.UpdateTuKu;
+          let capturedForwardMsg = null;
+  
+          const mockE = {
+            ...e,
+            reply: async (msg) => {
+              if (msg && msg.type === 'forward') {
+                capturedForwardMsg = msg;
+              }
+              return true;
+            }
+          };
+  
+          this.UpdateTuKu = async function (e_ignored, isScheduled) {
+            const mockError = new Error("Connection timed out after 120000ms");
+            mockError.code = 'ETIMEDOUT';
+            mockError.stderr = "fatal: unable to access 'https://github.com/...': Recv failure: Connection was reset";
+  
+            const reportResults = [
+              { name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: mockError },
+              { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [{ date: "刚刚", displayParts: [{ type: 'text', content: 'feat: ...' }] }] }
+            ];
+            const errorDetailsForForwardMsg = [];
+  
+            const result = reportResults[0];
+            const formattedError = MiaoPluginMBT.FormatError(`更新${result.name}`, result.error, "", this.logPrefix);
+            let errorReportText = `--- ${result.name} 更新失败 ---\n`;
+            errorReportText += `${formattedError.summary}\n\n`;
+            errorReportText += `**可能原因与建议**\n${formattedError.suggestions}\n\n`;
+            if (result.error.stderr || result.error.stdout) {
+              errorReportText += `**相关Git输出**\n${formattedError.contextInfo}`;
+            }
+            errorDetailsForForwardMsg.push(errorReportText);
+  
+            const forwardMsg = await common.makeForwardMsg(mockE, errorDetailsForForwardMsg, "咕咕牛更新失败详情");
+            await mockE.reply(forwardMsg);
+            return false;
+          };
+  
+          try {
+            await this.UpdateTuKu(mockE, false);
+            if (capturedForwardMsg) {
+              await e.reply("已成功捕获并模拟发送详细错误报告：");
+              await e.reply(capturedForwardMsg);
+            } else {
+              await e.reply("模拟失败：未能捕获到预期的合并转发消息。");
+            }
+          } finally {
+            this.UpdateTuKu = originalUpdateTuKu;
+          }
+  
+        } else if (type === "SIM_ALL_REMOTE" || type === "SIM_ALL") {
+          const localSimTriggers = TRIGGERABLE_ITEMS.filter(item => item.type.startsWith("SIM_TPL_") && item.type.endsWith("_LOCAL"));
+          const remoteSimTriggers = TRIGGERABLE_ITEMS.filter(item => item.type.startsWith("SIM_TPL_") && item.type.endsWith("_REMOTE"));
+  
+          let tasks = [];
+          if (type === "SIM_ALL_REMOTE") {
+            tasks = remoteSimTriggers;
+            await e.reply(`收到！开始逐个渲染 ${tasks.length} 个在线模板...`, true);
+          } else {
+            tasks = [...localSimTriggers, ...remoteSimTriggers];
+            await e.reply(`收到！开始逐个渲染 ${tasks.length} 个本地及在线模板...`, true);
+          }
+  
+          for (const task of tasks) {
+            await e.reply(`--- 正在渲染: ${task.name} ---`).catch(() => { });
+            await common.sleep(500);
+            try {
+              const match = task.type.match(/^SIM_TPL_([A-Z_]+)_(LOCAL|REMOTE)$/);
+              const coreType = match[1];
+              const source = match[2].toLowerCase();
+              let templateFileName = '';
+              if (coreType.startsWith("UP_REPORT")) templateFileName = 'update_report';
+              else if (coreType.startsWith("DL_REPORT")) templateFileName = 'download';
+              else if (coreType === 'DL_PROGRESS') templateFileName = 'download_progress';
+              else if (coreType === 'HELP') templateFileName = 'help';
+              else if (coreType === 'SPEEDTEST_SUCCESS') templateFileName = 'speedtest';
+  
+              const buffer = await renderEngine(templateFileName, coreType, source);
+              if (buffer) { await e.reply(buffer); }
+              else { await e.reply(`渲染失败: ${task.name}`); }
+            } catch (err) { this.logger.error(`渲染 ${task.name} 失败:`, err); await e.reply(`渲染异常: ${task.name}\n${err.message}`); }
+            await common.sleep(1000);
+          }
+          await e.reply("所有模板渲染任务执行完毕。");
+  
+        } else if (type.startsWith("SIM_TPL_")) {
+          const match = type.type.match(/^SIM_TPL_([A-Z_]+)_(LOCAL|REMOTE)$/);
+          if (!match) throw new Error(`无法解析的模板触发类型: ${type}`);
+          const coreType = match[1];
+          const source = match[2].toLowerCase();
+  
+          let templateFileName = '';
+          if (coreType.startsWith("UP_REPORT")) {
+            templateFileName = 'update_report';
+          } else if (coreType.startsWith("DL_REPORT")) {
+            templateFileName = 'download';
+          } else if (coreType === 'DL_PROGRESS') {
+            templateFileName = 'download_progress';
+          } else if (coreType === 'HELP') {
+            templateFileName = 'help';
+          } else if (coreType === 'SPEEDTEST_SUCCESS') {
+            templateFileName = 'speedtest';
+          } else if (coreType === 'DIFFSTAT_MOCK') {
+            templateFileName = 'update_report';
+          } else if (coreType === 'CONVENTIONAL_COMMITS_MOCK') {
+            templateFileName = 'update_report';
+          }
+          if (!templateFileName) throw new Error(`未找到核心类型 '${coreType}' 的模板映射。`);
+  
+          const imageBuffer = await renderEngine(templateFileName, coreType, source);
+          if (imageBuffer) await e.reply(imageBuffer);
+  
+        } else if (type.startsWith("THROW_")) {
+          let mockError = new Error(`模拟错误 (${type}): ${itemToTrigger.description}`);
+          switch (type) {
+            case "THROW_GIT_AUTH_FAIL": mockError.code = 128; mockError.stderr = "fatal: Authentication failed"; throw mockError;
+            case "THROW_NET_TIMEOUT": mockError.code = "ETIMEDOUT"; throw mockError;
+            case "THROW_FS_EACCES": mockError.code = "EACCES"; await fsPromises.writeFile("/root/test.txt", "test"); break;
+            case "THROW_FS_ENOENT": mockError.code = "ENOENT"; await fsPromises.access("/path/to/a/ghost/town"); break;
+            case "THROW_REFERENCE_ERROR": someUndefinedVariable.doSomething(); break;
+            case "THROW_RENDER_TEMPLATE_DATA_ERROR": await renderPageToImage("err", { htmlContent: "<div>{{ undefinedVariable }}</div>", data: {} }, this); break;
+            case "THROW_RENDER_TIMEOUT": await renderPageToImage("err", { htmlContent: "<div>Hang</div>", pageGotoParams: { timeout: 10 } }, this); break;
+            default: throw mockError;
+          }
+        } else {
+          await e.reply(`该触发器 (${type}) 的模拟方式暂未实现或已废弃。`);
+        }
+      } catch (error) {
+        await this.ReportError(e, `模拟错误 (${itemToTrigger.name})`, error, `用户触发: #${triggerInput}`);
+      }
+    } else {
+      if (triggerInput) {
+        await e.reply(`哎呀，没找着你说的这个触发器「${triggerInput}」，给你看看咱都有啥哈：`, true);
+      }
+  
       const TRIGGER_LIST_URL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/trigger_list.html";
       try {
         const response = await fetch(TRIGGER_LIST_URL, { timeout: 10000 });
@@ -7167,451 +7679,8 @@ class MiaoPluginMBT extends plugin {
         TRIGGERABLE_ITEMS.forEach(item => { fallbackText += `${item.id}. ${item.name}\n`; });
         await e.reply(fallbackText);
       }
-      return true;
     }
-
-    await e.reply(`${Default_Config.logPrefix}正在模拟: [${itemToTrigger.id}] ${itemToTrigger.name}...`, true);
-
-    const renderEngine = async (templateFileName, mockDataType, source) => {
-      const TEMPLATE_BASE_URL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/";
-      const localTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", `${templateFileName}.html`);
-      const remoteTemplateUrl = `${TEMPLATE_BASE_URL}${templateFileName}.html`;
-      let templateHtml = "";
-      try {
-        if (source === 'remote') {
-          const response = await fetch(remoteTemplateUrl, { timeout: 10000 });
-          if (!response.ok) throw new Error(`请求在线模板 '${remoteTemplateUrl}' 失败: ${response.status}`);
-          templateHtml = await response.text();
-        } else {
-          templateHtml = await fsPromises.readFile(localTemplatePath, 'utf-8');
-        }
-        if (!templateHtml) throw new Error("模板内容为空");
-      } catch (err) {
-        throw new Error(`无法加载模板 '${templateFileName}.html' (来源: ${source}): ${err.message}`);
-      }
-
-      const getMockData = async (type) => {
-        const baseData = {
-          pluginVersion: Version,
-          scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
-          isArray: Array.isArray,
-          duration: (Math.random() * 20 + 10).toFixed(1),
-          reportTime: new Date().toLocaleString()
-        };
-        const mockLog = [{ date: "刚刚", displayParts: [{ type: 'text', content: `feat: 模拟更新 (${type})` }] }];
-        const repoNames = { 1: "一号仓库 (核心)", 2: "二号仓库 (原神)", 3: "三号仓库 (星铁)", 4: "四号仓库 (鸣潮&绝区零)" };
-        const getStatusInfo = (result) => {
-          const repoName = repoNames[result.repo] || `仓库 ${result.repo}`;
-          if (result.nodeName === '本地') return { name: repoName, text: '已存在', statusClass: 'status-local', nodeName: '本地' };
-          if (result.success) return { name: repoName, text: result.repo === 1 ? '下载/部署成功' : '下载成功', statusClass: 'status-ok', nodeName: result.nodeName };
-          return { name: repoName, text: '下载失败', statusClass: 'status-fail', nodeName: result.nodeName || '执行异常' };
-        };
-
-        const buildReportData = (results, overallSuccess) => {
-          const successCount = results.filter(r => r.statusClass === 'status-ok' || r.statusClass === 'status-local').length;
-          const totalCount = results.length;
-          const percent = totalCount > 0 ? Math.round((successCount / totalCount) * 100) : 0;
-          return {
-            ...baseData,
-            results: results,
-            overallSuccess: overallSuccess,
-            successCount: successCount,
-            totalConfigured: totalCount,
-            successRate: percent,
-            successRateRounded: percent,
-          };
-        };
-
-        const mockFaceUrl = `file://${MiaoPluginMBT.paths.repoGalleryPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
-
-        switch (type) {
-          case 'DIFFSTAT_MOCK': {
-            const mockLogEntry = { date: "刚刚", isDescription: true, descriptionTitle: "feat: 功能变更", descriptionBodyHtml: "<p>本次更新包含文件变更。</p>" };
-            const noChangeLog = [{ date: "昨天", isDescription: true, descriptionTitle: "fix: 常规修复", descriptionBodyHtml: "" }];
-
-            return {
-              ...baseData,
-              overallSuccess: true,
-              overallHasChanges: true,
-              duration: '42.0',
-              reportTime: new Date().toLocaleString(),
-              results: [
-                {
-                  name: "一号仓库", statusText: "更新成功", statusClass: "status-ok",
-                  hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'a1b2c3d',
-                  diffStat: { insertions: 27, deletions: 24 }
-                },
-                {
-                  name: "二号仓库", statusText: "更新成功", statusClass: "status-ok",
-                  hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'b4c5d6e',
-                  diffStat: { insertions: 158, deletions: 0 }
-                },
-                {
-                  name: "三号仓库", statusText: "本地冲突 (强制同步)", statusClass: "status-force-synced",
-                  hasChanges: true, newCommitsCount: 1, log: [mockLogEntry], commitSha: 'c7d8e9f',
-                  diffStat: { insertions: 0, deletions: 99 }
-                },
-                {
-                  name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change",
-                  hasChanges: false, newCommitsCount: 0, log: noChangeLog, commitSha: 'd1e2f3g',
-                  diffStat: null
-                }
-              ]
-            };
-          }
-          case 'CONVENTIONAL_COMMITS_MOCK': {
-            const mockCommitsData = [
-              { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。' },
-              { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。' },
-              { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。' },
-              { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。' },
-              { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。' },
-              { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。' },
-              { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。' },
-              { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。' },
-              { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。' },
-              { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。' },
-              { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。' }
-            ];
-
-            const mockLog = mockCommitsData.map((item, index) => {
-              let simplifiedScope = null;
-              let scopeClass = 'scope-default';
-
-              if (item.scope) {
-                const lowerScope = item.scope.toLowerCase();
-                if (lowerScope.includes('web')) {
-                  simplifiedScope = 'WEB';
-                  scopeClass = 'scope-web';
-                } else if (lowerScope.includes('core')) {
-                  simplifiedScope = 'CORE';
-                  scopeClass = 'scope-core';
-                }
-              }
-
-              return {
-                isDescription: true,
-                date: `[${index + 1} hours ago]`,
-                commitPrefix: item.prefix,
-                commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
-                commitScopeClass: scopeClass,
-                commitTitle: item.title,
-                descriptionBodyHtml: `<p>${item.body}</p>`
-              };
-            });
-
-            return {
-              ...baseData,
-              overallSuccess: true,
-              overallHasChanges: true,
-              duration: '1.0',
-              reportTime: new Date().toLocaleString(),
-              results: [
-                {
-                  name: "一号仓库",
-                  statusText: "更新成功",
-                  statusClass: "status-ok",
-                  hasChanges: true,
-                  newCommitsCount: mockLog.length,
-                  log: mockLog,
-                  commitSha: 'c0nv3nt10n4l',
-                  hasValidLogs: true,
-                  shouldHighlight: true
-                },
-                { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
-              ]
-            };
-          }
-          case 'UP_REPORT_FULL_MOCK': {
-            const mockFaceUrl = `file://${MiaoPluginMBT.paths.repoGalleryPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
-            const repo1Log = [
-              { hash: "fakehash1", isDescription: false, date: '[07-07 14:47]', displayParts: [{ name: '橘福福', imageUrl: mockFaceUrl }, { name: '伊芙琳', imageUrl: mockFaceUrl }, { name: '柏妮思', imageUrl: mockFaceUrl }, { name: '辉嘉音', imageUrl: mockFaceUrl }] },
-              { hash: "fakehash2", isDescription: false, date: '[07-07 13:59]', displayParts: [{ name: '橘福福', imageUrl: mockFaceUrl }, { name: '爱丽丝', imageUrl: mockFaceUrl }, { name: '浮波柚叶', imageUrl: mockFaceUrl }] },
-              { hash: "fakehash3", isDescription: true, date: '[07-07 11:00]', descriptionTitle: 'Feat: 增加配置文件自动修复能力并优化更新逻辑', descriptionBodyHtml: '<p>实现本地配置自愈：</p><p>通过本地规则即可从损坏的 GalleryConfig.yaml 中抢救并恢复有效设置。</p><p>优化JS更新延迟：</p><p>解决了核心JS文件更新时，30秒延迟被后续操作覆盖的逻辑冲突，确保插件热重载行为正确。</p><p>优化报告渲染：</p><p>更新报告图片只在手动触发或定时任务有实际内容时才生成，避免了不必要的性能开销。</p>' }
-            ];
-            const repo2Log = [
-              { hash: "fakehash4", isDescription: false, date: '[07-06 10:30]', displayParts: [{ name: '可莉', imageUrl: mockFaceUrl }, { name: '妮露', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '菲谢尔', imageUrl: mockFaceUrl }] },
-              { hash: "fakehash5", isDescription: true, date: '[07-05 01:30]', descriptionTitle: 'Fix: 仓库重构了' },
-              { hash: "fakehash6", isDescription: false, date: '[06-19 13:01]', displayParts: [{ name: '雷电将军', imageUrl: mockFaceUrl }, { name: '莱欧斯利', imageUrl: mockFaceUrl }, { name: '胡桃', imageUrl: mockFaceUrl }, { name: '申鹤', imageUrl: mockFaceUrl }, { name: '枫原万叶', imageUrl: mockFaceUrl }, { name: '希格雯', imageUrl: mockFaceUrl }, { name: '克洛琳德', imageUrl: mockFaceUrl }, { name: '甘雨', imageUrl: mockFaceUrl }, { name: '艾梅莉埃', imageUrl: mockFaceUrl }, { name: '优菈', imageUrl: mockFaceUrl }] }
-            ];
-            const repo3Log = [
-              { hash: "fakehash7", isDescription: false, date: '[07-06 10:29]', displayParts: [{ name: '黑塔', imageUrl: mockFaceUrl }, { name: '花火', imageUrl: mockFaceUrl }] },
-              { hash: "fakehash8", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
-              { hash: "fakehash9", isDescription: false, date: '[06-16 11:41]', displayParts: [{ name: '黑塔', imageUrl: mockFaceUrl }, { name: '托帕&账账', imageUrl: mockFaceUrl }] }
-            ];
-            const repo4Log = [
-              { hash: "fakehash10", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
-              { hash: "fakehash11", isDescription: true, date: '[06-11 11:16]', descriptionTitle: '♥ READMEEE' }
-            ];
-
-            const baseResults = {
-              ...baseData,
-              overallSuccess: true,
-              overallHasChanges: true,
-              duration: '84.7',
-              reportTime: '2025-07-07 15:08',
-              results: [
-                { name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", newCommitsCount: 2, log: repo1Log, hasChanges: true, commitSha: 'a1b2c3d' },
-                { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo2Log, hasChanges: false, commitSha: 'e4f5g6h' },
-                { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo3Log, hasChanges: false, commitSha: 'i7j8k9l' },
-                { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log, hasChanges: false, commitSha: 'm1n2o3p' }
-              ]
-            };
-
-            if (itemToTrigger && itemToTrigger.id === 40) {
-              baseResults.results[0].diffStat = { insertions: 27, deletions: 24 };
-              baseResults.results[2].hasChanges = true;
-              baseResults.results[2].statusText = "更新成功";
-              baseResults.results[2].statusClass = "status-ok";
-              baseResults.results[2].newCommitsCount = 1;
-              baseResults.results[2].diffStat = { insertions: 158, deletions: 0 };
-            }
-
-            return baseResults;
-          }
-          case 'DL_REPORT_SUCCESS': {
-            const results = [
-              getStatusInfo({ repo: 1, success: true, nodeName: 'Ghfast(代理)' }),
-              getStatusInfo({ repo: 2, success: true, nodeName: '本地' }),
-              getStatusInfo({ repo: 3, success: true, nodeName: 'Ghproxy(代理)' }),
-              getStatusInfo({ repo: 4, success: true, nodeName: 'Ghproxy(代理)' }),
-            ];
-            return buildReportData(results, true);
-          }
-          case 'DL_REPORT_MIXED': {
-            const results = [
-              getStatusInfo({ repo: 1, success: true, nodeName: 'Ghfast(代理)' }),
-              getStatusInfo({ repo: 2, success: true, nodeName: '本地' }),
-              getStatusInfo({ repo: 3, success: false, nodeName: 'GitHub(直连)' }),
-              getStatusInfo({ repo: 4, success: true, nodeName: 'Ghproxy(代理)' }),
-            ];
-            return buildReportData(results, false);
-          }
-          case 'DL_REPORT_FAIL': {
-            const results = [
-              getStatusInfo({ repo: 1, success: false, nodeName: 'GitHub(直连)' }),
-              getStatusInfo({ repo: 2, success: false, nodeName: 'Ghproxy(代理)' }),
-              getStatusInfo({ repo: 3, success: false, nodeName: 'Moeyy(代理)' }),
-              getStatusInfo({ repo: 4, success: false, nodeName: '所有节点失败' }),
-            ];
-            return buildReportData(results, false);
-          }
-          case 'DL_PROGRESS': return { ...baseData, title: "正在下载依赖...", subtitle: "(附属仓库聚合下载)", nodeName: "多节点并发", progress: 68, statusMessage: "接收数据中..." };
-          case 'UP_REPORT_NOCHANGE': return { ...baseData, overallSuccess: true, overallHasChanges: false, results: [{ name: "一号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" }, { name: "四号仓库", statusText: "未下载 (插件未安装)", statusClass: "status-skipped" }] };
-          case 'UP_REPORT_CORE_CHANGE': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
-          case 'UP_REPORT_FORCE_SYNC': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "本地冲突 (强制同步)", statusClass: "status-force-synced", log: mockLog }, { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
-          case 'UP_REPORT_CORE_FAIL': return { ...baseData, overallSuccess: false, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟核心更新失败" } }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
-          case 'UP_REPORT_ALL_FAIL': return { ...baseData, overallSuccess: false, overallHasChanges: false, results: [{ name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟一号仓失败" } }, { name: "二号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟二号仓失败" } }, { name: "三号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟三号仓失败" } }, { name: "四号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "模拟四号仓失败" } }] };
-          case 'UP_REPORT_ALL_CHANGES': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "四号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }] };
-          case 'UP_REPORT_AUTOSWITCH_SUCCESS': return { ...baseData, overallSuccess: true, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新成功 (切换至Ghfast)", statusClass: "status-auto-switch", log: mockLog }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
-          case 'UP_REPORT_AUTOSWITCH_FAIL': return { ...baseData, overallSuccess: false, overallHasChanges: true, results: [{ name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: { message: "切换节点后依旧失败" } }, { name: "二号仓库", statusText: "更新成功", statusClass: "status-ok", log: mockLog }, { name: "三号仓库", statusText: "已是最新", statusClass: "status-no-change", log: mockLog }, { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" }] };
-          case 'HELP': { const mockPictureBasePath = `file://${MiaoPluginMBT.paths.backgroundImgPath.replace(/\\/g, '/')}/picture/`; const mockRandomIconPaths = Array(15).fill('').map((_, i) => `${mockPictureBasePath}simulated_icon_${i + 1}.png`); return { ...baseData, installedDays: "999", randomIconPaths: mockRandomIconPaths }; }
-          case 'SPEEDTEST_SUCCESS': return { ...baseData, best1Display: "Ghfast(1416ms)", duration: "5.0", speeds: { priority1: [{ id: '02', name: 'Ghfast', statusText: '1416ms', barColorClass: 'bar-green', priority: 10 }, { id: '09', name: 'GhproxyNet', statusText: '1511ms', barColorClass: 'bar-green', priority: 50 }], priority2: [{ id: '13', name: 'GitHub', statusText: '2121ms', barColorClass: 'bar-yellow', priority: 300 }], priority3: [{ id: '11', name: 'GitClone', statusText: 'N/A', barColorClass: 'bar-gray', priority: 320 }] } };
-          default: return baseData;
-        }
-      };
-
-      const mockData = await getMockData(mockDataType);
-      const imageBuffer = await renderPageToImage(`sim-${templateFileName}-${mockDataType}-${source}`, {
-        htmlContent: templateHtml, data: mockData, pageGotoParams: { waitUntil: "networkidle0" }, screenshotOptions: { fullPage: true }
-      }, this);
-      if (imageBuffer) {
-        return imageBuffer;
-      } else {
-        throw new Error("生成模拟图片失败 (返回空)");
-      }
-    };
-
-    try {
-
-      const type = itemToTrigger.type;
-      if (type === 'SIMULATE_ERROR_WITH_LOG_CONTEXT') {
-        const operationName = "模拟下载失败";
-        logger.info(`开始模拟一个带日志上下文的错误流程...`);
-        MiaoPluginMBT.log('info', operationName, '任务开始，正在检查环境...');
-        const startTime = Date.now();
-        await common.sleep(500);
-        MiaoPluginMBT.log('debug', operationName, '环境检查通过，开始测速...');
-        await common.sleep(1000);
-        MiaoPluginMBT.log('warn', operationName, '节点 Ghproxy 超时，但仍在继续...');
-        await common.sleep(500);
-        MiaoPluginMBT.log('info', operationName, '核心库下载开始...');
-        const mockError = new Error("这是一个在流程中模拟的顶层执行错误！");
-        mockError.code = 'MOCK_E_123';
-        const endTime = Date.now();
-        await MiaoPluginMBT.ReportError(e, operationName, mockError, "这是一个由触发器#13生成的模拟上下文", this, { startTime, endTime });
-        logger.info(`模拟错误流程已执行完毕。`);
-        return true;
-      }
-      if (type === 'TRIGGER_DOWNLOAD_TYPEERROR_WITH_CONTEXT') {
-        const mockError = new TypeError("Cannot read properties of undefined (reading 'success')");
-        const allRepoStatus = [
-          { repo: 1, success: true, nodeName: 'Ghfast(代理)', toDownload: false },
-          { repo: 2, success: true, nodeName: '本地', toDownload: false },
-          undefined,
-          { repo: 4, nodeName: '未配置', success: true, toDownload: false }
-        ];
-        const statusSummary = allRepoStatus.map((s, i) => {
-          if (!s) return `  - 仓库索引 ${i}: 状态对象为 undefined (这很可能是错误的直接原因)`;
-          return `  - 仓库 ${s.repo || '未知'}: toDownload=${s.toDownload === undefined ? 'N/A' : s.toDownload}, success=${s.success === undefined ? 'N/A' : s.success}, node=${s.nodeName || 'N/A'}`;
-        }).join('\n');
-        const context = `下载流程在最终报告生成前发生意外。\n当前各仓库状态快照:\n${statusSummary}`;
-        await this.ReportError(e, "下载流程", mockError, context);
-      }
-      else if (type === 'TRIGGER_GIT_FAIL_WITH_FULL_DETAILS') {
-        const mockError = new Error("Command failed with code 128: git clone https://github.com/user/repo");
-        mockError.code = 128;
-        mockError.signal = 'SIGTERM';
-        mockError.stderr = "fatal: Authentication failed for 'https://github.com/...'\nfatal: could not read from remote repository.";
-        mockError.stdout = "Cloning into 'Miao-Plugin-MBT'...";
-        await this.ReportError(e, "模拟Git认证失败", mockError, "这是一个由触发器生成的模拟上下文");
-      }
-      else if (type === 'THROW_SYNC_FILES_FAILED') {
-        const mockError = new Error("一个或多个关键资源同步失败，可能是仓库文件不完整。");
-        mockError.code = 'SYNC_FAILED';
-        mockError.syncDetails = {
-          count: 5,
-          files: [
-            "GuGuNiu-Gallery/html/img/...",
-            "GuGuNiu-Gallery/html/fonts/...",
-            "GuGuNiu-Gallery/html/search_helper.html",
-            "GuGuNiu-Gallery/html/status.html",
-            "GuGuNiu-Gallery/html/visualize.html"
-          ]
-        };
-        throw mockError;
-      }
-
-      if (type === "SIM_UPDATE_FAIL_WITH_DETAILS") {
-        const originalUpdateTuKu = this.UpdateTuKu;
-        let capturedForwardMsg = null;
-
-        const mockE = {
-          ...e,
-          reply: async (msg) => {
-            if (msg && msg.type === 'forward') {
-              capturedForwardMsg = msg;
-            }
-            return true;
-          }
-        };
-
-        this.UpdateTuKu = async function (e_ignored, isScheduled) {
-          const mockError = new Error("Connection timed out after 120000ms");
-          mockError.code = 'ETIMEDOUT';
-          mockError.stderr = "fatal: unable to access 'https://github.com/...': Recv failure: Connection was reset";
-
-          const reportResults = [
-            { name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: mockError },
-            { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [{ date: "刚刚", displayParts: [{ type: 'text', content: 'feat: ...' }] }] }
-          ];
-          const errorDetailsForForwardMsg = [];
-
-          const result = reportResults[0];
-          const formattedError = MiaoPluginMBT.FormatError(`更新${result.name}`, result.error, "", this.logPrefix);
-          let errorReportText = `--- ${result.name} 更新失败 ---\n`;
-          errorReportText += `${formattedError.summary}\n\n`;
-          errorReportText += `**可能原因与建议**\n${formattedError.suggestions}\n\n`;
-          if (result.error.stderr || result.error.stdout) {
-            errorReportText += `**相关Git输出**\n${formattedError.contextInfo}`;
-          }
-          errorDetailsForForwardMsg.push(errorReportText);
-
-          const forwardMsg = await common.makeForwardMsg(mockE, errorDetailsForForwardMsg, "咕咕牛更新失败详情");
-          await mockE.reply(forwardMsg);
-          return false;
-        };
-
-        try {
-          await this.UpdateTuKu(mockE, false);
-          if (capturedForwardMsg) {
-            await e.reply("已成功捕获并模拟发送详细错误报告：");
-            await e.reply(capturedForwardMsg);
-          } else {
-            await e.reply("模拟失败：未能捕获到预期的合并转发消息。");
-          }
-        } finally {
-          this.UpdateTuKu = originalUpdateTuKu;
-        }
-
-      } else if (type === "SIM_ALL_REMOTE" || type === "SIM_ALL") {
-        const localSimTriggers = TRIGGERABLE_ITEMS.filter(item => item.type.startsWith("SIM_TPL_") && item.type.endsWith("_LOCAL"));
-        const remoteSimTriggers = TRIGGERABLE_ITEMS.filter(item => item.type.startsWith("SIM_TPL_") && item.type.endsWith("_REMOTE"));
-
-        let tasks = [];
-        if (type === "SIM_ALL_REMOTE") {
-          tasks = remoteSimTriggers;
-          await e.reply(`收到！开始逐个渲染 ${tasks.length} 个在线模板...`, true);
-        } else {
-          tasks = [...localSimTriggers, ...remoteSimTriggers];
-          await e.reply(`收到！开始逐个渲染 ${tasks.length} 个本地及在线模板...`, true);
-        }
-
-        for (const task of tasks) {
-          await e.reply(`--- 正在渲染: ${task.name} ---`).catch(() => { });
-          await common.sleep(500);
-          try {
-            const match = task.type.match(/^SIM_TPL_([A-Z_]+)_(LOCAL|REMOTE)$/);
-            const coreType = match[1];
-            const source = match[2].toLowerCase();
-            let templateFileName = '';
-            if (coreType.startsWith("UP_REPORT")) templateFileName = 'update_report';
-            else if (coreType.startsWith("DL_REPORT")) templateFileName = 'download';
-            else if (coreType === 'DL_PROGRESS') templateFileName = 'download_progress';
-            else if (coreType === 'HELP') templateFileName = 'help';
-            else if (coreType === 'SPEEDTEST_SUCCESS') templateFileName = 'speedtest';
-
-            const buffer = await renderEngine(templateFileName, coreType, source);
-            if (buffer) { await e.reply(buffer); }
-            else { await e.reply(`渲染失败: ${task.name}`); }
-          } catch (err) { this.logger.error(`渲染 ${task.name} 失败:`, err); await e.reply(`渲染异常: ${task.name}\n${err.message}`); }
-          await common.sleep(1000);
-        }
-        await e.reply("所有模板渲染任务执行完毕。");
-
-      } else if (type.startsWith("SIM_TPL_")) {
-        const match = type.match(/^SIM_TPL_([A-Z_]+)_(LOCAL|REMOTE)$/);
-        if (!match) throw new Error(`无法解析的模板触发类型: ${type}`);
-        const coreType = match[1];
-        const source = match[2].toLowerCase();
-
-        let templateFileName = '';
-        if (coreType.startsWith("UP_REPORT")) {
-          templateFileName = 'update_report';
-        } else if (coreType.startsWith("DL_REPORT")) {
-          templateFileName = 'download';
-        } else if (coreType === 'DL_PROGRESS') {
-          templateFileName = 'download_progress';
-        } else if (coreType === 'HELP') {
-          templateFileName = 'help';
-        } else if (coreType === 'SPEEDTEST_SUCCESS') {
-          templateFileName = 'speedtest';
-        } else if (coreType === 'DIFFSTAT_MOCK') {
-          templateFileName = 'update_report';
-        } else if (coreType === 'CONVENTIONAL_COMMITS_MOCK') {
-          templateFileName = 'update_report';
-        }
-        if (!templateFileName) throw new Error(`未找到核心类型 '${coreType}' 的模板映射。`);
-
-        const imageBuffer = await renderEngine(templateFileName, coreType, source);
-        if (imageBuffer) await e.reply(imageBuffer);
-
-      } else if (type.startsWith("THROW_")) {
-        let mockError = new Error(`模拟错误 (${type}): ${itemToTrigger.description}`);
-        switch (type) {
-          case "THROW_GIT_AUTH_FAIL": mockError.code = 128; mockError.stderr = "fatal: Authentication failed"; throw mockError;
-          case "THROW_NET_TIMEOUT": mockError.code = "ETIMEDOUT"; throw mockError;
-          case "THROW_FS_EACCES": mockError.code = "EACCES"; await fsPromises.writeFile("/root/test.txt", "test"); break;
-          case "THROW_FS_ENOENT": mockError.code = "ENOENT"; await fsPromises.access("/path/to/a/ghost/town"); break;
-          case "THROW_REFERENCE_ERROR": someUndefinedVariable.doSomething(); break;
-          case "THROW_RENDER_TEMPLATE_DATA_ERROR": await renderPageToImage("err", { htmlContent: "<div>{{ undefinedVariable }}</div>", data: {} }, this); break;
-          case "THROW_RENDER_TIMEOUT": await renderPageToImage("err", { htmlContent: "<div>Hang</div>", pageGotoParams: { timeout: 10 } }, this); break;
-          default: throw mockError;
-        }
-      } else {
-        await e.reply(`该触发器 (${type}) 的模拟方式暂未实现或已废弃。`);
-      }
-    } catch (error) { await this.ReportError(e, `模拟错误 (${itemToTrigger.name})`, error, `用户触发: #${triggerInput}`); }
+    
     return true;
   }
 
