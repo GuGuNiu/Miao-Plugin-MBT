@@ -3374,36 +3374,45 @@ class MiaoPluginMBT extends plugin {
     const oldJsFilePath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
 
     try {
+      // 获取新文件的内容、哈希和体积
       const newFileContent = await fsPromises.readFile(newJsFilePath);
       const newHash = crypto.createHash('md5').update(newFileContent).digest('hex');
+      const newSize = (await fsPromises.stat(newJsFilePath)).size;
+
       let oldHash = null;
+      let oldSize = -1;
 
       try {
+        // 尝试获取旧文件的内容、哈希和体积
         const oldFileContent = await fsPromises.readFile(oldJsFilePath);
         oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
+        oldSize = (await fsPromises.stat(oldJsFilePath)).size;
       } catch (e) {
         if (e.code !== 'ENOENT') {
           logger.warn(`${Default_Config.logPrefix}读取旧核心脚本时发生错误:`, e);
         }
-        oldHash = null;
       }
 
-      if (newHash === oldHash) {
-        return false;
-      }
+      if (newHash !== oldHash || (newHash === oldHash && newSize !== oldSize)) {
+        if (newHash === oldHash && newSize !== oldSize) {
+          //logger.warn(`${Default_Config.logPrefix}检测到JS文件哈希一致但体积不一致的异常情况，将执行强制覆盖。新体积: ${newSize}, 旧体积: ${oldSize}`);
+        }
 
-      logger.info(`${Default_Config.logPrefix}检测到插件核心逻辑已更新，准备执行覆盖...`);
-      // await common.sleep(30000);
-      await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-      logger.info(`${Default_Config.logPrefix}核心管理器文件覆盖完成。该操作将触发插件热重载。`);
-      const restartMessage = `${Default_Config.logPrefix}检测到插件核心逻辑已更新！为确保所有新功能稳定生效，强烈建议稍后重启机器人。`;
-      setImmediate(() => {
-        MiaoPluginMBT.SendMasterMsg(restartMessage, null, 1000, logger).catch(err => {
-          logger.error(`${Default_Config.logPrefix}发送重启引导消息失败:`, err);
+        //logger.info(`${Default_Config.logPrefix}检测到插件核心逻辑已更新，准备执行覆盖...`);
+
+        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+        //logger.info(`${Default_Config.logPrefix}核心管理器文件覆盖完成。该操作将触发插件热重载。`);
+
+        const restartMessage = `${Default_Config.logPrefix}检测到插件核心逻辑已更新！为确保所有新功能稳定生效，强烈建议尽快重启机器人。`;
+        setImmediate(() => {
+          MiaoPluginMBT.SendMasterMsg(restartMessage, null, 1000, logger).catch(err => {
+            logger.error(`${Default_Config.logPrefix}发送重启引导消息失败:`, err);
+          });
         });
-      });
 
-      return true;
+        return true;
+      }
+      return false;
 
     } catch (error) {
       if (error.code !== 'ENOENT') {
