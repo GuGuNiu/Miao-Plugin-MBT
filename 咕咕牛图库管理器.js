@@ -5061,7 +5061,7 @@ class MiaoPluginMBT extends plugin {
     const pathsToDeleteDirectly = [
       MiaoPluginMBT.paths.LocalTuKuPath, MiaoPluginMBT.paths.LocalTuKuPath2,
       MiaoPluginMBT.paths.LocalTuKuPath3, MiaoPluginMBT.paths.LocalTuKuPath4,
-      MiaoPluginMBT.paths.commonResPath
+      MiaoPluginMBT.paths.commonResPath, MiaoPluginMBT.paths.guToolsPath
     ].filter(Boolean);
 
     for (const dirPath of pathsToDeleteDirectly) {
@@ -5936,71 +5936,64 @@ class MiaoPluginMBT extends plugin {
   }
 
   async ManageTuKuOption(e) {
-    const logger = this.logger; const logPrefix = this.logPrefix;
+    const logger = this.logger; 
+    const logPrefix = this.logPrefix;
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${Default_Config.logPrefix}只有主人才能开关图库啦~`, true);
-
     const match = e.msg.match(/^#(启用|禁用)咕咕牛$/i);
     if (!match) return false;
-
-    const action = match[1]; const enable = action === "启用";
-    let configChanged = false; let saveWarning = "";
+    const action = match[1]; 
+    const enable = action === "启用";
     let statusMessageForPanel = "";
-
+    let needsBackgroundAction = false;
+  
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
-      await MiaoPluginMBT.LoadTuKuConfig(true, logger);
-      const currentStatus = MiaoPluginMBT.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
+      await MiaoPluginMBT.LoadTuKuConfig(true, logger, this);
+      const currentStatus = this.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
+  
       if (currentStatus === enable) {
-        statusMessageForPanel = `图库已经是「${action}」状态了，无需更改。`;
-        return;
-      }
-      MiaoPluginMBT.MBTConfig.TuKuOP = enable; configChanged = true;
-      const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(MiaoPluginMBT.MBTConfig, logger);
-      if (!saveSuccess) {
-        saveWarning = "⚠️ 配置保存失败！设置可能不会持久生效。";
-        MiaoPluginMBT.MBTConfig.TuKuOP = !enable; configChanged = false;
-        logger.error(`${Default_Config.logPrefix}保存失败，内存状态已回滚。`);
-        await this.ReportError(e, `${action}咕咕牛`, new Error("保存配置失败"), saveWarning);
+        statusMessageForPanel = `图库已经是「${action}」状态，将执行一次强制${enable ? '同步' : '清理'}...`;
+        needsBackgroundAction = true; // 标记需要执行后台操作
+      } else {
+        const newConfig = { ...this.MBTConfig, TuKuOP: enable };
+        const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(newConfig, logger, this);
+  
+        if (saveSuccess) {
+          statusMessageForPanel = `图库已成功设为「${action}」。`;
+          needsBackgroundAction = true; // 标记需要执行后台操作
+        } else {
+          statusMessageForPanel = "⚠️ 配置保存失败！设置可能不会持久生效。";
+          await this.ReportError(e, `${action}咕咕牛`, new Error("保存配置失败"), statusMessageForPanel);
+          needsBackgroundAction = false;
+        }
       }
     });
-
-    if (configChanged && !saveWarning) {
-      statusMessageForPanel = `图库已成功设为「${action}」。`;
+    if (needsBackgroundAction) {
       setImmediate(async () => {
         try {
           if (enable) {
             await MiaoPluginMBT.SyncCharacterFolders(logger);
             await MiaoPluginMBT.GenerateAndApplyBanList(MiaoPluginMBT._imgDataCache, logger);
-
-            //logger.info(`${logPrefix}开始检查可选游戏内容...`);
             const gameKeysToCheck = ["zzz", "waves"];
             for (const gameKey of gameKeysToCheck) {
               const gameFolder = MiaoPluginMBT.paths.sourceFolders[gameKey];
               if (!gameFolder) continue;
-
               const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKey, logger);
               for (const repoPath of relevantRepoPaths) {
                 await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKey, gameFolder, logger);
               }
             }
-            //logger.info(`${logPrefix} [启用图库] 可选游戏内容检查并处理完毕。`);
-
           } else {
             await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.miaoChar, logger);
             await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.zzzChar, logger);
             await MiaoPluginMBT.CleanTargetCharacterDirs(MiaoPluginMBT.paths.target.wavesChar, logger);
           }
         } catch (error) {
-          logger.error(`${logPrefix} [启用禁用] 后台操作失败:`, error);
+          logger.error(`${logPrefix} [启用/禁用] 后台操作失败:`, error);
           await this.ReportError(e, `${action}咕咕牛 (后台操作)`, error);
         }
       });
     }
-
-    if (!statusMessageForPanel && saveWarning) {
-      statusMessageForPanel = saveWarning;
-    }
-
     try {
       await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
     } catch (panelError) {
