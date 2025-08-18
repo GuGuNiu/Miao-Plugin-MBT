@@ -2350,6 +2350,30 @@ class MiaoPluginMBT extends plugin {
     }
   }
 
+  static async _getMiaoCharacterFaceUrl(gameKey, characterName) {
+    if (gameKey !== 'gs' && gameKey !== 'sr') return null;
+
+    const baseDir = gameKey === 'gs'
+      ? MiaoPluginMBT.paths.target.miaoGsAliasDir
+      : MiaoPluginMBT.paths.target.miaoSrAliasDir;
+
+    const face2Path = path.join(baseDir, "..", "character", characterName, "imgs", "face2.webp");
+    try {
+      await fsPromises.access(face2Path);
+      return `file://${face2Path.replace(/\\/g, "/")}`;
+    } catch (err) {
+    }
+
+    const face1Path = path.join(baseDir, "..", "character", characterName, "imgs", "face.webp");
+    try {
+      await fsPromises.access(face1Path);
+      return `file://${face1Path.replace(/\\/g, "/")}`;
+    } catch (err) {
+    }
+
+    return null;
+  }
+
   static async _getGitRemoteNode(repoPath, logger = global.logger || console) {
     const logPrefix = Default_Config.logPrefix;
     const gitConfigPath = path.join(repoPath, ".git", "config");
@@ -3191,7 +3215,7 @@ class MiaoPluginMBT extends plugin {
       logger = global.logger || console;
       logPrefix = Default_Config.logPrefix;
     }
-  
+
     let finalContext = context || "（无额外上下文信息）";
     if (error?.syncDetails && typeof error.syncDetails === 'object') {
       finalContext += "\n\n--- 资源同步详情 ---";
@@ -3200,23 +3224,23 @@ class MiaoPluginMBT extends plugin {
         finalContext += "\n涉及文件列表（部分）:\n - " + error.syncDetails.files.slice(0, 5).join("\n - ");
       }
     }
-  
+
     const Report = MiaoPluginMBT.FormatError(operationName, error, finalContext, logPrefix);
     logger.error(`${logPrefix} [${operationName}] 操作失败:`, error?.message || error, error?.stack ? `\nStack(部分): ${error.stack.substring(0, 500)}...` : "", finalContext ? `\nContext: ${finalContext}` : "");
-  
+
     let mainReportSent = false;
     let fallbackMessages = [];
-    let aiSolutionRawText = ""; 
-  
+    let aiSolutionRawText = "";
+
     try {
       const shortMessage = `${logPrefix} 执行 ${operationName} 操作时遇到点问题！(错误码: ${error?.code || "未知"})`;
       await e.reply(shortMessage, true);
-  
+
       const getSnapshot = async () => {
         const snapshot = { git: {}, file: {}, system: {} };
         const mainRepoPath = MiaoPluginMBT.paths.LocalTuKuPath;
         const pluginJsPath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
-        
+
         try {
           const [sha, branch] = await Promise.all([
             ExecuteCommand("git", ["rev-parse", "--short=10", "HEAD"], { cwd: mainRepoPath }, 2000).then(r => r.stdout.trim()).catch(() => '获取失败'),
@@ -3224,7 +3248,7 @@ class MiaoPluginMBT extends plugin {
           ]);
           snapshot.git = { sha, branch };
         } catch (gitErr) { snapshot.git = { error: '获取Git信息失败' }; }
-  
+
         try {
           const stats = await fsPromises.stat(pluginJsPath);
           snapshot.file = {
@@ -3232,36 +3256,36 @@ class MiaoPluginMBT extends plugin {
             mtime: new Date(stats.mtime).toLocaleString('zh-CN', { hour12: false })
           };
         } catch (fileErr) { snapshot.file = { error: '获取文件信息失败' }; }
-        
+
         try {
           const yunzaiPkgPath = path.join(MiaoPluginMBT.paths.YunzaiPath, 'package.json');
           await fsPromises.access(yunzaiPkgPath);
           const yunzaiPkg = JSON.parse(await fsPromises.readFile(yunzaiPkgPath, 'utf-8'));
-          
+
           let yunzaiType = 'Miao-Yunzai';
           if (yunzaiPkg.name === 'trss-yunzai') {
-              yunzaiType = 'TRSS-Yunzai';
+            yunzaiType = 'TRSS-Yunzai';
           }
-  
+
           snapshot.system = {
             node: process.version,
             platform: os.platform(),
             yunzai: `${yunzaiType} ${yunzaiPkg.version || ''}`.trim()
           };
         } catch (sysErr) { snapshot.system = { error: '获取系统信息失败' }; }
-        
+
         return snapshot;
       };
-      
+
       const snapshotData = await getSnapshot();
-  
+
       aiSolutionRawText = "云露分析服务暂时无法提供解决方案。";
       try {
         aiSolutionRawText = await MiaoPluginMBT.getSpark(operationName, error, Report.contextInfo, logger);
       } catch (aiCallError) {
         logger.error(`${logPrefix} 调用云露分析失败:`, aiCallError);
       }
-  
+
       const localTemplatePath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "error_report.html");
       const remoteTemplateUrl = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/error_report.html";
       let templateHtml = "";
@@ -3276,7 +3300,7 @@ class MiaoPluginMBT extends plugin {
           throw localError;
         }
       }
-  
+
       const renderData = {
         pluginVersion: Version,
         scaleStyleValue: MiaoPluginMBT.getScaleStyleValue(),
@@ -3291,9 +3315,9 @@ class MiaoPluginMBT extends plugin {
         guguniu_res_path: `file://${MiaoPluginMBT.paths.repoGalleryPath}/`.replace(/\\/g, '/'),
         error: error
       };
-  
+
       const imageBuffer = await renderPageToImage("error-report", { htmlContent: templateHtml, data: renderData, imgType: "png" }, this);
-  
+
       if (imageBuffer) {
         await e.reply(imageBuffer);
         mainReportSent = true;
@@ -3308,7 +3332,7 @@ class MiaoPluginMBT extends plugin {
       if (Report.summary) fallbackMessages.push(Report.summary);
       if (Report.suggestions) fallbackMessages.push(`**可能原因与建议**\n${Report.suggestions}`);
     }
-  
+
     if (!mainReportSent && fallbackMessages.length > 0) {
       if (common?.makeForwardMsg) {
         try {
@@ -3330,13 +3354,13 @@ class MiaoPluginMBT extends plugin {
       suggestions: "",
       stack: error?.stack || "（调用栈信息丢失，大概是飞升了）",
     };
-    
+
     if (error?.message) Report.summary += `\n错误信息: ${error.message}`;
     if (error?.code) Report.summary += ` (Code: ${error.code})`;
     if (error?.signal) Report.summary += ` (Signal: ${error.signal})`;
-  
+
     const errorString = `${error?.message || ""} ${error?.stderr || ""} ${String(error?.code) || ""} ${context || ""}`.toLowerCase();
-    
+
     const errorTypes = {
       NETWORK: /could not resolve host|connection timed out|connection refused|ssl certificate|403 forbidden|404 not found|econnreset|etimedout/i,
       GIT: /unable to access|authentication failed|permission denied|index file corrupt|lock file|index.lock|commit your changes|not a git repository|unrelated histories|not possible to fast-forward/i,
@@ -3344,7 +3368,7 @@ class MiaoPluginMBT extends plugin {
       CONFIG: /json.parse|yaml.parse/i,
       CODE: /referenceerror|typeerror/i
     };
-  
+
     let detectedType = null;
     for (const type in errorTypes) {
       if (errorTypes[type].test(errorString)) {
@@ -3352,7 +3376,7 @@ class MiaoPluginMBT extends plugin {
         break;
       }
     }
-  
+
     const suggestionsMap = {
       NETWORK: [
         "- **首要建议**：执行 `#咕咕牛测速` 命令，诊断所有网络节点的实时状况。",
@@ -3376,37 +3400,37 @@ class MiaoPluginMBT extends plugin {
         "- 尝试重启 Yunzai-Bot 程序，有时可以解决临时的状态异常问题。"
       ]
     };
-  
+
     let finalSuggestionsArray = suggestionsMap[detectedType] || [];
-    
+
     finalSuggestionsArray.push(...[
       "- 请仔细查看控制台输出的详细错误日志，特别是本条错误上下的内容。",
       "- 尝试重启 Yunzai-Bot 程序。",
       "- 如果问题持续存在，且上述建议无效，最终手段是执行 `#重置咕咕牛` 后重新 `#下载咕咕牛`。"
     ]);
-    
+
     Report.suggestions = [...new Set(finalSuggestionsArray)].join("\n"); // 去重后合并
-  
+
     // 处理Git/命令的输出
-    const stderr = error?.stderr || ""; 
+    const stderr = error?.stderr || "";
     const stdout = error?.stdout || "";
     if (stdout || stderr) {
       Report.contextInfo += "\n\n--- Git/命令输出信息 ---";
       const maxLen = 700;
-      if (stdout.trim()) { 
-        Report.contextInfo += `\n[stdout]:\n${stdout.substring(0, maxLen)}${stdout.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`; 
+      if (stdout.trim()) {
+        Report.contextInfo += `\n[stdout]:\n${stdout.substring(0, maxLen)}${stdout.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`;
       }
       if (stderr.trim()) {
         Report.contextInfo += `\n[stderr]:\n${stderr.substring(0, maxLen)}${stderr.length > maxLen ? "\n...(后面省略，完整信息请查看后台日志)" : ""}`;
-        const criticalStderrLines = stderr.split("\n").filter(line => 
-          /fatal:|error:|warning:/i.test(line) && 
-          !/Cloning into/i.test(line) && 
-          !/^\s*$/.test(line) && 
-          !["trace:", "http.c:", "ssl.c:", "git.c:", "run-command.c:", "credential.c:", "config.c:", "advice.c:", "pktline.c:", "pack.c:", "sha1_file.c:", "remote.c:", "connect.c:", "version.c:", "sequencer.c:", "refs.c:", "commit.c:", "diff.c:", "unpack-trees.c:", "resolve-undo.c:", "notes-utils.c:"].some(p => line.trim().startsWith(p)) && 
-          !/^\s*(?:default|hint|Performance)\s/i.test(line) && 
+        const criticalStderrLines = stderr.split("\n").filter(line =>
+          /fatal:|error:|warning:/i.test(line) &&
+          !/Cloning into/i.test(line) &&
+          !/^\s*$/.test(line) &&
+          !["trace:", "http.c:", "ssl.c:", "git.c:", "run-command.c:", "credential.c:", "config.c:", "advice.c:", "pktline.c:", "pack.c:", "sha1_file.c:", "remote.c:", "connect.c:", "version.c:", "sequencer.c:", "refs.c:", "commit.c:", "diff.c:", "unpack-trees.c:", "resolve-undo.c:", "notes-utils.c:"].some(p => line.trim().startsWith(p)) &&
+          !/^\s*(?:default|hint|Performance)\s/i.test(line) &&
           !/== Info:|\s*Trying\s|\s*Connected to\s|Receiving objects:|Resolving deltas:|remote: Compressing objects:|remote: Total|remote: Enumerating objects:|remote: Counting objects:/i.test(line)
         ).map(line => line.replace(/^remote:\s*/, "").trim()).filter(Boolean).slice(0, 5).join("\n");
-        
+
         if (criticalStderrLines.trim()) {
           Report.summary += `\nGit关键消息: ${(criticalStderrLines.length > 200 ? criticalStderrLines.substring(0, 200) + "..." : criticalStderrLines).trim()}`;
         }
@@ -3796,7 +3820,7 @@ class MiaoPluginMBT extends plugin {
         finalDiffStat = updateResult.diffStat;
       }
 
-      const logCount = (RepoNum === 1) ? 5 : 3; 
+      const logCount = (RepoNum === 1) ? 5 : 3;
       const format = "%cd [%h]%n%s%n%b";
       const gitLogArgs = ["log", `-n ${logCount}`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
       let rawLogString = "";
@@ -3892,12 +3916,8 @@ class MiaoPluginMBT extends plugin {
                     const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
                     let faceImageUrl = defaultFaceUrl;
                     let faceImagePath = null;
-                    if (entry.gameType === "gs") {
-                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                    } else if (entry.gameType === "sr") {
-                      const imagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForPath, "imgs", "face.webp");
-                      try { await fsPromises.access(imagePath); faceImageUrl = `file://${imagePath.replace(/\\/g, "/")}`; } catch (err) { }
+                    if (entry.gameType === "gs" || entry.gameType === "sr") {
+                      faceImageUrl = await MiaoPluginMBT._getMiaoCharacterFaceUrl(entry.gameType, standardNameForPath) || defaultFaceUrl;
                     } else if (entry.gameType === "zzz") {
                       try {
                         const files = await fsPromises.readdir(MiaoPluginMBT.paths.target.zzzDataDir);
@@ -5869,13 +5889,11 @@ class MiaoPluginMBT extends plugin {
 
             const aliasForFace = await MiaoPluginMBT.FindRoleAliasAndMain(charData.name, logger);
             const standardNameForFace = aliasForFace.exists ? aliasForFace.mainName : charData.name;
-            let faceImagePath = null;
 
-            if (gameKey === "gs") {
-              faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoGsAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
-            } else if (gameKey === "sr") {
-              faceImagePath = path.join(MiaoPluginMBT.paths.target.miaoSrAliasDir, "..", "character", standardNameForFace, "imgs", "face.webp");
+            if (gameKey === "gs" || gameKey === "sr") {
+              characterFaceUrl = await MiaoPluginMBT._getMiaoCharacterFaceUrl(gameKey, standardNameForFace) || DEFAULT_NULL_BTN_PATH;
             } else if (gameKey === "zzz") {
+              let faceImagePath = null;
               try {
                 const zzzDataPath = path.join(MiaoPluginMBT.paths.target.zzzAliasDir, "..", "resources", "map", "PartnerId2Data.json");
                 const zzzJsonData = JSON.parse(await fsPromises.readFile(zzzDataPath, 'utf-8'));
@@ -5889,18 +5907,17 @@ class MiaoPluginMBT extends plugin {
                   }
                 }
               } catch (err) { }
+              if (faceImagePath) {
+                try {
+                  await fsPromises.access(faceImagePath);
+                  characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`;
+                } catch (err) { }
+              }
             } else if (gameKey === "waves") {
               const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForFace);
               if (roleData && roleData.icon) {
                 characterFaceUrl = roleData.icon;
               }
-            }
-
-            if (faceImagePath) {
-              try {
-                await fsPromises.access(faceImagePath);
-                characterFaceUrl = `file://${faceImagePath.replace(/\\/g, "/")}`;
-              } catch (err) { }
             }
 
             charactersInElement.push({
@@ -6009,28 +6026,28 @@ class MiaoPluginMBT extends plugin {
   }
 
   async ManageTuKuOption(e) {
-    const logger = this.logger; 
+    const logger = this.logger;
     const logPrefix = this.logPrefix;
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`${Default_Config.logPrefix}只有主人才能开关图库啦~`, true);
     const match = e.msg.match(/^#(启用|禁用)咕咕牛$/i);
     if (!match) return false;
-    const action = match[1]; 
+    const action = match[1];
     const enable = action === "启用";
     let statusMessageForPanel = "";
     let needsBackgroundAction = false;
-  
+
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
       await MiaoPluginMBT.LoadTuKuConfig(true, logger, this);
       const currentStatus = this.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
-  
+
       if (currentStatus === enable) {
         statusMessageForPanel = `图库已经是「${action}」状态，将执行一次强制${enable ? '同步' : '清理'}...`;
         needsBackgroundAction = true; // 标记需要执行后台操作
       } else {
         const newConfig = { ...this.MBTConfig, TuKuOP: enable };
         const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(newConfig, logger, this);
-  
+
         if (saveSuccess) {
           statusMessageForPanel = `图库已成功设为「${action}」。`;
           needsBackgroundAction = true; // 标记需要执行后台操作
@@ -7198,17 +7215,17 @@ class MiaoPluginMBT extends plugin {
     const match = e.msg.match(/#咕咕牛触发(?:\s*([a-zA-Z0-9_-]+))?/i);
     const triggerInput = match?.[1]?.trim() || "";
     this.logger.warn(`${Default_Config.logPrefix}用户 ${e.user_id} 触发模拟指令，输入: "${triggerInput}"`);
-  
+
     let itemToTrigger = null;
     if (triggerInput) {
       const lowerInput = triggerInput.toLowerCase();
       itemToTrigger = TRIGGERABLE_ITEMS.find(item => String(item.id) === triggerInput);
       if (!itemToTrigger) itemToTrigger = TRIGGERABLE_ITEMS.find(item => item.name.toLowerCase().includes(lowerInput));
     }
-  
+
     if (itemToTrigger) {
       await e.reply(`${Default_Config.logPrefix}正在模拟: [${itemToTrigger.id}] ${itemToTrigger.name}...`, true);
-      
+
       try {
         const renderEngine = async (templateFileName, mockDataType, source) => {
           const TEMPLATE_BASE_URL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/";
@@ -7227,7 +7244,7 @@ class MiaoPluginMBT extends plugin {
           } catch (err) {
             throw new Error(`无法加载模板 '${templateFileName}.html' (来源: ${source}): ${err.message}`);
           }
-  
+
           const getMockData = async (type) => {
             const baseData = {
               pluginVersion: Version,
@@ -7244,7 +7261,7 @@ class MiaoPluginMBT extends plugin {
               if (result.success) return { name: repoName, text: result.repo === 1 ? '下载/部署成功' : '下载成功', statusClass: 'status-ok', nodeName: result.nodeName };
               return { name: repoName, text: '下载失败', statusClass: 'status-fail', nodeName: result.nodeName || '执行异常' };
             };
-  
+
             const buildReportData = (results, overallSuccess) => {
               const successCount = results.filter(r => r.statusClass === 'status-ok' || r.statusClass === 'status-local').length;
               const totalCount = results.length;
@@ -7259,14 +7276,14 @@ class MiaoPluginMBT extends plugin {
                 successRateRounded: percent,
               };
             };
-  
+
             const mockFaceUrl = `file://${MiaoPluginMBT.paths.repoGalleryPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
-  
+
             switch (type) {
               case 'DIFFSTAT_MOCK': {
                 const mockLogEntry = { date: "刚刚", isDescription: true, descriptionTitle: "feat: 功能变更", descriptionBodyHtml: "<p>本次更新包含文件变更。</p>" };
                 const noChangeLog = [{ date: "昨天", isDescription: true, descriptionTitle: "fix: 常规修复", descriptionBodyHtml: "" }];
-  
+
                 return {
                   ...baseData,
                   overallSuccess: true,
@@ -7299,65 +7316,65 @@ class MiaoPluginMBT extends plugin {
               }
               case 'CONVENTIONAL_COMMITS_MOCK': {
                 const mockCommitsData = [
-                    { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。'},
-                    { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。'},
-                    { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。'},
-                    { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。'},
-                    { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。'},
-                    { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。'},
-                    { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。'},
-                    { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。'},
-                    { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。'},
-                    { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。'},
-                    { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。'}
+                  { prefix: 'feat', scope: 'Web Core', title: '兼容来自Miao/ZZZ/Waves的差距逻辑', body: '引入了新的差距算法，以更好地处理来自不同插件的数据源。' },
+                  { prefix: 'fix', scope: 'Web Core', title: '核心逻辑问题', body: '修复了一个可能导致在极端情况下配置丢失的严重问题。' },
+                  { prefix: 'docs', scope: 'Web', title: 'Web控制台的说明修改', body: '更新了Web控制台的相关文档，使其更易于理解和使用。' },
+                  { prefix: 'style', scope: 'Web Home', title: '调整了主页UI布局', body: '对Web主页的UI进行了微调，使其在不同分辨率下表现更佳。' },
+                  { prefix: 'refactor', scope: 'core', title: 'v5.0.7 架构重构', body: '对主插件的核心架构进行了大规模重构，提升可维护性。' },
+                  { prefix: 'perf', title: '提升图片合成速度', body: '通过优化渲染引擎，将面板生成时间减少了20%。' },
+                  { prefix: 'test', scope: 'core', title: '增加别名系统单元测试', body: '为别名匹配逻辑添加了新的测试用例，覆盖更多边缘情况。' },
+                  { prefix: 'build', title: '调整打包配置', body: '更新了 webpack 配置文件，优化了生产环境的构建输出。' },
+                  { prefix: 'ci', title: '修改 GitHub Actions 工作流', body: '调整了自动化测试脚本，使其在 CI 环境中运行更稳定。' },
+                  { prefix: 'chore', title: '清理无用资源', body: '删除了项目中不再使用的旧图片和脚本文件。' },
+                  { prefix: 'revert', title: '回滚：撤销上次的性能优化', body: '由于上次的性能优化引入了新的 bug，现已将其回滚。' }
                 ];
-  
+
                 const mockLog = mockCommitsData.map((item, index) => {
-                    let simplifiedScope = null;
-                    let scopeClass = 'scope-default';
-  
-                    if (item.scope) {
-                        const lowerScope = item.scope.toLowerCase();
-                        if (lowerScope.includes('web')) {
-                            simplifiedScope = 'WEB';
-                            scopeClass = 'scope-web';
-                        } else if (lowerScope.includes('core')) {
-                            simplifiedScope = 'CORE';
-                            scopeClass = 'scope-core';
-                        }
+                  let simplifiedScope = null;
+                  let scopeClass = 'scope-default';
+
+                  if (item.scope) {
+                    const lowerScope = item.scope.toLowerCase();
+                    if (lowerScope.includes('web')) {
+                      simplifiedScope = 'WEB';
+                      scopeClass = 'scope-web';
+                    } else if (lowerScope.includes('core')) {
+                      simplifiedScope = 'CORE';
+                      scopeClass = 'scope-core';
                     }
-  
-                    return {
-                        isDescription: true,
-                        date: `[${index + 1} hours ago]`,
-                        commitPrefix: item.prefix,
-                        commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
-                        commitScopeClass: scopeClass,
-                        commitTitle: item.title,
-                        descriptionBodyHtml: `<p>${item.body}</p>`
-                    };
+                  }
+
+                  return {
+                    isDescription: true,
+                    date: `[${index + 1} hours ago]`,
+                    commitPrefix: item.prefix,
+                    commitScope: simplifiedScope ? simplifiedScope.replace(/\s+/g, '&nbsp;') : null,
+                    commitScopeClass: scopeClass,
+                    commitTitle: item.title,
+                    descriptionBodyHtml: `<p>${item.body}</p>`
+                  };
                 });
-  
+
                 return {
-                    ...baseData,
-                    overallSuccess: true,
-                    overallHasChanges: true,
-                    duration: '1.0',
-                    reportTime: new Date().toLocaleString(),
-                    results: [
-                        {
-                            name: "一号仓库",
-                            statusText: "更新成功",
-                            statusClass: "status-ok",
-                            hasChanges: true,
-                            newCommitsCount: mockLog.length,
-                            log: mockLog,
-                            commitSha: 'c0nv3nt10n4l',
-                            hasValidLogs: true,
-                            shouldHighlight: true
-                        },
-                        { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
-                    ]
+                  ...baseData,
+                  overallSuccess: true,
+                  overallHasChanges: true,
+                  duration: '1.0',
+                  reportTime: new Date().toLocaleString(),
+                  results: [
+                    {
+                      name: "一号仓库",
+                      statusText: "更新成功",
+                      statusClass: "status-ok",
+                      hasChanges: true,
+                      newCommitsCount: mockLog.length,
+                      log: mockLog,
+                      commitSha: 'c0nv3nt10n4l',
+                      hasValidLogs: true,
+                      shouldHighlight: true
+                    },
+                    { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [], hasChanges: false },
+                  ]
                 };
               }
               case 'UP_REPORT_FULL_MOCK': {
@@ -7380,7 +7397,7 @@ class MiaoPluginMBT extends plugin {
                   { hash: "fakehash10", isDescription: true, date: '[07-05 01:31]', descriptionTitle: 'Fix: 仓库重构了' },
                   { hash: "fakehash11", isDescription: true, date: '[06-11 11:16]', descriptionTitle: '♥ READMEEE' }
                 ];
-  
+
                 const baseResults = {
                   ...baseData,
                   overallSuccess: true,
@@ -7394,7 +7411,7 @@ class MiaoPluginMBT extends plugin {
                     { name: "四号仓库", statusText: "已是最新", statusClass: "status-no-change", newCommitsCount: 0, log: repo4Log, hasChanges: false, commitSha: 'm1n2o3p' }
                   ]
                 };
-  
+
                 if (itemToTrigger && itemToTrigger.id === 40) {
                   baseResults.results[0].diffStat = { insertions: 27, deletions: 24 };
                   baseResults.results[2].hasChanges = true;
@@ -7403,7 +7420,7 @@ class MiaoPluginMBT extends plugin {
                   baseResults.results[2].newCommitsCount = 1;
                   baseResults.results[2].diffStat = { insertions: 158, deletions: 0 };
                 }
-  
+
                 return baseResults;
               }
               case 'DL_REPORT_SUCCESS': {
@@ -7447,7 +7464,7 @@ class MiaoPluginMBT extends plugin {
               default: return baseData;
             }
           };
-  
+
           const mockData = await getMockData(mockDataType);
           const imageBuffer = await renderPageToImage(`sim-${templateFileName}-${mockDataType}-${source}`, {
             htmlContent: templateHtml, data: mockData, pageGotoParams: { waitUntil: "networkidle0" }, screenshotOptions: { fullPage: true }
@@ -7458,7 +7475,7 @@ class MiaoPluginMBT extends plugin {
             throw new Error("生成模拟图片失败 (返回空)");
           }
         };
-        
+
         const type = itemToTrigger.type;
         if (type === 'SIMULATE_ERROR_WITH_LOG_CONTEXT') {
           const operationName = "模拟下载失败";
@@ -7508,11 +7525,11 @@ class MiaoPluginMBT extends plugin {
           };
           throw mockError;
         }
-  
+
         if (type === "SIM_UPDATE_FAIL_WITH_DETAILS") {
           const originalUpdateTuKu = this.UpdateTuKu;
           let capturedForwardMsg = null;
-  
+
           const mockE = {
             ...e,
             reply: async (msg) => {
@@ -7522,18 +7539,18 @@ class MiaoPluginMBT extends plugin {
               return true;
             }
           };
-  
+
           this.UpdateTuKu = async function (e_ignored, isScheduled) {
             const mockError = new Error("Connection timed out after 120000ms");
             mockError.code = 'ETIMEDOUT';
             mockError.stderr = "fatal: unable to access 'https://github.com/...': Recv failure: Connection was reset";
-  
+
             const reportResults = [
               { name: "一号仓库", statusText: "更新失败", statusClass: "status-fail", error: mockError },
               { name: "二号仓库", statusText: "已是最新", statusClass: "status-no-change", log: [{ date: "刚刚", displayParts: [{ type: 'text', content: 'feat: ...' }] }] }
             ];
             const errorDetailsForForwardMsg = [];
-  
+
             const result = reportResults[0];
             const formattedError = MiaoPluginMBT.FormatError(`更新${result.name}`, result.error, "", this.logPrefix);
             let errorReportText = `--- ${result.name} 更新失败 ---\n`;
@@ -7543,12 +7560,12 @@ class MiaoPluginMBT extends plugin {
               errorReportText += `**相关Git输出**\n${formattedError.contextInfo}`;
             }
             errorDetailsForForwardMsg.push(errorReportText);
-  
+
             const forwardMsg = await common.makeForwardMsg(mockE, errorDetailsForForwardMsg, "咕咕牛更新失败详情");
             await mockE.reply(forwardMsg);
             return false;
           };
-  
+
           try {
             await this.UpdateTuKu(mockE, false);
             if (capturedForwardMsg) {
@@ -7560,11 +7577,11 @@ class MiaoPluginMBT extends plugin {
           } finally {
             this.UpdateTuKu = originalUpdateTuKu;
           }
-  
+
         } else if (type === "SIM_ALL_REMOTE" || type === "SIM_ALL") {
           const localSimTriggers = TRIGGERABLE_ITEMS.filter(item => item.type.startsWith("SIM_TPL_") && item.type.endsWith("_LOCAL"));
           const remoteSimTriggers = TRIGGERABLE_ITEMS.filter(item => item.type.startsWith("SIM_TPL_") && item.type.endsWith("_REMOTE"));
-  
+
           let tasks = [];
           if (type === "SIM_ALL_REMOTE") {
             tasks = remoteSimTriggers;
@@ -7573,7 +7590,7 @@ class MiaoPluginMBT extends plugin {
             tasks = [...localSimTriggers, ...remoteSimTriggers];
             await e.reply(`收到！开始逐个渲染 ${tasks.length} 个本地及在线模板...`, true);
           }
-  
+
           for (const task of tasks) {
             await e.reply(`--- 正在渲染: ${task.name} ---`).catch(() => { });
             await common.sleep(500);
@@ -7587,7 +7604,7 @@ class MiaoPluginMBT extends plugin {
               else if (coreType === 'DL_PROGRESS') templateFileName = 'download_progress';
               else if (coreType === 'HELP') templateFileName = 'help';
               else if (coreType === 'SPEEDTEST_SUCCESS') templateFileName = 'speedtest';
-  
+
               const buffer = await renderEngine(templateFileName, coreType, source);
               if (buffer) { await e.reply(buffer); }
               else { await e.reply(`渲染失败: ${task.name}`); }
@@ -7595,13 +7612,13 @@ class MiaoPluginMBT extends plugin {
             await common.sleep(1000);
           }
           await e.reply("所有模板渲染任务执行完毕。");
-  
+
         } else if (type.startsWith("SIM_TPL_")) {
           const match = type.type.match(/^SIM_TPL_([A-Z_]+)_(LOCAL|REMOTE)$/);
           if (!match) throw new Error(`无法解析的模板触发类型: ${type}`);
           const coreType = match[1];
           const source = match[2].toLowerCase();
-  
+
           let templateFileName = '';
           if (coreType.startsWith("UP_REPORT")) {
             templateFileName = 'update_report';
@@ -7619,10 +7636,10 @@ class MiaoPluginMBT extends plugin {
             templateFileName = 'update_report';
           }
           if (!templateFileName) throw new Error(`未找到核心类型 '${coreType}' 的模板映射。`);
-  
+
           const imageBuffer = await renderEngine(templateFileName, coreType, source);
           if (imageBuffer) await e.reply(imageBuffer);
-  
+
         } else if (type.startsWith("THROW_")) {
           let mockError = new Error(`模拟错误 (${type}): ${itemToTrigger.description}`);
           switch (type) {
@@ -7645,7 +7662,7 @@ class MiaoPluginMBT extends plugin {
       if (triggerInput) {
         await e.reply(`哎呀，没找着你说的这个触发器「${triggerInput}」，给你看看咱都有啥哈：`, true);
       }
-  
+
       const TRIGGER_LIST_URL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/trigger_list.html";
       try {
         const response = await fetch(TRIGGER_LIST_URL, { timeout: 10000 });
@@ -7680,7 +7697,7 @@ class MiaoPluginMBT extends plugin {
         await e.reply(fallbackText);
       }
     }
-    
+
     return true;
   }
 
