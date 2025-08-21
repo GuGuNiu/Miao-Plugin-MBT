@@ -4,18 +4,18 @@
 // ==========================================================================
 
 const express = require("express");
-const { exec } = require('child_process');
+const { exec } = require("child_process");
 const fs = require("fs").promises;
 const path = require("path");
 const yaml = require("js-yaml");
 const crypto = require("crypto");
 const sharp = require("sharp");
-const favicon = require('serve-favicon');
-const http = require('http');
-const ws = require('ws');
+const favicon = require("serve-favicon");
+const http = require("http");
+const ws = require("ws");
 const { WebSocketServer } = ws;
-const { GitManager } = require('./src/Git.js');
-const Redis = require('ioredis');
+const { GitManager } = require("./src/Git.js");
+const Redis = require("ioredis");
 
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
 const DEFAULT_CONFIG_FOR_SERVER = {
@@ -51,19 +51,19 @@ const DEFAULT_CONFIG_FOR_SERVER = {
 
 const app = express();
 const port = process.env.GUGUNIU_PORT || 31540;
-const host = process.env.GUGUNIU_HOST || '0.0.0.0';
+const host = process.env.GUGUNIU_HOST || "0.0.0.0";
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 const broadcast = (data) => {
   const message = JSON.stringify(data);
-  wss.clients.forEach(client => {
+  wss.clients.forEach((client) => {
     if (client.readyState === ws.OPEN) {
       client.send(message);
     }
   });
 };
-console.log('[WebSocket] 服务已启动并附加到 HTTP 服务器。');
+console.log("[WebSocket] 服务已启动并附加到 HTTP 服务器。");
 
 // --- 核心常量与配置 ---
 const ALLOWED_IMAGE_EXTENSIONS = new Set([".webp", ".png", ".jpg", ".jpeg", ".gif"]);
@@ -83,31 +83,44 @@ const _preScannedData = {
   characterFolders: new Set(),
 };
 
-// --- 环境检测与路径设置 (最终注入版) ---
+// --- 环境检测与路径设置 ---
 console.log("🐂 GuGuNiu Tools Backend: 环境检测启动...");
 const GU_TOOLS_DIR = __dirname;
 let YUNZAI_ROOT_DIR = process.env.GUGUNIU_YUNZAI_PATH;
 let ENV_MODE = "robot";
 
+// 基础变量声明
+let RESOURCES_DIR, MAIN_REPO_DIR, USER_DATA_BASE_DIR, REPO_BASE_DIR;
+
 if (!YUNZAI_ROOT_DIR) {
   console.log("⚠️ 未从环境变量中获取 Yunzai 根目录，启动本地开发模式回退。");
   ENV_MODE = "local";
-  YUNZAI_ROOT_DIR = path.resolve(GU_TOOLS_DIR, "..", "..", "..");
 }
 
-const RESOURCES_DIR = process.env.GUGUNIU_RESOURCES_PATH || path.resolve(YUNZAI_ROOT_DIR, "resources");
-const MAIN_REPO_DIR = path.resolve(RESOURCES_DIR, "Miao-Plugin-MBT");
-const USER_DATA_BASE_DIR = RESOURCES_DIR;
-const REPO_BASE_DIR = RESOURCES_DIR;
+if (ENV_MODE === "local") {
+  console.log("-> 运行模式: local (本地开发)");
+  YUNZAI_ROOT_DIR = path.resolve(GU_TOOLS_DIR, "..", "..");
+  REPO_BASE_DIR = YUNZAI_ROOT_DIR;
+  RESOURCES_DIR = YUNZAI_ROOT_DIR;
+  MAIN_REPO_DIR = path.resolve(REPO_BASE_DIR, "Miao-Plugin-MBT");
+  USER_DATA_BASE_DIR = MAIN_REPO_DIR;
+} else {
+  console.log("-> 运行模式: robot (机器人环境)");
+  YUNZAI_ROOT_DIR = process.env.GUGUNIU_YUNZAI_PATH;
+  RESOURCES_DIR = process.env.GUGUNIU_RESOURCES_PATH || path.resolve(YUNZAI_ROOT_DIR, "resources");
+  REPO_BASE_DIR = RESOURCES_DIR;
+  USER_DATA_BASE_DIR = RESOURCES_DIR;
+  MAIN_REPO_DIR = path.resolve(REPO_BASE_DIR, "Miao-Plugin-MBT");
+}
 
 // --- 多仓库定义 ---
 const REPO_NAMES = ["Miao-Plugin-MBT", "Miao-Plugin-MBT-2", "Miao-Plugin-MBT-3", "Miao-Plugin-MBT-4"];
-const REPO_ROOTS = REPO_NAMES.map(name => ({ name: name, path: path.resolve(REPO_BASE_DIR, name) }));
+const REPO_ROOTS = REPO_NAMES.map((name) => ({ name: name, path: path.resolve(REPO_BASE_DIR, name) }));
 
 // --- 最终路径计算 ---
 const USER_DATA_DIRECTORY = path.join(USER_DATA_BASE_DIR, USER_DATA_FOLDER_NAME);
 const IMGTEMP_DIRECTORY = path.join(GU_TOOLS_DIR, IMGTEMP_DIRECTORY_NAME);
-const THUMBNAIL_DIRECTORY = ENV_MODE === 'local' ? path.join(GU_TOOLS_DIR, THUMBNAIL_DIRECTORY_NAME) : path.join(USER_DATA_DIRECTORY, THUMBNAIL_DIRECTORY_NAME);
+const THUMBNAIL_DIRECTORY = ENV_MODE === "local" ? path.join(GU_TOOLS_DIR, THUMBNAIL_DIRECTORY_NAME) : path.join(USER_DATA_DIRECTORY, THUMBNAIL_DIRECTORY_NAME);
 const IMG_DIRECTORY = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "html", "img");
 const INTERNAL_USER_DATA_FILE = path.join(MAIN_REPO_DIR, "GuGuNiu-Gallery", "ImageData.json");
 const EXTERNAL_USER_DATA_FILE = path.join(USER_DATA_DIRECTORY, "ExternalImageData.json");
@@ -128,25 +141,13 @@ function executeCommand(command, options) {
   });
 }
 
-
 // 外部插件图片资源路径
 const PLUGIN_IMAGE_PATHS = {
-  miao: path.join(
-    "plugins",
-    "miao-plugin",
-    "resources",
-    "profile",
-    "normal-character"
-  ),
+  miao: path.join("plugins", "miao-plugin", "resources", "profile", "normal-character"),
   zzz: path.join("plugins", "ZZZ-Plugin", "resources", "images", "panel"),
   waves: path.join("plugins", "waves-plugin", "resources", "rolePic"),
 };
-const ABSOLUTE_PLUGIN_IMAGE_PATHS = Object.fromEntries(
-  Object.entries(PLUGIN_IMAGE_PATHS).map(([key, relativePath]) => [
-    key,
-    path.resolve(YUNZAI_ROOT_DIR, relativePath),
-  ])
-);
+const ABSOLUTE_PLUGIN_IMAGE_PATHS = Object.fromEntries(Object.entries(PLUGIN_IMAGE_PATHS).map(([key, relativePath]) => [key, path.resolve(YUNZAI_ROOT_DIR, relativePath)]));
 
 // --- 启动时路径确认 ---
 console.log("--- 服务器路径配置 ---");
@@ -163,9 +164,7 @@ console.log(`缩略图缓存目录: ${THUMBNAIL_DIRECTORY}`);
 console.log("扫描仓库列表:");
 REPO_ROOTS.forEach((repo) => console.log(`  - ${repo.name}: ${repo.path}`));
 console.log("外部插件扫描路径:");
-Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS).forEach(([key, absPath]) =>
-  console.log(`  - ${key}: ${absPath}`)
-);
+Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS).forEach(([key, absPath]) => console.log(`  - ${key}: ${absPath}`));
 console.log("----------------------");
 
 // --- 中间件设置 ---
@@ -173,8 +172,8 @@ app.use(express.json({ limit: "10mb" }));
 
 // --- 令牌验证中间件 ---
 const tokenAuthMiddleware = async (req, res, next) => {
-  if (ENV_MODE === 'robot') {
-    if (req.path.startsWith('/api/') || req.path.startsWith('/external/') || path.extname(req.path)) {
+  if (ENV_MODE === "robot") {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/external/") || path.extname(req.path)) {
       return next();
     }
 
@@ -194,13 +193,13 @@ const tokenAuthMiddleware = async (req, res, next) => {
         return res.status(403).send("<h1>访问令牌无效或已过期</h1><p>请通过机器人重新获取登录链接。</p>");
       }
     } catch (error) {
-      console.error('[Token Auth] Redis 验证出错:', error);
+      console.error("[Token Auth] Redis 验证出错:", error);
       return res.status(500).send("<h1>服务器验证时出错</h1><p>无法连接到 Redis 服务进行令牌验证。</p>");
     }
   }
 
-  if (ENV_MODE === 'local') {
-    console.log('[Token Auth] 开发环境，跳过令牌验证。');
+  if (ENV_MODE === "local") {
+    console.log("[Token Auth] 开发环境，跳过令牌验证。");
     return next();
   }
 
@@ -239,13 +238,7 @@ const isFile = async (p) => {
  * @param {string} [currentRelativePath=''] 当前相对于 galleryBasePath 的路径
  * @returns {Promise<Array<object>>} 图片信息对象数组
  */
-const findGalleryImagesRecursively = async (
-  storageBox,
-  repoBasePath,
-  galleryName,
-  galleryBasePath,
-  currentRelativePath = ""
-) => {
+const findGalleryImagesRecursively = async (storageBox, repoBasePath, galleryName, galleryBasePath, currentRelativePath = "") => {
   const images = [];
   const currentFullPath = path.join(galleryBasePath, currentRelativePath);
   try {
@@ -260,15 +253,7 @@ const findGalleryImagesRecursively = async (
       const entryRelativePath = path.join(currentRelativePath, entry.name);
       const entryFullPath = path.join(currentFullPath, entry.name);
       if (entry.isDirectory()) {
-        images.push(
-          ...(await findGalleryImagesRecursively(
-            storageBox,
-            repoBasePath,
-            galleryName,
-            galleryBasePath,
-            entryRelativePath
-          ))
-        );
+        images.push(...(await findGalleryImagesRecursively(storageBox, repoBasePath, galleryName, galleryBasePath, entryRelativePath)));
       } else if (entry.isFile()) {
         const fileExt = path.extname(entry.name).toLowerCase();
         if (ALLOWED_IMAGE_EXTENSIONS.has(fileExt)) {
@@ -276,10 +261,7 @@ const findGalleryImagesRecursively = async (
           if (pathSegments.length >= 2) {
             const fileName = pathSegments.pop();
             const folderName = pathSegments.pop();
-            const relativeUrlPath = `${galleryName}/${entryRelativePath.replace(
-              /\\/g,
-              "/"
-            )}`;
+            const relativeUrlPath = `${galleryName}/${entryRelativePath.replace(/\\/g, "/")}`;
             images.push({
               name: folderName,
               folderName: folderName,
@@ -293,10 +275,7 @@ const findGalleryImagesRecursively = async (
       }
     }
   } catch (error) {
-    console.error(
-      `[主图库扫描 ${storageBox}] 扫描目录 "${currentFullPath}" 出错:`,
-      error
-    );
+    console.error(`[主图库扫描 ${storageBox}] 扫描目录 "${currentFullPath}" 出错:`, error);
   }
   return images;
 };
@@ -355,7 +334,7 @@ const getFolderStats = async (folderPath) => {
 
 /**
  * 扫描指定的外部插件图片目录
- * @param {string} sourceKey 来源标识 
+ * @param {string} sourceKey 来源标识
  * @param {string} basePath 要扫描的插件图片目录的物理路径
  * @returns {Promise<Array<object>>} 外部图片信息对象数组
  */
@@ -379,9 +358,7 @@ const findPluginImages = async (sourceKey, basePath) => {
       const entries = await fs.readdir(currentPath, { withFileTypes: true });
       for (const entry of entries) {
         const entryPath = path.join(currentPath, entry.name);
-        const entryRelativePath = relativeToBasePath
-          ? path.join(relativeToBasePath, entry.name).replace(/\\/g, "/")
-          : entry.name.replace(/\\/g, "/");
+        const entryRelativePath = relativeToBasePath ? path.join(relativeToBasePath, entry.name).replace(/\\/g, "/") : entry.name.replace(/\\/g, "/");
         if (entry.isDirectory()) {
           await findImagesRecursive(entryPath, entryRelativePath);
         } else if (entry.isFile()) {
@@ -390,10 +367,7 @@ const findPluginImages = async (sourceKey, basePath) => {
           const fileExt = path.extname(fileName).toLowerCase();
           if (ALLOWED_IMAGE_EXTENSIONS.has(fileExt)) {
             const pathSegments = entryRelativePath.split("/");
-            const folderName =
-              pathSegments.length > 1
-                ? pathSegments[pathSegments.length - 2]
-                : sourceKey;
+            const folderName = pathSegments.length > 1 ? pathSegments[pathSegments.length - 2] : sourceKey;
             const webPath = `/external/${sourceKey}/${entryRelativePath}`;
             images.push({
               folderName: folderName,
@@ -407,15 +381,11 @@ const findPluginImages = async (sourceKey, basePath) => {
         }
       }
     } catch (readError) {
-      console.error(
-        `[插件递归扫描] 读取目录 ${currentPath} 失败: ${readError.message}`
-      );
+      console.error(`[插件递归扫描] 读取目录 ${currentPath} 失败: ${readError.message}`);
     }
   };
   await findImagesRecursive(basePath, "");
-  console.log(
-    `[插件扫描] ${sourceKey} 扫描完成。找到 ${fileFoundCount} 文件，记录 ${imageRecordedCount} 图片。`
-  );
+  console.log(`[插件扫描] ${sourceKey} 扫描完成。找到 ${fileFoundCount} 文件，记录 ${imageRecordedCount} 图片。`);
   return images;
 };
 
@@ -435,24 +405,17 @@ const safelyReadJsonFile = async (filePath, fileDesc) => {
     }
     const data = JSON.parse(trimmedData);
     if (Array.isArray(data)) {
-      console.log(
-        `[读取JSON] 成功读取 ${data.length} 条记录从 ${fileDesc} ${filePath}`
-      );
+      console.log(`[读取JSON] 成功读取 ${data.length} 条记录从 ${fileDesc} ${filePath}`);
       return data;
     } else {
-      console.warn(
-        `[读取JSON] ${fileDesc} 文件内容不是数组 ${filePath} 返回空数组`
-      );
+      console.warn(`[读取JSON] ${fileDesc} 文件内容不是数组 ${filePath} 返回空数组`);
       return [];
     }
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       console.log(`[读取JSON] ${fileDesc} 文件不存在 ${filePath} 返回空数组`);
     } else {
-      console.error(
-        `[读取JSON] 读取或解析 ${fileDesc} 文件 ${filePath} 出错:`,
-        error
-      );
+      console.error(`[读取JSON] 读取或解析 ${fileDesc} 文件 ${filePath} 出错:`, error);
     }
     return [];
   }
@@ -467,7 +430,7 @@ const safelyReadJsonFile = async (filePath, fileDesc) => {
 const safelyWriteJsonFile = async (filePath, data, fileDesc) => {
   try {
     const replacer = (key, value) => {
-      if (key === 'secondaryTags' && Array.isArray(value)) {
+      if (key === "secondaryTags" && Array.isArray(value)) {
         if (value.length === 0) return [];
         return `__ONE_LINE_ARRAY_START__${JSON.stringify(value)}__ONE_LINE_ARRAY_END__`;
       }
@@ -493,8 +456,7 @@ const safelyWriteJsonFile = async (filePath, data, fileDesc) => {
  * 生成 GELD-ID
  */
 const generateGeldId = (length = 20) => {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
   const charsLength = chars.length;
   for (let i = 0; i < length; i++) {
@@ -516,17 +478,14 @@ const escapeRegExp = (string) => {
  * @returns {Promise<string|null>} 物理路径或 null
  */
 const resolvePhysicalPath = async (webPath) => {
-  if (!webPath || typeof webPath !== "string" || webPath.includes(".."))
-    return null;
-  const normalizedWebPath = webPath.startsWith("/")
-    ? webPath.substring(1)
-    : webPath;
+  if (!webPath || typeof webPath !== "string" || webPath.includes("..")) return null;
+  const normalizedWebPath = webPath.startsWith("/") ? webPath.substring(1) : webPath;
   const pathSegments = normalizedWebPath.split("/");
   if (pathSegments.length < 2) return null;
   const firstSegment = pathSegments[0];
 
   // 检查新格式主图库路径 (/仓库名/分类/...)
-  const repo = REPO_ROOTS.find(r => r.name === firstSegment); // 比较原始大小写
+  const repo = REPO_ROOTS.find((r) => r.name === firstSegment); // 比较原始大小写
   if (repo && pathSegments.length >= 3) {
     const galleryName = pathSegments[1];
     if (MAIN_GALLERY_FOLDERS.includes(galleryName)) {
@@ -537,7 +496,7 @@ const resolvePhysicalPath = async (webPath) => {
           console.log(`[resolvePhysicalPath] 匹配到新格式主图库 (在 ${repo.name}): ${potentialPath}`);
           return potentialPath;
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -545,39 +504,34 @@ const resolvePhysicalPath = async (webPath) => {
   if (firstSegment === "external" && pathSegments.length >= 3) {
     const sourceKey = pathSegments[1];
     if (ABSOLUTE_PLUGIN_IMAGE_PATHS[sourceKey]) {
-      const potentialPath = path.join(
-        ABSOLUTE_PLUGIN_IMAGE_PATHS[sourceKey],
-        ...pathSegments.slice(2)
-      );
+      const potentialPath = path.join(ABSOLUTE_PLUGIN_IMAGE_PATHS[sourceKey], ...pathSegments.slice(2));
       try {
         const stats = await fs.stat(potentialPath);
         if (stats.isFile()) {
           console.log(`[resolvePhysicalPath] 匹配到外部插件: ${potentialPath}`);
           return potentialPath;
         }
-      } catch { }
+      } catch {}
     }
   }
 
   // 检查临时图片
   if (firstSegment === IMGTEMP_DIRECTORY_NAME && pathSegments.length >= 2) {
-    const potentialPath = path.join(
-      IMGTEMP_DIRECTORY,
-      ...pathSegments.slice(1)
-    );
+    const potentialPath = path.join(IMGTEMP_DIRECTORY, ...pathSegments.slice(1));
     try {
       const stats = await fs.stat(potentialPath);
       if (stats.isFile()) {
         console.log(`[resolvePhysicalPath] 匹配到临时图片: ${potentialPath}`);
         return potentialPath;
       }
-    } catch { }
+    } catch {}
   }
 
   // 检查旧格式主图库 (兼容 /分类/...)
   if (MAIN_GALLERY_FOLDERS.includes(firstSegment) && pathSegments.length >= 2) {
     console.log(`[resolvePhysicalPath] 尝试匹配旧格式主图库: ${normalizedWebPath}`);
-    for (const repoLoop of REPO_ROOTS) { // 使用不同的变量名避免作用域混淆
+    for (const repoLoop of REPO_ROOTS) {
+      // 使用不同的变量名避免作用域混淆
       const potentialPath = path.join(repoLoop.path, ...pathSegments);
       try {
         const stats = await fs.stat(potentialPath);
@@ -585,7 +539,7 @@ const resolvePhysicalPath = async (webPath) => {
           console.log(`[resolvePhysicalPath] 匹配到旧格式路径 (在仓库 ${repoLoop.name}): ${potentialPath}`);
           return potentialPath;
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -618,27 +572,21 @@ REPO_ROOTS.forEach(async (repo) => {
       console.log(`[静态服务] OK: ${routePath} -> ${IMGTEMP_DIRECTORY}`);
     }
   } catch {
-    console.warn(
-      `[静态服务] 警告: 临时目录 ${IMGTEMP_DIRECTORY} 无效，无法提供 ${routePath} 服务。`
-    );
+    console.warn(`[静态服务] 警告: 临时目录 ${IMGTEMP_DIRECTORY} 无效，无法提供 ${routePath} 服务。`);
   }
 })();
-Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS).forEach(
-  async ([key, physicalPath]) => {
-    const routePath = `/external/${key}`;
-    try {
-      const stats = await fs.stat(physicalPath);
-      if (stats.isDirectory()) {
-        app.use(routePath, express.static(physicalPath));
-        console.log(`[静态服务] OK: ${routePath} -> ${physicalPath}`);
-      }
-    } catch {
-      console.warn(
-        `[静态服务] 警告: 外部目录 ${physicalPath} (${key}) 无效，无法提供 ${routePath} 服务。`
-      );
+Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS).forEach(async ([key, physicalPath]) => {
+  const routePath = `/external/${key}`;
+  try {
+    const stats = await fs.stat(physicalPath);
+    if (stats.isDirectory()) {
+      app.use(routePath, express.static(physicalPath));
+      console.log(`[静态服务] OK: ${routePath} -> ${physicalPath}`);
     }
+  } catch {
+    console.warn(`[静态服务] 警告: 外部目录 ${physicalPath} (${key}) 无效，无法提供 ${routePath} 服务。`);
   }
-);
+});
 console.log("--- 静态服务配置完毕 ---");
 
 // --- API 端点 ---
@@ -651,33 +599,32 @@ const thirdPartyBasePath = path.join(YUNZAI_ROOT_DIR, "resources", "GuGuNiu_thir
 const thirdPartyConfigPath = path.join(thirdPartyBasePath, "config.json");
 
 async function _fetchRepoOwnerInfo(repoUrl, logger) {
-  const fetch = (await import('node-fetch')).default;
+  const fetch = (await import("node-fetch")).default;
   try {
     const urlMatch = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitee\.com|gitcode\.net)\/([^/]+)\/([^/]+)/);
     if (!urlMatch) return null;
 
     const platform = urlMatch[1];
     const owner = urlMatch[2];
-    const repo = urlMatch[3].replace(/\.git$/, '');
+    const repo = urlMatch[3].replace(/\.git$/, "");
     let apiUrl;
     let ownerInfo = null;
 
-    if (platform === 'github.com') apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
-    else if (platform === 'gitee.com') apiUrl = `https://gitee.com/api/v5/repos/${owner}/${repo}`;
-    else if (platform === 'gitcode.net') apiUrl = `https://gitcode.net/api/v4/projects/${encodeURIComponent(`${owner}/${repo}`)}`;
+    if (platform === "github.com") apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
+    else if (platform === "gitee.com") apiUrl = `https://gitee.com/api/v5/repos/${owner}/${repo}`;
+    else if (platform === "gitcode.net") apiUrl = `https://gitcode.net/api/v4/projects/${encodeURIComponent(`${owner}/${repo}`)}`;
     else return null;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
-    const response = await fetch(apiUrl, { signal: controller.signal, headers: { 'User-Agent': 'GuGuNiu-Tuku-Manager' } });
+    const response = await fetch(apiUrl, { signal: controller.signal, headers: { "User-Agent": "GuGuNiu-Tuku-Manager" } });
     clearTimeout(timeoutId);
 
     if (!response.ok) throw new Error(`API 请求失败，状态码: ${response.status}`);
     const data = await response.json();
-    ownerInfo = (platform === 'gitcode.net') ? data.namespace : data.owner;
+    ownerInfo = platform === "gitcode.net" ? data.namespace : data.owner;
 
     if (ownerInfo) return { ownerName: ownerInfo.name || ownerInfo.login, ownerAvatarUrl: ownerInfo.avatar_url };
-
   } catch (error) {
     logger.warn(`获取仓库所有者信息失败 (${repoUrl}):`, error.message);
   }
@@ -700,33 +647,33 @@ const communityGalleryManager = {
   },
   extractOwnerAndRepo(url) {
     const match = url.match(/(?:github\.com|gitee\.com|gitcode\.com)\/([^/]+)\/([^/]+)/i);
-    return match ? { owner: match[1], repo: match[2].replace(/\.git$/, '') } : null;
-  }
+    return match ? { owner: match[1], repo: match[2].replace(/\.git$/, "") } : null;
+  },
 };
 
 // [GET] /api/installed-repos - 获取服务器上实际安装的仓库列表
 app.get("/api/installed-repos", async (req, res) => {
-    console.log("请求: [GET] /api/installed-repos");
-    if (ENV_MODE === 'local') {
-        console.log("  > 本地开发模式，返回所有理论仓库。");
-        return res.json({ success: true, repos: REPO_NAMES });
+  console.log("请求: [GET] /api/installed-repos");
+  if (ENV_MODE === "local") {
+    console.log("  > 本地开发模式，返回所有理论仓库。");
+    return res.json({ success: true, repos: REPO_NAMES });
+  }
+  try {
+    const installedRepos = [];
+    for (const repo of REPO_ROOTS) {
+      try {
+        await fs.access(repo.path);
+        installedRepos.push(repo.name);
+      } catch (error) {
+        // 目录不存在，忽略
+      }
     }
-    try {
-        const installedRepos = [];
-        for (const repo of REPO_ROOTS) {
-            try {
-                await fs.access(repo.path);
-                installedRepos.push(repo.name);
-            } catch (error) {
-                // 目录不存在，忽略
-            }
-        }
-        console.log(`  > 机器人模式，检测到 ${installedRepos.length} 个已安装仓库。`);
-        res.json({ success: true, repos: installedRepos });
-    } catch (error) {
-        console.error("[API Installed Repos] 检测已安装仓库时出错:", error);
-        res.status(500).json({ success: false, error: "服务器检测仓库时出错。" });
-    }
+    console.log(`  > 机器人模式，检测到 ${installedRepos.length} 个已安装仓库。`);
+    res.json({ success: true, repos: installedRepos });
+  } catch (error) {
+    console.error("[API Installed Repos] 检测已安装仓库时出错:", error);
+    res.status(500).json({ success: false, error: "服务器检测仓库时出错。" });
+  }
 });
 
 // [GET] /api/home-stats - 获取首页仓库统计数据
@@ -736,35 +683,32 @@ app.get("/api/home-stats", async (req, res) => {
     const CACHE_TTL = 60 * 60 * 1000;
 
     try {
-      const cacheContent = await fs.readFile(REPO_STATS_CACHE_FILE, 'utf-8');
+      const cacheContent = await fs.readFile(REPO_STATS_CACHE_FILE, "utf-8");
       const parsedCache = JSON.parse(cacheContent);
       const cacheTime = new Date(parsedCache.lastUpdated).getTime();
 
-      if (Date.now() - cacheTime < CACHE_TTL && parsedCache['1'] && parsedCache['1'].sha !== '获取失败') {
+      if (Date.now() - cacheTime < CACHE_TTL && parsedCache["1"] && parsedCache["1"].sha !== "获取失败") {
         console.log("  > [Web API] 命中有效缓存，直接返回数据。");
 
         const isPluginInstalled = async (pluginName) => {
           try {
-            await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
+            await fs.access(path.join(YUNZAI_ROOT_DIR, "plugins", pluginName));
             return true;
-          } catch { return false; }
+          } catch {
+            return false;
+          }
         };
-        const zzzInstalled = await isPluginInstalled('ZZZ-Plugin');
-        const wavesInstalled = await isPluginInstalled('waves-plugin');
+        const zzzInstalled = await isPluginInstalled("ZZZ-Plugin");
+        const wavesInstalled = await isPluginInstalled("waves-plugin");
 
-        const repoConfigs = [
-          { num: 1 },
-          { num: 2 },
-          { num: 3 },
-          { num: 4, requiredPlugins: zzzInstalled || wavesInstalled }
-        ];
+        const repoConfigs = [{ num: 1 }, { num: 2 }, { num: 3 }, { num: 4, requiredPlugins: zzzInstalled || wavesInstalled }];
 
-        const results = repoConfigs.map(repoConfig => {
+        const results = repoConfigs.map((repoConfig) => {
           const repoCache = parsedCache[repoConfig.num] || {};
-          let status = (repoCache.size > 0) ? 'exists' : 'not-exists';
+          let status = repoCache.size > 0 ? "exists" : "not-exists";
 
           if (repoConfig.num === 4 && !repoConfig.requiredPlugins) {
-            status = 'not-required';
+            status = "not-required";
           }
 
           return {
@@ -775,9 +719,9 @@ app.get("/api/home-stats", async (req, res) => {
             size: repoCache.size || 0,
             filesSize: repoCache.filesSize || 0,
             gitSize: repoCache.gitSize || 0,
-            downloadNode: repoCache.nodeName || '未知',
-            lastUpdate: repoCache.lastUpdate || 'N/A',
-            sha: repoCache.sha || '获取失败'
+            downloadNode: repoCache.nodeName || "未知",
+            lastUpdate: repoCache.lastUpdate || "N/A",
+            sha: repoCache.sha || "获取失败",
           };
         });
 
@@ -788,7 +732,7 @@ app.get("/api/home-stats", async (req, res) => {
     }
 
     console.log("  > [Web API] 执行实时扫描以生成或刷新数据...");
-    const { execSync } = require('child_process');
+    const { execSync } = require("child_process");
 
     const getDirectorySize = async (dirPath) => {
       let totalSize = 0;
@@ -802,34 +746,36 @@ app.get("/api/home-stats", async (req, res) => {
             try {
               const stats = await fs.stat(fullPath);
               totalSize += stats.size;
-            } catch { }
+            } catch {}
           }
         }
-      } catch { }
+      } catch {}
       return totalSize;
     };
 
     const isPluginInstalled = async (pluginName) => {
       try {
-        await fs.access(path.join(YUNZAI_ROOT_DIR, 'plugins', pluginName));
+        await fs.access(path.join(YUNZAI_ROOT_DIR, "plugins", pluginName));
         return true;
-      } catch { return false; }
+      } catch {
+        return false;
+      }
     };
-    const zzzInstalled = await isPluginInstalled('ZZZ-Plugin');
-    const wavesInstalled = await isPluginInstalled('waves-plugin');
+    const zzzInstalled = await isPluginInstalled("ZZZ-Plugin");
+    const wavesInstalled = await isPluginInstalled("waves-plugin");
 
     const repoConfigsForScan = [
-      { num: 1, name: 'Miao-Plugin-MBT', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT')?.path },
-      { num: 2, name: 'Miao-Plugin-MBT-2', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-2')?.path },
-      { num: 3, name: 'Miao-Plugin-MBT-3', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-3')?.path },
-      { num: 4, name: 'Miao-Plugin-MBT-4', path: REPO_ROOTS.find(r => r.name === 'Miao-Plugin-MBT-4')?.path, requiredPlugins: zzzInstalled || wavesInstalled },
+      { num: 1, name: "Miao-Plugin-MBT", path: REPO_ROOTS.find((r) => r.name === "Miao-Plugin-MBT")?.path },
+      { num: 2, name: "Miao-Plugin-MBT-2", path: REPO_ROOTS.find((r) => r.name === "Miao-Plugin-MBT-2")?.path },
+      { num: 3, name: "Miao-Plugin-MBT-3", path: REPO_ROOTS.find((r) => r.name === "Miao-Plugin-MBT-3")?.path },
+      { num: 4, name: "Miao-Plugin-MBT-4", path: REPO_ROOTS.find((r) => r.name === "Miao-Plugin-MBT-4")?.path, requiredPlugins: zzzInstalled || wavesInstalled },
     ];
 
     const newCacheData = {};
 
     const getGitRemoteNode = async (repoPath) => {
       try {
-        const configContent = await fs.readFile(path.join(repoPath, '.git', 'config'), 'utf-8');
+        const configContent = await fs.readFile(path.join(repoPath, ".git", "config"), "utf-8");
         const urlMatch = configContent.match(/url\s*=\s*(.+)/);
         if (urlMatch && urlMatch[1]) {
           const remoteUrl = urlMatch[1];
@@ -838,22 +784,22 @@ app.get("/api/home-stats", async (req, res) => {
           }
           if (remoteUrl.includes("github.com")) return "GitHub";
         }
-      } catch (err) { }
+      } catch (err) {}
       return "未知";
     };
 
     const resultsPromises = repoConfigsForScan.map(async (repo) => {
-      const result = { repo: repo.num, status: 'not-exists', roles: 0, images: 0, size: 0, filesSize: 0, gitSize: 0, downloadNode: '未知', lastUpdate: 'N/A', sha: '获取失败' };
+      const result = { repo: repo.num, status: "not-exists", roles: 0, images: 0, size: 0, filesSize: 0, gitSize: 0, downloadNode: "未知", lastUpdate: "N/A", sha: "获取失败" };
 
       if (repo.num === 4 && !repo.requiredPlugins) {
-        result.status = 'not-required';
+        result.status = "not-required";
       } else if (repo.path) {
         try {
           await fs.access(repo.path);
-          result.status = 'exists';
+          result.status = "exists";
 
           const stats = await getFolderStats(repo.path);
-          const gitPath = path.join(repo.path, '.git');
+          const gitPath = path.join(repo.path, ".git");
           result.gitSize = await getDirectorySize(gitPath);
           result.filesSize = stats.size;
           result.size = result.filesSize + result.gitSize;
@@ -861,14 +807,16 @@ app.get("/api/home-stats", async (req, res) => {
           result.images = stats.images;
 
           try {
-            result.sha = execSync('git rev-parse HEAD', { cwd: repo.path, encoding: 'utf-8', stdio: 'pipe' }).trim().substring(0, 20);
-            result.lastUpdate = execSync('git log -1 --pretty=format:%cd --date=format:"%Y-%m-%d %H:%M"', { cwd: repo.path, encoding: 'utf-8', stdio: 'pipe' }).trim();
+            result.sha = execSync("git rev-parse HEAD", { cwd: repo.path, encoding: "utf-8", stdio: "pipe" }).trim().substring(0, 20);
+            result.lastUpdate = execSync('git log -1 --pretty=format:%cd --date=format:"%Y-%m-%d %H:%M"', { cwd: repo.path, encoding: "utf-8", stdio: "pipe" }).trim();
           } catch (gitErr) {
             console.warn(`[Git Info] 获取仓库 ${repo.name} 的git信息失败:`, gitErr.message);
           }
 
           result.downloadNode = await getGitRemoteNode(repo.path);
-        } catch { /* 路径不存在，保持 not-exists 状态 */ }
+        } catch {
+          /* 路径不存在，保持 not-exists 状态 */
+        }
       }
 
       newCacheData[repo.num] = {
@@ -879,7 +827,7 @@ app.get("/api/home-stats", async (req, res) => {
         filesSize: result.filesSize,
         lastUpdate: result.lastUpdate,
         sha: result.sha,
-        nodeName: result.downloadNode
+        nodeName: result.downloadNode,
       };
       return result;
     });
@@ -888,17 +836,16 @@ app.get("/api/home-stats", async (req, res) => {
 
     newCacheData.lastUpdated = new Date().toISOString();
     try {
-      await fs.writeFile(REPO_STATS_CACHE_FILE, JSON.stringify(newCacheData, null, 2), 'utf-8');
+      await fs.writeFile(REPO_STATS_CACHE_FILE, JSON.stringify(newCacheData, null, 2), "utf-8");
       console.log("  > [Web API] 实时扫描完成，并已成功更新缓存文件。");
     } catch (writeErr) {
       console.error("  > [Web API] 写入仓库统计缓存失败:", writeErr);
     }
 
     res.json({ success: true, stats: finalResults });
-
   } catch (error) {
-    console.error('[API Home Stats] 获取统计数据出错:', error);
-    res.status(500).json({ success: false, error: '服务器获取统计数据时出错' });
+    console.error("[API Home Stats] 获取统计数据出错:", error);
+    res.status(500).json({ success: false, error: "服务器获取统计数据时出错" });
   }
 });
 
@@ -933,7 +880,7 @@ app.get("/api/aliases", async (req, res) => {
         }
         Object.assign(combinedAliases, data);
       } catch (err) {
-        if (err.code !== 'ENOENT') {
+        if (err.code !== "ENOENT") {
           console.warn(`[API Aliases] 读取或解析别名文件 ${filePath} 时出错:`, err.message);
         }
       }
@@ -943,21 +890,22 @@ app.get("/api/aliases", async (req, res) => {
     const aliasToMain = {};
 
     for (const mainName in combinedAliases) {
-      const aliases = Array.isArray(combinedAliases[mainName]) 
-        ? combinedAliases[mainName] 
-        : String(combinedAliases[mainName]).split(',').map(s => s.trim());
-      
+      const aliases = Array.isArray(combinedAliases[mainName])
+        ? combinedAliases[mainName]
+        : String(combinedAliases[mainName])
+            .split(",")
+            .map((s) => s.trim());
+
       const allNames = [mainName, ...aliases];
       mainToAliases[mainName] = allNames;
-      
-      allNames.forEach(name => {
+
+      allNames.forEach((name) => {
         aliasToMain[String(name).toLowerCase()] = mainName;
       });
     }
 
     console.log(`  > 成功加载并整合了 ${Object.keys(combinedAliases).length} 个角色的别名数据。`);
     res.json({ success: true, mainToAliases, aliasToMain });
-
   } catch (error) {
     console.error("[API Aliases] 获取别名数据时发生严重错误:", error);
     res.status(500).json({ success: false, error: "服务器在处理别名数据时出错。" });
@@ -965,51 +913,51 @@ app.get("/api/aliases", async (req, res) => {
 });
 
 // API: 获取已安装的图库列表
-app.get('/api/community-galleries', async (req, res) => {
+app.get("/api/community-galleries", async (req, res) => {
   console.log("请求: [GET] /api/community-galleries");
   try {
     const config = await communityGalleryManager.getConfig();
     res.json(Object.entries(config).map(([alias, data]) => ({ alias, ...data })));
   } catch (error) {
-    console.error('[API 社区图库] 获取列表失败:', error);
-    res.status(500).json({ success: false, message: '无法读取配置文件' });
+    console.error("[API 社区图库] 获取列表失败:", error);
+    res.status(500).json({ success: false, message: "无法读取配置文件" });
   }
 });
 
 // API: 添加新的社区图库
-app.post('/api/community-galleries/add', async (req, res) => {
+app.post("/api/community-galleries/add", async (req, res) => {
   console.log("请求: [POST] /api/community-galleries/add");
   const { url, alias } = req.body;
   if (!url || !alias) {
-    return res.status(400).json({ success: false, message: 'URL 和别名不能为空' });
+    return res.status(400).json({ success: false, message: "URL 和别名不能为空" });
   }
   const repoInfo = communityGalleryManager.extractOwnerAndRepo(url);
   if (!repoInfo) {
-    return res.status(400).json({ success: false, message: '无效的 Git URL 格式' });
+    return res.status(400).json({ success: false, message: "无效的 Git URL 格式" });
   }
   const folderName = `${repoInfo.owner}-${repoInfo.repo}`;
   const targetPath = path.join(thirdPartyBasePath, folderName);
 
   // 立即响应前端，告知任务已开始
-  res.status(202).json({ success: true, message: '已接收安装请求' });
+  res.status(202).json({ success: true, message: "已接收安装请求" });
 
   // 现在，后台任务在同一个 async 上下文中执行，await 会生效
   try {
-    broadcast({ type: 'progress', payload: { status: '开始任务...', progress: 0 } });
+    broadcast({ type: "progress", payload: { status: "开始任务...", progress: 0 } });
     const config = await communityGalleryManager.getConfig();
     if (config[alias]) {
       throw new Error(`别名 "${alias}" 已存在`);
     }
-    if ((await isDirectory(targetPath))) {
+    if (await isDirectory(targetPath)) {
       await fs.rm(targetPath, { recursive: true, force: true });
     }
 
-    // 现在 await 会阻塞后续代码，直到下载完成或失败 
+    // 现在 await 会阻塞后续代码，直到下载完成或失败
     const downloadResult = await gitManager.downloadRepo(url, targetPath, alias);
 
     const ownerInfo = await _fetchRepoOwnerInfo(url, console);
 
-    broadcast({ type: 'log', message: '分析仓库内容...' });
+    broadcast({ type: "log", message: "分析仓库内容..." });
 
     config[alias] = {
       url,
@@ -1022,64 +970,63 @@ app.post('/api/community-galleries/add', async (req, res) => {
     };
     await communityGalleryManager.saveConfig(config);
 
-    broadcast({ type: 'complete', payload: { success: true, message: `图库 "${alias}" 安装成功!` } });
-
+    broadcast({ type: "complete", payload: { success: true, message: `图库 "${alias}" 安装成功!` } });
   } catch (error) {
-    const errorMessage = error.friendlyMessage || error.message || '未知安装错误';
-    broadcast({ type: 'error', payload: { message: errorMessage } });
+    const errorMessage = error.friendlyMessage || error.message || "未知安装错误";
+    broadcast({ type: "error", payload: { message: errorMessage } });
     console.error(`安装社区图库 ${alias} 失败:`, error);
     // 清理失败的下载
-    await fs.rm(targetPath, { recursive: true, force: true }).catch(() => { });
+    await fs.rm(targetPath, { recursive: true, force: true }).catch(() => {});
   }
 });
 
 // API: 更新图库
-app.post('/api/community-galleries/update', async (req, res) => {
+app.post("/api/community-galleries/update", async (req, res) => {
   console.log("请求: [POST] /api/community-galleries/update");
   const { alias } = req.body;
   const config = await communityGalleryManager.getConfig();
   const repoInfo = config[alias];
-  if (!repoInfo) return res.status(404).json({ success: false, message: '未找到图库' });
-  res.status(202).json({ success: true, message: '已接收更新请求' });
+  if (!repoInfo) return res.status(404).json({ success: false, message: "未找到图库" });
+  res.status(202).json({ success: true, message: "已接收更新请求" });
   (async () => {
     try {
       const repoPath = path.join(thirdPartyBasePath, repoInfo.folderName);
       await gitManager.updateRepo(repoPath);
-      broadcast({ type: 'complete', payload: { success: true, message: `图库 "${alias}" 更新成功!` } });
+      broadcast({ type: "complete", payload: { success: true, message: `图库 "${alias}" 更新成功!` } });
     } catch (error) {
-      broadcast({ type: 'error', payload: { message: `更新失败: ${error.message}` } });
+      broadcast({ type: "error", payload: { message: `更新失败: ${error.message}` } });
     }
   })();
 });
 
 // API: 移除图库
-app.delete('/api/community-galleries/remove/:alias', async (req, res) => {
+app.delete("/api/community-galleries/remove/:alias", async (req, res) => {
   console.log(`请求: [DELETE] /api/community-galleries/remove/${req.params.alias}`);
   const { alias } = req.params;
   const config = await communityGalleryManager.getConfig();
   const repoInfo = config[alias];
-  if (!repoInfo) return res.status(404).json({ success: false, message: '未找到图库' });
+  if (!repoInfo) return res.status(404).json({ success: false, message: "未找到图库" });
   try {
     const repoPath = path.join(thirdPartyBasePath, repoInfo.folderName);
     await fs.rm(repoPath, { recursive: true, force: true });
     delete config[alias];
     await communityGalleryManager.saveConfig(config);
-    res.json({ success: true, message: '移除成功' });
+    res.json({ success: true, message: "移除成功" });
   } catch (error) {
-    res.status(500).json({ success: false, message: '移除失败' });
+    res.status(500).json({ success: false, message: "移除失败" });
   }
 });
 
 // [GET] /api/ban-list - 获取封禁列表
-app.get('/api/ban-list', async (req, res) => {
+app.get("/api/ban-list", async (req, res) => {
   console.log("请求: [GET] /api/ban-list");
   try {
     let banData = [];
     try {
-      const fileContent = await fs.readFile(BAN_LIST_FILE, 'utf-8');
+      const fileContent = await fs.readFile(BAN_LIST_FILE, "utf-8");
       banData = JSON.parse(fileContent);
     } catch (err) {
-      if (err.code === 'ENOENT') {
+      if (err.code === "ENOENT") {
         console.log(`  > 封禁列表文件 ${BAN_LIST_FILE} 不存在, 返回空列表。`);
         return res.json([]);
       }
@@ -1092,15 +1039,15 @@ app.get('/api/ban-list', async (req, res) => {
     }
 
     // 兼容性处理：如果还是旧的字符串数组格式，则转换为新的对象格式
-    if (banData.length > 0 && typeof banData[0] === 'string') {
+    if (banData.length > 0 && typeof banData[0] === "string") {
       console.log(`  > 检测到旧版封禁列表格式，正在转换为新格式...`);
       const imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
-      const pathGidMap = new Map(imageData.map(item => [item.path, item.gid]));
+      const pathGidMap = new Map(imageData.map((item) => [item.path, item.gid]));
 
-      const convertedData = banData.map(pathStr => ({
+      const convertedData = banData.map((pathStr) => ({
         gid: pathGidMap.get(pathStr) || "unknown", // 找不到对应 GID 则标记
         path: pathStr,
-        timestamp: new Date(0).toISOString() // 使用一个默认的旧时间戳
+        timestamp: new Date(0).toISOString(), // 使用一个默认的旧时间戳
       }));
       console.log(`  > 转换完成，返回 ${convertedData.length} 条记录。`);
       return res.json(convertedData);
@@ -1108,15 +1055,14 @@ app.get('/api/ban-list', async (req, res) => {
 
     console.log(`  > 成功读取 ${banData.length} 条封禁记录。`);
     res.json(banData);
-
   } catch (error) {
-    console.error('[API 封禁列表] 获取数据出错:', error);
+    console.error("[API 封禁列表] 获取数据出错:", error);
     res.status(500).json({ error: `读取封禁列表出错: ${error.message}` });
   }
 });
 
 // [POST] /api/update-ban-list - 更新封禁列表
-app.post('/api/update-ban-list', async (req, res) => {
+app.post("/api/update-ban-list", async (req, res) => {
   console.log("请求: [POST] /api/update-ban-list");
   const newBanList = req.body;
 
@@ -1128,28 +1074,28 @@ app.post('/api/update-ban-list', async (req, res) => {
 
   try {
     const jsonString = JSON.stringify(newBanList, null, 2);
-    await fs.writeFile(BAN_LIST_FILE, jsonString, 'utf-8');
+    await fs.writeFile(BAN_LIST_FILE, jsonString, "utf-8");
     res.json({ success: true, message: "封禁列表保存成功！" });
   } catch (error) {
-    console.error('[API 封禁列表] 保存数据出错:', error);
+    console.error("[API 封禁列表] 保存数据出错:", error);
     res.status(500).json({ success: false, error: `保存封禁列表出错: ${error.message}` });
   }
 });
 
 // [GET] /api/thumbnail/* - 动态生成并缓存缩略图
-app.get('/api/thumbnail/*', async (req, res) => {
+app.get("/api/thumbnail/*", async (req, res) => {
   const imageWebPath = req.params[0];
-  if (!imageWebPath || imageWebPath.includes('..')) {
-    return res.status(400).send('无效的图片路径');
+  if (!imageWebPath || imageWebPath.includes("..")) {
+    return res.status(400).send("无效的图片路径");
   }
 
   const sourcePhysicalPath = await resolvePhysicalPath(imageWebPath);
 
   if (!sourcePhysicalPath) {
-    return res.status(404).send('原始图片未找到');
+    return res.status(404).send("原始图片未找到");
   }
 
-  const cacheKey = crypto.createHash('md5').update(sourcePhysicalPath).digest('hex') + '.webp';
+  const cacheKey = crypto.createHash("md5").update(sourcePhysicalPath).digest("hex") + ".webp";
   const thumbnailPath = path.join(THUMBNAIL_DIRECTORY, cacheKey);
 
   try {
@@ -1159,15 +1105,12 @@ app.get('/api/thumbnail/*', async (req, res) => {
   } catch {
     // 缓存未命中
     try {
-      await sharp(sourcePhysicalPath)
-        .resize({ width: THUMBNAIL_WIDTH })
-        .webp({ quality: 100 })
-        .toFile(thumbnailPath);
+      await sharp(sourcePhysicalPath).resize({ width: THUMBNAIL_WIDTH }).webp({ quality: 100 }).toFile(thumbnailPath);
 
       res.sendFile(thumbnailPath);
     } catch (generationError) {
       console.error(`[缩略图] 生成 ${imageWebPath} 的缩略图失败:`, generationError);
-      res.status(500).send('缩略图生成失败');
+      res.status(500).send("缩略图生成失败");
     }
   }
 });
@@ -1190,22 +1133,13 @@ app.get("/api/images", async (req, res) => {
         try {
           const stats = await fs.stat(galleryBasePath);
           if (stats.isDirectory()) {
-            allImageData.push(
-              ...(await findGalleryImagesRecursively(
-                repo.name,
-                repo.path,
-                gallery,
-                galleryBasePath
-              ))
-            );
+            allImageData.push(...(await findGalleryImagesRecursively(repo.name, repo.path, gallery, galleryBasePath)));
           }
-        } catch { }
+        } catch {}
       }
     }
     allImageData.sort((a, b) => {
-      const repoCompare = (a.storageBox || "").localeCompare(
-        b.storageBox || ""
-      );
+      const repoCompare = (a.storageBox || "").localeCompare(b.storageBox || "");
       if (repoCompare !== 0) return repoCompare;
       return (a.urlPath || "").localeCompare(b.urlPath || "");
     });
@@ -1225,9 +1159,7 @@ app.get("/api/external-images", async (req, res) => {
     for (const [key, basePath] of Object.entries(ABSOLUTE_PLUGIN_IMAGE_PATHS)) {
       allPluginImages.push(...(await findPluginImages(key, basePath)));
     }
-    allPluginImages.sort((a, b) =>
-      (a.webPath || "").localeCompare(b.webPath || "")
-    );
+    allPluginImages.sort((a, b) => (a.webPath || "").localeCompare(b.webPath || ""));
     console.log(`[API 插件图] 返回 ${allPluginImages.length} 张图片`);
     res.json(allPluginImages);
   } catch (error) {
@@ -1250,61 +1182,56 @@ app.get("/api/gallery-config", async (req, res) => {
         console.warn(`配置文件 ${GALLERY_CONFIG_FILE} 格式无效 将使用默认值`);
       }
     } catch (readError) {
-      if (readError.code === 'ENOENT') {
+      if (readError.code === "ENOENT") {
         console.warn(`配置文件不存在: ${GALLERY_CONFIG_FILE} 将使用默认值`);
       } else {
-        console.error(
-          `读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错 将使用默认值:`,
-          readError
-        );
+        console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错 将使用默认值:`, readError);
       }
     }
     console.log("成功读取图库配置 (或使用默认值)");
     res.json({ success: true, config: configData });
   } catch (error) {
     console.error("[API 配置] 读取配置出错:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: `读取配置出错: ${error.message}`,
-        config: null,
-      });
+    res.status(500).json({
+      success: false,
+      error: `读取配置出错: ${error.message}`,
+      config: null,
+    });
   }
 });
 
 // [POST] 更新图库配置项
-app.post('/api/update-gallery-config', async (req, res) => {
+app.post("/api/update-gallery-config", async (req, res) => {
   console.log("请求: [POST] /api/update-gallery-config");
   const { configKey, newValue } = req.body;
   console.log(`  > 更新项: ${configKey}, 新值: ${newValue}`);
 
-  const allowedKeys = ['TuKuOP', 'PFL', 'Ai', 'EasterEgg', 'layout', 'Execution_Mode', 'Load_Level'];
+  const allowedKeys = ["TuKuOP", "PFL", "Ai", "EasterEgg", "layout", "Execution_Mode", "Load_Level"];
   if (!configKey || !allowedKeys.includes(configKey)) {
     console.error(`  > 错误: 无效的配置键: ${configKey}`);
     return res.status(400).json({ success: false, error: `无效的配置项: ${configKey}` });
   }
 
   let processedNewValue;
-  if (['TuKuOP', 'Ai', 'EasterEgg', 'layout'].includes(configKey)) {
+  if (["TuKuOP", "Ai", "EasterEgg", "layout"].includes(configKey)) {
     processedNewValue = Number(newValue);
     if (processedNewValue !== 0 && processedNewValue !== 1) {
       console.error(`  > 错误: ${configKey} 值无效 (非0或1): ${processedNewValue}`);
       return res.status(400).json({ success: false, error: `${configKey} 状态值必须是 0 或 1。` });
     }
-  } else if (configKey === 'PFL') {
+  } else if (configKey === "PFL") {
     processedNewValue = Number(newValue);
     if (![0, 1, 2].includes(processedNewValue)) {
       console.error(`  > 错误: PFL 值无效 (非0,1,2): ${processedNewValue}`);
       return res.status(400).json({ success: false, error: "PFL 净化等级值必须是 0, 1 或 2。" });
     }
-  } else if (configKey === 'Execution_Mode') {
-    if (newValue !== 'Batch' && newValue !== 'Serial') {
+  } else if (configKey === "Execution_Mode") {
+    if (newValue !== "Batch" && newValue !== "Serial") {
       console.error(`  > 错误: Execution_Mode 值无效 (非'Batch'或'Serial'): ${newValue}`);
       return res.status(400).json({ success: false, error: "Execution_Mode 模式值必须是 'Batch' 或 'Serial'。" });
     }
     processedNewValue = newValue;
-  } else if (configKey === 'Load_Level') {
+  } else if (configKey === "Load_Level") {
     processedNewValue = Number(newValue);
     if (![1, 2, 3].includes(processedNewValue)) {
       console.error(`  > 错误: Load_Level 值无效 (非1,2,3): ${processedNewValue}`);
@@ -1317,18 +1244,18 @@ app.post('/api/update-gallery-config', async (req, res) => {
   try {
     let configData = { ...DEFAULT_GALLERY_CONFIG };
     try {
-      const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, 'utf8');
+      const fileContents = await fs.readFile(GALLERY_CONFIG_FILE, "utf8");
       const loadedConfig = yaml.load(fileContents);
-      if (typeof loadedConfig === 'object' && loadedConfig !== null) {
+      if (typeof loadedConfig === "object" && loadedConfig !== null) {
         configData = { ...configData, ...loadedConfig };
       }
     } catch (readError) {
-      if (readError.code !== 'ENOENT') console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错:`, readError);
+      if (readError.code !== "ENOENT") console.error(`读取现有配置文件 ${GALLERY_CONFIG_FILE} 出错:`, readError);
     }
 
     configData[configKey] = processedNewValue;
     const newYamlContents = yaml.dump(configData, { indent: 2 });
-    await fs.writeFile(GALLERY_CONFIG_FILE, newYamlContents, 'utf8');
+    await fs.writeFile(GALLERY_CONFIG_FILE, newYamlContents, "utf8");
 
     console.log(`  > 成功更新 ${configKey} 为 ${processedNewValue}`);
     res.json({ success: true, message: `设置 '${configKey}' 成功！`, newConfig: configData });
@@ -1347,28 +1274,21 @@ app.get("/api/local-images", async (req, res) => {
       try {
         const stats = await fs.stat(repo.path);
         if (!stats.isDirectory()) continue;
-      } catch { continue; }
+      } catch {
+        continue;
+      }
       for (const gallery of MAIN_GALLERY_FOLDERS) {
         const galleryBasePath = path.join(repo.path, gallery);
         try {
           const stats = await fs.stat(galleryBasePath);
           if (stats.isDirectory()) {
-            allImageData.push(
-              ...(await findGalleryImagesRecursively(
-                repo.name,
-                repo.path,
-                gallery,
-                galleryBasePath
-              ))
-            );
+            allImageData.push(...(await findGalleryImagesRecursively(repo.name, repo.path, gallery, galleryBasePath)));
           }
-        } catch { }
+        } catch {}
       }
     }
     allImageData.sort((a, b) => {
-      const repoCompare = (a.storageBox || "").localeCompare(
-        b.storageBox || ""
-      );
+      const repoCompare = (a.storageBox || "").localeCompare(b.storageBox || "");
       if (repoCompare !== 0) return repoCompare;
       return (a.urlPath || "").localeCompare(b.urlPath || "");
     });
@@ -1383,13 +1303,9 @@ app.get("/api/local-images", async (req, res) => {
 app.get("/api/folder-contents", async (req, res) => {
   const folderName = req.query.folder;
   const storageBox = req.query.storageBox;
-  console.log(
-    `请求: [GET] /api/folder-contents?folder=${folderName}&storageBox=${storageBox}`
-  );
+  console.log(`请求: [GET] /api/folder-contents?folder=${folderName}&storageBox=${storageBox}`);
   if (!folderName || !storageBox) {
-    return res
-      .status(400)
-      .json({ error: "缺少 'folder' 或 'storageBox' 参数。" });
+    return res.status(400).json({ error: "缺少 'folder' 或 'storageBox' 参数。" });
   }
   const repo = REPO_ROOTS.find((r) => r.name === storageBox);
   if (!repo) {
@@ -1403,15 +1319,13 @@ app.get("/api/folder-contents", async (req, res) => {
       try {
         const stats = await fs.stat(characterFolderPath);
         if (stats.isDirectory()) {
-          console.log(
-            `  > 在 ${storageBox}/${gallery} 找到文件夹: ${characterFolderPath}`
-          );
+          console.log(`  > 在 ${storageBox}/${gallery} 找到文件夹: ${characterFolderPath}`);
           folderFound = true;
           const files = await fs.readdir(characterFolderPath);
           filesList = files.filter((f) => !f.startsWith("."));
           break;
         }
-      } catch { }
+      } catch {}
     }
     if (!folderFound) {
       console.warn(`  > 在仓库 ${storageBox} 中未找到文件夹: ${folderName}`);
@@ -1420,15 +1334,10 @@ app.get("/api/folder-contents", async (req, res) => {
     console.log(`  > 返回 ${filesList.length} 个文件`);
     res.json(filesList);
   } catch (error) {
-    console.error(
-      `[API 文件夹内容] 读取 ${storageBox}/${folderName} 出错:`,
-      error
-    );
-    res
-      .status(500)
-      .json({
-        error: `读取文件夹 '${folderName}' (仓库: ${storageBox}) 出错: ${error.message}`,
-      });
+    console.error(`[API 文件夹内容] 读取 ${storageBox}/${folderName} 出错:`, error);
+    res.status(500).json({
+      error: `读取文件夹 '${folderName}' (仓库: ${storageBox}) 出错: ${error.message}`,
+    });
   }
 });
 
@@ -1436,19 +1345,14 @@ app.get("/api/folder-contents", async (req, res) => {
 app.get("/api/userdata", async (req, res) => {
   console.log("请求: [GET] /api/userdata");
   try {
-    const data = await safelyReadJsonFile(
-      INTERNAL_USER_DATA_FILE,
-      "内部用户数据"
-    );
+    const data = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
     res.json(data);
   } catch (error) {
     console.error("[API 内数据] 获取数据出错:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: `读取内部用户数据出错: ${error.message}`,
-      });
+    res.status(500).json({
+      success: false,
+      error: `读取内部用户数据出错: ${error.message}`,
+    });
   }
 });
 
@@ -1457,26 +1361,18 @@ app.post("/api/update-userdata", async (req, res) => {
   console.log("请求: [POST] /api/update-userdata");
   const updatedUserData = req.body;
   if (!Array.isArray(updatedUserData)) {
-    return res
-      .status(400)
-      .json({ success: false, error: "请求体必须是 JSON 数组。" });
+    return res.status(400).json({ success: false, error: "请求体必须是 JSON 数组。" });
   }
   console.log(`  > 收到 ${updatedUserData.length} 条记录 准备保存...`);
   try {
-    await safelyWriteJsonFile(
-      INTERNAL_USER_DATA_FILE,
-      updatedUserData,
-      "内部用户数据"
-    );
+    await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, updatedUserData, "内部用户数据");
     res.json({ success: true, message: "内部用户数据保存成功！" });
   } catch (error) {
     console.error("[API 内数据] 保存数据出错:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: `保存内部用户数据出错: ${error.message}`,
-      });
+    res.status(500).json({
+      success: false,
+      error: `保存内部用户数据出错: ${error.message}`,
+    });
   }
 });
 
@@ -1484,19 +1380,14 @@ app.post("/api/update-userdata", async (req, res) => {
 app.get("/api/external-userdata", async (req, res) => {
   console.log("请求: [GET] /api/external-userdata");
   try {
-    const data = await safelyReadJsonFile(
-      EXTERNAL_USER_DATA_FILE,
-      "外部用户数据"
-    );
+    const data = await safelyReadJsonFile(EXTERNAL_USER_DATA_FILE, "外部用户数据");
     res.json(data);
   } catch (error) {
     console.error("[API 外数据] 获取数据出错:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: `读取外部用户数据出错: ${error.message}`,
-      });
+    res.status(500).json({
+      success: false,
+      error: `读取外部用户数据出错: ${error.message}`,
+    });
   }
 });
 
@@ -1505,29 +1396,18 @@ app.post("/api/update-external-userdata", async (req, res) => {
   console.log("请求: [POST] /api/update-external-userdata");
   const updatedExternalData = req.body;
   if (!Array.isArray(updatedExternalData)) {
-    return res
-      .status(400)
-      .json({ success: false, error: "请求体必须是 JSON 数组。" });
+    return res.status(400).json({ success: false, error: "请求体必须是 JSON 数组。" });
   }
-  console.log(
-    `  > 收到 ${updatedExternalData.length} 条记录 准备处理并保存...`
-  );
+  console.log(`  > 收到 ${updatedExternalData.length} 条记录 准备处理并保存...`);
   try {
     const geldIdRegex = /^[a-zA-Z0-9]{20}$/;
     const processedData = updatedExternalData.map((entry) => {
       if (!entry.attributes) entry.attributes = {};
-      if (
-        entry.attributes.hasOwnProperty("gid") &&
-        !entry.attributes.hasOwnProperty("geldId")
-      ) {
+      if (entry.attributes.hasOwnProperty("gid") && !entry.attributes.hasOwnProperty("geldId")) {
         entry.attributes.geldId = entry.attributes.gid;
         delete entry.attributes.gid;
       }
-      if (
-        !entry.attributes.geldId ||
-        typeof entry.attributes.geldId !== "string" ||
-        !geldIdRegex.test(entry.attributes.geldId)
-      ) {
+      if (!entry.attributes.geldId || typeof entry.attributes.geldId !== "string" || !geldIdRegex.test(entry.attributes.geldId)) {
         entry.attributes.geldId = generateGeldId(20);
       }
       entry.timestamp = new Date().toISOString();
@@ -1536,25 +1416,19 @@ app.post("/api/update-external-userdata", async (req, res) => {
       }
       return entry;
     });
-    await safelyWriteJsonFile(
-      EXTERNAL_USER_DATA_FILE,
-      processedData,
-      "外部用户数据"
-    );
+    await safelyWriteJsonFile(EXTERNAL_USER_DATA_FILE, processedData, "外部用户数据");
     res.json({ success: true, message: "外部用户数据保存成功！" });
   } catch (error) {
     console.error("[API 外数据] 保存数据出错:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: `保存外部用户数据出错: ${error.message}`,
-      });
+    res.status(500).json({
+      success: false,
+      error: `保存外部用户数据出错: ${error.message}`,
+    });
   }
 });
 
 // [POST] 仓库核对修正 (使用修正后的自动确定仓库逻辑)
-app.post('/api/batch-update-storagebox', async (req, res) => {
+app.post("/api/batch-update-storagebox", async (req, res) => {
   console.log("请求: [POST] /api/batch-update-storagebox");
   const { entriesToUpdate } = req.body;
 
@@ -1573,18 +1447,19 @@ app.post('/api/batch-update-storagebox', async (req, res) => {
     let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
     let updatedCount = 0;
 
-    entriesToUpdate.forEach(itemToUpdate => {
-      if (!itemToUpdate || typeof itemToUpdate.gid !== 'string' || typeof itemToUpdate.correctStorageBox !== 'string') {
+    entriesToUpdate.forEach((itemToUpdate) => {
+      if (!itemToUpdate || typeof itemToUpdate.gid !== "string" || typeof itemToUpdate.correctStorageBox !== "string") {
         console.warn("  > 跳过无效的更新条目:", itemToUpdate);
         return;
       }
 
-      const entryIndex = imageData.findIndex(entry => entry.gid === itemToUpdate.gid);
+      const entryIndex = imageData.findIndex((entry) => entry.gid === itemToUpdate.gid);
 
       if (entryIndex > -1) {
         const newStorageBoxValue = itemToUpdate.correctStorageBox;
 
-        if (imageData[entryIndex].storagebox !== newStorageBoxValue) { // 与JSON中当前值比较
+        if (imageData[entryIndex].storagebox !== newStorageBoxValue) {
+          // 与JSON中当前值比较
           console.log(`    > 校准 GID: ${itemToUpdate.gid}, 从 "${imageData[entryIndex].storagebox}" -> "${newStorageBoxValue}"`);
           imageData[entryIndex].storagebox = newStorageBoxValue; // 更新为原始大小写
           imageData[entryIndex].timestamp = new Date().toISOString();
@@ -1605,7 +1480,6 @@ app.post('/api/batch-update-storagebox', async (req, res) => {
       console.log("  > 没有记录的 storagebox 被实际更改。");
       res.json({ success: true, message: "没有记录的 storagebox 需要更新。", updatedCount: 0 });
     }
-
   } catch (error) {
     console.error("[API Storagebox校准] 处理更新时出错:", error);
     res.status(500).json({ success: false, error: `校准 storagebox 失败: ${error.message}` });
@@ -1616,9 +1490,7 @@ app.post('/api/batch-update-storagebox', async (req, res) => {
 app.post("/api/import-image", async (req, res) => {
   console.log("请求: [POST] /api/import-image (自动确定仓库)");
   const { tempImagePath, targetFolder, targetFilename, attributes } = req.body;
-  console.log(
-    `  > 导入: ${tempImagePath} -> ${targetFolder}/${targetFilename}`
-  );
+  console.log(`  > 导入: ${tempImagePath} -> ${targetFolder}/${targetFilename}`);
   if (
     !tempImagePath ||
     !targetFolder ||
@@ -1637,9 +1509,7 @@ app.post("/api/import-image", async (req, res) => {
     targetFilename.includes("\\")
   ) {
     console.error("  > 错误: 导入参数无效。", req.body);
-    return res
-      .status(400)
-      .json({ success: false, error: "导入请求的参数无效。" });
+    return res.status(400).json({ success: false, error: "导入请求的参数无效。" });
   }
   const tempImageFilename = path.basename(tempImagePath);
   const sourcePhysicalPath = path.join(IMGTEMP_DIRECTORY, tempImageFilename);
@@ -1651,12 +1521,10 @@ app.post("/api/import-image", async (req, res) => {
     }
   } catch {
     console.error(`  > 错误: 源文件无效: ${sourcePhysicalPath}`);
-    return res
-      .status(400)
-      .json({
-        success: false,
-        error: `要导入的图片 '${tempImageFilename}' 在临时目录中不存在或不是文件。`,
-      });
+    return res.status(400).json({
+      success: false,
+      error: `要导入的图片 '${tempImageFilename}' 在临时目录中不存在或不是文件。`,
+    });
   }
 
   let determinedStorageBox = null; // 原始大小写
@@ -1669,7 +1537,9 @@ app.post("/api/import-image", async (req, res) => {
     try {
       const stats = await fs.stat(repo.path);
       if (!stats.isDirectory()) continue;
-    } catch { continue; }
+    } catch {
+      continue;
+    }
     for (const gallery of MAIN_GALLERY_FOLDERS) {
       const potentialDir = path.join(repo.path, gallery, targetFolder);
       try {
@@ -1680,69 +1550,43 @@ app.post("/api/import-image", async (req, res) => {
           destinationDirectoryPhysicalPath = potentialDir;
           targetRepoPath = repo.path;
           folderExists = true;
-          console.log(
-            `  > 目标文件夹在 ${determinedStorageBox}/${determinedGallery} 中找到`
-          );
+          console.log(`  > 目标文件夹在 ${determinedStorageBox}/${determinedGallery} 中找到`);
           break;
         }
-      } catch { }
+      } catch {}
     }
     if (folderExists) break;
   }
 
   if (!folderExists) {
-    if (REPO_ROOTS.length === 0)
-      return res
-        .status(500)
-        .json({ success: false, error: "服务器未配置任何仓库目录。" });
-    if (MAIN_GALLERY_FOLDERS.length === 0)
-      return res
-        .status(500)
-        .json({ success: false, error: "服务器未配置主图库目录分类。" });
+    if (REPO_ROOTS.length === 0) return res.status(500).json({ success: false, error: "服务器未配置任何仓库目录。" });
+    if (MAIN_GALLERY_FOLDERS.length === 0) return res.status(500).json({ success: false, error: "服务器未配置主图库目录分类。" });
     determinedStorageBox = REPO_ROOTS[0].name;
     determinedGallery = MAIN_GALLERY_FOLDERS[0];
     targetRepoPath = REPO_ROOTS[0].path;
-    destinationDirectoryPhysicalPath = path.join(
-      targetRepoPath,
-      determinedGallery,
-      targetFolder
-    );
-    console.log(
-      `  > 目标文件夹未找到 将在默认仓库 ${determinedStorageBox}/${determinedGallery} 下创建`
-    );
+    destinationDirectoryPhysicalPath = path.join(targetRepoPath, determinedGallery, targetFolder);
+    console.log(`  > 目标文件夹未找到 将在默认仓库 ${determinedStorageBox}/${determinedGallery} 下创建`);
   }
 
-  const destinationFilePhysicalPath = path.join(
-    destinationDirectoryPhysicalPath,
-    targetFilename
-  );
-  const relativePath =
-    `${determinedGallery}/${targetFolder}/${targetFilename}`.replace(
-      /\\/g,
-      "/"
-    ); // 相对路径
+  const destinationFilePhysicalPath = path.join(destinationDirectoryPhysicalPath, targetFilename);
+  const relativePath = `${determinedGallery}/${targetFolder}/${targetFilename}`.replace(/\\/g, "/"); // 相对路径
   console.log(`  > 目标物理路径: ${destinationFilePhysicalPath}`);
   console.log(`  > 存储相对路径: ${relativePath}`);
 
   try {
     await fs.access(destinationFilePhysicalPath);
     console.error(`  > 错误: 目标文件已存在: ${destinationFilePhysicalPath}`);
-    return res
-      .status(409)
-      .json({
-        success: false,
-        error: `目标位置已存在同名文件 '${targetFilename}'。`,
-      });
-  } catch { }
+    return res.status(409).json({
+      success: false,
+      error: `目标位置已存在同名文件 '${targetFilename}'。`,
+    });
+  } catch {}
 
   try {
     await fs.mkdir(destinationDirectoryPhysicalPath, { recursive: true });
     await fs.rename(sourcePhysicalPath, destinationFilePhysicalPath);
     console.log(`  > 文件移动成功`);
-    let savedEntries = await safelyReadJsonFile(
-      INTERNAL_USER_DATA_FILE,
-      "内部用户数据"
-    );
+    let savedEntries = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
     const newEntry = {
       storagebox: determinedStorageBox, // 写入小写
       characterName: targetFolder,
@@ -1766,11 +1610,7 @@ app.post("/api/import-image", async (req, res) => {
     };
     console.log(`  > 新记录准备完毕 GID: ${newEntry.gid}`);
     savedEntries.push(newEntry);
-    await safelyWriteJsonFile(
-      INTERNAL_USER_DATA_FILE,
-      savedEntries,
-      "内部用户数据"
-    );
+    await safelyWriteJsonFile(INTERNAL_USER_DATA_FILE, savedEntries, "内部用户数据");
     console.log(`  > 导入成功: ${targetFilename} 到 ${determinedStorageBox}`);
     // 返回给前端的 newEntry 中包含原始大小写的 storageBox 和相对路径 path
     res.json({
@@ -1790,13 +1630,11 @@ app.post("/api/import-image", async (req, res) => {
       await fs.rename(destinationFilePhysicalPath, sourcePhysicalPath);
       console.log("  > 尝试回滚文件移动成功");
     } catch (rollbackError) {
-      if (rollbackError.code !== 'ENOENT') {
+      if (rollbackError.code !== "ENOENT") {
         console.error("  > 尝试回滚文件移动失败:", rollbackError);
       }
     }
-    res
-      .status(500)
-      .json({ success: false, error: `导入过程中出错: ${error.message}` });
+    res.status(500).json({ success: false, error: `导入过程中出错: ${error.message}` });
   }
 });
 
@@ -1827,7 +1665,7 @@ app.get("/api/temp-images", async (req, res) => {
     console.log(`  > 返回 ${tempImages.length} 张临时图片`);
     res.json(tempImages);
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       console.error("[API 临时图] 读取目录出错:", error);
       res.status(500).json({ error: "读取临时图片目录出错。" });
     } else {
@@ -1859,7 +1697,7 @@ app.get("/api/background-images", async (req, res) => {
     console.log(`  > 返回 ${backgroundImages.length} 个背景图片文件名`);
     res.json(backgroundImages);
   } catch (error) {
-    if (error.code !== 'ENOENT') {
+    if (error.code !== "ENOENT") {
       console.error("[API 背景图] 读取目录出错:", error);
       res.status(500).json({ error: "查找背景图片出错。" });
     } else {
@@ -1878,7 +1716,9 @@ app.get("/api/character-folders", async (req, res) => {
       try {
         const stats = await fs.stat(repo.path);
         if (!stats.isDirectory()) continue;
-      } catch { continue; }
+      } catch {
+        continue;
+      }
       for (const gallery of MAIN_GALLERY_FOLDERS) {
         const galleryPath = path.join(repo.path, gallery);
         try {
@@ -1892,7 +1732,7 @@ app.get("/api/character-folders", async (req, res) => {
               folderSet.add(entry.name);
             }
           }
-        } catch { }
+        } catch {}
       }
     }
     const folders = Array.from(folderSet).sort((a, b) => a.localeCompare(b));
@@ -1907,9 +1747,7 @@ app.get("/api/character-folders", async (req, res) => {
 // [GET] 获取文件夹内最大文件编号
 app.get("/api/last-file-number", async (req, res) => {
   const folderName = req.query.folder;
-  console.log(
-    `请求: [GET] /api/last-file-number?folder=${folderName} (自动查找仓库)`
-  );
+  console.log(`请求: [GET] /api/last-file-number?folder=${folderName} (自动查找仓库)`);
   if (!folderName) {
     return res.status(400).json({ error: "缺少 'folder' 参数。" });
   }
@@ -1921,15 +1759,15 @@ app.get("/api/last-file-number", async (req, res) => {
       try {
         const stats = await fs.stat(repo.path);
         if (!stats.isDirectory()) continue;
-      } catch { continue; }
+      } catch {
+        continue;
+      }
       for (const gallery of MAIN_GALLERY_FOLDERS) {
         const characterFolderPath = path.join(repo.path, gallery, folderName);
         try {
           const stats = await fs.stat(characterFolderPath);
           if (!stats.isDirectory()) continue;
-          console.log(
-            `  > 在仓库 ${repo.name}/${gallery} 找到文件夹: ${characterFolderPath}`
-          );
+          console.log(`  > 在仓库 ${repo.name}/${gallery} 找到文件夹: ${characterFolderPath}`);
           const files = await fs.readdir(characterFolderPath);
           files.forEach((file) => {
             const match = file.match(filenamePattern);
@@ -1940,12 +1778,10 @@ app.get("/api/last-file-number", async (req, res) => {
               }
             }
           });
-        } catch { }
+        } catch {}
       }
     }
-    console.log(
-      `  > 文件夹 ${folderName} 在所有仓库中找到的最大编号: ${maxNumber}`
-    );
+    console.log(`  > 文件夹 ${folderName} 在所有仓库中找到的最大编号: ${maxNumber}`);
     res.json({ lastNumber: maxNumber });
   } catch (error) {
     console.error(`[API 最大编号] 查找 ${folderName} 出错:`, error);
@@ -1968,12 +1804,7 @@ app.post("/api/rename-sequence-files", async (req, res) => {
   const stage2Ops = [];
   for (const folderPlan of fixPlan) {
     const { folderName, storageBox, filesToRename } = folderPlan;
-    if (
-      !folderName ||
-      !storageBox ||
-      !Array.isArray(filesToRename) ||
-      filesToRename.length === 0
-    ) {
+    if (!folderName || !storageBox || !Array.isArray(filesToRename) || filesToRename.length === 0) {
       errors.push(`计划项无效`);
       console.error(`    > 错误: 计划项无效`, folderPlan);
       continue;
@@ -1993,7 +1824,7 @@ app.post("/api/rename-sequence-files", async (req, res) => {
           folderPath = potentialPath;
           break;
         }
-      } catch { }
+      } catch {}
     }
     if (!folderPath) {
       errors.push(`未找到文件夹: ${storageBox}/${folderName}`);
@@ -2016,17 +1847,9 @@ app.post("/api/rename-sequence-files", async (req, res) => {
     try {
       await fs.rename(op.oldPath, op.newPath);
     } catch (renameError) {
-      if (renameError.code !== 'ENOENT') {
-        console.error(
-          `    [阶段1 失败] ${path.basename(op.oldPath)} -> ${path.basename(
-            op.newPath
-          )}:`,
-          renameError
-        );
-        errors.push(
-          `重命名 ${path.basename(op.oldPath)} (临时) 失败: ${renameError.message
-          }`
-        );
+      if (renameError.code !== "ENOENT") {
+        console.error(`    [阶段1 失败] ${path.basename(op.oldPath)} -> ${path.basename(op.newPath)}:`, renameError);
+        errors.push(`重命名 ${path.basename(op.oldPath)} (临时) 失败: ${renameError.message}`);
       } else {
         console.warn(`    [阶段1 跳过] 源文件不存在: ${op.oldPath}`);
       }
@@ -2038,16 +1861,9 @@ app.post("/api/rename-sequence-files", async (req, res) => {
       await fs.rename(op.oldPath, op.newPath);
       totalRenamedFiles++;
     } catch (renameError) {
-      if (renameError.code !== 'ENOENT') {
-        console.error(
-          `    [阶段2 失败] ${path.basename(op.oldPath)} -> ${path.basename(
-            op.newPath
-          )}:`,
-          renameError
-        );
-        errors.push(
-          `重命名到 ${path.basename(op.newPath)} 失败: ${renameError.message}`
-        );
+      if (renameError.code !== "ENOENT") {
+        console.error(`    [阶段2 失败] ${path.basename(op.oldPath)} -> ${path.basename(op.newPath)}:`, renameError);
+        errors.push(`重命名到 ${path.basename(op.newPath)} 失败: ${renameError.message}`);
       } else {
         console.warn(`    [阶段2 跳过] 临时文件不存在: ${op.oldPath}`);
       }
@@ -2063,20 +1879,18 @@ app.post("/api/rename-sequence-files", async (req, res) => {
     });
   } else {
     console.error(`  > 序号修复出现 ${errors.length} 个错误`);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: `修复过程中出现 ${errors.length} 个错误`,
-        errors: errors,
-        processedFolders: totalProcessedFolders,
-        renamedFiles: totalRenamedFiles,
-      });
+    res.status(500).json({
+      success: false,
+      error: `修复过程中出现 ${errors.length} 个错误`,
+      errors: errors,
+      processedFolders: totalProcessedFolders,
+      renamedFiles: totalRenamedFiles,
+    });
   }
 });
 
 // [POST] 处理仓库转移请求
-app.post('/api/transfer-folder', async (req, res) => {
+app.post("/api/transfer-folder", async (req, res) => {
   console.log("请求: [POST] /api/transfer-folder");
   const { sourceStorageBox, sourceFolderName, targetStorageBox } = req.body;
   console.log(`  > 转移请求: 从 [${sourceStorageBox}] 的 "${sourceFolderName}" 到 [${targetStorageBox}]`);
@@ -2087,8 +1901,8 @@ app.post('/api/transfer-folder', async (req, res) => {
   if (sourceStorageBox === targetStorageBox) {
     return res.status(400).json({ success: false, error: "源仓库和目标仓库不能相同" });
   }
-  const sourceRepo = REPO_ROOTS.find(r => r.name === sourceStorageBox);
-  const targetRepo = REPO_ROOTS.find(r => r.name === targetStorageBox);
+  const sourceRepo = REPO_ROOTS.find((r) => r.name === sourceStorageBox);
+  const targetRepo = REPO_ROOTS.find((r) => r.name === targetStorageBox);
   if (!sourceRepo || !targetRepo) {
     return res.status(404).json({ success: false, error: "指定的源仓库或目标仓库未找到" });
   }
@@ -2112,10 +1926,10 @@ app.post('/api/transfer-folder', async (req, res) => {
           foundSource = true;
           console.log(`  > 找到源文件夹: ${sourceFolderPath}`);
           filesToMove = await fs.readdir(sourceFolderPath);
-          filesToMove = filesToMove.filter(f => !f.startsWith('.'));
+          filesToMove = filesToMove.filter((f) => !f.startsWith("."));
           break;
         }
-      } catch { }
+      } catch {}
     }
     if (!foundSource) {
       throw new Error(`在源仓库 [${sourceStorageBox}] 中未找到文件夹 "${sourceFolderName}"`);
@@ -2130,7 +1944,7 @@ app.post('/api/transfer-folder', async (req, res) => {
     try {
       await fs.access(targetFolderPath);
       throw new Error(`目标仓库 [${targetStorageBox}] 中已存在同名文件夹 "${sourceFolderName}"`);
-    } catch { }
+    } catch {}
 
     // 移动文件夹
     console.log(`  > 准备移动文件夹从 ${sourceFolderPath} 到 ${targetFolderPath}`);
@@ -2145,13 +1959,13 @@ app.post('/api/transfer-folder', async (req, res) => {
     const sourceStorageboxLower = sourceStorageBox.toLowerCase();
     const sourceRelativePrefix = `${sourceGallery}/${sourceFolderName}/`;
 
-    const updatedImageData = imageData.map(entry => {
+    const updatedImageData = imageData.map((entry) => {
       if (entry.storagebox?.toLowerCase() === sourceStorageboxLower && entry.path?.startsWith(sourceRelativePrefix)) {
         const updatedEntry = { ...entry };
         updatedEntry.storagebox = targetStorageBox;
         updatedEntry.timestamp = new Date().toISOString();
         updatedCount++;
-        console.log(`    > 更新条目: GID ${entry.gid || 'N/A'}, 原路径 ${entry.path}, 新仓库 ${targetStorageboxLower}`);
+        console.log(`    > 更新条目: GID ${entry.gid || "N/A"}, 原路径 ${entry.path}, 新仓库 ${targetStorageboxLower}`);
         return updatedEntry;
       }
       return entry;
@@ -2166,7 +1980,6 @@ app.post('/api/transfer-folder', async (req, res) => {
       filesMoved: filesToMove.length,
       jsonUpdated: updatedCount,
     });
-
   } catch (error) {
     console.error(`[API 仓库转移] 处理转移时出错:`, error);
     res.status(500).json({ success: false, error: `仓库转移失败: ${error.message}` });
@@ -2182,30 +1995,28 @@ app.get("/api/file-sizes", async (req, res) => {
       try {
         const stats = await fs.stat(repo.path);
         if (!stats.isDirectory()) continue;
-      } catch { continue; }
+      } catch {
+        continue;
+      }
       for (const gallery of MAIN_GALLERY_FOLDERS) {
         const galleryBasePath = path.join(repo.path, gallery);
         try {
           const stats = await fs.stat(galleryBasePath);
           if (!stats.isDirectory()) continue;
           const findAndStatFiles = async (currentRelativePath = "") => {
-            const currentFullPath = path.join(
-              galleryBasePath,
-              currentRelativePath
-            );
+            const currentFullPath = path.join(galleryBasePath, currentRelativePath);
             try {
               const stats = await fs.stat(currentFullPath);
               if (!stats.isDirectory()) return;
-            } catch { return; }
+            } catch {
+              return;
+            }
 
             const entries = await fs.readdir(currentFullPath, {
               withFileTypes: true,
             });
             for (const entry of entries) {
-              const entryRelativePath = path.join(
-                currentRelativePath,
-                entry.name
-              );
+              const entryRelativePath = path.join(currentRelativePath, entry.name);
               const entryFullPath = path.join(currentFullPath, entry.name);
               if (entry.isDirectory()) {
                 await findAndStatFiles(entryRelativePath);
@@ -2219,11 +2030,7 @@ app.get("/api/file-sizes", async (req, res) => {
                         const pathSegments = entryRelativePath.split(path.sep);
                         const fileName = pathSegments.pop() || entry.name;
                         const folderName = pathSegments.pop() || "unknown";
-                        const relativeUrlPath =
-                          `${gallery}/${entryRelativePath}`.replace(
-                            /\\/g,
-                            "/"
-                          );
+                        const relativeUrlPath = `${gallery}/${entryRelativePath}`.replace(/\\/g, "/");
                         const repoMatch = repo.name.match(/-(\d+)$/);
                         return {
                           storageBox: repo.name,
@@ -2234,10 +2041,7 @@ app.get("/api/file-sizes", async (req, res) => {
                           repoNumber: repoMatch ? parseInt(repoMatch[1], 10) : 1,
                         };
                       } catch (statError) {
-                        console.error(
-                          `[文件大小] 无法获取文件状态: ${entryFullPath}`,
-                          statError
-                        );
+                        console.error(`[文件大小] 无法获取文件状态: ${entryFullPath}`, statError);
                         return null;
                       }
                     })()
@@ -2247,7 +2051,7 @@ app.get("/api/file-sizes", async (req, res) => {
             }
           };
           await findAndStatFiles();
-        } catch { }
+        } catch {}
       }
     }
 
@@ -2271,15 +2075,13 @@ app.get("/api/image-md5", async (req, res) => {
   const physicalPath = await resolvePhysicalPath(imageWebPath);
   if (!physicalPath) {
     console.error(`  > 错误: 无法解析物理路径或文件不存在: ${imageWebPath}`);
-    return res
-      .status(404)
-      .json({ error: `文件未找到或路径无法解析: ${imageWebPath}` });
+    return res.status(404).json({ error: `文件未找到或路径无法解析: ${imageWebPath}` });
   }
   console.log(`  > 物理路径: ${physicalPath}`);
 
   const calculateMd5 = async (filePath) => {
     const fileBuffer = await fs.readFile(filePath);
-    return crypto.createHash('md5').update(fileBuffer).digest('hex');
+    return crypto.createHash("md5").update(fileBuffer).digest("hex");
   };
 
   try {
@@ -2288,9 +2090,7 @@ app.get("/api/image-md5", async (req, res) => {
     res.json({ success: true, md5: md5 });
   } catch (error) {
     console.error(`[API MD5] 计算 ${physicalPath} 出错:`, error);
-    res
-      .status(500)
-      .json({ success: false, error: `计算 MD5 出错: ${error.message}` });
+    res.status(500).json({ success: false, error: `计算 MD5 出错: ${error.message}` });
   }
 });
 // [GET] 获取二级标签列表
@@ -2301,7 +2101,7 @@ app.get("/api/secondary-tags", async (req, res) => {
     const content = await fs.readFile(tagsFilePath, "utf-8");
     res.json(JSON.parse(content));
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       console.warn("[API 二级标签] SecondTags.json 文件未找到。", `路径: ${tagsFilePath}`);
       res.status(404).json({ error: `二级标签配置文件未找到。` });
     } else {
@@ -2312,15 +2112,15 @@ app.get("/api/secondary-tags", async (req, res) => {
 });
 
 // [POST] 移除错误的 searchIndex 字段工具
-app.post('/api/cleanup-search-index', async (req, res) => {
+app.post("/api/cleanup-search-index", async (req, res) => {
   console.log("请求: [POST] /api/cleanup-search-index");
   try {
     let imageData = await safelyReadJsonFile(INTERNAL_USER_DATA_FILE, "内部用户数据");
     let cleanedCount = 0;
 
     // 遍历所有条目，如果存在 searchIndex，则删除它
-    imageData.forEach(entry => {
-      if (entry.hasOwnProperty('searchIndex')) {
+    imageData.forEach((entry) => {
+      if (entry.hasOwnProperty("searchIndex")) {
         delete entry.searchIndex;
         cleanedCount++;
       }
@@ -2337,9 +2137,8 @@ app.post('/api/cleanup-search-index', async (req, res) => {
       console.log(`  > ${message}`);
       res.json({ success: true, message: message });
     }
-
   } catch (error) {
-    console.error('[API 清理工具] 处理时出错:', error);
+    console.error("[API 清理工具] 处理时出错:", error);
     res.status(500).json({ success: false, error: `清理失败: ${error.message}` });
   }
 });
@@ -2349,7 +2148,7 @@ app.post("/api/update-secondary-tags", async (req, res) => {
   console.log("请求: [POST] /api/update-secondary-tags");
   const newTagsData = req.body;
 
-  if (typeof newTagsData !== 'object' || newTagsData === null) {
+  if (typeof newTagsData !== "object" || newTagsData === null) {
     return res.status(400).json({ success: false, error: "请求数据格式无效。" });
   }
 
@@ -2362,7 +2161,8 @@ app.post("/api/update-secondary-tags", async (req, res) => {
       await fs.copyFile(tagsFilePath, backupFilePath);
       console.log(`  > 已成功备份 SecondTags.json 到 ${backupFilePath}`);
     } catch (backupError) {
-      if (backupError.code !== 'ENOENT') { // 如果源文件不存在，则无需备份
+      if (backupError.code !== "ENOENT") {
+        // 如果源文件不存在，则无需备份
         console.warn(`  > 备份 SecondTags.json 失败:`, backupError);
       }
     }
@@ -2380,7 +2180,7 @@ app.post("/api/update-secondary-tags", async (req, res) => {
 });
 
 // --- 服务前端页面和脚本 ---
-app.use(favicon(path.join(GU_TOOLS_DIR, 'favicon.ico')));
+app.use(favicon(path.join(GU_TOOLS_DIR, "favicon.ico")));
 
 app.get("/:token([A-Za-z0-9]{6})", async (req, res) => {
   const htmlPath = path.join(GU_TOOLS_DIR, "咕咕牛Web管理.html");
@@ -2414,7 +2214,9 @@ const buildFileSystemIndex = async () => {
     try {
       const stats = await fs.stat(repo.path);
       if (!stats.isDirectory()) continue;
-    } catch { continue; }
+    } catch {
+      continue;
+    }
     for (const gallery of MAIN_GALLERY_FOLDERS) {
       const galleryBasePath = path.join(repo.path, gallery);
       const images = await findGalleryImagesRecursively(repo.name, repo.path, gallery, galleryBasePath);
@@ -2454,7 +2256,7 @@ const buildFileSystemIndex = async () => {
         }
       }
     }
-  } catch { }
+  } catch {}
 
   const duration = Date.now() - startTime;
   console.log(`--- [索引服务] 索引构建完成！耗时 ${duration}ms ---`);
@@ -2476,7 +2278,7 @@ const pregenerateThumbnails = async () => {
 
   for (const physicalPath of uniquePhysicalPaths) {
     processedCount++;
-    const cacheKey = crypto.createHash('md5').update(physicalPath).digest('hex') + '.webp';
+    const cacheKey = crypto.createHash("md5").update(physicalPath).digest("hex") + ".webp";
     const thumbnailPath = path.join(THUMBNAIL_DIRECTORY, cacheKey);
 
     try {
@@ -2484,10 +2286,7 @@ const pregenerateThumbnails = async () => {
       skippedCount++;
     } catch {
       try {
-        await sharp(physicalPath)
-          .resize({ width: THUMBNAIL_WIDTH })
-          .webp({ quality: 90 })
-          .toFile(thumbnailPath);
+        await sharp(physicalPath).resize({ width: THUMBNAIL_WIDTH }).webp({ quality: 90 }).toFile(thumbnailPath);
         generatedCount++;
       } catch (genError) {
         console.error(`[缩略图预生成] 无法为 ${physicalPath} 生成缩略图: ${genError.message}`);
@@ -2507,12 +2306,18 @@ const pregenerateThumbnails = async () => {
 
 // 为启动检查提供临时的 ExecuteCommand
 const { spawn: spawnForCheck } = require("child_process");
-class TempProcessManager { constructor() { this.processes = new Set(); } register(p) { } unregister(p) { } }
+class TempProcessManager {
+  constructor() {
+    this.processes = new Set();
+  }
+  register(p) {}
+  unregister(p) {}
+}
 function ExecuteCommandForCheck(command, args, options, timeout, pm, conlog) {
   return new Promise((resolve, reject) => {
-    const proc = spawnForCheck(command, args, { ...options, shell: process.platform === 'win32' });
+    const proc = spawnForCheck(command, args, { ...options, shell: process.platform === "win32" });
     proc.on("error", reject);
-    proc.on("close", code => code === 0 ? resolve() : reject(new Error(`Code ${code}`)));
+    proc.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`Code ${code}`))));
   });
 }
 
@@ -2530,7 +2335,7 @@ const initializeServer = async () => {
       console.warn("         2. 请将 Git 的 'bin' 目录完整路径添加到系统的 PATH 环境变量中。");
       console.warn("  (此警告不影响图库的核心图片查看与管理功能)");
       console.warn("=======================================================");
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         console.error("错误详情: spawn git ENOENT");
       } else {
         console.error("错误详情:", error.message);
@@ -2558,7 +2363,7 @@ const initializeServer = async () => {
       await fs.access(INTERNAL_USER_DATA_FILE);
       console.log(`[启动检查] 内部用户数据文件 OK.`);
     } catch {
-      if (ENV_MODE !== 'local') {
+      if (ENV_MODE !== "local") {
         await fs.writeFile(INTERNAL_USER_DATA_FILE, "[]", "utf-8");
         console.log(`[启动检查] 创建了空的内部用户数据文件: ${INTERNAL_USER_DATA_FILE}`);
       } else {
@@ -2602,12 +2407,12 @@ app.use((err, req, res, next) => {
   server.listen(port, host, () => {
     console.log(`\n====================================================`);
     console.log(`🎉 咕咕牛图库工具 后台服务启动成功！ 🎉`);
-    const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+    const displayHost = host === "0.0.0.0" ? "localhost" : host;
     console.log(`👂 正在监听 http://${displayHost}:${port} `);
     console.log(`✨ 服务运行中... 按 Ctrl+C 停止。 ✨`);
     console.log(`====================================================\n`);
 
-    pregenerateThumbnails().catch(err => {
+    pregenerateThumbnails().catch((err) => {
       console.error("!!! 缩略图预生成过程中发生未捕获的错误:", err);
     });
   });

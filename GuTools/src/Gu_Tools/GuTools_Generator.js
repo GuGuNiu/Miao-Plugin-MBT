@@ -6,6 +6,11 @@
  * 重置 JSON 生成器界面到初始状态，清空所有输入和预览。
  */
 function resetGeneratorInterface() {
+  clearInterval(AppState.generator.writingTimerId);
+  clearTimeout(AppState.generator.successTimerId);
+  AppState.generator.writingTimerId = null;
+  AppState.generator.successTimerId = null;
+
   AppState.isSettingInputProgrammatically = true; // 设置一个标志位，防止触发不必要的 input 事件
   if (DOM.generatorSearchInput) DOM.generatorSearchInput.value = "";
   if (DOM.generatorSuggestionList) DOM.generatorSuggestionList.classList.add(UI_CLASSES.HIDDEN);
@@ -27,7 +32,7 @@ function clearFileInfoDisplay() {
     DOM.generatorPreviewImage.classList.add(UI_CLASSES.HIDDEN);
   }
   if (DOM.generatorSaveButton) DOM.generatorSaveButton.disabled = true;
-  
+
   // 重置表单元素到默认值
   const defaultRatingRadio = document.querySelector('input[name="rating"][value="none"]');
   if (defaultRatingRadio) defaultRatingRadio.checked = true;
@@ -104,11 +109,9 @@ async function displaySelectedImage(imageInfo) {
     DOM.generatorStorageBoxDisplay.classList.remove(UI_CLASSES.HIDDEN);
   }
 
-  // 先清空再显示，确保UI状态正确
   clearFileInfoDisplay();
   if (DOM.generatorAttributesPanel) DOM.generatorAttributesPanel.classList.remove(UI_CLASSES.INITIALLY_HIDDEN);
 
-  // 显示预览图
   const fullWebPath = buildFullWebPath(imageInfo.storageBox, imageInfo.urlPath);
   if (DOM.generatorPreviewImage) {
     DOM.generatorPreviewImage.src = fullWebPath;
@@ -117,7 +120,6 @@ async function displaySelectedImage(imageInfo) {
     DOM.generatorPreviewImage.style.display = 'block';
   }
   
-  // 自动生成 GID 和计算 MD5
   AppState.generator.currentGeneratedId = generateNumericId();
   if (DOM.generatorIdDisplayInput) DOM.generatorIdDisplayInput.value = AppState.generator.currentGeneratedId;
   
@@ -130,6 +132,47 @@ async function displaySelectedImage(imageInfo) {
 }
 
 /**
+ * 查找下一个待处理的任务（图片）。
+ * 优先在当前文件夹内查找，如果完成，则查找下一个未完成的文件夹。
+ * @param {object} lastSavedInfo - 刚刚被成功保存的图片信息对象。
+ * @returns {Promise<{nextImage: object, isNewFolder: boolean} | null>} - 返回任务对象或 null。
+ */
+async function findNextTask(lastSavedInfo) {
+    const getFirstUnsavedInFolder = (storageBox, folderName) => {
+        const imagesInFolder = AppState.galleryImages
+            .filter(img => img.storageBox === storageBox && img.folderName === folderName)
+            .sort((a, b) => a.fileName.localeCompare(b.fileName, undefined, { numeric: true, sensitivity: 'base' }));
+
+        for (const image of imagesInFolder) {
+            const fullWebPath = buildFullWebPath(image.storageBox, image.urlPath);
+            if (!AppState.userDataPaths.has(fullWebPath)) {
+                return image;
+            }
+        }
+        return null;
+    };
+
+    let nextImage = getFirstUnsavedInFolder(lastSavedInfo.storageBox, lastSavedInfo.folderName);
+    if (nextImage) {
+        return { nextImage: nextImage, isNewFolder: false };
+    }
+
+    const allUnsavedFolders = findTopUnsavedFolders(Infinity);
+    if (allUnsavedFolders.length > 0) {
+        const nextFolderId = allUnsavedFolders[0];
+        const [nextStorageBox, nextFolderName] = nextFolderId.split('/');
+        nextImage = getFirstUnsavedInFolder(nextStorageBox, nextFolderName);
+        if (nextImage) {
+            displayToast(`开始处理新文件夹: ${nextFolderName}`, UI_CLASSES.INFO, 2500);
+            return { nextImage: nextImage, isNewFolder: true };
+        }
+    }
+
+    return null;
+}
+
+
+/**
  * 收集当前界面的所有属性，构建一个新的 JSON 条目，并发送到后端保存。
  */
 async function saveGeneratedEntry() {
@@ -138,10 +181,21 @@ async function saveGeneratedEntry() {
         displayGeneratorMessage("错误：数据不完整，无法保存。", UI_CLASSES.ERROR);
         return;
     }
+
+    clearInterval(AppState.generator.writingTimerId);
+    AppState.generator.writingStartTime = Date.now();
+    DOM.generatorSaveButton.disabled = true;
+
+    AppState.generator.writingTimerId = setInterval(() => {
+        const elapsed = ((Date.now() - AppState.generator.writingStartTime) / 1000).toFixed(1);
+        displayGeneratorMessage(`${currentSelection.fileName} 正在保存... (${elapsed}s)`, UI_CLASSES.INFO, null);
+    }, 100);
+
     const ratingRadio = document.querySelector('input[name="rating"]:checked');
     const layoutRadio = document.querySelector('input[name="layout"]:checked');
     const isEasterEgg = DOM.generatorIsEasterEggCheckbox?.checked ?? false;
     const isAiImage = DOM.generatorIsAiImageCheckbox?.checked ?? false;
+
     const newEntry = {
         storagebox: currentSelection.storageBox,
         gid: currentGeneratedId,
@@ -163,13 +217,41 @@ async function saveGeneratedEntry() {
         timestamp: new Date().toISOString(),
         sourceGallery: currentSelection.gallery,
     };
-    const success = await updateUserData([...AppState.userData, newEntry], `成功添加 "${newEntry.attributes.filename}"`, "generatorMessageArea", false, DELAYS.MESSAGE_CLEAR_DEFAULT, false);
+
+    const success = await updateUserData([...AppState.userData, newEntry], `成功添加 "${newEntry.attributes.filename}"`, "messageArea", false, null, false);
+    
+    clearInterval(AppState.generator.writingTimerId);
+
     if (success) {
+        const lastSavedInfo = { ...currentSelection };
+
+        AppState.generator.successStartTime = Date.now();
+        AppState.generator.successTimerId = setInterval(() => {
+            const remaining = (DELAYS.GENERATOR_NEXT_IMAGE_DELAY - (Date.now() - AppState.generator.successStartTime)) / 1000;
+            if (remaining > 0) {
+                displayGeneratorMessage(`${lastSavedInfo.fileName} 保存成功！(${remaining.toFixed(1)}s后加载下一张)`, UI_CLASSES.SUCCESS, null);
+            } else {
+                 clearInterval(AppState.generator.successTimerId);
+            }
+        }, 100);
+        
+        const nextTask = await findNextTask(lastSavedInfo);
+
         setTimeout(() => {
-            resetGeneratorInterface();
+            clearInterval(AppState.generator.successTimerId);
+            if (nextTask) {
+                displaySelectedImage(nextTask.nextImage);
+            } else {
+                displayGeneratorMessage(`所有图片已全部录入！`, UI_CLASSES.SUCCESS, 4000);
+                setTimeout(resetGeneratorInterface, 4000);
+            }
         }, DELAYS.GENERATOR_NEXT_IMAGE_DELAY);
+
+    } else {
+        DOM.generatorSaveButton.disabled = false;
     }
 }
+
 
 /**
  * 处理搜索框的输入事件，使用防抖机制向 Worker 发送搜索请求。
@@ -178,7 +260,6 @@ function handleGeneratorSearchInput() {
     if (AppState.isSettingInputProgrammatically) return;
     const query = DOM.generatorSearchInput.value.trim();
 
-    // 如果修改了搜索框内容，说明当前选择已失效，重置界面
     if (AppState.generator.currentSelection && query !== `${AppState.generator.currentSelection.name} (${AppState.generator.currentSelection.fileName})`) {
         resetGeneratorInterface();
     }
@@ -202,10 +283,8 @@ function handleGeneratorSearchInput() {
 function handleGeneratorSearchFocus() {
     const query = DOM.generatorSearchInput.value.trim();
     if (query) {
-        // 如果框内已有内容，立即触发一次搜索
         requestSearchFromWorker(query, 'unsaved_physical');
     } else {
-        // 如果框为空，显示高优先级的待办文件夹列表
         const topFolders = findTopUnsavedFolders();
         displaySuggestions(topFolders, true);
     }
@@ -236,7 +315,7 @@ function displaySuggestions(results, isFolderList = false) {
                 const folderNameOnly = folderIdentifier.split('/')[1] || folderIdentifier;
                 if (DOM.generatorSearchInput) {
                     DOM.generatorSearchInput.value = folderNameOnly;
-                    handleGeneratorSearchInput(); // 触发搜索
+                    handleGeneratorSearchInput();
                 }
                 suggestionList.classList.add(UI_CLASSES.HIDDEN);
             };
@@ -312,7 +391,6 @@ function setupGeneratorEventListeners() {
     DOM.generatorSaveButton.addEventListener("click", saveGeneratedEntry);
   }
 
-  // 订阅由 Core.js 广播的 Worker 搜索结果事件
   AppEvents.on('workerSearchResults', (payload) => {
       if (DOM.generatorPaneView?.classList.contains("active")) {
           displaySuggestions(payload.results);
