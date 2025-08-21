@@ -3465,54 +3465,50 @@ class MiaoPluginMBT extends plugin {
     catch (error) { logger.warn(`${Default_Config.logPrefix}Git log 失败 (${RepoPath})`); return null; }
   }
 
-  static async _handleJsFileSync(sourceRepoPath, logger) {
+  static async _handleJsFileSync(sourceRepoPath, logger, forceOverwrite = false) {
     const newJsFilePath = path.join(sourceRepoPath, "咕咕牛图库管理器.js");
     const oldJsFilePath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
+    
+    await common.sleep(500);
 
     try {
-      // 获取新文件的内容、哈希和体积
-      const newFileContent = await fsPromises.readFile(newJsFilePath);
-      const newHash = crypto.createHash('md5').update(newFileContent).digest('hex');
-      const newSize = (await fsPromises.stat(newJsFilePath)).size;
-
-      let oldHash = null;
-      let oldSize = -1;
-
-      try {
-        // 尝试获取旧文件的内容、哈希和体积
-        const oldFileContent = await fsPromises.readFile(oldJsFilePath);
-        oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
-        oldSize = (await fsPromises.stat(oldJsFilePath)).size;
-      } catch (e) {
-        if (e.code !== 'ENOENT') {
-          logger.warn(`${Default_Config.logPrefix}读取旧核心脚本时发生错误:`, e);
-        }
-      }
-
-      if (newHash !== oldHash || (newHash === oldHash && newSize !== oldSize)) {
-        if (newHash === oldHash && newSize !== oldSize) {
-          //logger.warn(`${Default_Config.logPrefix}检测到JS文件哈希一致但体积不一致的异常情况，将执行强制覆盖。新体积: ${newSize}, 旧体积: ${oldSize}`);
-        }
-
-        //logger.info(`${Default_Config.logPrefix}检测到插件核心逻辑已更新，准备执行覆盖...`);
-
+      if (forceOverwrite) {
+        logger.info(`${Default_Config.logPrefix}根据 Git diff 或强制逻辑，执行核心JS文件覆盖...`);
         await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-        //logger.info(`${Default_Config.logPrefix}核心管理器文件覆盖完成。该操作将触发插件热重载。`);
-
-        const restartMessage = `${Default_Config.logPrefix}检测到插件核心逻辑已更新！为确保所有新功能稳定生效，强烈建议尽快重启机器人。`;
-        setImmediate(() => {
-          MiaoPluginMBT.SendMasterMsg(restartMessage, null, 1000, logger).catch(err => {
-            logger.error(`${Default_Config.logPrefix}发送重启引导消息失败:`, err);
-          });
-        });
-
         return true;
       }
-      return false;
+
+      // 如果不强制覆盖，则执行基于哈希和大小的交叉验证
+      const [newFileContent, oldFileContent] = await Promise.all([
+        fsPromises.readFile(newJsFilePath).catch(() => null),
+        fsPromises.readFile(oldJsFilePath).catch(() => null),
+      ]);
+
+      if (!newFileContent) {
+        logger.warn(`${Default_Config.logPrefix}无法读取新版JS文件进行交叉验证，跳过覆盖。`);
+        return false;
+      }
+
+      if (!oldFileContent) {
+        logger.info(`${Default_Config.logPrefix}目标JS文件不存在，执行首次覆盖。`);
+        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+        return true;
+      }
+
+      const newHash = crypto.createHash('md5').update(newFileContent).digest('hex');
+      const oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
+
+      if (newHash !== oldHash) {
+        logger.info(`${Default_Config.logPrefix}交叉验证发现JS文件哈希不匹配，执行覆盖。`);
+        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+        return true;
+      }
+      
+      return false; 
 
     } catch (error) {
       if (error.code !== 'ENOENT') {
-        logger.error(`${Default_Config.logPrefix}核心脚本更新流程失败:`, error);
+        logger.error(`${Default_Config.logPrefix}核心脚本更新流程发生意外错误:`, error);
       }
       return false;
     }
@@ -3620,6 +3616,7 @@ class MiaoPluginMBT extends plugin {
     let autoSwitchedNode = null;
     let finalNewCommitsCount = 0;
     let finalDiffStat = null;
+    let finalJsFileWasModified = false;
 
     const attemptUpdate = async (isRetry = false) => {
       let currentSuccess = false;
@@ -3628,6 +3625,7 @@ class MiaoPluginMBT extends plugin {
       let currentWasForceReset = false;
       let newCommitsCount = 0;
       let diffStat = null;
+      let jsFileWasModified = false;
 
       try {
         let oldCommit = "";
@@ -3722,6 +3720,19 @@ class MiaoPluginMBT extends plugin {
                 newCommitsCount = 1;
               }
             }
+
+            if (currentHasChanges && oldCommit && newCommit && RepoNum === 1) { 
+                try {
+                    const diffNameOnlyResult = await ExecuteCommand("git", ["diff", "--name-only", oldCommit, newCommit], { cwd: localPath }, 5000);
+                    const changedFiles = diffNameOnlyResult.stdout.trim().split('\n');
+                    if (changedFiles.includes("咕咕牛图库管理器.js")) {
+                        jsFileWasModified = true;
+                        logger.info(`${Default_Config.logPrefix}Git diff 检测到“咕咕牛图库管理器.js”文件已更新。`);
+                    }
+                } catch (diffCheckError) {
+                    logger.warn(`${Default_Config.logPrefix}通过 git diff 检查 JS 文件变更失败，将回退到哈希比对。`, diffCheckError.message);
+                }
+            }
           }
         }
 
@@ -3731,11 +3742,12 @@ class MiaoPluginMBT extends plugin {
           error: currentPullError,
           wasForceReset: currentWasForceReset,
           newCommitsCount: newCommitsCount,
-          diffStat: diffStat
+          diffStat: diffStat,
+          jsFileWasModified: jsFileWasModified
         };
 
       } catch (innerError) {
-        return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0, diffStat: null };
+        return { success: false, hasChanges: false, error: innerError, wasForceReset: false, newCommitsCount: 0, diffStat: null, jsFileWasModified: false };
       }
     };
 
@@ -3803,6 +3815,7 @@ class MiaoPluginMBT extends plugin {
                   wasForceReset = retryResult.wasForceReset;
                   finalNewCommitsCount = retryResult.newCommitsCount;
                   finalDiffStat = retryResult.diffStat;
+                  finalJsFileWasModified = retryResult.jsFileWasModified;
                 } catch (setUrlError) {
                   logger.error(`${Default_Config.logPrefix}${RepoName} 切换远程URL失败:`, setUrlError);
                   pullError = setUrlError;
@@ -3818,9 +3831,10 @@ class MiaoPluginMBT extends plugin {
         wasForceReset = updateResult.wasForceReset;
         finalNewCommitsCount = updateResult.newCommitsCount;
         finalDiffStat = updateResult.diffStat;
+        finalJsFileWasModified = updateResult.jsFileWasModified;
       }
 
-      const logCount = (RepoNum === 1) ? 5 : 3;
+      const logCount = (RepoNum === 1) ? 5 : 3; 
       const format = "%cd [%h]%n%s%n%b";
       const gitLogArgs = ["log", `-n ${logCount}`, `--date=${Default_Config.gitLogDateFormat}`, `--pretty=format:${format}`];
       let rawLogString = "";
@@ -3915,7 +3929,7 @@ class MiaoPluginMBT extends plugin {
                     if (aliasResult.exists) { displayName = aliasResult.mainName; }
                     const standardNameForPath = aliasResult.exists ? aliasResult.mainName : displayName;
                     let faceImageUrl = defaultFaceUrl;
-                    let faceImagePath = null;
+                    
                     if (entry.gameType === "gs" || entry.gameType === "sr") {
                       faceImageUrl = await MiaoPluginMBT._getMiaoCharacterFaceUrl(entry.gameType, standardNameForPath) || defaultFaceUrl;
                     } else if (entry.gameType === "zzz") {
@@ -3938,11 +3952,9 @@ class MiaoPluginMBT extends plugin {
                       } catch (err) { }
                     } else if (entry.gameType === 'waves') {
                       const roleData = MiaoPluginMBT._wavesRoleDataMap.get(standardNameForPath);
-                      if (roleData && roleData.icon) { faceImageUrl = roleData.icon; faceImagePath = null; }
+                      if (roleData && roleData.icon) { faceImageUrl = roleData.icon; }
                     }
-                    if (faceImagePath) {
-                      try { await fsPromises.access(faceImagePath); faceImageUrl = `file://${faceImagePath.replace(/\\/g, "/")}`; } catch (err) { }
-                    }
+
                     commitData.displayParts.push({ type: 'character', name: displayName, game: entry.gameType, imageUrl: faceImageUrl || defaultFaceUrl });
                   }
                   break;
@@ -3980,7 +3992,7 @@ class MiaoPluginMBT extends plugin {
       MiaoPluginMBT.gitMutex.release();
     }
 
-    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, autoSwitchedNode: autoSwitchedNode, newCommitsCount: finalNewCommitsCount, diffStat: finalDiffStat };
+    return { success: success, hasChanges: hasChanges, log: latestLog, error: success ? null : pullError, wasForceReset: wasForceReset, autoSwitchedNode: autoSwitchedNode, newCommitsCount: finalNewCommitsCount, diffStat: finalDiffStat, jsFileWasModified: finalJsFileWasModified };
   }
 
   static async GitLsRemoteTest(repoUrl, cloneUrlPrefix, nodeName, logger) {
@@ -4979,7 +4991,21 @@ class MiaoPluginMBT extends plugin {
 
       const hasValidLogs = Array.isArray(result.log) && result.log.length > 0 && result.log[0] && (result.log[0].hash !== 'N/A');
       const shouldHighlight = (statusClass === 'status-ok' || statusClass === 'status-force-synced' || statusClass === 'status-auto-switch') && result.newCommitsCount > 0;
-      return { name: repoDisplayName, statusText, statusClass, error: result.error, log: result.log, wasForceReset: result.wasForceReset, autoSwitchedNode: result.autoSwitchedNode, newCommitsCount: result.newCommitsCount, commitSha: currentSha, diffStat: result.diffStat, hasChanges: result.hasChanges, hasValidLogs: hasValidLogs, shouldHighlight: shouldHighlight };
+      return { 
+          name: repoDisplayName, 
+          statusText, statusClass, 
+          error: result.error, 
+          log: result.log, 
+          wasForceReset: result.wasForceReset, 
+          autoSwitchedNode: result.autoSwitchedNode, 
+          newCommitsCount: result.newCommitsCount, 
+          commitSha: currentSha, 
+          diffStat: result.diffStat, 
+          hasChanges: result.hasChanges, 
+          hasValidLogs: hasValidLogs, 
+          shouldHighlight: shouldHighlight,
+          jsFileWasModified: result.jsFileWasModified || false
+      };
     };
 
     const branch = MiaoPluginMBT.MBTConfig.SepositoryBranch || Default_Config.SepositoryBranch;
@@ -4988,7 +5014,7 @@ class MiaoPluginMBT extends plugin {
 
     const repo1Result = reportResults.find(r => r.name === "一号仓库");
     if (repo1Result && repo1Result.success) {
-      jsFileUpdated = await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger);
+      jsFileUpdated = await MiaoPluginMBT._handleJsFileSync(MiaoPluginMBT.paths.LocalTuKuPath, logger, repo1Result.jsFileWasModified);
     }
     if (Repo2UrlConfigured) { if (Repo2Exists) reportResults.push(await processRepoResult(2, MiaoPluginMBT.paths.LocalTuKuPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch)); else reportResults.push({ name: "二号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
     if (Repo3UrlConfigured) { if (Repo3Exists) reportResults.push(await processRepoResult(3, MiaoPluginMBT.paths.LocalTuKuPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch)); else reportResults.push({ name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" }); }
