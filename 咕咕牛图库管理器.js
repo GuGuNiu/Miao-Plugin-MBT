@@ -6064,15 +6064,16 @@ class MiaoPluginMBT extends plugin {
     let needsBackgroundAction = false;
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
-    await MiaoPluginMBT.LoadTuKuConfig(true, logger);
-      const currentStatus = this.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
+      await MiaoPluginMBT.LoadTuKuConfig(true, logger);
+      
+      const currentStatus = MiaoPluginMBT.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
 
       if (currentStatus === enable) {
         statusMessageForPanel = `图库已经是「${action}」状态，将执行一次强制${enable ? '同步' : '清理'}...`;
         needsBackgroundAction = true; // 标记需要执行后台操作
       } else {
-        const newConfig = { ...this.MBTConfig, TuKuOP: enable };
-        const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(newConfig, logger, this);
+        const newConfig = { ...MiaoPluginMBT.MBTConfig, TuKuOP: enable };
+        const saveSuccess = await MiaoPluginMBT.SaveTuKuConfig(newConfig, logger);
 
         if (saveSuccess) {
           statusMessageForPanel = `图库已成功设为「${action}」。`;
@@ -6084,6 +6085,7 @@ class MiaoPluginMBT extends plugin {
         }
       }
     });
+
     if (needsBackgroundAction) {
       setImmediate(async () => {
         try {
@@ -6110,6 +6112,7 @@ class MiaoPluginMBT extends plugin {
         }
       });
     }
+    
     try {
       await this.ShowSettingsPanel(e, statusMessageForPanel.trim());
     } catch (panelError) {
