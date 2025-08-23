@@ -6064,7 +6064,7 @@ class MiaoPluginMBT extends plugin {
     let needsBackgroundAction = false;
 
     await MiaoPluginMBT.configMutex.runExclusive(async () => {
-      await MiaoPluginMBT.LoadTuKuConfig(true, logger, this);
+    await MiaoPluginMBT.LoadTuKuConfig(true, logger);
       const currentStatus = this.MBTConfig.TuKuOP ?? Default_Config.defaultTuKuOp;
 
       if (currentStatus === enable) {
