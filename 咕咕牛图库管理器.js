@@ -131,7 +131,7 @@ class ProcessHookManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.7";
+const Version = "5.0.8";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -918,56 +918,63 @@ class MiaoPluginMBT extends plugin {
       await fsPromises.access(sharpPath);
       return true;
     } catch (error) {
-      logger.info(`${logPrefix}[GuTools Web] 依赖缺失，开始自动安装...`);
-    }
+      
+      const manualInstallRequiredError = new Error("GuTools 依赖需要手动安装。");
+      manualInstallRequiredError.code = 'GUTOOLS_EACCES';
+      throw manualInstallRequiredError;
 
-    const findExecutable = async (command) => {
-      const paths = process.env.PATH.split(path.delimiter);
-      const extensions = process.platform === 'win32' ? ['.cmd', '.exe', '.bat', '.ps1', ''] : [''];
-      for (const dir of paths) {
-        for (const ext of extensions) {
-          const fullPath = path.join(dir, command + ext);
-          try {
-            await fsPromises.access(fullPath, fs.constants.X_OK);
-            return fullPath;
-          } catch {
-            // 继续查找
+      /*
+      logger.info(`${logPrefix}[GuTools Web] 依赖缺失，开始自动安装...`);
+
+      const findExecutable = async (command) => {
+        const paths = process.env.PATH.split(path.delimiter);
+        const extensions = process.platform === 'win32' ? ['.cmd', '.exe', '.bat', '.ps1', ''] : [''];
+        for (const dir of paths) {
+          for (const ext of extensions) {
+            const fullPath = path.join(dir, command + ext);
+            try {
+              await fsPromises.access(fullPath, fs.constants.X_OK);
+              return fullPath;
+            } catch {
+            }
           }
         }
+        return null;
+      };
+
+      const getPackageManager = async () => {
+        const pnpmPath = await findExecutable('pnpm');
+        if (pnpmPath) return { name: 'pnpm', path: pnpmPath };
+        const npmPath = await findExecutable('npm');
+        if (npmPath) return { name: 'npm', path: npmPath };
+        return null;
+      };
+
+      const pm = await getPackageManager();
+      if (!pm) {
+        throw new Error("未能在系统中找到 pnpm 或 npm 命令，请确保 Node.js 环境已正确安装并配置了环境变量。");
       }
-      return null;
-    };
 
-    const getPackageManager = async () => {
-      const pnpmPath = await findExecutable('pnpm');
-      if (pnpmPath) return { name: 'pnpm', path: pnpmPath };
-      const npmPath = await findExecutable('npm');
-      if (npmPath) return { name: 'npm', path: npmPath };
-      return null;
-    };
+      logger.info(`${logPrefix}[GuTools Web] 检测到包管理器: ${pm.name} (${pm.path})`);
 
-    const pm = await getPackageManager();
-    if (!pm) {
-      throw new Error("未能在系统中找到 pnpm 或 npm 命令，请确保 Node.js 环境已正确安装并配置了环境变量。");
-    }
+      let installArgs = [];
+      if (pm.name === 'pnpm') {
+        installArgs = ['install', '-P', '--reporter=silent', '--ignore-scripts'];
+      } else {
+        installArgs = ['install', '--prod', '--no-audit'];
+      }
 
-    logger.info(`${logPrefix}[GuTools Web] 检测到包管理器: ${pm.name} (${pm.path})`);
-
-    let installArgs = [];
-    if (pm.name === 'pnpm') {
-      installArgs = ['install', '-P', '--reporter=silent', '--ignore-scripts'];
-    } else {
-      installArgs = ['install', '--prod', '--no-audit'];
-    }
-
-    try {
-      await ExecuteCommand(pm.path, installArgs, { cwd: guToolsDir }, 300000);
-      logger.info(`${logPrefix}[GuTools Web] 后台服务依赖安装成功。`);
-      return true;
-    } catch (error) {
-      const errorMessage = `GuTools 后台服务依赖自动安装失败。\n请检查 ${pm.name} 环境和网络连接。`;
-      logger.error(`${logPrefix}[GuTools Web] 依赖安装失败!`, error.stderr || error.message);
-      throw new Error(errorMessage);
+      try {
+        await ExecuteCommand(pm.path, installArgs, { cwd: guToolsDir }, 300000);
+        logger.info(`${logPrefix}[GuTools Web] 后台服务依赖安装成功。`);
+        return true;
+      } catch (error) {
+        const errorMessage = `GuTools 后台服务依赖自动安装失败。\n请检查 ${pm.name} 环境和网络连接。`;
+        logger.error(`${logPrefix}[GuTools Web] 依赖安装失败!`, error.stderr || error.message);
+        throw new Error(errorMessage);
+      }
+      
+      */
     }
   }
 
@@ -1230,11 +1237,14 @@ class MiaoPluginMBT extends plugin {
 
         MiaoPluginMBT.startLoadMonitor(logger);
 
+        /* 自动启动GuTools服务
+
         if (await MiaoPluginMBT.IsTuKuDownloaded(1)) {
           MiaoPluginMBT.startGuToolsServer(logger).catch(err => {
             logger.error(`${Default_Config.logPrefix}后台 GuTools 服务启动失败:`, err);
           });
         }
+        */
 
         setImmediate(() => {
           // logger.info(`${Default_Config.logPrefix}已将启动时仓库统计扫描任务调度到后台执行...`);
@@ -4025,13 +4035,13 @@ class MiaoPluginMBT extends plugin {
     }
   }
 
-  static async RunPostDownloadSetup(e, logger = global.logger || console, stage = 'full') {
+static async RunPostDownloadSetup(e, logger = global.logger || console, stage = 'full') {
     const logPrefix = Default_Config.logPrefix;
     // logger.info(`${logPrefix} [诊断] === 进入 RunPostDownloadSetup (阶段: ${stage}) ===`);
 
     try {
       try {
-        await this._installGuToolsDependencies(logger);
+        await MiaoPluginMBT._syncAndInstallGuTools(logger);
       } catch (installError) {
         if (installError.code === 'GUTOOLS_EACCES') {
           logger.warn(`${logPrefix} GuTools 依赖因权限问题安装失败，已计划在1分钟后向主人发送手动操作指引。`);
@@ -4045,7 +4055,7 @@ class MiaoPluginMBT extends plugin {
               `${this.paths.guToolsPath}`,
               '',
               '2. 然后，在上面那个目录里，敲这个命令再回车：',
-              'npm install --prod --registry=https://registry.npmmirror.com',
+              'pnpm install --prod',
               '',
               '弄完之后重启一下机器人应该就好了。'
             ].join('\n');
@@ -4106,7 +4116,7 @@ class MiaoPluginMBT extends plugin {
     const logPrefix = Default_Config.logPrefix;
     try {
       try {
-        await this._installGuToolsDependencies(logger);
+        await MiaoPluginMBT._syncAndInstallGuTools(logger);
       } catch (installError) {
         if (installError.code === 'GUTOOLS_EACCES') {
           logger.warn(`${logPrefix} GuTools 依赖因权限问题安装失败，已计划在1分钟后向主人发送手动操作指引。`);
@@ -4120,7 +4130,7 @@ class MiaoPluginMBT extends plugin {
               `${this.paths.guToolsPath}`,
               '',
               '2. 然后，在上面那个目录里，敲这个命令再回车：',
-              'npm install --prod --registry=https://registry.npmmirror.com',
+              'pnpm install --prod',
               '',
               '弄完之后重启一下机器人应该就好了。'
             ].join('\n');
@@ -4844,6 +4854,7 @@ class MiaoPluginMBT extends plugin {
     const logPrefix = Default_Config.logPrefix;
     const sourcePath = this.paths.guToolsSourcePath;
     const targetPath = this.paths.guToolsPath;
+    const targetNodeModules = path.join(targetPath, 'node_modules'); 
 
     try {
       await fsPromises.access(sourcePath);
@@ -4854,6 +4865,17 @@ class MiaoPluginMBT extends plugin {
 
     try {
       logger.info(`${logPrefix}[GuTools] 开始同步 GuTools 文件到 plugins 目录...`);
+
+      try {
+        await fsPromises.access(targetNodeModules);
+        logger.warn(`${logPrefix}[GuTools] 检测到残留的 node_modules，正在进行强制清理...`);
+        await safeDelete(targetNodeModules);
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          logger.error(`${logPrefix}[GuTools] 强制清理 node_modules 失败:`, error);
+        }
+      }
+      
       await safeDelete(targetPath);
       await copyFolderRecursive(sourcePath, targetPath, {}, logger);
       logger.info(`${logPrefix}[GuTools] 文件同步完成。`);
@@ -4863,6 +4885,9 @@ class MiaoPluginMBT extends plugin {
       return true;
 
     } catch (error) {
+      if (error.code === 'GUTOOLS_EACCES') {
+        throw error;
+      }
       const errorMessage = `GuTools 同步或依赖安装失败！\n原因: ${error.message}`;
       logger.error(`${logPrefix}${errorMessage}`, {
         stderr: error.stderr,
@@ -4879,16 +4904,22 @@ class MiaoPluginMBT extends plugin {
     this.logger.info(`${this.logPrefix} 主人手动触发 GuTools 部署...`);
 
     try {
+
+      if (MiaoPluginMBT._guToolsProcess && !MiaoPluginMBT._guToolsProcess.killed) {
+        this.logger.warn(`${this.logPrefix} [部署] 检测到正在运行的 GuTools 服务，将先终止它...`);
+        MiaoPluginMBT.processManager.killAll('SIGKILL', '手动部署前清理'); 
+        await common.sleep(2000); 
+      }
+
       await MiaoPluginMBT._syncAndInstallGuTools(this.logger);
       await e.reply(`${this.logPrefix} GuTools 文件同步和依赖安装成功！`, true);
 
       this.logger.info(`${this.logPrefix} 部署成功，正在重启 GuTools 服务...`);
-      await e.reply(`${this.logPrefix} 正在重启 GuTools 服务...`, true);
+      await e.reply(`${this.logPrefix} 正在启动 GuTools 服务...`, true); 
 
       if (MiaoPluginMBT._guToolsProcess && !MiaoPluginMBT._guToolsProcess.killed) {
-        this.logger.warn(`${this.logPrefix} 检测到正在运行的 GuTools 服务，将先终止它...`);
-        MiaoPluginMBT.processManager.killAll('SIGTERM', '手动部署前清理');
-        await common.sleep(2000);
+        MiaoPluginMBT.processManager.killAll('SIGKILL', '启动新服务前再次清理');
+        await common.sleep(1000);
       }
 
       await MiaoPluginMBT.startGuToolsServer(this.logger);
