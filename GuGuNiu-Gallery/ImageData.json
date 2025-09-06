@@ -36866,5 +36866,110 @@
         },
         "timestamp": "2025-07-14T03:00:31.336Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2231292342",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu24.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu24.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6d8c3e8d712bcd872ef3bc4fa3f479d5",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-06T05:14:43.385Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3569779991",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu25.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu25.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "4fd6eff34c4c8a7138dfb04b6d955d07",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-06T05:14:46.077Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5471397422",
+        "characterName": "瓦雷莎",
+        "path": "gs-character/瓦雷莎/瓦雷莎Gu26.webp",
+        "attributes": {
+            "filename": "瓦雷莎Gu26.webp",
+            "parentFolder": "瓦雷莎",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0a25fd897a30c9f50b8ea49846225b87",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-06T05:14:48.699Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2684819259",
+        "characterName": "刻律德菈",
+        "path": "sr-character/刻律德菈/刻律德菈Gu1.webp",
+        "attributes": {
+            "filename": "刻律德菈Gu1.webp",
+            "parentFolder": "刻律德菈",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "02c5a833c5b932a2cd63d93888ec17b0",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-06T05:14:53.273Z",
+        "sourceGallery": "sr-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4772065987",
+        "characterName": "刻律德菈",
+        "path": "sr-character/刻律德菈/刻律德菈Gu2.webp",
+        "attributes": {
+            "filename": "刻律德菈Gu2.webp",
+            "parentFolder": "刻律德菈",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "96ee43b9c45be00b97d00b5fe4d7152f",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-06T05:14:55.787Z",
+        "sourceGallery": "sr-character"
     }
 ]
