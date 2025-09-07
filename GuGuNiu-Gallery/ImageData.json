@@ -24723,7 +24723,7 @@
         "attributes": {
             "filename": "宵宫Gu16.webp",
             "parentFolder": "宵宫",
-            "isPx18": false,
+            "isPx18": true,
             "isRx18": false,
             "layout": "normal",
             "isEasterEgg": false,
@@ -24732,7 +24732,7 @@
             "md5": "24ee0ad2388714f9787a7ba41a53ca56",
             "Downloaded_From": "none"
         },
-        "timestamp": "2025-05-03T10:18:29.752Z",
+        "timestamp": "2025-09-07T03:56:00.666Z",
         "sourceGallery": "gs-character"
     },
     {
@@ -37222,6 +37222,48 @@
             "secondaryTags": []
         },
         "timestamp": "2025-09-06T05:56:05.167Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5597809163",
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu73.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu73.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "cd3efcad7182758f9e64f34acf2691f5",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-07T03:54:03.855Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "3940250192",
+        "characterName": "宵宫",
+        "path": "gs-character/宵宫/宵宫Gu18.webp",
+        "attributes": {
+            "filename": "宵宫Gu18.webp",
+            "parentFolder": "宵宫",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "4ec0ddcba07ac27c7163581cde854ccf",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-07T03:54:06.831Z",
         "sourceGallery": "gs-character"
     }
 ]
