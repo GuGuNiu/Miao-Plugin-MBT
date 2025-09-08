@@ -37265,5 +37265,26 @@
         },
         "timestamp": "2025-07-14T03:00:31.336Z",
         "sourceGallery": "zzz-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2085281677",
+        "characterName": "芙宁娜",
+        "path": "gs-character/芙宁娜/芙宁娜Gu74.webp",
+        "attributes": {
+            "filename": "芙宁娜Gu74.webp",
+            "parentFolder": "芙宁娜",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "f8ef0c57e3eaaae626f638007c5e5f03",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-08T15:35:50.158Z",
+        "sourceGallery": "gs-character"
     }
 ]
