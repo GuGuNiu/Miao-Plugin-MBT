@@ -37433,5 +37433,110 @@
         },
         "timestamp": "2025-09-11T04:51:56.130Z",
         "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1528130204",
+        "characterName": "菈乌玛",
+        "path": "gs-character/菈乌玛/菈乌玛Gu6.webp",
+        "attributes": {
+            "filename": "菈乌玛Gu6.webp",
+            "parentFolder": "菈乌玛",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "86564806ffac512e85d47c1e929dfcec",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-14T07:17:04.757Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5499152841",
+        "characterName": "菈乌玛",
+        "path": "gs-character/菈乌玛/菈乌玛Gu7.webp",
+        "attributes": {
+            "filename": "菈乌玛Gu7.webp",
+            "parentFolder": "菈乌玛",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": true,
+            "isBan": false,
+            "md5": "c938f6f1e9b1281a5d9a251ce780dde0",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-14T07:17:15.709Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5969319186",
+        "characterName": "菈乌玛",
+        "path": "gs-character/菈乌玛/菈乌玛Gu8.webp",
+        "attributes": {
+            "filename": "菈乌玛Gu8.webp",
+            "parentFolder": "菈乌玛",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "aa0b23d7af7f062fb801e3865114cc7a",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-14T07:17:20.325Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7173685916",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu3.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu3.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "02e7a4139a86d431dec78ec59d1ca8ff",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-14T07:17:23.332Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3012465656",
+        "characterName": "奈芙尔",
+        "path": "gs-character/奈芙尔/奈芙尔Gu1.webp",
+        "attributes": {
+            "filename": "奈芙尔Gu1.webp",
+            "parentFolder": "奈芙尔",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "6f0a996cf9df6f35ab520c5af677eff7",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-09-14T07:17:29.034Z",
+        "sourceGallery": "gs-character"
     }
 ]
