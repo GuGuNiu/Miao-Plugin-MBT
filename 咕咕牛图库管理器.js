@@ -131,7 +131,7 @@ class ProcessHookManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.8";
+const Version = "5.0.9";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -2764,27 +2764,38 @@ class MiaoPluginMBT extends plugin {
       return { mainName: cleanInput, exists: false };
     }
 
+    let bestMatch = { mainName: null, score: -Infinity };
+    const SCORE_THRESHOLD = 65;
+    const EXACT_MATCH_SCORE = 100; // 精确匹配的完美分数
+
     for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
-      if (mainName.toLowerCase() === lowerInput) {
-        return { mainName: mainName, exists: true };
+      
+      // 阶段一：精确匹配检查，给予最高分
+      const lowerMainName = mainName.toLowerCase();
+      if (lowerMainName === lowerInput) {
+        if (EXACT_MATCH_SCORE > bestMatch.score) {
+          bestMatch = { mainName: mainName, score: EXACT_MATCH_SCORE };
+        }
+        continue; // 找到主名的精确匹配后，无需再对此角色进行模糊匹配
       }
+
       const aliasArray = (Array.isArray(aliasesValue) ? aliasesValue : String(aliasesValue).split(","))
         .map(a => String(a).trim().toLowerCase());
+      
       if (aliasArray.includes(lowerInput)) {
-        return { mainName: mainName, exists: true };
+        if (EXACT_MATCH_SCORE > bestMatch.score) {
+          bestMatch = { mainName: mainName, score: EXACT_MATCH_SCORE };
+        }
+        continue; // 找到别名的精确匹配后，也无需再进行模糊匹配
       }
-    }
 
-    const SCORE_THRESHOLD = 65;
-    let bestMatch = { mainName: null, score: -Infinity };
+      // 如果已经找到了一个精确匹配，就不再为其他角色计算模糊匹配，以提高效率
+      if (bestMatch.score === EXACT_MATCH_SCORE) {
+          continue;
+      }
 
-    for (const [mainName, aliasesValue] of Object.entries(searchScope)) {
-      const lowerMainName = mainName.toLowerCase();
-      const allTerms = [lowerMainName, ...(Array.isArray(aliasesValue) ? aliasesValue : String(aliasesValue).split(","))
-        .map(a => String(a).trim().toLowerCase()).filter(Boolean)];
-
-      let bestScoreForChar = -Infinity;
-
+      //  阶段二：模糊匹配检查，只有在分数更高时才更新
+      const allTerms = [lowerMainName, ...aliasArray.filter(Boolean)];
       for (const term of allTerms) {
         const distance = levenshtein(lowerInput, term);
         const maxLen = Math.max(lowerInput.length, term.length);
@@ -2795,19 +2806,14 @@ class MiaoPluginMBT extends plugin {
         } else {
           const similarity = maxLen === 0 ? 1 : (maxLen - distance) / maxLen;
           score = similarity * 100;
-
           if (distance === 1) {
             score += 25;
           }
         }
 
-        if (score > bestScoreForChar) {
-          bestScoreForChar = score;
+        if (score > bestMatch.score) {
+          bestMatch = { mainName: mainName, score: score };
         }
-      }
-
-      if (bestScoreForChar > bestMatch.score) {
-        bestMatch = { mainName: mainName, score: bestScoreForChar };
       }
     }
 
