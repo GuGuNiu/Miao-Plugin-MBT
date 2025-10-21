@@ -148,7 +148,7 @@ const Default_Config = {
     { name: "GhLLKK", priority: 15, testUrlPrefix: `https://gh.llkk.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.llkk.cc/" },
     { name: "GhproxyCom", priority: 18, testUrlPrefix: `https://ghproxy.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.com/" },
     { name: "MirrorGhproxy", priority: 22, testUrlPrefix: `https://mirror.ghproxy.com/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://mirror.ghproxy.com/" },
-    { name: "GhproxyNet", priority: 25, testUrlPrefix: `https://gh-proxy.net/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh-proxy.net/" },
+    //{ name: "GhproxyNet", priority: 25, testUrlPrefix: `https://gh-proxy.net/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh-proxy.net/" },
     { name: "UiGhproxy", priority: 28, testUrlPrefix: `https://ui.ghproxy.cc/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ui.ghproxy.cc/" },
     { name: "GhApi999", priority: 30, testUrlPrefix: `https://gh.api.99988866.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://gh.api.99988866.xyz/" },
     { name: "GhproxyGo", priority: 35, testUrlPrefix: `https://ghproxy.1888866.xyz/${RAW_URL_Repo1}`, cloneUrlPrefix: "https://ghproxy.1888866.xyz/" },
