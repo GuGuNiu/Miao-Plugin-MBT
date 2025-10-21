@@ -8465,28 +8465,32 @@ class YunluTukuManager extends plugin {
   }
 
   _extractOwnerFromUrl(repoUrl) {
-    const match = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(?:github\.com|gitee\.com|gitcode\.com)\/([^/]+)/);
+    const match = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(?:github\.com|gitee\.com|gitcode.(?:com|net))\/([^/]+)/);
     return match ? match[1] : null;
   }
 
   async _fetchRepoOwnerInfo(repoUrl) {
     try {
-      const urlMatch = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitee\.com|gitcode\.com)\/([^/]+)\/([^/]+)/);
+      const urlMatch = repoUrl.match(/^(?:https?:\/\/)?(?:www\.)?(github\.com|gitee\.com|gitcode\.(?:com|net))\/([^/]+)\/([^/]+)/);
       if (!urlMatch) return null;
 
-      const platform = urlMatch[1];
+      let platform = urlMatch[1];
       const owner = urlMatch[2];
       const repo = urlMatch[3].replace(/\.git$/, '');
       let apiUrl;
       let ownerInfo = null;
+      
+      if (platform.startsWith('gitcode')) {
+        platform = 'gitcode';
+      }
 
       if (platform === 'github.com') {
         apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
       } else if (platform === 'gitee.com') {
         apiUrl = `https://gitee.com/api/v5/repos/${owner}/${repo}`;
-      } else if (platform === 'gitcode.com') {
+      } else if (platform === 'gitcode') {
         const encodedProjectId = encodeURIComponent(`${owner}/${repo}`);
-        apiUrl = `https://gitcode.com/api/v4/projects/${encodedProjectId}`;
+        apiUrl = `https://gitcode.net/api/v4/projects/${encodedProjectId}`;
       } else {
         return null;
       }
@@ -8503,7 +8507,7 @@ class YunluTukuManager extends plugin {
 
       const data = await response.json();
 
-      if (platform === 'gitcode.com') {
+      if (platform === 'gitcode') { 
         ownerInfo = data.namespace;
       } else {
         ownerInfo = data.owner;
@@ -9025,7 +9029,7 @@ class YunluTukuManager extends plugin {
         if (info.url) {
           if (info.url.includes('github')) platform = 'github';
           else if (info.url.includes('gitee')) platform = 'gitee';
-          else if (info.url.includes('gitcode')) platform = 'gitcode';
+          else if (info.url.includes('gitcode.com') || info.url.includes('gitcode.net')) platform = 'gitcode';
         }
 
         const hasRecognized = (info.contentMap.gs || 0) > 0 ||
