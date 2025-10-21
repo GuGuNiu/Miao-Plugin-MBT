@@ -37769,5 +37769,236 @@
         },
         "timestamp": "2025-10-21T09:18:08.767Z",
         "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "2758525233",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu10.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu10.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "558f88986e691c42e555bc12fb1e5a8a",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:12:43.644Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4449213248",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu4.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu4.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "87fef3ceb2e0b38db19bf15024b61226",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:12:48.236Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7119928488",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu5.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu5.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "5889083662226997227557597e6d8706",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:12:52.672Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "8935420088",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu6.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu6.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "78bdb33300925fcc36207a75dd0edaa6",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:12:56.385Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "7765618333",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu7.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu7.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "63257e4841a425b9a7f2c845b83065a3",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:12:59.676Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "3151717794",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu8.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu8.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "92051b4e65d937429aa695488a84e27f",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:13:04.099Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "5612965605",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu9.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu9.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "7fe8a47145560f004adf5e4276498e35",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:13:10.986Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "1947246262",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu11.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu11.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "0a8733dafe9979e0b9ffbd0c2ba099b8",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:13:14.956Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "4562460811",
+        "characterName": "哥伦比娅",
+        "path": "gs-character/哥伦比娅/哥伦比娅Gu12.webp",
+        "attributes": {
+            "filename": "哥伦比娅Gu12.webp",
+            "parentFolder": "哥伦比娅",
+            "isPx18": false,
+            "isRx18": true,
+            "layout": "fullscreen",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "8685154eb6b539540046844b931aeaa0",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:13:22.009Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT",
+        "gid": "9795195677",
+        "characterName": "菈乌玛",
+        "path": "gs-character/菈乌玛/菈乌玛Gu10.webp",
+        "attributes": {
+            "filename": "菈乌玛Gu10.webp",
+            "parentFolder": "菈乌玛",
+            "isPx18": true,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fef3d5575b02e7e9502ffeec08e616f5",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:13:26.569Z",
+        "sourceGallery": "gs-character"
+    },
+    {
+        "storagebox": "Miao-Plugin-MBT-2",
+        "gid": "4649239162",
+        "characterName": "爱诺",
+        "path": "gs-character/爱诺/爱诺Gu2.webp",
+        "attributes": {
+            "filename": "爱诺Gu2.webp",
+            "parentFolder": "爱诺",
+            "isPx18": false,
+            "isRx18": false,
+            "layout": "normal",
+            "isEasterEgg": false,
+            "isAiImage": false,
+            "isBan": false,
+            "md5": "fe112d16fa6ba428189da06122944442",
+            "Downloaded_From": "GuTools-Generator",
+            "secondaryTags": []
+        },
+        "timestamp": "2025-10-21T12:13:29.771Z",
+        "sourceGallery": "gs-character"
     }
 ]
