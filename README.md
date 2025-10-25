@@ -130,7 +130,7 @@
 <br>
   
 -   **Q: 启动机器人或更新后，控制台出 依赖安装 失败的报错怎么办？**
-    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在机器人根目录或者Plugins/GuTools下打开终端运行`pnpm install` 尝试解决
+    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
 
   
 <br>
