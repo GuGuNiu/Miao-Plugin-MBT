@@ -2,7 +2,7 @@
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
     <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%" alt="咕咕牛图库 Banner"/>
   </a>
-</p>
+</p> 
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-v3-blue.svg" alt="Miao-Yunzai"></a>
@@ -41,7 +41,7 @@
 
 <br>
 
-**咕咕牛图库** 是基于 **Yunzai** 的角色面板图扩展，提供角色面板图资源及围绕面板图的智能化管理。 **2023年12月** 创建以来，不断在打磨稳定、高效且安全的图库体验。管理器采用多类协作与静态状态集中管理相结合的混合架构设计，模块间高度耦合、环环相扣，使用过程中如有问题欢迎反馈。
+咕咕牛提供了角色面板图资源及围绕面板图的智能化管理。 **2023年12月** 创建以来，不断在打磨稳定、高效且安全的图库体验。管理器采用多类协作与静态状态集中管理相结合的混合架构设计，模块间高度耦合、环环相扣，使用过程中如有问题欢迎反馈。
 
 - ✅ 完美兼容 **Miao-Plugin**、**ZZZ-Plugin**、**Waves-Plugin** 插件
 - ✅ 覆盖[**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图资源
@@ -158,7 +158,7 @@
     -   **A:** 索引数据未更新导致的，所有操作都会依据imagedata.json，索引数据不会及时更新。
 
 -   **Q: 启动机器人或更新后，控制台出 依赖安装 失败的报错怎么办？**
-    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在机器人根目录或者Plugins/GuTools下打开终端运行`pnpm install` 尝试解决
+    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
 
 -   **Q: 第三方/社区图库管理混乱？**
     -   **A:** 仅保证能用。
