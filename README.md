@@ -174,7 +174,7 @@
 </p>
 
 <p align="center">
-  <img src="./gs-character/芙宁娜/芙宁娜Gu6.webp" width="100%">
+  <img src="./gs-character/哥伦比娅/哥伦比娅Gu11.webp" width="100%">
 </p>
 
 <i>水印说明：在保障原图作者利益和咕咕牛图库权益的前提下,每张图都会带标识信息水印,介意请勿安装</i>
