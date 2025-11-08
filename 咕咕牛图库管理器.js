@@ -131,7 +131,7 @@ class ProcessHookManager {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YunzaiPath = path.resolve(__dirname, "..", "..");
-const Version = "5.0.9";
+const Version = "5.1.0";
 const Purify_Level = { NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2, getDescription: (level) => ({ 0: "不过滤", 1: "过滤R18", 2: "全部敏感项" }[level] ?? "未知"), };
 const VALID_TAGS = { "彩蛋": { key: "isEasterEgg", value: true }, "ai": { key: "isAiImage", value: true }, "横屏": { key: "layout", value: "fullscreen" }, "r18": { key: "isRx18", value: true }, "p18": { key: "isPx18", value: true }, };
 const RAW_URL_Repo1 = "https://raw.githubusercontent.com/GuGuNiu/Miao-Plugin-MBT/main";
@@ -188,6 +188,13 @@ const Default_Config = {
   guToolsPort: 31540,
   guToolsHost: '0.0.0.0',
 };
+
+const Repos_List = {
+  "何日见": { url: "https://github.com/herijian1/characterpic1", default: true, order: 1, aboutDisplay: "喵喵插件原神星铁高质量面板图" },
+  "夜": { url: "https://github.com/ye3011/normal-character", default: true, order: 2, aboutDisplay: "喵喵插件面板图" },
+  "花花": { url: "https://gitcode.com/HanaHimeUnica/super-character", default: true, order: 3, aboutDisplay: "喵喵插件面板图" }
+};
+
 let backgroundCache = { files: [], lastScan: 0, ttl: 60000, };
 
 async function getBackgroundFiles(logger) {
@@ -3481,54 +3488,91 @@ class MiaoPluginMBT extends plugin {
     catch (error) { logger.warn(`${Default_Config.logPrefix}Git log 失败 (${RepoPath})`); return null; }
   }
 
-  static async _handleJsFileSync(sourceRepoPath, logger, forceOverwrite = false) {
-    const newJsFilePath = path.join(sourceRepoPath, "咕咕牛图库管理器.js");
-    const oldJsFilePath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
-    
-    await common.sleep(500);
+  static async _raceGit(primaryCmd, backupCmd, logger) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      let errors = [];
+      let primaryError = null;
+      let backupError = null;
 
-    try {
-      if (forceOverwrite) {
-        logger.info(`${Default_Config.logPrefix}根据 Git diff 或强制逻辑，执行核心JS文件覆盖...`);
-        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-        return true;
-      }
+      const settle = (winner, result) => {
+        if (settled) return;
+        settled = true;
+        if (winner === '主节点') backupCmd?.cancel( );
+        if (winner === '备用节点') primaryCmd?.cancel();
+        resolve(result);
+      };
 
-      // 如果不强制覆盖，则执行基于哈希和大小的交叉验证
-      const [newFileContent, oldFileContent] = await Promise.all([
-        fsPromises.readFile(newJsFilePath).catch(() => null),
-        fsPromises.readFile(oldJsFilePath).catch(() => null),
-      ]);
+      primaryCmd
+        .then(result => settle('主节点', result))
+        .catch(err => {
+          primaryError = err;
+          errors.push(err);
+          if (errors.length === 2) {
+            reject(backupError); 
+          }
+        });
 
-      if (!newFileContent) {
-        logger.warn(`${Default_Config.logPrefix}无法读取新版JS文件进行交叉验证，跳过覆盖。`);
-        return false;
-      }
+      backupCmd
+        .then(result => settle('备用节点', result))
+        .catch(err => {
+          backupError = err;
+          errors.push(err);
+          if (errors.length === 2) {
+            reject(primaryError); 
+          }
+        });
+    });
+  }
 
-      if (!oldFileContent) {
-        logger.info(`${Default_Config.logPrefix}目标JS文件不存在，执行首次覆盖。`);
-        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-        return true;
-      }
+static async _handleJsFileSync(sourceRepoPath, logger, forceOverwrite = false) {
+  const newJsFilePath = path.join(sourceRepoPath, "咕咕牛图库管理器.js");
+  const oldJsFilePath = path.join(MiaoPluginMBT.paths.target.exampleJs, "咕咕牛图库管理器.js");
+  
+  logger.info(`${Default_Config.logPrefix}开始核心JS文件同步检查...`);
 
-      const newHash = crypto.createHash('md5').update(newFileContent).digest('hex');
-      const oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
+  try {
+    const [newStats, oldStats] = await Promise.all([
+      fsPromises.stat(newJsFilePath).catch(() => null),
+      fsPromises.stat(oldJsFilePath).catch(() => null),
+    ]);
 
-      if (newHash !== oldHash) {
-        logger.info(`${Default_Config.logPrefix}交叉验证发现JS文件哈希不匹配，执行覆盖。`);
-        await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
-        return true;
-      }
-      
-      return false; 
-
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
-        logger.error(`${Default_Config.logPrefix}核心脚本更新流程发生意外错误:`, error);
-      }
+    if (!newStats) {
       return false;
     }
-  }
+
+    if (!oldStats) {
+      await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+      return true;
+    }
+
+    if (forceOverwrite) {
+      await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+      return true;
+    }
+
+    if (newStats.size !== oldStats.size) {
+      await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+      return true;
+    }
+
+    const [newFileContent, oldFileContent] = await Promise.all([
+      fsPromises.readFile(newJsFilePath),
+      fsPromises.readFile(oldJsFilePath),
+    ]);
+
+    const newHash = crypto.createHash('md5').update(newFileContent).digest('hex');
+    const oldHash = crypto.createHash('md5').update(oldFileContent).digest('hex');
+
+    if (newHash !== oldHash) {
+      await fsPromises.copyFile(newJsFilePath, oldJsFilePath);
+      return true;
+    }
+    
+    return false; 
+
+  } catch (error) { if (error.code !== 'ENOENT') {} return false; }
+}
 
   static async DownloadRepoWithFallback(repoNum, repoUrl, branch, finalLocalPath, e, logger, sortedNodes = [], processManager) {
     const logPrefix = Default_Config.logPrefix;
@@ -3547,75 +3591,91 @@ class MiaoPluginMBT extends plugin {
     if (!sortedNodes || sortedNodes.length === 0) {
       return { success: false, nodeName: "无可用源", error: new Error("没有可用的下载节点列表") };
     }
+    
+    const githubNode = sortedNodes.find(n => n.name === "GitHub");
+    const availableNodes = sortedNodes.filter(n => (n.gitResult && n.gitResult.success) || (n.gitResult && n.gitResult.isFallback));
+    let failedAttempts = 0;
 
-    for (const node of sortedNodes) {
-      if (!((node.gitResult && node.gitResult.success) || (node.gitResult.isFallback))) continue;
+    const createCloneCommand = (node, isBackup = false) => {
+      const nodeName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(${node.protocol})`;
+      const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${node.name.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}`;
+      const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
 
-      const maxAttempts = (node.name === "Ghfast" || node.name === "Moeyy") ? 2 : 1;
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const nodeName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(${node.protocol})`;
-        const uniqueTempCloneDirName = `GuTempClone-${repoNum}-${node.name.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now()}`;
-        const tempRepoPath = path.join(tempDownloadsBaseDir, uniqueTempCloneDirName);
+      let actualCloneUrl = "";
+      const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+      let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
+      if (!userAndRepoPath) { throw new Error(`无法提取仓库路径`); }
 
-        try {
-          await fsPromises.mkdir(tempRepoPath, { recursive: true });
-          if (attempt > 1) {
-            logger.info(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试...`);
-            await common.sleep(1500);
-          }
+      if (node.name === "GitHub") {
+        actualCloneUrl = repoUrl;
+      } else if (node.cloneUrlPrefix) {
+        const cleanPrefix = node.cloneUrlPrefix.replace(/\/$/, "");
+        if (node.name === "GitClone") actualCloneUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
+        else if (node.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) actualCloneUrl = `${cleanPrefix}/${userAndRepoPath}`;
+        else actualCloneUrl = `${cleanPrefix}/${repoUrl}`;
+      } else { throw new Error(`源 ${node.name} 配置缺少 cloneUrlPrefix`); }
 
-          let actualCloneUrl = "";
-          const repoPathMatch = repoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-          let userAndRepoPath = repoPathMatch ? repoPathMatch[1].replace(/\.git$/, "") : null;
-          if (!userAndRepoPath) { throw new Error(`无法提取仓库路径`); }
+      const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", "-b", branch, actualCloneUrl, tempRepoPath];
+      const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+      
+      let cloneTimeout = Default_Config.gitCloneTimeout;
+      if (repoNum === 1 && node.name === "GitHub") cloneTimeout = 60000;
 
-          if (node.name === "GitHub") {
-            actualCloneUrl = repoUrl;
-          } else if (node.cloneUrlPrefix) {
-            const cleanPrefix = node.cloneUrlPrefix.replace(/\/$/, "");
-            if (node.name === "GitClone") {
-              actualCloneUrl = `${cleanPrefix}/${repoUrl.replace(/^https?:\/\//, "")}`;
-            } else if (node.name === "Mirror" || cleanPrefix.includes("gitmirror.com")) {
-              actualCloneUrl = `${cleanPrefix}/${userAndRepoPath}`;
-            } else {
-              actualCloneUrl = `${cleanPrefix}/${repoUrl}`;
-            }
-          } else { throw new Error(`源 ${node.name} 配置缺少 cloneUrlPrefix`); }
+      const commandPromise = ExecuteCommand("git", cloneArgs, gitOptions, cloneTimeout, null, null, (percent, resetTimeout) => {
 
-          const cloneArgs = ["clone", "--verbose", `--depth=${Default_Config.gitCloneDepth}`, "--progress", "-b", branch, actualCloneUrl, tempRepoPath];
-          const gitOptions = { cwd: MiaoPluginMBT.paths.YunzaiPath, shell: false };
+      }, processManager);
 
-          let cloneTimeout = Default_Config.gitCloneTimeout;
-          if (repoNum === 1 && node.name === "GitHub") {
-            cloneTimeout = 60000;
-          }
+      commandPromise.tempRepoPath = tempRepoPath;
+      commandPromise.nodeName = nodeName;
 
-          await ExecuteCommand("git", cloneArgs, gitOptions, cloneTimeout, null, null, null, processManager);
+      return commandPromise;
+    };
 
-          if (repoNum === 1) {
-            const requiredPath = "GuGuNiu-Gallery/html";
-            try { await fsPromises.access(path.join(tempRepoPath, requiredPath)); }
-            catch (accessError) { throw new Error(`仓库下载不完整，缺少关键目录: ${requiredPath}`); }
-          }
+    for (let i = 0; i < availableNodes.length; i++) {
+      const node = availableNodes[i];
+      if (node.name === "GitHub") continue; // 主循环跳过GitHub，只作为备用
 
-          await safeDelete(finalLocalPath);
-          await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
-          await fsPromises.rename(tempRepoPath, finalLocalPath);
-          const gitLog = await MiaoPluginMBT.GetTuKuLog(1, finalLocalPath, logger);
+      const isLastNode = (i === availableNodes.length - 1) || (i === availableNodes.length - 2 && availableNodes[i+1].name === 'GitHub');
+      const isHighPressure = failedAttempts > 0 && availableNodes.length > 2 && (failedAttempts >= Math.floor(availableNodes.length / 2));
+      
+      let primaryCommand = null;
+      
+      try {
+        primaryCommand = createCloneCommand(node);
+        let finalResult;
 
-          return { success: true, nodeName, error: null, gitLog };
-
-        } catch (error) {
-          lastError = error;
-          //logger.warn(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 第 ${attempt} 次尝试失败:`, error.message);
-          const stderr = (error.stderr || "").toLowerCase();
-          if (stderr.includes("could not read from remote repository") || stderr.includes("authentication failed")) {
-            logger.error(`${logPrefix}[${repoTypeName}] 节点 ${nodeName} 遭遇认证/权限错误，将不再重试此节点。`);
-            break;
-          }
-        } finally {
-          await safeDelete(tempRepoPath);
+        if (githubNode && (isLastNode || isHighPressure)) {
+          const githubCommand = createCloneCommand(githubNode, true);
+          finalResult = await this._raceGitCommands(primaryCommand, githubCommand, logger);
+        } else {
+          finalResult = await primaryCommand;
         }
+
+        const winningTempPath = finalResult.command.tempRepoPath;
+        const winningNodeName = finalResult.command.nodeName;
+
+        if (repoNum === 1) {
+          const requiredPath = "GuGuNiu-Gallery/html";
+          await fsPromises.access(path.join(winningTempPath, requiredPath));
+        }
+
+        await safeDelete(finalLocalPath);
+        await fsPromises.mkdir(path.dirname(finalLocalPath), { recursive: true });
+        await fsPromises.rename(winningTempPath, finalLocalPath);
+        
+        const gitLog = await MiaoPluginMBT.GetTuKuLog(1, finalLocalPath, logger);
+        return { success: true, nodeName: winningNodeName, error: null, gitLog };
+
+      } catch (error) {
+        lastError = error;
+        failedAttempts++;
+        const failedNodeName = primaryCommand?.nodeName || node.name;
+        logger.warn(`${logPrefix}[${repoTypeName}] 节点 ${failedNodeName} 尝试失败 (累计失败: ${failedAttempts}):`, error.message);
+        
+        if (primaryCommand?.tempRepoPath) {
+            await safeDelete(primaryCommand.tempRepoPath);
+        }
+
       }
     }
 
@@ -8410,7 +8470,7 @@ class YunluTukuManager extends plugin {
       event: 'message',
       priority: 101,
       rule: [
-        { reg: /^#咕咕牛安装\s*https?:\/\/[^:]+:.+$/i, fnc: "install", permission: "master" },
+        { reg: /^#咕咕牛安装\s*(https?:\/\/[^:]+:.+|[^:]+)$/i, fnc: "install", permission: "master" },
         { reg: /^#咕咕牛更新\s*.+$/i, fnc: "update", permission: "master" },
         { reg: /^#咕咕牛卸载\s*.+$/i, fnc: "uninstall", permission: "master" },
         { reg: /^#咕咕牛列表$/i, fnc: "list", permission: "master" },
@@ -8421,11 +8481,48 @@ class YunluTukuManager extends plugin {
     this.logPrefix = `『咕咕牛🐂』第三方图库管理器`;
     this.paths = {
       base: path.join(YunzaiPath, "resources", "GuGuNiu_third_party"),
-      configFile: path.join(YunzaiPath, "resources", "Guguniu_third_party", "config.json")
+      configFile: path.join(YunzaiPath, "resources", "GuGuNiu_third_party", "config.json")
     };
     this.config = {};
     this.mutex = new SimpleAsyncMutex();
     this._loadConfig();
+
+    this.task = {
+      name: `${this.logPrefix} 定时更新`,
+      cron: '0 0 4 * * 0', // 每周日凌晨4点
+      fnc: () => this.runScheduledUpdate(),
+      log: true
+    };
+  }
+
+  async runScheduledUpdate() {
+    this.logger.info(`${this.logPrefix} 开始执行每周定时更新...`);
+    await this.mutex.runExclusive(async () => {
+      await this._loadConfig();
+      const aliasesToUpdate = Object.keys(this.config);
+      if (aliasesToUpdate.length === 0) {
+        this.logger.info(`${this.logPrefix} 没有已安装的第三方图库，跳过更新。`);
+        return;
+      }
+
+      for (const alias of aliasesToUpdate) {
+        const repoInfo = this.config[alias];
+        if (!repoInfo || !repoInfo.folderName) {
+          this.logger.error(`${this.logPrefix} 定时更新跳过 ${alias}，配置不完整。`);
+          continue;
+        }
+        const repoPath = path.join(this.paths.base, repoInfo.folderName);
+        try {
+          this.logger.info(`${this.logPrefix} 正在更新: ${alias}`);
+          await ExecuteCommand("git", ["pull"], { cwd: repoPath }, Default_Config.gitPullTimeout);
+          const { totalSynced } = await this._syncRepo(alias);
+          this.logger.info(`${this.logPrefix} ${alias} 更新完成，同步了 ${totalSynced} 个文件。`);
+        } catch (error) {
+          this.logger.error(`${this.logPrefix} 定时更新 ${alias} 失败:`, error);
+        }
+      }
+      this.logger.info(`${this.logPrefix} 每周定时更新完成。`);
+    });
   }
 
   async handleCorrection(e) {
@@ -8519,9 +8616,7 @@ class YunluTukuManager extends plugin {
           ownerAvatarUrl: ownerInfo.avatar_url
         };
       }
-    } catch (error) {
-      this.logger.warn(`${this.logPrefix} 获取仓库所有者信息失败 (${repoUrl}):`, error.message);
-    }
+    } catch (error) { }
     return null;
   }
 
@@ -8797,21 +8892,47 @@ class YunluTukuManager extends plugin {
   async install(e) {
     if (!(await this._ensureMainPluginReady(e))) return true;
     await this.mutex.runExclusive(async () => {
-      const match = e.msg.match(/^#咕咕牛安装\s*(https?:\/\/[^:]+):(.+)$/i);
-      if (!match) return;
-      const [, url, alias] = match;
+      const input = e.msg.replace(/^#咕咕牛安装\s*/i, '').trim();
+      let url, alias;
 
-      const sanitizedAlias = alias.trim().replace(/[\\/.:]/g, '');
+      const urlMatch = input.match(/^(https?:\/\/[^:]+):(.+)$/i);
+      if (urlMatch) {
+        [, url, alias] = urlMatch;
+        url = url.trim();
+        alias = alias.trim();
+      } else {
+        alias = input;
+        if (Repos_List[alias]) {
+          url = Repos_List[alias].url;
+        } else {
+          return e.reply(`俺不认识「${alias}」这个库咧，你得给俺完整的格式才中：\n#咕咕牛安装 网址:你起个名儿`, true);
+        }
+      }
+
+      const sanitizedAlias = alias.replace(/[\\/.:]/g, '');
       if (!sanitizedAlias) {
         return e.reply("你这给的简名中不中啊，不能空着也不能有乱七八糟的符号咧。", true);
       }
 
-      const folderName = this._extractOwnerFromUrl(url.trim());
+      const folderName = this._extractOwnerFromUrl(url);
       if (!folderName) {
         return e.reply("俺从你这网址里看不出来作者是谁咧，换个 GitHub、Gitee 或者 GitCode 的链接中不中？", true);
       }
 
       await this._loadConfig();
+
+      for (const key in this.config) {
+        if (this.config[key].url === url) {
+          return e.reply(`这个网址已经用「${key}」这个名儿装过了，不能再装一遍咧。`, true);
+        }
+      }
+      
+      for (const key in Repos_List) {
+        if (Repos_List[key].url === url && alias !== key) {
+          return e.reply(`这个网址是默认库「${key}」的，你直接用 #咕咕牛安装 ${key} 就中咧。`, true);
+        }
+      }
+
       if (this.config[sanitizedAlias]) {
         return e.reply(`哎呀，这个叫「${sanitizedAlias}」的库俺们这已经有咧，你换个名儿中不中？要不就先用卸载命令给它弄掉。`, true);
       }
@@ -8820,7 +8941,7 @@ class YunluTukuManager extends plugin {
       const targetPath = path.join(this.paths.base, folderName);
 
       try {
-        const repoUrl = url.trim();
+        const repoUrl = url;
         if (repoUrl.includes("github.com")) {
           this.logger.info(`${this.logPrefix} 检测到 GitHub 仓库，启动高级下载模式...`);
           const processManager = new ProcessManager(this.logger);
@@ -8836,7 +8957,7 @@ class YunluTukuManager extends plugin {
           this.logger.info(`${this.logPrefix} 优选下载节点顺序: ${sortedNodes.map(n => n.name).join(' -> ')}`);
 
           const downloadResult = await MiaoPluginMBT.DownloadRepoWithFallback(
-            `third-party-${sanitizedAlias}`, repoUrl, 'main', targetPath, e, this.logger, sortedNodes, true, processManager
+            `third-party-${sanitizedAlias}`, repoUrl, 'main', targetPath, e, this.logger, sortedNodes, processManager
           );
 
           if (!downloadResult.success) {
@@ -8857,6 +8978,7 @@ class YunluTukuManager extends plugin {
           installDate: new Date().toISOString(),
           ownerName: ownerInfo?.ownerName || null,
           ownerAvatarUrl: ownerInfo?.ownerAvatarUrl || null,
+          description: ownerInfo?.description || null,
           structureType,
           contentMap,
           lastSync: new Date().toISOString()
@@ -8985,29 +9107,41 @@ class YunluTukuManager extends plugin {
       await this._loadConfig();
       const repos = Object.entries(this.config);
 
-      if (repos.length === 0) {
+      const displayConfig = { ...this.config };
+      for (const alias in Repos_List) {
+        if (!displayConfig[alias]) {
+          displayConfig[alias] = { ...Repos_List[alias], notIns: true };
+        }
+      }
+
+      if (Object.keys(displayConfig).length === 0) {
         return e.reply("一个第三方图库都还没装咧。\n想装的话，就用 `#咕咕牛安装 网址:你给它起个名儿`。", true);
       }
 
-      for (const [alias, info] of repos) {
-        if (!info.folderName) {
-          this.logger.warn(`${this.logPrefix}跳过 ${alias}，配置缺少文件夹名。`);
-          continue;
-        }
-        const repoPath = path.join(this.paths.base, info.folderName);
-        try {
-          await fsPromises.access(repoPath);
-          const { sourcePath, structureType } = await this._detectStructure(repoPath);
-          const contentMap = await this._analyzeContent(sourcePath);
-
-          this.config[alias].structureType = structureType;
-          this.config[alias].contentMap = contentMap;
-        } catch (error) {
-          if (error.code === 'ENOENT') {
-            this.logger.warn(`${this.logPrefix}仓库目录 ${repoPath} 不存在，跳过分析。`);
-          } else {
-            this.logger.error(`${this.logPrefix}分析仓库 ${alias} 时出错:`, error);
-          }
+      for (const [alias, info] of Object.entries(displayConfig)) {
+        if (info.notIns && info.default) {
+            const ownerInfo = await this._fetchRepoOwnerInfo(info.url);
+            if (ownerInfo) {
+                info.ownerName = ownerInfo.ownerName;
+                info.ownerAvatarUrl = ownerInfo.ownerAvatarUrl;
+                info.description = ownerInfo.description;
+            }
+        } else if (!info.notIns && info.folderName) {
+            const repoPath = path.join(this.paths.base, info.folderName);
+            try {
+                await fsPromises.access(repoPath);
+                const { sourcePath, structureType } = await this._detectStructure(repoPath);
+                const contentMap = await this._analyzeContent(sourcePath);
+                this.config[alias].structureType = structureType;
+                this.config[alias].contentMap = contentMap;
+            } catch (error) {
+                if (error.code === 'ENOENT') {
+                    this.logger.warn(`${this.logPrefix}仓库目录 ${repoPath} 不存在，标记为未安装。`);
+                    this.config[alias].notIns = true;
+                } else {
+                    this.logger.error(`${this.logPrefix}分析仓库 ${alias} 时出错:`, error);
+                }
+            }
         }
       }
 
@@ -9015,15 +9149,13 @@ class YunluTukuManager extends plugin {
 
       const tplPath = path.join(MiaoPluginMBT.paths.repoGalleryPath, "html", "third_party_list.html");
       const repoList = [];
-      const updatedRepos = Object.entries(this.config);
-
-      for (const [alias, info] of updatedRepos) {
-        if (!info.folderName) continue;
-        const repoPath = path.join(this.paths.base, info.folderName);
+      
+      for (const [alias, info] of Object.entries(displayConfig)) {
         let size = 0;
-        try {
-          size = await FolderSize(repoPath);
-        } catch (err) { }
+        if (!info.notIns && info.folderName) {
+          const repoPath = path.join(this.paths.base, info.folderName);
+          try { size = await FolderSize(repoPath); } catch (err) { }
+        }
 
         let platform = 'unknown';
         if (info.url) {
@@ -9032,35 +9164,42 @@ class YunluTukuManager extends plugin {
           else if (info.url.includes('gitcode.com') || info.url.includes('gitcode.net')) platform = 'gitcode';
         }
 
-        const hasRecognized = (info.contentMap.gs || 0) > 0 ||
-          (info.contentMap.sr || 0) > 0 ||
-          (info.contentMap.zzz || 0) > 0 ||
-          (info.contentMap.waves || 0) > 0;
+        const hasRecognized = !info.notIns && info.contentMap && (
+          (info.contentMap.gs || 0) > 0 || (info.contentMap.sr || 0) > 0 ||
+          (info.contentMap.zzz || 0) > 0 || (info.contentMap.waves || 0) > 0
+        );
 
-        let installDateStr = '未知';
-        if (info.installDate) {
+        let installDateStr = '未安装';
+        if (!info.notIns && info.installDate) {
           installDateStr = new Date(info.installDate).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        } else {
+        } else if (!info.notIns && info.folderName) {
           try {
+            const repoPath = path.join(this.paths.base, info.folderName);
             const stats = await fsPromises.stat(repoPath);
             installDateStr = new Date(stats.birthtime).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-            this.config[alias].installDate = stats.birthtime.toISOString();
+            if (this.config[alias]) this.config[alias].installDate = stats.birthtime.toISOString();
           } catch (statError) {
-            this.logger.warn(`${this.logPrefix} 无法获取文件夹 ${repoPath} 的创建时间: ${statError.message}`);
+            this.logger.warn(`${this.logPrefix} 无法获取文件夹 ${info.folderName} 的创建时间: ${statError.message}`);
           }
         }
 
         repoList.push({
-          alias,
-          ...info,
-          platform,
-          hasRecognized,
-          sizeFormatted: FormatBytes(size),
-          lastSyncFormatted: new Date(info.lastSync).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+          alias, ...info, platform, hasRecognized,
+          sizeFormatted: info.notIns ? 'N/A' : FormatBytes(size),
+          lastSyncFormatted: info.notIns ? 'N/A' : new Date(info.lastSync).toLocaleString('zh-CN', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
           installDateFormatted: installDateStr,
         });
       }
-      await this._saveConfig();
+
+      repoList.sort((a, b) => {
+        const aIsDefault = !!a.default;
+        const bIsDefault = !!b.default;
+        if (aIsDefault && !bIsDefault) return -1;
+        if (!aIsDefault && bIsDefault) return 1;
+        if (aIsDefault && bIsDefault) return a.order - b.order;
+        return a.alias.localeCompare(b.alias, 'zh-CN');
+      });
+
       const renderData = {
         repos: repoList,
         pluginVersion: Version,
