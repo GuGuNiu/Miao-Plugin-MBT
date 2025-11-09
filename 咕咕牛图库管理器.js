@@ -3827,14 +3827,14 @@ static async _handleJsFileSync(sourceRepoPath, logger, forceOverwrite = false) {
       }
     };
 
-    const gameKeysForPreUpdateManage = ["zzz", "waves"];
-    for (const gameKeyToManage of gameKeysForPreUpdateManage) {
-      const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
-      if (!gameFolderToManage) { continue; }
-      let isRepoRelevant = false;
-      if (gameKeyToManage === "zzz" || gameKeyToManage === "waves") { isRepoRelevant = (RepoNum === 1 || RepoNum === 4); }
-      if (isRepoRelevant) { await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger); }
-    }
+    // const gameKeysForPreUpdateManage = ["zzz", "waves"];
+    // for (const gameKeyToManage of gameKeysForPreUpdateManage) {
+    //   const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+    //   if (!gameFolderToManage) { continue; }
+    //   let isRepoRelevant = false;
+    //   if (gameKeyToManage === "zzz" || gameKeyToManage === "waves") { isRepoRelevant = (RepoNum === 1 || RepoNum === 4); }
+    //   if (isRepoRelevant) { await MiaoPluginMBT.ManageOptionalGameContent(localPath, gameKeyToManage, gameFolderToManage, logger); }
+    // }
 
     await MiaoPluginMBT.gitMutex.acquire();
     try {
@@ -5132,15 +5132,15 @@ static async RunPostDownloadSetup(e, logger = global.logger || console, stage = 
       });
     }
 
-    const gameKeysForPostUpdateManage = ["zzz", "waves"];
-    for (const gameKeyToManage of gameKeysForPostUpdateManage) {
-      const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
-      if (!gameFolderToManage) continue;
-      const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
-      for (const repoPath of relevantRepoPaths) {
-        await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
-      }
-    }
+    // const gameKeysForPostUpdateManage = ["zzz", "waves"];
+    // for (const gameKeyToManage of gameKeysForPostUpdateManage) {
+    //   const gameFolderToManage = MiaoPluginMBT.paths.sourceFolders[gameKeyToManage];
+    //   if (!gameFolderToManage) continue;
+    //   const relevantRepoPaths = await MiaoPluginMBT.GetRelevantRepoPathsForGame(gameKeyToManage, logger);
+    //   for (const repoPath of relevantRepoPaths) {
+    //     await MiaoPluginMBT.ManageOptionalGameContent(repoPath, gameKeyToManage, gameFolderToManage, logger);
+    //   }
+    // }
 
     let configChangedOnUpdate = false;
     if (!MiaoPluginMBT.MBTConfig.repoNodeInfo) MiaoPluginMBT.MBTConfig.repoNodeInfo = {};
