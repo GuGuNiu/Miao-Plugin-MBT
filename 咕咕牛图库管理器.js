@@ -3646,7 +3646,7 @@ static async _handleJsFileSync(sourceRepoPath, logger, forceOverwrite = false) {
 
         if (githubNode && (isLastNode || isHighPressure)) {
           const githubCommand = createCloneCommand(githubNode, true);
-          finalResult = await this._raceGitCommands(primaryCommand, githubCommand, logger);
+          finalResult = await this._raceGit(primaryCommand, githubCommand, logger);
         } else {
           finalResult = await primaryCommand;
         }
