@@ -4,21 +4,11 @@
   </a>
 </p> 
 
-<p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-v3-blue.svg" alt="Miao-Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3-green.svg" alt="Trss-Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
-</p>
+# 🔠图库的简言
 
+<br>
 
-<p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://count.getloli.com/get/@GuGuNiu-MiaoPluginMBT?theme=moebooru" alt="Visitor Count" />
-  </a>
-</p>
-
-<div style="padding: 16px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9fb; font-family: sans-serif;" align="center">
+  图库创建于 **2023年10月** 至今不断在打磨稳定、高效且安全的图库体验。插件采用多类协作与静态状态集中管理相结合的混合架构，模块间耦合高且环环相扣，使用过程中如有问题欢迎反馈，尽量让每一位都可以方便简单的使用，插件内置了800万Token联网大模型可以辅助查找部分报错问题。
     ❓遇到问题可以加群 
   <a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
     <button style="
@@ -34,49 +24,59 @@
       transition: background 0.3s ease;
     " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'" 
        onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-      💬 点击加入QQ群：原神/星铁/鸣潮/绝区零/留学/三角洲/王者/小米汽车/特斯拉/新南威尔士大学/斯坦福大学交流群
+      💬 点击加入QQ群：蓝色星球的移民签证交流群
     </button>
   </a>
-</div>
 
-<br>
-
-咕咕牛提供了面板图资源和智能化管理系统。 **2023年10月** 创建以来不断在打磨稳定、高效且安全的图库体验。管理器采用多类协作与静态状态集中管理相结合的混合架构，模块间耦合高且环环相扣，使用过程中如有问题欢迎反馈，尽量让每一位都可以方便简单的使用，插件内置了800万token大模型可以辅助查找报错问题。
 
 ---
 
-咕咕牛提供的自动化插件方面：
-- ✅ 已适配 **Miao-Plugin**、**ZZZ-Plugin**、**Waves-Plugin** 插件
+## 🛒已实装功能
+
+- ✅ 适配 **Miao-Plugin**、**ZZZ-Plugin**、**[0卡苏打水版]Waves-Plugin** 插件
 - ✅ 覆盖[**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图资源调度
-- ✅ 采用高性能角色名匹配及多层内存索引，实现高频功能**秒级响应**，支持复杂的角色名变体和多游戏去重精准识别
-- ✅ 高度自动化的管理系统，支持**85%以上**场景无人值守，流程及异常处理全自动化
-- ✅ GitHub智能访问加速，具备多节点双通道测速、故障自动切换、多节点并行下载、失效代理重试及双层下载容灾机制
-- ✅ 使用完全自动抠图方案：
-  - 通过 **[Liblib 工作流 + Adobe 云]** 实现全流程自动抠图 
-  - 部分图片采用[ **Midjourney** / **Nano-banana** ]扩图
+- ✅ 高性能角色名匹配支持复杂的角色名变体及多层内存索引，实现高频功能**秒级响应**
+- ✅ 自动化的管理系统，支持**85%以上**场景无人值守，流程及异常处理自动化
+- ✅ 多维构建围绕的 **[面板图]** 增/删/查/封禁/内容过滤管理
+  #
+- ✅ **『咕咕牛🐂图库』** 使用场景定制的 [**Git 智能/自动化工具链**]:
+  - I. 多节点双通道 (HTTP + GIT) 有限度的智能测速
+  - II. 内置故障自动切换、多节点协同、节点利用最大化、双层下载容错、多层次的容灾机制
+  - III. 针对 **Spawn 进程** 的 stdout/stderr 流构建精密拦截与清洗防火墙，隔离来自可能的 **Clash 或其他代理**产生的异常日志倒灌，防止异常数据通过流通道干扰主进程日志与控制逻辑 ```©️v5.1.1版本实装```
+  - IV. 支持 HTTP2/HTTP1.1 动态切换，主动过滤代理异常流 ```©️v5.1.1版本实装```
+  - V. 请求 URL 随机化 + 流量混淆加密降低流量特征 ```©️v5.1.1版本实装```
+  - VI. 主动干预 (**常见和极端**) 场景下的 Git 错误码与异常
+  - VII. 配套全生命周期和增强进程管理能力的 **Spawn Git 进程** ```©️v5.1.1版本实装```
+  - VIII. 采用 **'跳房子'** 作为节点服务器减负的核心 ```©️v5.1.1版本实装```
+#
+- ✅ 使用完全自动抠图的方案：
+  - 通过 **[ 定制的 ComfyUI 工作流 + Adobe 云]** 实现全流程自动抠图并采用[ **Midjourney** / **Nano-banana** ]扩图
   - 每一张图都会进行后期调色，确保每张图在视觉上的适配度和美感，以及匹配每个插件的背景色
 
 ## ⚠️ 使用须知 · 请务必仔细阅读
 
 - 项目除图片资源外基于 **MIT 协议** 开源，**图片资源严禁用于任何商业用途**。如有侵权请联系删除。
-- **部分图片为付费商业素材**，咕咕牛已购买此素材仅用于展示用途，咕咕牛不拥有其版权后续使用或传播行为与本项目无关。
+- **部分图片为付费商业素材**，咕咕牛已购买此素材仅用于展示用途，咕咕牛不拥有其版权**后续使用或传播行为与本项目无关**。
 
 ---
 
 ## 🛡️ 内容净化与过滤系统
 
 > [!WARNING]
-> 为应对潜在的平台风控，建议根据自身需求配置。
+> 为应对潜在的平台风控，建议根据自身需求配置，此功能是贯穿全图库业务的核心，优先级最高请着重考虑！
 
 | 等级 | 效果         | 说明                                              |
 |:----:|:-------------|:--------------------------------------------------|
-| 0    | 无过滤       | 显示所有图片，含敏感内容                          |
-| 1    | 常规净化     | 过滤 Rx18，保留低风险 Px18 内容                   |
+| 0    | 无过滤       | 显示所有面板图，含敏感内容 ( 轻微露点占比0.02% )        |
+| 1    | 常规净化     | 过滤全部 Rx18，保留低敏感的 Px18 内容                   |
 | 2    | 最高净化     | 严格过滤所有敏感内容（含 Rx18 + Px18）            |
 
 配合以下指令可独立管理图片类型开关：
-- `#咕咕牛设置 AI图 / 彩蛋图 / 横屏图`
-- `#咕咕牛封禁 / 解禁 角色名 / [二级标签]`
+- #咕咕牛设置 AI图 / 彩蛋图 / 横屏图 ```启|禁用```
+- #咕咕牛封禁 / 解禁 ```角色名``` | ```[二级标签]``` 
+
+> [!TIP]  
+> [二级标签] 可选参数，用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级
 
 >在5.0.3版本引入了二级标签，作为辅助查找封禁，可以用 #咕咕牛查看 具体了解有哪些
 
@@ -127,13 +127,15 @@
 | `#咕咕牛卸载 <简称>`                     | 卸载第三方图库及其所有文件     |
 | `#咕咕牛列表`                          | 展示所有已安装的第三方图库     |
 
+💡TIPS：插件在每个星期都会自动更新一次社区图库
+
 </details>
 
 <details> <summary> 🌏 GuTools Web控制台 </summary>
 
 <br>
   
--   **Q: 启动机器人或更新后，控制台出 依赖安装 失败的报错怎么办？**
+-   **Q: 启动机器人或更新后，依赖安装失败的报错怎么办？**
     -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
 
   
@@ -153,22 +155,19 @@
 ## 🤔 常见问题 (Q&A)
 
 -   **Q: 部分仓库下载失败怎么办？**
-    -   **A:** 管理器支持断点续传。只需再次发送 `#下载咕咕牛`，即可继续未完成的下载任务。
+    -   **A:** 插件支持断点续传。只需再次发送 `#下载咕咕牛`，即可继续未完成的下载任务。
 
--   **Q: 管理器Js报错或运行不正常？**
-    -   **A:** 先尝试重启，也可从仓库拉一份最新的Js然后重新覆盖，或者请携带由 AI 生成的错误报告图前往 Issues 反馈。
+-   **Q: 插件报错或运行不正常？**
+    -   **A:** 先尝试重启，也可从仓库拉一份最新的Js然后重新覆盖，或者请携带由 AI 生成的错误报告图并且 **完整上下文日志** 前往 Issues 反馈。
      
 -   **Q: 更新图库后，看不到新面板图？**
     -   **A:** 索引数据未更新导致的，所有操作都会依据imagedata.json，索引数据不会及时更新。
 
--   **Q: 启动机器人或更新后，控制台出 依赖安装 失败的报错怎么办？**
+-   **Q: 启动机器人或更新后，依赖安装失败的报错怎么办？**
     -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
 
 -   **Q: 第三方/社区图库管理混乱？**
-    -   **A:** 仅保证能用。
-
--   **Q: 能使用自己的镜像站？**
-    -   **A:** 不能，管理器自己就有主动干预的**GIT管理器**基本是打个命令就不用管了，也是非常的方便简单。
+    -   **A:** 仅保证能用，且鸣朝游戏适配难度过大无法深度适配
 
 ---
 
@@ -201,9 +200,65 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 
 
 > [!TIP]
-> 部署插件后 输入 **#咕咕牛帮助** 查看命令，输入 **#下载咕咕牛** 安装图库 。
+> 部署插件后 输入 **#咕咕牛帮助** 查看命令，输入 **#下载咕咕牛** 安装图库 。 <br>
+> 你至少需要准备 Nodejs 22 版本以上，否则会报错。
 
 ---
+
+## 项目透明墙
+
+> 以下对"数字资产所有者"，"面板图二次创作使用来源“，"图片原创者"，"数字影像所有者"统称为**原创者**
+
+<table border="1" style="width: 100%; table-layout: fixed;">
+  <tr>
+    <th>模块/功能</th> 
+    <th>具体说明</th>
+  </tr>
+  <tr>
+    <td>远程封禁</td> 
+    <td><strong>远程封禁模块/功能</strong>仅用于保障<strong>“原创者“</strong>的版权追溯，<br>
+    <strong>远程封禁模块/功能</strong>不涉及任何 <strong>后门</strong>，咕咕牛仅作为协助<strong>暂停图像分发</strong>，<br>
+    任何行为应遵循<strong>“原创者“</strong>当地法律，咕咕牛不承担因此产生的任何<strong>法律责任</strong>。</td> 
+  </tr>
+  
+  <tr>
+    <td style="white-space: nowrap;">copyFolderRecursive</td> 
+    <td>以下对该模块/功能简称<strong>"资源同步":</strong> <br>
+     <strong>资源同步模块/功能</strong>仅用于保障<strong>“原创者“</strong>的版权追溯清理遗留在用户本地的图片文件，<br>
+  </tr>
+  
+</table>
+
+## 公益的节点列表
+
+> [!NOTE]
+> 虽然部分节点拉黑了仓库，但是非常感谢曾经的帮助！以下排名不分先后按照增加日期排序
+
+<table border="1" style="width: 100%; table-layout: fixed;">
+  <tr>
+    <th>简称</th> 
+    <th>URL</th>
+    <th>备注</th>
+  </tr>
+  <tr>
+    <td style="white-space: nowrap;">Moeyy</td> 
+    <td>https://moeyy.cn/blog</td> 
+    <td>已经停止运营了</td>
+  </tr>
+  
+  <tr>
+    <td style="white-space: nowrap;">KGithub</td> 
+    <td>https://help.kkgithub.com/</td> 
+    <td>捐助链接：https://help.kkgithub.com/donate/</td>
+  </tr>
+
+  <tr>
+    <td style="white-space: nowrap;">老牌镜像站</td> 
+    <td>https://ghproxy.link/</td> 
+    <td>捐助链接：https://ghproxy.link/donate</td>
+  </tr>
+  
+</table>
 
 ## 分流仓库列表
 
@@ -216,4 +271,17 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-4"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true&theme=transparent"></a>
 </p>
 </details>
+
+<p align="center">
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-v3-blue.svg" alt="Miao-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3-green.svg" alt="Trss-Yunzai"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
+    <img src="https://count.getloli.com/get/@GuGuNiu-MiaoPluginMBT?theme=moebooru" alt="Visitor Count" />
+  </a>
+</p>
 
