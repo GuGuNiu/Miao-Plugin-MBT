@@ -1,15 +1,12 @@
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://s2.loli.net/2025/05/22/BXoFpIgChVyqWz2.png" width="100%" alt="咕咕牛图库 Banner"/>
+    <img src="https://s2.loli.net/2025/11/29/XoIglTY1J2mLqMK.png" width="100%" alt="咕咕牛图库 Banner"/>
   </a>
 </p> 
 
-# 🔠图库的简言
+<div align="center">
 
-<br>
-
-  图库创建于 **2023年10月** 至今不断在打磨稳定、高效且安全的图库体验。插件采用多类协作与静态状态集中管理相结合的混合架构，模块间耦合高且环环相扣，使用过程中如有问题欢迎反馈，尽量让每一位都可以方便简单的使用，插件内置了800万Token联网大模型可以辅助查找部分报错问题。
-    ❓遇到问题可以加群 
+  🏵️  **2023年10月**创建至今不断在打磨稳定、方便、高效且安全的图库**一体化生态**体验，交流群：
   <a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
     <button style="
       padding: 10px 20px;
@@ -24,9 +21,11 @@
       transition: background 0.3s ease;
     " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'" 
        onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-      💬 点击加入QQ群：蓝色星球的移民签证交流群
+      💬 QQ群：移民交流群
     </button>
-  </a>
+  </a>，提供的插件没有保证100%能完成下载，只能在有限资源内提升一定量的成功率且替代了繁琐重复的手动操作。🏵️
+
+</div> 
 
 
 ---
@@ -35,19 +34,18 @@
 
 - ✅ 适配 **Miao-Plugin**、**ZZZ-Plugin**、**[0卡苏打水版]Waves-Plugin** 插件
 - ✅ 覆盖[**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图资源调度
-- ✅ 高性能角色名匹配支持复杂的角色名变体及多层内存索引，实现高频功能**秒级响应**
-- ✅ 自动化的管理系统，支持**85%以上**场景无人值守，流程及异常处理自动化
+- ✅ 支持了高性能的角色名模糊匹配、多层内存索引加速
+- ✅ 支持了**85%以上**场景无人值守，流程及异常处理自动化管理系统
 - ✅ 多维构建围绕的 **[面板图]** 增/删/查/封禁/内容过滤管理
   #
-- ✅ **『咕咕牛🐂图库』** 使用场景定制的 [**Git 智能/自动化工具链**]:
-  - I. 多节点双通道 (HTTP + GIT) 有限度的智能测速
-  - II. 内置故障自动切换、多节点协同、节点利用最大化、双层下载容错、多层次的容灾机制
-  - III. 针对 **Spawn 进程** 的 stdout/stderr 流构建精密拦截与清洗防火墙，隔离来自可能的 **Clash 或其他代理**产生的异常日志倒灌，防止异常数据通过流通道干扰主进程日志与控制逻辑 ```©️v5.1.1版本实装```
-  - IV. 支持 HTTP2/HTTP1.1 动态切换，主动过滤代理异常流 ```©️v5.1.1版本实装```
-  - V. 请求 URL 随机化 + 流量混淆加密降低流量特征 ```©️v5.1.1版本实装```
-  - VI. 主动干预 (**常见和极端**) 场景下的 Git 错误码与异常
-  - VII. 配套全生命周期和增强进程管理能力的 **Spawn Git 进程** ```©️v5.1.1版本实装```
-  - VIII. 采用 **'跳房子'** 作为节点服务器减负的核心 ```©️v5.1.1版本实装```
+- ✅ 迭代了第三个版本的 **Git 自动化工具链**:
+  - ①. 多节点双通道 (HTTP + GIT) 有限度的智能测速 
+  - ②. 内置故障自动切换、多节点协同、节点利用最大化、多层次的容灾和下载容错
+  - ③. 配套全生命周期和增强进程管理、对 stdout/stderr 异常流构建拦截与清洗的 Spawn 进程 ```©️v5.1.1版本实装```
+  - ④. 支持 HTTP2/1.1 动态切换、URL 随机化、流量混淆加密降低流量特征 ```©️v5.1.1版本实装```
+  - ⑤. 主动干预 (常见和极端) 场景下的 Git 错误码与异常
+  - ⑥. 主动对公益节点服务器减轻流量压力不再滥用免费节点 ```©️v5.1.1版本实装```
+  - ⑦. 配套了一定量的离散数学模型 + 一定量的势能模型用于动态调度算法使用 ```©️v5.1.1版本实装```
 #
 - ✅ 使用完全自动抠图的方案：
   - 通过 **[ 定制的 ComfyUI 工作流 + Adobe 云]** 实现全流程自动抠图并采用[ **Midjourney** / **Nano-banana** ]扩图
@@ -222,7 +220,7 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
   </tr>
   
   <tr>
-    <td style="white-space: nowrap;">copyFolderRecursive</td> 
+    <td style="white-space: nowrap;">FsTreeSync</td> 
     <td>以下对该模块/功能简称<strong>"资源同步":</strong> <br>
      <strong>资源同步模块/功能</strong>仅用于保障<strong>“原创者“</strong>的版权追溯清理遗留在用户本地的图片文件，<br>
   </tr>
