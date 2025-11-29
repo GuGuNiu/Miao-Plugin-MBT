@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://s2.loli.net/2025/11/29/XoIglTY1J2mLqMK.png" width="100%" alt="咕咕牛图库 Banner"/>
+    <img src="https://s2.loli.net/2025/11/29/XoIglTY1J2mLqMK.png" width="100%" alt="https://github.com/GuGuNiu/Miao-Plugin-MBT"/>
   </a>
 </p> 
 
@@ -23,7 +23,7 @@
        onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
       💬 QQ群：移民交流群
     </button>
-  </a>，提供的插件没有保证100%能完成下载，只能在有限资源内提升一定量的成功率且替代了繁琐重复的手动操作。🏵️
+  </a>，提供的插件没有保证100%成功，只能在有限资源内提升成功率且替代了繁琐重复的手动操作。🏵️
 
 </div> 
 
