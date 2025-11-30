@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://s2.loli.net/2025/11/29/XoIglTY1J2mLqMK.png" width="100%" alt="https://github.com/GuGuNiu/Miao-Plugin-MBT"/>
+    <img src="https://s2.loli.net/2025/12/01/uOIEZhmibT2Bxav.webp" width="100%" alt="https://github.com/GuGuNiu/Miao-Plugin-MBT"/>
   </a>
 </p> 
 
