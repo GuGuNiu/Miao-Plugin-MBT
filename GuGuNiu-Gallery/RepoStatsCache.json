@@ -1,29 +1,29 @@
 {
   "1": {
-    "roles": 85,
-    "images": 476,
-    "size": 2989437164,
-    "gitSize": 2172121246,
-    "filesSize": 817315918,
-    "lastUpdate": "2025-11-25 11:52",
-    "sha": "25e2a5bd9dea1af2cfe9",
-    "nodeName": "GitHub"
+    "roles": 27,
+    "images": 325,
+    "size": 579851858,
+    "gitSize": 77663462,
+    "filesSize": 502188396,
+    "lastUpdate": "2025-12-01 12:27",
+    "sha": "0312af0ade00f4ffe097",
+    "nodeName": "未知"
   },
   "2": {
-    "roles": 95,
-    "images": 912,
-    "size": 2233749351,
-    "gitSize": 1337570281,
-    "filesSize": 896179070,
-    "lastUpdate": "2025-10-27 12:19",
-    "sha": "abafbccca0c7b50a790b",
+    "roles": 28,
+    "images": 542,
+    "size": 1410019985,
+    "gitSize": 697716105,
+    "filesSize": 712303880,
+    "lastUpdate": "2025-12-01 13:38",
+    "sha": "318c589cc36ac9a82e97",
     "nodeName": "GitHub"
   },
   "3": {
     "roles": 56,
     "images": 463,
-    "size": 1049332944,
-    "gitSize": 580946610,
+    "size": 1049333244,
+    "gitSize": 580946910,
     "filesSize": 468386334,
     "lastUpdate": "2025-10-27 12:20",
     "sha": "88d3659c74ba07788424",
@@ -39,5 +39,5 @@
     "sha": "获取失败",
     "nodeName": "未知"
   },
-  "lastUpdated": "2025-12-01T01:59:25.110Z"
+  "lastUpdated": "2025-12-01T11:35:56.428Z"
 }
