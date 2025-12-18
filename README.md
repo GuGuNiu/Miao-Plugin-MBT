@@ -27,25 +27,7 @@
 
 </div> 
 
-
 ---
-
-## 🛒已实装功能
-
-- ✅ 覆盖了 85%适配度的 **Miao-Plugin**、**ZZZ-Plugin**、**[0卡苏打水版]Waves-Plugin** 插件
-- ✅ 覆盖了 [**原神**、**崩坏：星穹铁道**、**绝区零**、**鸣潮**]的面板图资源调度
-- ✅ 支持了 高性能内存索引加速、角色名复杂变体识别提高查询准确率
-- ✅ 支持了 **85%以上**场景无人值守，流程及异常处理自动化
-- ✅ 支持了 围绕 **面板图** 的分级内容过滤管理
-- ✅ 支持了 自适应的 Git 执行工具链 / 大量边缘使用场景容错
-- ✅ 支持了 自适应设备性能负载均衡 / IO限流管控 / 联网AI大模型无缝辅助
-- ✅ 支持了 免费公共 **代理节点服务器** 访问保护避免对其造成过大压力
-- ✅ 使用了 双 Symbol 驱动的生命周期总线架构设计
-- ✅ 商业化的制图方案：
-  - **[ 适配生态定制的 ComfyUI 工作流 + Adobe 云]** 实现全流程自动制图
-  - 采用[ **Midjourney** / **Nano-Banana Pro 3** ] 超分辨率扩图
-  - 自定义了生态专用的压缩算法，确保在不损失大质量的前提下最大程度压缩面板图
-  - 每张图都会进行后期调色，确保在视觉上的适配度和美感，以及匹配每个插件的背景色
 
 ## ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -87,43 +69,37 @@
 
 ---
 
-## 🪄 咕咕牛的小口袋工具箱
+## 🏘️ 社区面板图库的支持
 
-<details> <summary> 🧩 第三方/社区面板图库的增强型支持 </summary>
+> [!NOTE]
+> 在许多参与提供面板图的维护者中，仅咕咕牛一家提供了全链路的垂直适配，本着开源精神希望能够带着其它还在弄面板图的维护者们一起玩，你不需要再设计复杂的下载器了，咕咕牛提供了多模态的下载器足够应对超大型仓库
 
 - 支持从 **GitHub、Gitee、GitCode、Gitea** 平台克隆并自动探测仓库内的文件夹结构
 - **示例**: `#咕咕牛安装https://github.com/user/repo:我哈`
-> 单独说明下无法适配外部的鸣朝面板图因为鸣朝的角色识别非常复杂涉及到用户TOKEN，比如【早柚】核心的鸣朝插件资源就无法兼容，缺少ID和角色名映射表。
+
+
+### 🅰️ 社区图库指令表
   
 | 指令                                 | 效果                                |
 |:-------------------------------------|:------------------------------------|
-| `#咕咕牛安装 <URL:简称>`                 | 安装第三方图库 |
-| `#咕咕牛更新 <简称\|全部>`               | 更新指定的或全部第三方图库     |
-| `#咕咕牛卸载 <简称>`                     | 卸载第三方图库及其所有文件     |
-| `#咕咕牛列表`                          | 展示所有已安装的第三方图库     |
+| `#咕咕牛安装 <URL:简称>`                 | 安装社区图库 |
+| `#咕咕牛更新 <简称\|全部>`               | 更新指定的或全部社区图库     |
+| `#咕咕牛卸载 <简称>`                     | 卸载社区图库及其所有文件     |
+| `#咕咕牛列表`                          | 展示所有已安装的社区图库     |
 
-💡TIPS：插件在每个星期都会自动更新一次社区图库
+### 🅱️ 社区图库的内容过滤管理 ```©️ v5.2.1 实装```
 
-</details>
+| 指令                                 | 效果                                |
+|:-------------------------------------|:------------------------------------|
+| `#咕咕牛封/解禁芙芙<CID>`                 | 封/解禁指定图库的指定面板图 |
+| `#咕咕牛过滤列表`                 | 展示已安装图库封禁情况 |
 
-<details> <summary> 🌏 GuTools Web控制台 </summary>
-
-<br>
-  
--   **Q: 启动机器人或更新后，依赖安装失败的报错怎么办？**
-    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
-
-  
-<br>
-通过 #咕咕牛登录 获取控制台的入口地址，更精细化、可视化的操作，当你在群聊内发送登录公网IP会主动被隐藏。但是WEB端本质上是方便我自己编辑索引数据没什么好用的。
-
->需要你的服务器打开端口：31540
-
-<img src="https://s2.loli.net/2025/07/30/QTu1pjy3VsaroPb.png" width="100%" alt="web-1"/>
-<img src="https://s2.loli.net/2025/07/30/D6lbzwFsqVgi3UR.png" width="100%" alt="web-1"/>
-<img src="https://s2.loli.net/2025/08/16/drqgF1uBpVA3hXv.png" width="100%" alt="web-1"/>
+> [!TIP] 
+> 插件在每个星期都会自动更新社区图库 <br>
+> 鸣朝的角色识别非常复杂涉及到用户TOKEN，比如【早柚】核心的鸣朝插件资源就无法兼容，缺少ID和角色名映射表
 
 </details>
+
 
 ---
 
@@ -151,9 +127,6 @@
 ```bash
 curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js"
 ````
-
-**☑️备用：暂无**
-
 
 > [!TIP]
 > 部署插件后输入 **#咕咕牛帮助** 查看命令，输入 **#下载咕咕牛** 安装图库自动启用。 <br>
@@ -218,7 +191,8 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 
 ## 🍵 开发资料 & 杂谈
 
-<details> <summary> 🫳 1. Spawn Git 调度研究 </summary> </details>
+<details> <summary> 🫳 1. Spawn Git 调度研究 </summary> 
+</details>
 
 
 ## 分流仓库列表
@@ -233,12 +207,32 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 </p>
 </details>
 
+<details> <summary> 🌏 GuTools Web控制台 </summary>
+
+<br>
+  
+-   **Q: 启动机器人或更新后，依赖安装失败的报错怎么办？**
+    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
+
+  
+<br>
+通过 #咕咕牛登录 获取控制台的入口地址，更精细化、可视化的操作，当你在群聊内发送登录公网IP会主动被隐藏。但是WEB端本质上是方便我自己编辑索引数据没什么好用的。
+
+>需要你的服务器打开端口：31540
+
+<img src="https://s2.loli.net/2025/07/30/QTu1pjy3VsaroPb.png" width="100%" alt="web-1"/>
+<img src="https://s2.loli.net/2025/07/30/D6lbzwFsqVgi3UR.png" width="100%" alt="web-1"/>
+<img src="https://s2.loli.net/2025/08/16/drqgF1uBpVA3hXv.png" width="100%" alt="web-1"/>
+
+</details>
+
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-v3-blue.svg" alt="Miao-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3-green.svg" alt="Trss-Yunzai"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
 </p>
+
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
