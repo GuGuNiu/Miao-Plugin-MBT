@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>咕咕牛封禁列表</title>
+  <style>
+    :root {
+      --bg-color: #fef2f2;
+      --container-bg: #ffffff;
+      --container-border: #e11d48;
+      --text-primary: #1f2937;
+      --text-secondary: #4b5563;
+      --header-bg: #be123c;
+      --header-title-color: #ffffff;
+      --header-underline-color: #fecdd3;
+      --header-stat-color: #fecdd3;
+      --tag-bg: rgba(0, 0, 0, 0.2);
+      --tag-manual-color: #ffcdd2;
+      --tag-purified-color: #d1c4e9;
+      --digit-bg: rgba(0, 0, 0, 0.25);
+      --digit-color: #ffffff;
+      --item-bg: #fff1f2;
+      --item-border: #fecdd3;
+      --item-shadow: rgba(0, 0, 0, 0.05);
+      --error-text-color: #be123c;
+      --error-bg-color: #ffe4e6;
+      --reason-tag-text-color: #be123c;
+      --reason-tag-bg-color: #ffe4e6;
+    }
+
+    @font-face {
+      font-family: 'Orbitron';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+    }
+
+    @font-face {
+      font-family: 'Noto Sans SC';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      width: 1000px;
+      margin: 20px auto;
+    }
+
+    .container {
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      border: 2px solid var(--container-border);
+      box-shadow: 0 8px 25px rgba(224, 38, 72, 0.2);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 40px 30px;
+      background-color: var(--header-bg);
+      background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 10px, transparent 10px, transparent 20px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .header-content-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .main-title {
+      position: relative;
+      padding-bottom: 8px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--header-title-color);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .main-title::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 50%;
+      height: 2px;
+      background-color: var(--header-underline-color);
+      border-radius: 1px;
+    }
+
+    .list-type-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--tag-bg);
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .list-type-tag.manual {
+      color: var(--tag-manual-color);
+    }
+
+    .list-type-tag.purified {
+      color: var(--tag-purified-color);
+    }
+
+    .header-stats-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--header-stat-color);
+      font-size: 14px;
+      font-weight: 500;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .digit-container {
+      display: flex;
+      gap: 3px;
+    }
+
+    .digit {
+      background-color: var(--digit-bg);
+      color: var(--digit-color);
+      padding: 4px 7px;
+      border-radius: 4px;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.4em;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .pagination-info {
+      color: var(--header-stat-color);
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, 0.15);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .pagination-info .page-number {
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .main-content {
+      padding: 20px 30px;
+    }
+
+    .ban-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      padding: 10px 0;
+      list-style: none;
+    }
+
+    .ban-item {
+      background-color: var(--item-bg);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid var(--item-border);
+      box-shadow: 0 2px 4px var(--item-shadow);
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .ban-item img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      background-color: #fff;
+    }
+
+    .ban-item .error-placeholder {
+      width: 100%;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--error-bg-color);
+      color: var(--error-text-color);
+      font-size: 12px;
+      border-radius: 6px;
+      margin: 0 auto 10px;
+      padding: 10px;
+      text-align: center;
+      border: 1px dashed var(--error-text-color);
+    }
+
+    .filename-area {
+      margin-top: auto;
+      padding-top: 5px;
+    }
+
+    .ban-item .filename {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      word-break: break-all;
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .ban-item .filename .index {
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-right: 4px;
+    }
+
+    .ban-reasons {
+      margin-top: 5px;
+    }
+
+    .reason-tag {
+      font-size: 0.85em;
+      color: var(--reason-tag-text-color);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin: 2px;
+      background-color: var(--reason-tag-bg-color);
+      white-space: nowrap;
+    }
+
+    .empty-list {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 20px;
+      font-size: 0.95em;
+      padding: 20px;
+      background: #fffafa;
+      border-radius: 10px;
+      border: 1px dashed #fecdd3;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      letter-spacing: 0.25px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      background-color: #fff1f2;
+      border-top: 1px solid #fecdd3;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        width: 100%;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .header-stats-area {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .ban-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body style="{{ scaleStyleValue }}">
+  <div class="container">
+    <div class="header">
+      <div class="header-content-left">
+        <div class="main-title">咕咕牛的封禁列表</div>
+        <div class="list-type-tag {{ listTypeClass }}">{{ emoji }} {{ listTypeName }}</div>
+      </div>
+      <div class="header-stats-area">
+        <div class="stat-item">
+          <span>总数</span>
+          <div class="digit-container">
+            {{ each totalCountDigits digit }}
+            <div class="digit">{{ digit }}</div>
+            {{ /each }}
+          </div>
+        </div>
+        {{ if totalPages > 1 }}
+        <div class="pagination-info">
+          PAGE <span class="page-number">{{ currentPage }}</span> / {{ totalPages }}
+        </div>
+        {{ /if }}
+      </div>
+    </div>
+    <div class="main-content">
+      {{ if items && items.length > 0 }}
+      <div class="ban-grid">
+        {{ each items item index }}
+        <div class="ban-item">
+          <img src="{{ item.thumbnailPath }}" alt="{{ item.fileNameNoExt }}"
+            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);" />
+          <div class="filename-area">
+            <div class="filename"><span class="index">{{ item.displayIndex }}.</span>{{ item.fileNameNoExt }}</div>
+            {{ if item.reasons && item.reasons.length > 0 }}
+            <div class="ban-reasons">
+              {{ each item.reasons reason }}
+              <span class="reason-tag">[{{ reason }}]</span>
+              {{ /each }}
+            </div>
+            {{ /if }}
+          </div>
+        </div>
+        {{ /each }}
+      </div>
+      {{ else }}
+      <p class="empty-list">当前页面无内容</p>
+      {{ /if }}
+    </div>
+    <div class="footer">Miao-Plugin-MBT v{{ Version }}</div>
+  </div>
+</body>
+
+</html>

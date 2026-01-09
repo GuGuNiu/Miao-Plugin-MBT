@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛帮助</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --container-border: #333333;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-muted: #adb5bd;
+            --accent-color: #007bff;
+
+            --header-subtitle-color: rgba(255, 255, 255, 0.9);
+
+            --section-title-color: #343a40;
+            --section-deco-color: #007bff;
+
+            --card-bg: #ffffff;
+            --card-border: #e0e0e0;
+            --card-shadow: rgba(0, 0, 0, 0.05);
+
+            --color-install: #28a745;
+            --color-op: #17a2b8;
+            --color-manage: #dc3545;
+            --color-test: #6f42c1;
+            --color-third-party: #ffc107;
+
+            --accent-glow: rgba(0, 0, 0, 0.4);
+            --panel-backdrop-blur: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: var(--text-primary);
+            padding: 30px;
+            width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 15px 5px var(--accent-glow);
+            background-color: var(--container-bg);
+            background-image:
+                repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px),
+                repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px);
+            background-size: 20px 20px;
+            border: 1px solid var(--container-border);
+        }
+
+        .header {
+            /* 核心：直接赋予背景图 */
+            background-image: url('{{guguniu_res_path}}html/img/bg/Help/112.png');
+            background-size: cover;
+            background-position: center 30%;
+            background-repeat: no-repeat;
+            
+            /* 核心：增加高度 */
+            min-height: 280px;
+            width: 100%;
+            
+            /* 布局 */
+            position: relative;
+            display: flex;
+            align-items: flex-end; /* 内容靠下 */
+            padding: 0;
+            margin: 0;
+            
+            /* 核心：无缝接驳 (整体淡出到底部) */
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+        }
+
+        /* 核心：越接近越虚化 (Blur Layer) */
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%; /* 只模糊下半部分 */
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 0;
+            /* 让模糊层也渐变，实现平滑过渡 */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 80%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 80%);
+            pointer-events: none;
+        }
+
+        .header-screen {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 40px 60px 40px; /* 底部padding留出渐变空间 */
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-left-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 32px;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.5px;
+            position: relative;
+            display: flex;
+            align-items: baseline;
+            padding-bottom: 4px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .header h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50%;
+            height: 4px;
+            background-color: #00f3ff;
+            border-radius: 2px;
+            box-shadow: 0 0 8px #00f3ff;
+        }
+
+        .subtitle {
+            font-family: 'Orbitron', monospace;
+            font-size: 15px;
+            color: var(--header-subtitle-color);
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+            font-weight: 600;
+        }
+
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+            margin-bottom: 5px;
+        }
+
+        .installation-days {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Orbitron', sans-serif;
+            color: #ffffff;
+            font-size: 14px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+            font-weight: 700;
+        }
+
+        .digit-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .digit {
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #00f3ff;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 1.5em;
+            font-weight: 700;
+            line-height: 1;
+            box-shadow: inset 0 0 5px rgba(0, 243, 255, 0.2), 0 0 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.8);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        .main-content-area {
+            padding: 0px 40px 25px 40px; 
+            margin-top: 10px; 
+            position: relative;
+            z-index: 2;
+        }
+
+        .section-category {
+            margin-bottom: 30px;
+        }
+
+        .section-category:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .category-title {
+            margin: 0 0 18px 0;
+            padding-left: 0;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid transparent;
+        }
+
+        .category-title span {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2em;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
+            border-left: 4px solid #333;
+        }
+
+        .section-category:nth-of-type(1) .category-title {
+            border-bottom-color: rgba(40, 167, 69, 0.15);
+        }
+
+        .section-category:nth-of-type(1) .category-title span {
+            background: linear-gradient(to right, rgba(40, 167, 69, 0.1), transparent);
+            border-left-color: var(--color-install);
+            color: #1e7e34;
+        }
+
+        .section-category:nth-of-type(2) .category-title {
+            border-bottom-color: rgba(23, 162, 184, 0.15);
+        }
+
+        .section-category:nth-of-type(2) .category-title span {
+            background: linear-gradient(to right, rgba(23, 162, 184, 0.1), transparent);
+            border-left-color: var(--color-op);
+            color: #117a8b;
+        }
+
+        .section-category:nth-of-type(3) .category-title {
+            border-bottom-color: rgba(220, 53, 69, 0.15);
+        }
+
+        .section-category:nth-of-type(3) .category-title span {
+            background: linear-gradient(to right, rgba(220, 53, 69, 0.1), transparent);
+            border-left-color: var(--color-manage);
+            color: #bd2130;
+        }
+
+        .section-category:nth-of-type(4) .category-title {
+            border-bottom-color: rgba(255, 193, 7, 0.2);
+        }
+
+        .section-category:nth-of-type(4) .category-title span {
+            background: linear-gradient(to right, rgba(255, 193, 7, 0.1), transparent);
+            border-left-color: var(--color-third-party);
+            color: #d39e00;
+        }
+
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .commands-grid.three-columns {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .command-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 2px 8px var(--card-shadow);
+            overflow: hidden;
+            height: auto;
+            padding: 0;
+            min-height: 75px;
+        }
+
+        .command-item.install {
+            border-color: var(--color-install);
+        }
+
+        .command-item.operation {
+            border-color: var(--color-op);
+        }
+
+        .command-item.management {
+            border-color: var(--color-manage);
+        }
+
+        .command-item.testing {
+            border-color: var(--color-test);
+        }
+
+        .command-item.third-party {
+            border-color: var(--color-third-party);
+        }
+
+        .command-icon-container {
+            flex-shrink: 0;
+            width: 80px;
+            height: 100%;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            color: var(--text-light);
+            clip-path: polygon(0 0, 100% 0, 75% 100%, 0 100%);
+            border-radius: 7px 0 0 7px;
+            padding-left: 5px;
+        }
+
+        .install .command-icon-container {
+            background-color: var(--color-install);
+        }
+
+        .operation .command-icon-container {
+            background-color: var(--color-op);
+        }
+
+        .management .command-icon-container {
+            background-color: var(--color-manage);
+        }
+
+        .testing .command-icon-container {
+            background-color: var(--color-test);
+        }
+
+        .third-party .command-icon-container {
+            background-color: var(--color-third-party);
+        }
+
+        .command-icon-container img {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+        }
+
+        .command-info {
+            flex-grow: 1;
+            padding: 10px 0px 10px 7px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .command-item.install.filled-background {
+            background-color: rgba(40, 167, 69, 0.08);
+        }
+
+        .command-item.operation.filled-background {
+            background-color: rgba(23, 162, 184, 0.08);
+        }
+
+        .command-item.management.filled-background {
+            background-color: rgba(220, 53, 69, 0.08);
+        }
+
+        .command-item.testing.filled-background {
+            background-color: rgba(255, 193, 7, 0.08);
+        }
+
+        .command-item.third-party.filled-background {
+            background-color: rgba(255, 193, 7, 0.08);
+        }
+
+        .filled-background .command-info {
+            background-color: transparent;
+        }
+
+        .filled-background .command-text {
+            color: var(--text-primary);
+        }
+
+        .filled-background .command-desc {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .command-text {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: var(--text-primary);
+        }
+
+        .command-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .command-text .highlight {
+            color: var(--accent-color);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .commands-grid .span-2-columns {
+            grid-column: span 2;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px 30px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 0.1px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 1000;
+            border-top: 1px solid var(--card-border);
+        }
+    </style>
+</head>
+
+<body style="{{RenderMatrix}}">
+    <div class="container-wrapper">
+        <header class="header">
+            <div class="header-screen">
+                <div class="header-left-group">
+                    <h1>咕咕牛图库的帮助菜单</h1>
+                    <div class="subtitle">GuGuNiu & Miao-Plugin & ZZZ-Plugin & Waves-Plugin</div>
+                </div>
+                <div class="header-right-group">
+                    <div class="installation-days">
+                        <span>已陪伴</span>
+                        <div class="digit-container">
+                            {{ each insDays.split('') digit }}
+                            <div class="digit">
+                                <span>{{ digit }}</span>
+                            </div>
+                            {{ /each }}
+                        </div>
+                        <span>天</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content-area">
+            <div class="section-category">
+                <div class="category-title">
+                    <span>图库安装</span>
+                </div>
+                <div class="commands-grid">
+                    <div class="command-item install filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[0]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#下载咕咕牛</div>
+                            <div class="command-desc">自动测速选择合适节点下载</div>
+                        </div>
+                    </div>
+                    <div class="command-item install filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[1]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#更新咕咕牛</div>
+                            <div class="command-desc">手动执行更新 / 每天会自动更新</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-category">
+                <div class="category-title">
+                    <span>图库操作</span>
+                </div>
+                <div class="commands-grid three-columns">
+                    <div class="command-item operation filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[2]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#启/禁用咕咕牛</div>
+                            <div class="command-desc">管理图库同步</div>
+                        </div>
+                    </div>
+                    <div class="command-item operation filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[3]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛状态</div>
+                            <div class="command-desc">查看本地参数</div>
+                        </div>
+                    </div>
+                    <div class="command-item operation filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[4]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛查看<span class="highlight"></span></div>
+                            <div class="command-desc">查看角色图片</div>
+                        </div>
+                    </div>
+                    <div class="command-item operation filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[5]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛导出<span class="highlight">xx</span></div>
+                            <div class="command-desc">导出'花火1'图片文件</div>
+                        </div>
+                    </div>
+                    <div class="command-item operation filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[6]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#可视化<span class="highlight">xx</span></div>
+                            <div class="command-desc">图形化显示面板图</div>
+                        </div>
+                    </div>
+                    <div class="command-item operation filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[7]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#重置咕咕牛</div>
+                            <div class="command-desc">清理图库文件</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-category">
+                <div class="category-title">
+                    <span>封禁与设置</span>
+                </div>
+                <div class="commands-grid">
+                    <div class="command-item management filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[8]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛封/解禁<span class="highlight">花火1</span></div>
+                            <div class="command-desc">请看[#查看]获取编号</div>
+                        </div>
+                    </div>
+                    <div class="command-item management filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[9]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛封禁列表</div>
+                            <div class="command-desc">显示封禁图片</div>
+                        </div>
+                    </div>
+                    <div class="command-item management filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[10]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛设置<span class="highlight">净化等级0-2</span></div>
+                            <div class="command-desc">1:过滤R18 / 2:过滤全部</div>
+                        </div>
+                    </div>
+                    <div class="command-item management filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[11]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛面板</div>
+                            <div class="command-desc">查看设置状态</div>
+                        </div>
+                    </div>
+                    <div class="command-item management span-2-columns filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[12]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛设置<span class="highlight">xx开启/关闭</span></div>
+                            <div class="command-desc">可设置：Ai / 彩蛋 / 横屏 / Px18 / 低负载 / 高级合并</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-category">
+                <div class="category-title">
+                    <span>社区图库管理</span>
+                </div>
+                <div class="commands-grid">
+                    <div class="command-item third-party filled-background span-2-columns">
+                        <div class="command-icon-container"><img src="{{headerImg[4]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛安装 <span class="highlight">URL:简称</span></div>
+                            <div class="command-desc">安装一个第三方图库,示例：#咕咕牛安装https://github.com/GuGuNiu/Miao-Plugin-MBT:咕咕牛</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="commands-grid three-columns" style="margin-top: 15px;">
+                    <div class="command-item third-party filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[5]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛更新<span class="highlight">简称</span></div>
+                            <div class="command-desc">更新指定图库 / 全部</div>
+                        </div>
+                    </div>
+                    <div class="command-item third-party filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[6]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛卸载<span class="highlight">简称</span></div>
+                            <div class="command-desc">卸载指定图库</div>
+                        </div>
+                    </div>
+                    <div class="command-item third-party filled-background">
+                        <div class="command-icon-container"><img src="{{headerImg[7]}}"></div>
+                        <div class="command-info">
+                            <div class="command-text">#咕咕牛列表</div>
+                            <div class="command-desc">查看已安装图库</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="footer">Miao-Plugin-MBT v{{ Version }} © 咕咕牛</footer>
+    </div>
+</body>
+
+</html>

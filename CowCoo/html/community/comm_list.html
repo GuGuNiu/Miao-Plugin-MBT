@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>咕咕牛第三方图库列表</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f4f7f9;
+            --container-bg: #ffffff;
+            --primary-color: #5e7ce2;
+            --text-dark: #333d4b;
+            --text-light: #5f7a93;
+            --border-color: #e9eef3;
+            --header-bg: #ffffff;
+            --header-border: #e0e6ed;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 6px 16px -8px rgba(0, 0, 0, 0.08), 0 9px 28px 0 rgba(0, 0, 0, 0.05);
+            --github-color: #181717;
+            --gitee-color: #c71d23;
+            --gitcode-color: #e67e22;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            width: 700px;
+            margin: 10px auto;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .header {
+            padding: 20px 30px;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            width: 250px;
+            height: 60px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .header h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .main-content-area {
+            padding: 25px 30px;
+        }
+
+        .section-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
+        }
+
+        .section-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 30px 0;
+        }
+
+        .repo-card {
+            background: #fdfdff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .repo-card.border-github { border-color: var(--github-color); }
+        .repo-card.border-gitee { border-color: var(--gitee-color); }
+        .repo-card.border-gitcode { border-color: var(--gitcode-color); }
+
+        .repo-card.not-installed {
+            background-color: #fafafa;
+            opacity: 0.8;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            padding: 4px 12px 4px 16px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+            border-bottom-left-radius: 10px;
+        }
+
+        .status-installed { background-color: #28a745; }
+        .status-not-installed { background-color: #6c757d; }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .alias-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alias-container .platform-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .alias {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .owner {
+            display: flex;
+            align-items: center;
+        }
+
+        .owner img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .owner-name {
+            font-size: 16px;
+            color: #555;
+            text-align: right;
+        }
+        
+        .custom-description {
+            font-size: 14px;
+            color: #555;
+            text-align: right;
+        }
+
+        .card-body {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .stats-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-start;
+            text-align: right;
+        }
+
+        .info-row {
+            font-size: 14px;
+            color: #666;
+            word-wrap: break-word;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .info-row strong {
+            color: #333;
+            margin-right: 8px;
+            flex-shrink: 0;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .url-text, .description-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .description-text {
+            white-space: normal;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .content-map {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .unknown-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .unknown-tag {
+            background-color: #fef4e2;
+            color: #88601d;
+            border: 1px solid #fceecf;
+            padding: 3px 7px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .game-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .game-tag.gs { background-color: #d1ecf1; color: #0c5460; }
+        .game-tag.sr { background-color: #495057; color: #ffffff; }
+        .game-tag.zzz { background-color: #f8d7da; color: #721c24; }
+        .game-tag.waves { background-color: #fff3cd; color: #856404; }
+
+        .size {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .install-time, .sync-time {
+            font-size: 12px;
+            font-weight: normal;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px 30px;
+            font-size: 14px;
+            color: #6c757d;
+            letter-spacing: 0.1px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 15px;
+        }
+
+        .no-repo-message {
+            text-align: center;
+            font-size: 16px;
+            color: #888;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body style="{{ scaleStyleValue }}">
+    <div class="container-wrapper">
+        <header class="header">
+            <img class="header-logo" src="{{ guguniu_res_path }}html/img/logo.png" alt="Logo">
+            <h1> · 第三方图库列表</h1>
+        </header>
+        <main class="main-content-area">
+            
+            <div class="section-header">推荐图库</div>
+            {{ each repos item }}
+            {{ if item.default }}
+            <div class="repo-card {{ if item.notInstalled }}not-installed{{ /if }} border-{{item.platform}}">
+                {{ if item.notInstalled }}
+                    <div class="status-badge status-not-installed">未安装</div>
+                {{ else }}
+                    <div class="status-badge status-installed">已安装</div>
+                {{ /if }}
+                <div class="card-header">
+                    <div class="alias-container">
+                        {{ if item.platform === 'github' }}
+                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/github.png">
+                        {{ else if item.platform === 'gitee' }}
+                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitee.png">
+                        {{ else if item.platform === 'gitcode' }}
+                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitcode.png">
+                        {{ /if }}
+                        <div class="alias">{{ item.alias }}</div>
+                    </div>
+                    <div class="owner">
+                        {{ if item.ownerAvatarUrl }}
+                        <img src="{{ item.ownerAvatarUrl }}" alt="owner">
+                        {{ /if }}
+                        <div>
+                            {{ if item.notInstalled && item.aboutDisplay }}
+                                <div class="custom-description">{{ item.aboutDisplay }}</div>
+                            {{ else }}
+                                <div class="owner-name">{{ item.ownerName || '未知作者' }}</div>
+                            {{ /if }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="info-section">
+                        <div class="info-row">
+                            <strong>GIT 来源:</strong>
+                            <span class="url-text">{{ item.url }}</span>
+                        </div>
+                        {{ if item.description }}
+                        <div class="info-row">
+                            <strong>仓库描述:</strong>
+                            <span class="description-text">{{ item.description }}</span>
+                        </div>
+                        {{ /if }}
+                        {{ if !item.notInstalled }}
+                        <div class="info-row">
+                            <strong>仓库分析:</strong>
+                            <div class="content-map">
+                                {{ if item.contentMap && item.contentMap.gs > 0 }}<span class="game-tag gs">原神: {{ item.contentMap.gs }}</span>{{ /if }}
+                                {{ if item.contentMap && item.contentMap.sr > 0 }}<span class="game-tag sr">星铁: {{ item.contentMap.sr }}</span>{{ /if }}
+                                {{ if item.contentMap && item.contentMap.zzz > 0 }}<span class="game-tag zzz">绝区零: {{ item.contentMap.zzz }}</span>{{ /if }}
+                                {{ if item.contentMap && item.contentMap.waves > 0 }}<span class="game-tag waves">鸣潮: {{ item.contentMap.waves }}</span>{{ /if }}
+                                {{ if !item.hasRecognized }}
+                                    <span>无</span>
+                                {{ /if }}
+                            </div>
+                        </div>
+                        {{ if item.contentMap && item.contentMap.unknownFolders && item.contentMap.unknownFolders.length > 0 }}
+                        <div class="info-row">
+                            <strong>未识别 ({{ item.contentMap.unknownFolders.length }}):</strong>
+                            <div class="unknown-list">
+                                {{ each item.contentMap.unknownFolders folderName }}
+                                <span class="unknown-tag">{{ folderName }}</span>
+                                {{ /each }}
+                            </div>
+                        </div>
+                        {{ /if }}
+                        {{ /if }}
+                    </div>
+                    {{ if !item.notInstalled }}
+                    <div class="stats-section">
+                        <div class="size">{{ item.CommRepoSize }}</div>
+                        <div class="install-time">{{ item.ComminsDate }}</div>
+                        <div class="sync-time">{{ item.CommlastSync }}</div>
+                    </div>
+                    {{ /if }}
+                </div>
+            </div>
+            {{ /if }}
+            {{ /each }}
+
+            <div class="section-divider"></div>
+            <div class="section-header">自定义图库</div>
+            
+            {{ set hasCustom = false }}
+            {{ each repos item }}
+            {{ if !item.default }}
+                {{ set hasCustom = true }}
+                <div class="repo-card border-{{item.platform}}">
+                    <div class="status-badge status-installed">已安装</div>
+                    <div class="card-header">
+                        <div class="alias-container">
+                            {{ if item.platform === 'github' }}
+                                <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/github.png">
+                            {{ else if item.platform === 'gitee' }}
+                                <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitee.png">
+                            {{ else if item.platform === 'gitcode' }}
+                                <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitcode.png">
+                            {{ /if }}
+                            <div class="alias">{{ item.alias }}</div>
+                        </div>
+                        <div class="owner">
+                            {{ if item.ownerAvatarUrl }}
+                            <img src="{{ item.ownerAvatarUrl }}" alt="owner">
+                            {{ /if }}
+                            <div class="owner-name">{{ item.ownerName || '未知作者' }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-section">
+                            <div class="info-row">
+                                <strong>GIT 来源:</strong>
+                                <span class="url-text">{{ item.url }}</span>
+                            </div>
+                            {{ if item.description }}
+                            <div class="info-row">
+                                <strong>仓库描述:</strong>
+                                <span class="description-text">{{ item.description }}</span>
+                            </div>
+                            {{ /if }}
+                            <div class="info-row">
+                                <strong>仓库分析:</strong>
+                                <div class="content-map">
+                                    {{ if item.contentMap && item.contentMap.gs > 0 }}<span class="game-tag gs">原神: {{ item.contentMap.gs }}</span>{{ /if }}
+                                    {{ if item.contentMap && item.contentMap.sr > 0 }}<span class="game-tag sr">星铁: {{ item.contentMap.sr }}</span>{{ /if }}
+                                    {{ if item.contentMap && item.contentMap.zzz > 0 }}<span class="game-tag zzz">绝区零: {{ item.contentMap.zzz }}</span>{{ /if }}
+                                    {{ if item.contentMap && item.contentMap.waves > 0 }}<span class="game-tag waves">鸣潮: {{ item.contentMap.waves }}</span>{{ /if }}
+                                    {{ if !item.hasRecognized }}
+                                        <span>无</span>
+                                    {{ /if }}
+                                </div>
+                            </div>
+                            {{ if item.contentMap && item.contentMap.unknownFolders && item.contentMap.unknownFolders.length > 0 }}
+                            <div class="info-row">
+                                <strong>未识别 ({{ item.contentMap.unknownFolders.length }}):</strong>
+                                <div class="unknown-list">
+                                    {{ each item.contentMap.unknownFolders folderName }}
+                                    <span class="unknown-tag">{{ folderName }}</span>
+                                    {{ /each }}
+                                </div>
+                            </div>
+                            {{ /if }}
+                        </div>
+                        <div class="stats-section">
+                            <div class="size">{{ item.CommRepoSize }}</div>
+                            <div class="install-time">{{ item.ComminsDate }}</div>
+                            <div class="sync-time">{{ item.CommlastSync }}</div>
+                        </div>
+                    </div>
+                </div>
+            {{ /if }}
+            {{ /each }}
+
+            {{ if !hasCustom }}
+            <div class="no-repo-message">暂无自定义图库</div>
+            {{ /if }}
+
+        </main>
+        <footer class="footer">由咕咕牛图库管理器 v{{ Version }} 提供支持</footer>
+    </div>
+</body>
+
+</html>

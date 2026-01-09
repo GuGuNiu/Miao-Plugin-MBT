@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛图库的更新报告</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron-Medium';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'AaJiJiaHei';
+            font-style: normal;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/AaJiJiaHei-2.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --container-border: #dddddd;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #adb5bd;
+            --accent-color: #333333;
+            --card-1-color: #20c997;
+            --card-2-color: #1395ff;
+            --card-3-color: #5a5a5a;
+            --card-4-color: #ff9838;
+            --card-text-color: #ffffff;
+            --success-color: #28a745;
+            --fail-color: #dc3545;
+            --force-sync-color: #14b8a6;
+            --auto-switch-color: #6f42c1;
+            --update-ok-text-color: #8a6ebe;
+            --no-change-color: #6c757d;
+            --accent-glow: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 20px;
+        }
+
+        .container-shadow-wrapper {
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 10px 20px rgba(108, 117, 125, 0.2));
+        }
+
+        .wrapper {
+            width: 760px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .container {
+            position: relative;
+            background-color: var(--container-bg);
+            border: 1px solid var(--container-border);
+            border-radius: 18px;
+            padding: 25px 30px;
+            clip-path: polygon(40px 0, calc(100% - 40px) 0, 100% 40px, 100% calc(100% - 40px), calc(100% - 40px) 100%, 40px 100%, 0 calc(100% - 40px), 0 40px);
+            -webkit-backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            background-image:
+                repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 28px),
+                repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 28px);
+            background-size: 28px 28px;
+        }
+
+        .glow-border {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 22px;
+            box-shadow: 0 0 15px 5px var(--accent-glow);
+            z-index: -1;
+            overflow: visible;
+        }
+
+        .glow-border .glow-clip-inner {
+            width: 100%;
+            height: 100%;
+            background: var(--container-bg);
+            border: 3px solid var(--accent-color);
+            border-radius: 22px;
+            clip-path: polygon(40px 0, calc(100% - 40px) 0, 100% 40px, 100% calc(100% - 40px), calc(100% - 40px) 100%, 40px 100%, 0 calc(100% - 40px), 0 40px);
+        }
+
+        .trapezoid-deco {
+            position: absolute;
+            z-index: 0;
+            background-color: var(--accent-color);
+            box-shadow: 0 5px 20px -5px var(--accent-glow);
+        }
+
+        .trapezoid-deco::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: inherit;
+            opacity: 0.5;
+            transform: translate(5px, 5px);
+            filter: blur(3px);
+            z-index: -1;
+        }
+
+        .trapezoid-deco.top-left {
+            width: 80px;
+            height: 80px;
+            top: -10px;
+            left: -10px;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+
+        .trapezoid-deco.top-right {
+            width: 80px;
+            height: 80px;
+            top: -10px;
+            right: -10px;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+        }
+
+        .trapezoid-deco.bottom-right {
+            width: 80px;
+            height: 80px;
+            bottom: -10px;
+            right: -10px;
+            clip-path: polygon(100% 100%, 0 100%, 100% 0);
+        }
+
+        .trapezoid-deco.bottom-left {
+            width: 80px;
+            height: 80px;
+            bottom: -10px;
+            left: -10px;
+            clip-path: polygon(0 100%, 100% 100%, 0 0);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--container-border);
+        }
+
+        .title {
+            display: inline-block;
+            position: relative;
+            font-family: 'Noto Sans SC';
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--text-title);
+            padding-bottom: 8px;
+        }
+
+        .header .title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 35%;
+            height: 3px;
+            background: #1395ff;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(19, 149, 255, 0.5);
+        }
+
+        .title span {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .report-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .repo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .repo-item {
+            display: flex;
+            gap: 0;
+            align-items: stretch;
+            background-color: rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--container-border);
+            position: relative;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .repo-item-1 {
+            --repo-color: var(--card-1-color);
+            --repo-bg-light: #f3fcf9;
+            --repo-border-light: rgba(32, 201, 151, 0.2);
+            --capsule-bg: #d9f3e9;
+            --capsule-border-color: #b2e5d6;
+            --capsule-face-bg: #e9fbf3;
+            --capsule-name-color: #206e5a;
+        }
+
+        .repo-item-2 {
+            --repo-color: var(--card-2-color);
+            --repo-bg-light: #f3f8ff;
+            --repo-border-light: rgba(19, 149, 255, 0.2);
+            --capsule-bg: #dbeaff;
+            --capsule-border-color: #b8d9ff;
+            --capsule-face-bg: #eff6ff;
+            --capsule-name-color: #155ec1;
+        }
+
+        .repo-item-3 {
+            --repo-color: var(--card-3-color);
+            --repo-bg-light: #f7f7f7;
+            --repo-border-light: rgba(90, 90, 90, 0.2);
+            --capsule-bg: #e8e8e8;
+            --capsule-border-color: #cccccc;
+            --capsule-face-bg: #f0f0f0;
+            --capsule-name-color: #333333;
+        }
+
+        .repo-item-4 {
+            --repo-color: var(--card-4-color);
+            --repo-bg-light: #fffaf3;
+            --repo-border-light: rgba(255, 152, 56, 0.2);
+            --capsule-bg: #ffeeda;
+            --capsule-border-color: #f8d0a5;
+            --capsule-face-bg: #fff4e2;
+            --capsule-name-color: #9b4b00;
+        }
+
+        .repo-item.status-ok {
+            border-color: var(--repo-color);
+            box-shadow: 0 0 10px 2px var(--repo-color);
+        }
+
+        .repo-item.status-fail {
+            border-color: var(--fail-color);
+            box-shadow: 0 0 10px 2px rgba(220, 53, 69, 0.4);
+        }
+
+        .repo-item.status-force-synced {
+            border-color: var(--force-sync-color);
+            box-shadow: 0 0 10px 2px rgba(45, 212, 191, 0.8);
+        }
+
+        .repo-item.status-auto-switch {
+            border-color: var(--auto-switch-color);
+            box-shadow: 0 0 10px 2px rgba(111, 66, 193, 0.4);
+        }
+
+        .repo-card {
+            flex: 0 0 180px;
+            padding: 20px 15px;
+            color: var(--card-text-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            background: var(--repo-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .card-content {
+            z-index: 1;
+        }
+
+        .card-number {
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 17px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .card-subtitle {
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .card-status {
+            margin-top: 20px;
+            display: inline-block;
+            width: 85%;
+            padding: 9px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.25);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .diff-stats-flip {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .diff-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+            padding: 0 5px;
+            border-radius: 6px;
+            color: #ffffff;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .diff-box.insertions {
+            background-color: rgba(16, 185, 129, 0.6);
+        }
+
+        .diff-box.deletions {
+            background-color: rgba(244, 63, 94, 0.6);
+        }
+
+        .diff-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 4px;
+            line-height: 1;
+        }
+
+        .diff-value {
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-size: 8px;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .repo-item-4 .repo-card {
+            color: #ffffff;
+        }
+
+        .log-section {
+            flex-grow: 1;
+            padding: 15px 20px;
+            background-color: var(--repo-bg-light);
+            color: #333;
+        }
+
+        .log-section .special-status-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 150px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 50px;
+            letter-spacing: 40px;
+            font-weight: 1000;
+            color: rgba(0, 0, 0, 0.2);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed var(--repo-border-light);
+        }
+
+        .log-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .log-title .commit-sha {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 0px;
+            font-weight: 400;
+        }
+
+        .log-status {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .repo-item.status-fail .log-status {
+            color: var(--fail-color);
+        }
+
+        .repo-item.status-ok .log-status {
+            color: var(--update-ok-text-color);
+        }
+
+        .repo-item.status-force-synced .log-status {
+            color: var(--force-sync-color);
+        }
+
+        .repo-item.status-auto-switch .log-status {
+            font-weight: 700;
+            color: var(--auto-switch-color);
+        }
+
+        .log-content-container {
+            font-size: 13px;
+        }
+
+        .commit-entry {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--repo-border-light);
+        }
+
+        .commit-entry-highlight {
+            background-color: #ffffff;
+            border-top: 1.5px solid var(--repo-color);
+            border-right: 1.5px solid var(--repo-color);
+            border-left: 1.5px solid var(--repo-color);
+            border-bottom: none;
+            border-radius: 8px 8px 8px 8px;
+            padding: 6px 10px;
+            margin: 4px -8px 8px;
+            box-shadow: 0 4px 12px -2px var(--repo-border-light);
+            position: relative;
+            z-index: 1;
+        }
+
+        .commit-entry-highlight .commit-entry {
+            border-bottom: 1px solid var(--repo-border-light);
+        }
+
+        .commit-entry-highlight .commit-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 4px;
+            margin-bottom: 0;
+        }
+
+        .commit-entry-highlight:before {
+            content: '★';
+            position: absolute;
+            top: 5px;
+            right: 12px;
+            font-size: 20px;
+            color: var(--repo-color);
+            transform: rotate(-25deg);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .commit-entry-highlight+.commit-entry {
+            border-top: 1px solid var(--repo-border-light);
+            padding-top: 12px;
+        }
+
+        .commit-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .commit-meta {
+            color: #333;
+            opacity: 0.7;
+            font-family: 'Noto Sans SC', sans-serif;
+            flex-shrink: 0;
+            margin-right: 10px;
+            font-size: 12px;
+        }
+
+        .commit-content-wrapper {
+            flex-grow: 1;
+        }
+
+        .commit-message-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 3px;
+            line-height: 1.5;
+        }
+
+        .character-capsule {
+            display: inline-flex;
+            align-items: stretch;
+            height: 28px;
+            border-radius: 14px;
+            overflow: hidden;
+            background-color: #ffffff;
+            border: 1px solid var(--capsule-border-color);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .character-capsule-face-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2px;
+            background-color: var(--capsule-face-bg);
+        }
+
+        .character-capsule-face {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-left: 1px;
+        }
+
+        .character-capsule-name {
+            display: flex;
+            align-items: center;
+            padding: 0 6px 0 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--capsule-name-color);
+            border-left: 1px solid var(--capsule-border-color);
+        }
+
+        .description-commit .title {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .description-commit .title>span:last-child {
+            font-size: 13px;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        .description-commit .body {
+            font-size: 0.85em;
+            color: #333;
+            opacity: 0.85;
+            margin-top: 0.5em;
+        }
+
+        .description-commit .body h3 {
+            font-size: 1em;
+            margin: 0.8em 0 0.4em;
+            padding-bottom: 0.2em;
+            border-bottom: 1px solid var(--repo-border-light);
+            color: #333;
+        }
+
+        .description-commit .body ul {
+            margin: 0.5em 0;
+            padding-left: 0;
+            list-style-type: none;
+        }
+
+        .description-commit .body li {
+            margin-bottom: 0.3em;
+            padding-left: 1.2em;
+            position: relative;
+        }
+
+        .description-commit .body li::before {
+            content: '-';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--text-secondary);
+        }
+
+        .description-commit .body p {
+            margin: 0 0 0.5em;
+        }
+
+        .description-commit .body code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: .2em .4em;
+            font-size: 85%;
+            border-radius: 3px;
+        }
+
+        .summary-bar {
+            margin: 30px 0 20px 0;
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 18px 25px;
+            text-align: center;
+            font-size: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            box-shadow: 0 6px 20px -5px var(--status-shadow, #ccc);
+        }
+
+        .summary-bar.has-errors {
+            border-color: var(--fail-color);
+            background: #fff5f5;
+            color: var(--fail-color);
+            --status-shadow: rgba(220, 53, 69, 0.2);
+        }
+
+        .summary-bar.no-changes {
+            border-color: var(--no-change-color);
+            background: #f8f9fa;
+            color: var(--no-change-color);
+            --status-shadow: rgba(108, 117, 125, 0.2);
+        }
+
+        .summary-bar.success {
+            border-color: var(--success-color);
+            background: #e6f9f0;
+            color: var(--success-color);
+            --status-shadow: rgba(40, 167, 69, 0.25);
+        }
+
+        .summary-bar .icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .summary-bar .duration {
+            color: var(--text-secondary);
+            margin-left: 12px;
+            font-size: 14px;
+            font-family: 'Orbitron-Medium', sans-serif;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding-top: 18px;
+            letter-spacing: 0.5px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            text-shadow: 0 0 1px rgba(90, 114, 138, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .commit-prefix {
+            display: inline-block;
+            padding: 3px 9px;
+            margin-right: 8px;
+            border-radius: 12px 4px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Orbitron-Medium', 'SFMono-Regular', Consolas, monospace;
+            color: #fff;
+            text-transform: uppercase;
+            line-height: 1.2;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .commit-scope {
+            display: inline-block !important;
+            font-size: 9px !important;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 8px;
+            border: 1.5px solid;
+            margin-right: 3px;
+            line-height: 1;
+            vertical-align: middle;
+            text-transform: uppercase;
+        }
+
+        .scope-core {
+            border-color: #64748b;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .scope-web {
+            border-color: #4338ca;
+            background-color: #eef2ff;
+            color: #4338ca;
+        }
+
+        .scope-default {
+            border-color: #64748b;
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+
+        .prefix-feat {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+
+        .prefix-fix {
+            background-color: #fd7e14 !important;
+            color: #ffe663 !important;
+        }
+
+        .prefix-docs {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+
+        .prefix-style {
+            background-color: #a855f7 !important;
+            color: #ffffff !important;
+        }
+
+        .prefix-refactor {
+            background-color: #ff9800 !important;
+            color: #1f2937 !important;
+        }
+
+        .prefix-perf {
+            background-color: #dc2626 !important;
+            color: #ffffff !important;
+        }
+
+        .prefix-test {
+            background-color: #ec4899 !important;
+            color: #1f2937 !important;
+        }
+
+        .prefix-build {
+            background-color: #06b6d4 !important;
+            color: #1f2937 !important;
+        }
+
+        .prefix-ci {
+            background-color: #60a5fa !important;
+            color: #1e3a8a !important;
+        }
+
+        .prefix-chore {
+            background-color: #d1d5db !important;
+            color: #1f2937 !important;
+        }
+
+        .prefix-revert {
+            background-color: #1f2937 !important;
+            color: #ffffff !important;
+        }
+
+        .prefix-feat,
+        .prefix-fix,
+        .prefix-docs,
+        .prefix-style,
+        .prefix-refactor,
+        .prefix-perf,
+        .prefix-test,
+        .prefix-build,
+        .prefix-ci,
+        .prefix-chore,
+        .prefix-revert {
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+        }
+    </style>
+</head>
+
+<body style="{{scaleStyleValue}}">
+    <div class="wrapper">
+        <div class="glow-border">
+            <div class="glow-clip-inner"></div>
+        </div>
+        <div class="trapezoid-deco top-left"></div>
+        <div class="trapezoid-deco top-right"></div>
+        <div class="trapezoid-deco bottom-left"></div>
+        <div class="trapezoid-deco bottom-right"></div>
+        <div class="container-shadow-wrapper">
+            <div class="container">
+                <header class="header">
+                    <h1 class="title">咕咕牛图库的更新报告 <span>/IREPOPORTI/</span></h1>
+                    <div class="report-time">{{ reportTime }}</div>
+                </header>
+                <main class="repo-list">
+                    {{ each results repoResult index }}
+                    <div class="repo-item repo-item-{{index + 1}} {{ repoResult.statusClass }}">
+                        <div class="repo-card">
+                            <div class="bubble" style="width: 80px; height: 80px; top: 15%; left: 55%;"></div>
+                            <div class="bubble" style="width: 40px; height: 40px; top: 60%; left: 10%;"></div>
+                            <div class="card-content">
+                                <div class="card-number">{{ index + 1 }}</div>
+                                <div class="card-title">{{ repoResult.name }}</div>
+                                <div class="card-subtitle">
+                                    {{ if index === 0 }}MAIN REPO{{ else if index === 1 }}GENSHIN{{ else if index === 2
+                                    }}Star Rail{{ else if index === 3 }}WAVES & ZZZ{{ /if }}
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span class="card-status">
+                                    {{if index === 0}}主 资 源{{else if index === 1}}原 神{{else if index ===
+                                    2}}崩坏：星穹铁道{{else if index === 3}}鸣潮 & 绝区零{{/if}}
+                                </span>
+                            </div>
+                            {{ if repoResult.hasChanges && repoResult.diffStat }}
+                            <div class="diff-stats-flip">
+                                <div class="diff-box insertions">
+                                    <span class="diff-label">+</span>
+                                    <span class="diff-value">{{ repoResult.diffStat.insertions }}</span>
+                                </div>
+                                <div class="diff-box deletions">
+                                    <span class="diff-label">-</span>
+                                    <span class="diff-value">{{ repoResult.diffStat.deletions }}</span>
+                                </div>
+                            </div>
+                            {{ /if }}
+                        </div>
+                        <div class="log-section">
+                            {{ if repoResult.statusClass === 'status-skipped' }}
+                            <div class="special-status-display">
+                                {{ repoResult.statusText }}
+                            </div>
+                            {{ else }}
+                            <div class="log-header">
+                                <div class="log-title">
+                                    最新提交记录
+                                    {{ if repoResult.commitSha && repoResult.commitSha !== '获取失败' }}
+                                    <span class="commit-sha">[SHA:{{ repoResult.commitSha.substring(0, 20) }}]</span>
+                                    {{ /if }}
+                                </div>
+                                <span class="log-status">
+                                    {{ if repoResult.autoSwitchedNode }}
+                                    更新成功(切换至{{ repoResult.autoSwitchedNode }})
+                                    {{ else }}
+                                    {{ repoResult.statusText }}
+                                    {{ /if }}
+                                </span>
+                            </div>
+                            <div class="log-content-container">
+                                {{ if repoResult.hasValidLogs }}
+                                {{ if repoResult.shouldHighlight }}
+                                <div class="commit-entry-highlight">
+                                    {{ each repoResult.log.slice(0, repoResult.newCommitsCount) commit }}
+                                    <div class="commit-entry">
+                                        <div class="commit-meta">{{ commit.date }}</div>
+                                        <div class="commit-content-wrapper">
+                                            {{ if commit.isDescription }}
+                                            <div class="description-commit">
+                                                <div class="title">
+                                                    {{ if commit.commitPrefix }}<span
+                                                        class="commit-prefix prefix-{{commit.commitPrefix}}">{{
+                                                        commit.commitPrefix }}</span>{{ /if }}
+                                                    {{ if commit.commitScope }}<span
+                                                        class="commit-scope {{ commit.commitScopeClass }}">{{@
+                                                        commit.commitScope }}</span>{{ /if }}
+                                                    <span>{{@ commit.commitTitle }}</span>
+                                                </div>
+                                                {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length >
+                                                0 }}
+                                                <div class="body">{{@ commit.descriptionBodyHtml }}</div>
+                                                {{ /if }}
+                                            </div>
+                                            {{ /if }}
+
+                                            {{ if commit.displayParts && commit.displayParts.length > 0 }}
+                                            <div class="commit-message-wrapper">
+                                                {{ each commit.displayParts part }}
+                                                <div class="character-capsule" data-game="{{ part.game }}">
+                                                    <div class="character-capsule-face-wrapper"><img
+                                                            src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}"
+                                                            alt="{{ part.name }}" class="character-capsule-face"></div>
+                                                    <span class="character-capsule-name">{{ part.name }}</span>
+                                                </div>
+                                                {{ /each }}
+                                            </div>
+                                            {{ /if }}
+                                        </div>
+                                    </div>
+                                    {{ /each }}
+                                </div>
+                                {{ /if }}
+                                {{ each repoResult.log.slice(repoResult.newCommitsCount) commit }}
+                                <div class="commit-entry">
+                                    <div class="commit-meta">{{ commit.date }}</div>
+                                    <div class="commit-content-wrapper">
+                                        {{ if commit.isDescription }}
+                                        <div class="description-commit">
+                                            <div class="title">
+                                                {{ if commit.commitPrefix }}<span
+                                                    class="commit-prefix prefix-{{commit.commitPrefix}}">{{
+                                                    commit.commitPrefix }}</span>{{ /if }}
+                                                {{ if commit.commitScope }}<span
+                                                    class="commit-scope {{ commit.commitScopeClass }}">{{@
+                                                    commit.commitScope }}</span>{{ /if }}
+                                                <span>{{@ commit.commitTitle }}</span>
+                                            </div>
+                                            {{ if commit.descriptionBodyHtml && commit.descriptionBodyHtml.length > 0 }}
+                                            <div class="body">{{@ commit.descriptionBodyHtml }}</div>
+                                            {{ /if }}
+                                        </div>
+                                        {{ /if }}
+
+                                        {{ if commit.displayParts && commit.displayParts.length > 0 }}
+                                        <div class="commit-message-wrapper">
+                                            {{ each commit.displayParts part }}
+                                            <div class="character-capsule" data-game="{{ part.game }}">
+                                                <div class="character-capsule-face-wrapper"><img
+                                                        src="{{ part.imageUrl || guguniu_res_path + 'html/img/icon/null-btn.png' }}"
+                                                        alt="{{ part.name }}" class="character-capsule-face"></div>
+                                                <span class="character-capsule-name">{{ part.name }}</span>
+                                            </div>
+                                            {{ /each }}
+                                        </div>
+                                        {{ /if }}
+                                    </div>
+                                </div>
+                                {{ /each }}
+                                {{ else }}
+                                <div class="commit-entry">(无有效提交记录)</div>
+                                {{ /if }}
+                            </div>
+                            {{ /if }}
+                        </div>
+                    </div>
+                    {{ /each }}
+                </main>
+                <footer
+                    class="summary-bar {{ if !overallSuccess }}has-errors{{ else if !overallHasChanges }}no-changes{{ else }}success{{ /if }}">
+                    <span class="icon">{{ if !overallSuccess }}💔{{ else if !overallHasChanges }}⭐{{ else }}🎉{{ /if
+                        }}</span>
+                    {{ summaryText }}
+                    <span class="duration">[耗时: {{ duration }} s]</span>
+                </footer>
+                <div class="footer">Miao-Plugin-MBT v{{ Version }}</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛网络测速</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --container-border: #333333;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #adb5bd;
+            --accent-color: #00acc1;
+
+            --success-color: #28a745;
+            --glow-color: #39ff14;
+            --fail-color: #dc3545;
+            --na-color: #78909c;
+            --default-color: #3f51b5;
+
+            --soft-shadow: rgba(0, 0, 0, 0.08);
+            --header-bg: #333333;
+            --header-title-color: #ffffff;
+            --header-subtitle-color: rgba(255, 255, 255, 0.6);
+            --header-underline-color: #1395ff;
+            --header-border-line: rgba(255, 255, 255, 0.1);
+
+            --item-bg-card: rgba(255, 255, 255, 0.95);
+            --item-border-card: #e0e0e0;
+            --item-shadow-card: rgba(0, 0, 0, 0.05);
+            --accent-glow: rgba(0, 0, 0, 0.4);
+            --panel-backdrop-blur: 5px;
+        }
+
+        @keyframes glow-animation {
+            0%, 100% {
+                box-shadow: 0 0 7px rgba(40, 167, 69, 0.5), 0 0 12px rgba(40, 167, 69, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 12px rgba(40, 167, 69, 0.8), 0 0 24px rgba(40, 167, 69, 0.5);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+            color: var(--text-primary);
+            padding: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            width: 840px;
+            margin: 20px auto;
+            position: relative;
+            z-index: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container-shadow-wrapper {
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 16px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            border: 1px solid var(--container-border);
+            width: 100%;
+            margin: 0 auto;
+            box-shadow: 0 0 15px 5px var(--accent-glow);
+            padding: 0;
+            box-sizing: border-box;
+            z-index: 1;
+            overflow: hidden;
+            backdrop-filter: blur(var(--panel-backdrop-blur));
+            -webkit-backdrop-filter: blur(var(--panel-backdrop-blur));
+            background-image:
+                repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px),
+                repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px);
+            background-size: 20px 20px;
+        }
+
+        .container::before,
+        .container::after,
+        body::before,
+        body::after {
+            display: none;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 20px;
+            padding: 25px 30px 15px 30px;
+            background-color: var(--header-bg);
+            position: relative;
+            z-index: 1;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            box-shadow: inset 0 -1px 0 var(--header-border-line);
+            background-image:
+                radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
+                linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
+            background-size: 100% 100%, 50% 100%;
+            background-position: center, center;
+            background-repeat: no-repeat, repeat-x;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 26px;
+            color: var(--header-title-color);
+            margin: 0;
+            letter-spacing: 0.5px;
+            position: relative;
+            display: flex;
+            align-items: baseline;
+            padding-bottom: 4px;
+        }
+
+        .header h1 span {
+            font-family: 'Orbitron', monospace;
+            color: var(--header-subtitle-color);
+            font-size: 16px;
+            margin-left: 10px;
+            font-weight: 500;
+            letter-spacing: 0.25px;
+        }
+
+        .header h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40%;
+            height: 3px;
+            background-color: var(--header-underline-color);
+            border-radius: 1px;
+            box-shadow: 0 0 4px var(--header-underline-color);
+        }
+
+        .header-image-container {
+            width: 50px;
+            height: 50px;
+            overflow: hidden;
+            flex-shrink: 0;
+            margin-left: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-cute-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .category-title {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-align: left;
+            margin: 20px 0 10px 0;
+            padding-left: 10px;
+            border-left: 4px solid var(--header-underline-color);
+            letter-spacing: 0.5px;
+        }
+
+        .speedtest-section {
+            padding: 0 25px;
+        }
+
+        .speed-cards-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .speedtest-category:last-of-type .speed-cards-list {
+            margin-bottom: 0;
+        }
+
+        .speed-card {
+            background-color: var(--item-bg-card);
+            border-radius: 8px;
+            padding: 15px 20px;
+            border: 1px solid var(--item-border-card);
+            box-shadow: 0 2px 8px var(--item-shadow-card);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            min-height: 90px;
+            transition: all 0.2s ease-in-out;
+            padding-left: 20px;
+        }
+
+        .speed-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--default-color);
+            border-radius: 8px 0 0 8px;
+            z-index: 0;
+        }
+        
+        .speed-card.best-node-glow {
+            border: 1px solid var(--success-color);
+            transform: scale(1.02);
+            animation: glow-animation 2.5s infinite ease-in-out;
+        }
+
+        .speed-card.bar-green::before { background-color: #28a745; }
+        .speed-card.bar-yellow::before { background-color: #ffb300; }
+        .speed-card.bar-orange::before { background-color: #ff5722; }
+        .speed-card.bar-gray::before { background-color: #bdbdbd; }
+        .speed-card.bar-red::before { background-color: #dc3545; }
+
+        .speed-card-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .card-initial {
+            position: absolute;
+            top: 35%;
+            right: 25px;
+            transform: translateY(-50%);
+            font-family: 'Orbitron', 'Rajdhani', Arial, sans-serif;
+            font-size: 54px;
+            font-weight: 700;
+            color: #2e2e2e;
+            opacity: 0.13;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 2px;
+            z-index: 1;
+            -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 40%, #000 100%);
+            mask-image: linear-gradient(to left, transparent 0%, #000 40%, #000 100%);
+        }
+
+        .node-id {
+            font-family: 'Rajdhani', monospace;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .node-name {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .latency-status {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .latency-status.status-ok {
+            background-color: rgba(0, 200, 83, 0.1);
+            color: var(--success-color);
+        }
+        .latency-status.status-timeout {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--fail-color);
+        }
+        .latency-status.status-na {
+            background-color: rgba(120, 144, 156, 0.1);
+            color: var(--na-color);
+        }
+        .latency-status.latency-green {
+            background-color: rgba(0, 200, 83, 0.1);
+            color: #28a745;
+        }
+        .latency-status.latency-yellow {
+            background-color: rgba(255, 193, 7, 0.13);
+            color: #ffb300;
+        }
+        .latency-status.latency-orange {
+            background-color: rgba(255, 87, 34, 0.12);
+            color: #ff5722;
+        }
+
+        .priority-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .priority-value {
+            font-family: 'Orbitron', monospace;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .best-choice {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--success-color);
+            box-shadow: 0 0 8px rgba(0, 200, 83, 0.2);
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--success-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .best-choice .icon {
+            margin-right: 8px;
+            font-size: 18px;
+            color: var(--success-color);
+        }
+
+        .duration-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 13px;
+            color: #888;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+        
+        .gitclone-grid {
+            align-items: stretch;
+        }
+
+        .info-tip {
+            background-color: rgba(40, 167, 69, 0.05);
+            border: 1px solid var(--success-color);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .tip-title {
+            font-weight: bold;
+            color: var(--success-color);
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tip-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px 0px 15px 0px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 0.25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body style="{{RenderMatrix}}">
+    <div class="container-shadow-wrapper">
+        <div class="container">
+            <header class="header">
+                <h1>咕咕牛的网络测速<span>/ISPEEDI/</span></h1>
+                <div class="header-image-container">
+                    {{ if headerImage }}
+                    <img src="{{ headerImage }}" class="header-cute-image">
+                    {{ /if }}
+                </div>
+            </header>
+
+            <main class="speedtest-section">
+                {{ if speeds.priority1 && speeds.priority1.length > 0 }}
+                <div class="speedtest-category">
+                    <h2 class="category-title">主镜像 (优选节点)</h2>
+                    <div class="speed-cards-list">
+                        {{ each speeds.priority1 s }}
+                        <div class="speed-card {{ s.statusClass }} {{ s.barColorClass }} {{ if s.isBest }}best-node-glow{{/if}}">
+                            <div class="node-id">[NODE-{{ s.id }}]</div>
+                            <div class="node-name">{{ s.name }}</div>
+                            <div class="status-info">
+                                <div class="card-initial">{{ s.name.charAt(0).toUpperCase() }}</div>
+                                <span class="latency-status {{ s.statusClass }} {{ s.latencyColorClass }}">{{
+                                    s.statusText }}</span>
+                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority ?? 'N/A'
+                                        }}</span></span>
+                            </div>
+                        </div>
+                        {{ /each }}
+                    </div>
+                </div>
+                {{ /if }}
+
+                {{ if speeds.priority2 && speeds.priority2.length > 0 }}
+                <div class="speedtest-category">
+                    <h2 class="category-title">官方</h2>
+                    <div class="speed-cards-list">
+                        {{ each speeds.priority2 s }}
+                        <div class="speed-card {{ s.statusClass }} {{ s.barColorClass }} {{ if s.isBest }}best-node-glow{{/if}}">
+                            <div class="node-id">[NODE-{{ s.id }}]</div>
+                            <div class="node-name">{{ s.name }}</div>
+                            <div class="status-info">
+                                <div class="card-initial">{{ s.name.charAt(0).toUpperCase() }}</div>
+                                <span class="latency-status {{ s.statusClass }} {{ s.latencyColorClass }}">{{
+                                    s.statusText }}</span>
+                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority ?? 'N/A'
+                                        }}</span></span>
+                            </div>
+                        </div>
+                        {{ /each }}
+                    </div>
+                </div>
+                {{ /if }}
+
+                {{ if speeds.priority3 && speeds.priority3.length > 0 }}
+                <div class="speedtest-category">
+                    <h2 class="category-title">无法测速 (Git Clone)</h2>
+                    <div class="speed-cards-list gitclone-grid">
+                        {{ each speeds.priority3 s }}
+                        <div class="speed-card {{ s.statusClass }} {{ s.barColorClass }}">
+                            <div class="node-id">[NODE-{{ s.id }}]</div>
+                            <div class="node-name">{{ s.name }}</div>
+                            <div class="status-info">
+                                <div class="card-initial">{{ s.name.charAt(0).toUpperCase() }}</div>
+                                <span class="latency-status {{ s.statusClass }} {{ s.latencyColorClass }}">{{
+                                    s.statusText }}</span>
+                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority ?? 'N/A'
+                                        }}</span></span>
+                            </div>
+                        </div>
+                        {{ /each }}
+
+                        <div class="info-tip">
+                            <div class="tip-title">💡 TIP</div>
+                            <p class="tip-text">  网络测速结果仅供参考，实际下载节点以后续为准。</p>
+                        </div>
+                    </div>
+                </div>
+                {{ /if }}
+
+                <div class="best-choice">
+                    <span class="icon">✅</span>优选:<span style="padding-left:10px">{{ best1Display }}</span>
+                </div>
+            </main>
+
+            <footer class="footer">Miao-Plugin-MBT v{{ Version }}</footer>
+        </div>
+    </div>
+</body>
+
+</html>

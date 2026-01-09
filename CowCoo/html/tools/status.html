@@ -1,0 +1,1947 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>咕咕牛状态</title>
+  <style>
+    @font-face {
+      font-family: 'Orbitron';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+    }
+
+    @font-face {
+      font-family: 'Orbitron';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+    }
+
+    @font-face {
+      font-family: 'Rajdhani';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+    }
+
+    @font-face {
+      font-family: 'Noto Sans SC';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+    }
+
+    :root {
+      --bg-color: #f8f9fa;
+      --container-bg: #ffffff;
+      --container-border: #333333;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-muted: #adb5bd;
+      --accent-color: #00acc1;
+      --chart-text-color: #3f608d;
+      --section-bg-card: rgba(255, 255, 255, 0.95);
+      --section-border-card: #e0e0e0;
+      --section-shadow-card: rgba(0, 0, 0, 0.05);
+      --accent-glow: rgba(0, 0, 0, 0.4);
+      --panel-backdrop-blur: 5px;
+      --block-meta-border: #ff4081;
+      --block-meta-shadow: rgba(255, 64, 129, 0.15);
+      --block-scan-border: #00acc1;
+      --block-scan-shadow: rgba(0, 172, 193, 0.15);
+      --block-storage-border: #9c27b0;
+      --block-storage-shadow: rgba(156, 39, 176, 0.15);
+      --block-config-border: #ff9800;
+      --block-config-shadow: rgba(255, 152, 0, 0.15);
+      --system-overview-border: #99ccff;
+      --system-overview-shadow: rgba(153, 204, 255, 0.4);
+      --disk-used-color: #42A5F5;
+      --disk-free-color: #E0E0E0;
+      --plugin-robot-bar-color: #00BCD4;
+      --highlight-color: #C71585;
+      --header-underline-color: #1395ff;
+      --value-local-color: #0288d1;
+      --value-ok-color: #00c853;
+      --value-error-color: #dc3545;
+      --status-item-bg: rgba(255, 255, 255, 0.8);
+      --status-item-border: rgba(0, 0, 0, 0.1);
+      --status-item-shadow: rgba(0, 0, 0, 0.03);
+      --status-item-text: var(--text-primary);
+
+      --block-meta-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="rgba(255, 105, 180, 0.1)" stroke-width="0.5"/></svg>');
+      --block-scan-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><circle cx="30" cy="30" r="3" fill="rgba(0, 230, 118, 0.15)"/><polyline points="15,45 30,30 45,45" stroke="rgba(0, 172, 230, 0.1)" stroke-width="0.5" fill="none"/></svg>');
+      --block-storage-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect x="10" y="10" width="20" height="20" fill="none" stroke="rgba(156, 39, 176, 0.1)" stroke-width="0.5"/></svg>');
+      --block-config-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><path d="M25,5 L45,25 L25,45 L5,25 Z" fill="none" stroke="rgba(255, 152, 0, 0.1)" stroke-width="0.5"/><circle cx="25" cy="25" r="3" fill="rgba(255, 152, 0, 0.15)"/></svg>');
+      --system-overview-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="1" fill="rgba(0,0,0,0.1)"/></svg>');
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      color: var(--text-primary);
+      padding: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      width: 650px;
+      margin: 20px auto;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container-shadow-wrapper {
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .container {
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      border: 1px solid var(--container-border);
+      width: 100%;
+      margin: 0 auto;
+      box-shadow: 0 0 15px 5px var(--accent-glow);
+      overflow: hidden;
+      background-image:
+        repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px);
+      background-size: 20px 20px;
+    }
+
+    .header {
+      background-color: #050505;
+      padding: 4px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .header-screen {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      border-radius: 11px 11px 0 0;
+      background-color: #1a0b2e;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(0, 0, 0, 0.6) 30px, rgba(0, 0, 0, 0.6) 31.5px),
+        repeating-linear-gradient(-45deg, transparent, transparent 30px, rgba(0, 0, 0, 0.6) 30px, rgba(0, 0, 0, 0.6) 31.5px),
+        linear-gradient(135deg, #2a0e45 0%, #0d1b40 100%);
+      border: none;
+      box-shadow:
+        inset 0 0 10px 0px rgba(0, 243, 255, 0.25),
+        inset 0 0 30px 5px rgba(188, 19, 254, 0.3);
+      position: relative;
+    }
+
+    .header h1 {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: 0.5px;
+      position: relative;
+      display: flex;
+      align-items: baseline;
+      padding-bottom: 4px;
+      flex-grow: 1;
+      text-shadow:
+        0 0 5px rgba(0, 243, 255, 0.6),
+        0 0 10px rgba(188, 19, 254, 0.4),
+        2px 2px 0 #000000;
+    }
+
+    .header h1 span {
+      font-family: 'Orbitron';
+      color: #00f3ff;
+      font-size: 16px;
+      margin-left: 10px;
+      letter-spacing: 0.25px;
+      text-transform: uppercase;
+      font-weight: bold;
+      opacity: 0.9;
+    }
+
+    .header h1::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 30%;
+      height: 3px;
+      background-color: #00f3ff;
+      border-radius: 1px;
+      box-shadow: 0 0 8px #00f3ff;
+    }
+
+    .header-image-container {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      margin-left: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      background: transparent;
+      position: relative;
+    }
+
+    .header-image-container::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 243, 255, 0.3) 0%, transparent 70%);
+      z-index: -1;
+      filter: blur(8px);
+    }
+
+    .header-cute-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
+      mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
+      filter: brightness(1.1) contrast(1.1);
+    }
+
+    .main-content-padding {
+      padding: 0 30px;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stats-block {
+      flex: 1;
+      min-width: 0;
+      background-color: var(--section-bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--section-border-card);
+      box-shadow: 0 4px 15px var(--section-shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-block.meta {
+      border-color: var(--block-meta-border);
+      box-shadow: 0 4px 15px var(--block-meta-shadow);
+    }
+
+    .stats-block.meta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--block-meta-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .stats-block.scan {
+      border-color: var(--block-scan-border);
+      box-shadow: 0 4px 15px var(--block-scan-shadow);
+    }
+
+    .stats-block.scan::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--block-scan-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .storage-details-block {
+      background-color: var(--section-bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--block-storage-border);
+      box-shadow: 0 4px 15px var(--block-storage-shadow);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .storage-details-block.seamless-top {
+      margin-bottom: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-bottom: none;
+      background-color: var(--section-bg-card);
+      border-color: var(--system-overview-border);
+      box-shadow: 0 4px 15px var(--system-overview-shadow);
+    }
+
+    .storage-details-block.seamless-top::before {
+      background: var(--system-overview-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .config-section {
+      background-color: var(--section-bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--block-config-border);
+      box-shadow: 0 4px 15px var(--block-config-shadow);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .config-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--block-config-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .config-section .category-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .config-section .install-days-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14em;
+      font-family: 'Orbitron';
+      color: rgba(255, 152, 0, 0.02);
+      pointer-events: none;
+      z-index: 2;
+      text-shadow: 0 0 5px rgba(255, 152, 0, 0.05);
+    }
+
+    .system-overview-block {
+      background-color: var(--section-bg-card);
+      border: 1px solid var(--system-overview-border);
+      box-shadow: 0 4px 15px var(--system-overview-shadow);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .system-overview-block.seamless-bottom {
+      margin-top: 0;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-top: none;
+    }
+
+    .system-overview-block::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--system-overview-pattern) repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .system-overview-block .category-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .system-overview-block .category-title .icon {
+      color: var(--system-overview-border);
+    }
+
+    .wave-content {
+      position: relative;
+      z-index: 10;
+      padding: 15px 15px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .wave-info-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.07em;
+    }
+
+    .wave-title {
+      font-size: 0.9em;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.9);
+    }
+
+    .wave-big-value {
+      font-size: 1.6em;
+      font-weight: 800;
+      color: var(--value-local-color);
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.9);
+      line-height: 1.1;
+    }
+
+    .wave-details-right {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      text-align: right;
+      font-size: 0.8em;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 6px 10px;
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 5px rgb(0 74 147 / 30%);
+      min-width: 110px;
+    }
+
+    .wave-details-right span {
+      white-space: nowrap;
+    }
+
+    .wave-details-right span strong {
+      color: var(--text-primary);
+      margin-left: 4px;
+    }
+
+    .wave-details-right h3 {
+      font-size: 0.95em;
+      margin: 5px 0 0 0;
+      padding-top: 5px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      color: #333;
+      font-weight: bold;
+      width: 100%;
+      text-align: right;
+    }
+
+    .wave-details-right h3 span {
+      font-weight: bold;
+      color: var(--text-primary);
+      font-size: 1em;
+      margin-left: 5px;
+    }
+
+    .wave-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .wave-bg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--wave-height);
+      background: linear-gradient(to top, rgba(2, 136, 209, 0.2), rgba(0, 188, 212, 0.1));
+      transition: height 1s ease-in-out;
+    }
+
+    .wave-surface {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      width: 200%;
+      height: 20px;
+      background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(2, 136, 209, 0.15)"/></svg>');
+      background-size: 50% 100%;
+      animation: wave-move 10s linear infinite;
+      transform: translateY(1px);
+    }
+
+    .wave-surface-2 {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      width: 200%;
+      height: 25px;
+      background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" fill="rgba(0, 188, 212, 0.2)"/></svg>');
+      background-size: 50% 100%;
+      animation: wave-move 7s linear infinite reverse;
+      transform: translateY(1px);
+      opacity: 0.7;
+    }
+
+    .bubble {
+      position: absolute;
+      bottom: -10px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      animation: rise 4s infinite ease-in;
+      z-index: 2;
+    }
+
+    .bubble:nth-child(1) {
+      width: 8px;
+      height: 8px;
+      left: 10%;
+      animation-duration: 3s;
+      animation-delay: 0s;
+    }
+
+    .bubble:nth-child(2) {
+      width: 12px;
+      height: 12px;
+      left: 30%;
+      animation-duration: 5s;
+      animation-delay: 1s;
+    }
+
+    .bubble:nth-child(3) {
+      width: 6px;
+      height: 6px;
+      left: 60%;
+      animation-duration: 4s;
+      animation-delay: 2s;
+    }
+
+    .bubble:nth-child(4) {
+      width: 10px;
+      height: 10px;
+      left: 80%;
+      animation-duration: 6s;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes wave-move {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    @keyframes rise {
+      0% {
+        bottom: -10px;
+        transform: translateX(0);
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        bottom: 100%;
+        transform: translateX(-20px);
+        opacity: 0;
+      }
+    }
+
+    .category-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-align: left;
+      margin: 0 0 15px 0;
+      padding: 8px 0 8px 10px;
+      border-left: 4px solid var(--header-underline-color);
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .category-title .icon {
+      margin-right: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
+
+    .category-title .icon svg {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    .stats-block.meta .category-title {
+      color: #0288d1;
+      border-left-color: #ff4081;
+    }
+
+    .stats-block.meta .category-title .icon {
+      color: #ff4081;
+    }
+
+    .stats-block.scan .category-title {
+      color: #00acc1;
+      border-left-color: #28a745;
+    }
+
+    .stats-block.scan .category-title .icon {
+      color: #28a745;
+    }
+
+    .storage-details-block .category-title .icon {
+      color: var(--system-overview-border);
+    }
+
+    .config-section .category-title {
+      color: #ff9800;
+      border-left: none;
+    }
+
+    .config-section .category-title .icon {
+      color: #f57c00;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stats-block ul>li {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 1.2em;
+    }
+
+    .stats-block ul>li:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .stats-block ul>li>.label {
+      flex-shrink: 0;
+      margin-right: 8px;
+      text-align: left;
+      color: var(--text-secondary);
+    }
+
+    .stats-block ul>li>.value {
+      flex-grow: 1;
+      text-align: right;
+      font-weight: bold;
+      color: var(--value-local-color);
+      white-space: nowrap;
+    }
+
+    .stats-block ul>li>.value strong {
+      color: var(--highlight-color);
+      font-weight: bold;
+    }
+
+    .game-stats-container {
+      margin-left: 10px;
+      margin-top: 10px;
+      padding-left: 10px;
+      border-left: 2px solid var(--header-underline-color);
+    }
+
+    .game-stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+      table-layout: auto;
+    }
+
+    .game-stats-table td {
+      padding: 3px 0;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+
+    .game-stats-table .game-name {
+      width: 60px;
+      padding-right: 5px;
+      color: var(--text-secondary);
+    }
+
+    .game-stats-table .stat-value {
+      text-align: right;
+      font-weight: bold;
+      color: var(--value-local-color);
+      padding-right: 15px;
+    }
+
+    .game-stats-table .game-size {
+      color: var(--text-muted);
+      font-weight: normal;
+      text-align: right;
+    }
+
+    .config-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      min-height: 20px;
+    }
+
+    .config-list-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .label {
+      color: var(--text-secondary);
+      margin-right: 10px;
+      white-space: nowrap;
+      font-size: 0.95em;
+    }
+
+    .value {
+      font-weight: bold;
+      color: var(--value-local-color);
+      text-align: right;
+      font-size: 0.9em;
+    }
+
+    .value strong {
+      color: inherit;
+      text-shadow: none;
+    }
+
+    .storage-repo-columns {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      border-top: 1px solid var(--section-border-card);
+      padding-top: 15px;
+    }
+
+    .storage-column,
+    .storage-repo4-column {
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      padding: 15px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+      margin-top: 15px;
+      position: relative;
+      overflow: visible;
+    }
+
+    .storage-column::before,
+    .storage-repo4-column::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: radial-gradient(circle at 30% 30%, #a0a0a0, #404040);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+    }
+
+    .storage-column::after,
+    .storage-repo4-column::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 20px;
+      background: transparent;
+      border-top: 2px solid rgba(0, 0, 0, 0.15);
+      border-radius: 50% 50% 0 0 / 15px 15px 0 0;
+      z-index: 0;
+    }
+
+    .storage-column h3,
+    .storage-repo4-column h3 {
+      font-size: 0.95em;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin: -15px -12px 10px -12px;
+      padding: 8px 12px;
+      background-color: rgba(153, 204, 255, 0.1);
+      border: none;
+      justify-content: center;
+      display: flex;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .storage-column h3 .icon,
+    .storage-repo4-column h3 .icon {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      margin-bottom: 0;
+    }
+
+    .storage-column h3 .icon svg,
+    .storage-repo4-column h3 .icon svg {
+      fill: var(--text-secondary);
+    }
+
+    .storage-column ul,
+    .storage-repo4-column ul {
+      margin-top: 0;
+      padding: 0;
+      list-style: none;
+      width: 100%;
+    }
+
+    .storage-column li,
+    .storage-repo4-column li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+      padding: 6px 0;
+      margin-bottom: 0;
+    }
+
+    .storage-column li:last-child,
+    .storage-repo4-column li:last-child {
+      border-bottom: none;
+    }
+
+    .storage-column .label,
+    .storage-repo4-column .label {
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .storage-column .value,
+    .storage-repo4-column .value {
+      font-weight: bold;
+      color: var(--value-local-color);
+      text-align: right;
+      padding-left: 8px;
+      line-height: 1.2;
+    }
+
+    .storage-column .repo-not-exist,
+    .storage-repo4-column .repo-not-exist {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9em;
+      font-style: italic;
+      margin: auto 0;
+    }
+
+    .status-display-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--section-border-card);
+    }
+
+    .status-display-item {
+      flex: 1 1 calc(25% - 15px);
+      min-width: 100px;
+      background-color: var(--status-item-bg);
+      border: 1px solid var(--status-item-border);
+      box-shadow: 0 1px 4px var(--status-item-shadow);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status-display-item:nth-child(-n+3) {
+      flex: 1 1 calc(33.333% - 15px);
+    }
+
+    .status-display-item .label {
+      font-size: 0.9em;
+      font-weight: 500;
+      color: var(--status-item-text);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      margin-right: 0;
+      text-transform: none;
+    }
+
+    .status-display-item .value {
+      font-size: 1.1em;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: var(--value-local-color);
+      background-color: rgba(0, 0, 0, 0.05);
+      width: fit-content;
+      margin: 0 auto;
+      font-family: inherit;
+    }
+
+    .status-display-item .value.config-value-enabled {
+      color: var(--value-ok-color);
+      background-color: rgba(0, 230, 118, 0.15);
+    }
+
+    .status-display-item .value.config-value-disabled {
+      color: var(--value-error-color);
+      background-color: rgba(255, 105, 180, 0.15);
+    }
+
+    .status-display-item .status-sub-value {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      margin-top: 5px;
+      display: block;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .task-schedule-group {
+      grid-column: 1 / -1;
+      background-color: rgba(240, 248, 255, 0.7);
+      border: 1px solid rgba(173, 216, 230, 0.5);
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin-top: 15px;
+      font-family: 'Orbitron', monospace;
+    }
+
+    .task-schedule-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+    }
+
+    .task-schedule-item:not(:last-child) {
+      margin-bottom: 6px;
+    }
+
+    .task-name {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .cron-expression {
+      color: var(--accent-color);
+      font-weight: bold;
+      background-color: rgba(0, 172, 193, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 0px 0px 20px 0px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      letter-spacing: 0.25px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
+    }
+
+    .repo-node-source {
+      padding: 4px 0px;
+      border-radius: 6px;
+      background-color: rgba(232, 245, 233, 0.7);
+      border: 1px solid rgba(40, 167, 69, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      font-size: 0.85em;
+      font-family: 'Rajdhani', sans-serif;
+      margin-top: 8px;
+      line-height: 1.2;
+    }
+
+    .repo-node-source .label {
+      color: var(--text-secondary);
+      margin-right: 5px;
+      border-bottom: none;
+      padding: 0;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .repo-node-source .value {
+      font-weight: bold;
+      color: #1b5e20;
+      padding-left: 0;
+    }
+
+    .repo-sha-display {
+      margin: 10px -12px -15px -12px;
+      background-color: #f1f3f5;
+      border-radius: 0 0 8px 8px;
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Consolas', monospace;
+      font-size: 0.85em;
+      color: #333;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .repo-sha-display .sha-icon {
+      color: var(--text-muted);
+      margin-right: 2px;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    .repo-sha-display .sha-value {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      color: var(--text-secondary);
+    }
+
+    .category-title>span:first-child {
+      display: flex;
+      align-items: center;
+    }
+
+    .category-title .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      height: 24px;
+      width: 24px;
+      vertical-align: unset;
+    }
+
+    .category-title .icon svg {
+      transform: translateY(1px);
+    }
+
+    .storage-details-block .category-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: none;
+      margin-bottom: 20px;
+    }
+
+    .tech-divider-header {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .section-badge-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1.2em;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      margin-right: 15px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .config-section .section-badge-title {
+      background: linear-gradient(to right, rgba(255, 152, 0, 0.1), transparent);
+      border-left: 4px solid #ff9800;
+      color: #e65100;
+    }
+
+    .storage-details-block .section-badge-title {
+      background: linear-gradient(to right, rgba(153, 204, 255, 0.1), transparent);
+      border-left: 4px solid #99ccff;
+      color: #0277bd;
+    }
+
+    .section-badge-title .icon {
+      margin-right: 8px;
+    }
+
+    .install-time-display {
+      font-size: 0.85em;
+      color: var(--text-muted);
+      margin-left: auto;
+      white-space: nowrap;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-weight: normal;
+    }
+
+    .merged-visual-wrapper {
+      background-color: var(--section-bg-card);
+      border: 1px solid var(--system-overview-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px var(--section-shadow-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background-image:
+        linear-gradient(rgba(0, 172, 193, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 172, 193, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .merged-visual-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.8) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .donut-chart-container {
+      position: relative;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding: 20px 0 10px 0;
+      width: 100%;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      z-index: 1;
+    }
+
+    .static-zone-container {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin-top: 20px;
+      box-shadow: none;
+    }
+
+    .donut-chart-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      flex: 1;
+    }
+
+    .donut-chart-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 10%;
+      height: 80%;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1), transparent);
+    }
+
+    .donut-chart {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(var(--chart-color) var(--progress),
+          var(--track-color, #e0e0e0) 0);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .donut-chart::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: var(--section-bg-card, #ffffff);
+      border-radius: 50%;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .chart-value {
+      font-size: 1.2em;
+      font-weight: 800;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--chart-color);
+      line-height: 1;
+    }
+
+    .chart-sub-value {
+      font-size: 0.6em;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+
+    .chart-label {
+      font-size: 0.85em;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .donut-chart-item:nth-child(1) {
+      --chart-color: #4FC3F7;
+      --track-color: #E1F5FE;
+    }
+
+
+    .donut-chart-item:nth-child(2) {
+      --chart-color: #2c2c2c;
+      --track-color: #EEEEEE;
+    }
+
+    .donut-chart-item:nth-child(3) {
+      --chart-color: #FF80AB;
+      --track-color: #FCE4EC;
+    }
+
+    .donut-chart-item:nth-child(4) {
+      --chart-color: #FFB74D;
+      --track-color: #FFF3E0;
+    }
+
+    .resource-usage-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 0;
+      margin-top: 10px;
+    }
+
+    .resource-card {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid var(--system-overview-border);
+      border-radius: 16px;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    .resource-info {
+      position: relative;
+      z-index: 2;
+      flex: 0 0 60%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 15px 15px 15px 20px;
+      background:
+        linear-gradient(115deg, transparent 40%, rgba(0, 0, 0, 0.02) 40.5%, rgba(0, 0, 0, 0.02) 100%),
+        linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+      box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .resource-info::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.8) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .resource-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-size: 1.1em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .resource-title svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+    }
+
+    .resource-data-list {
+      font-size: 0.85em;
+      color: var(--text-muted);
+      width: 100%;
+    }
+
+    .resource-data-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .resource-data-val {
+      font-family: inherit;
+      color: var(--text-primary);
+      font-weight: bold;
+    }
+
+    .gauge-container {
+      position: relative;
+      flex: 0 0 45%;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-right: 10px;
+    }
+
+    .gauge-svg {
+      width: 90px;
+      height: 90px;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(0, 0, 0, 0.05);
+      stroke-width: 8;
+    }
+
+    .gauge-progress {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 251.2;
+      stroke-dashoffset: 251.2;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 0 4px currentColor);
+    }
+
+    .gauge-inner-circle {
+      fill: none;
+      stroke: rgba(0, 0, 0, 0.03);
+      stroke-width: 1;
+      stroke-dasharray: 4 4;
+    }
+
+    .gauge-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      line-height: 1;
+    }
+
+    .gauge-percent {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1.3em;
+      color: var(--text-primary);
+    }
+
+    .gauge-label {
+      font-size: 0.6em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .disk-card .gauge-progress {
+      stroke: #FF5722;
+      color: #FF5722;
+    }
+
+    .disk-card .resource-title {
+      color: #D84315;
+    }
+
+    .robot-card .gauge-progress {
+      stroke: #FFC107;
+      color: #FFC107;
+    }
+
+    .robot-card .resource-title {
+      color: #FFA000;
+    }
+  </style>
+</head>
+
+<body style="{{RenderMatrix}}">
+  <div class="container-shadow-wrapper">
+    <div class="container">
+      <header class="header">
+        <div class="header-screen">
+          <h1>咕咕牛的状态报告<span>/ISTATUSI/</span></h1>
+          <div class="header-image-container">
+            {{ if headerImg }}
+            <img src="{{ headerImg }}" class="header-cute-image" />
+            {{ /if }}
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content-padding">
+        <div class="stats-row">
+          <div class="stats-block meta">
+            <h2 class="category-title">
+              <span class="icon">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                </svg> </span>元数据统计
+            </h2>
+            <ul>
+              <li>
+                <span class="label">角色:</span>
+                <span class="value"><strong>{{ stats.meta.roles || 0 }}</strong> 名</span>
+              </li>
+              <li>
+                <span class="label">图片:</span>
+                <span class="value"><strong>{{ stats.meta.images || 0 }}</strong> 张</span>
+              </li>
+            </ul>
+            <div class="game-stats-container">
+              <table class="game-stats-table">
+                <tbody>
+                  {{ each stats.meta.games gameCount gameName }}
+                  <tr>
+                    <td class="game-name">{{ gameName }}:</td>
+                    <td class="stat-value">{{ gameCount }} 张</td>
+                    <td class="stat-value">{{ stats.meta.gameRoles[gameName] || 0 }} 名</td>
+                  </tr>
+                  {{ /each }}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="stats-block scan">
+            <h2 class="category-title">
+              <span class="icon">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z" />
+                </svg> </span>本地文件扫描
+            </h2>
+            <ul>
+              <li>
+                <span class="label">角色(扫描):</span>
+                <span class="value"><strong>{{ stats.scan.roles || 0 }}</strong> 名</span>
+              </li>
+              <li>
+                <span class="label">图片(扫描):</span>
+                <span class="value"><strong>{{ stats.scan.images || 0 }}</strong> 张</span>
+              </li>
+            </ul>
+            <div class="game-stats-container">
+              <table class="game-stats-table">
+                <tbody>
+                  {{ each stats.scan.gameImages gameCount gameName }}
+                  <tr>
+                    <td class="game-name">{{ gameName }}:</td>
+                    <td class="stat-value">{{ gameCount }} 张</td>
+                    <td class="stat-value">{{ stats.scan.gameRoles[gameName] || 0 }} 名</td>
+                    <td class="stat-value game-size">
+                      {{ stats.scan.gameSizesFormatted[gameName] || '0 B' }}
+                    </td>
+                  </tr>
+                  {{ /each }}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h2 class="category-title">
+            <span class="section-badge-title">
+              <span class="icon"></span>配置状态
+            </span>
+          </h2>
+          <div class="install-days-overlay">{{ config.insDaysText || '' }}</div>
+          <div class="status-display-group">
+            <div class="status-display-item">
+              <span class="label">远程封禁</span>
+              <span class="value config-value-disabled">{{ config.remoteBansCount || 0 }} 张</span>
+              <span class="status-sub-value">由咕咕牛封禁的图片数量</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">净化等级</span>
+              <span class="value">{{ config.pflLevel }}</span>
+              <span class="status-sub-value">({{ config.pflDesc }})</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">本地生效屏蔽</span>
+              <span class="value">{{ config.activeBans || 0 }} 张</span>
+              <span class="status-sub-value">(手动 {{ config.userBans || 0 }} + 净化 {{ config.purifiedBans || 0 }})</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">Ai图状态</span>
+              <span class="value {{ config.aiEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{
+                config.aiStatusText }}</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">彩蛋图状态</span>
+              <span class="value {{ config.easterEggEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{
+                config.easterEggStatusText }}</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">横屏图状态</span>
+              <span class="value {{ config.layoutEnabled ? 'config-value-enabled' : 'config-value-disabled' }}">{{
+                config.layoutStatusText }}</span>
+            </div>
+            <div class="status-display-item">
+              <span class="label">I/O 负载均衡</span>
+              <span class="value">自动</span>
+            </div>
+          </div>
+          <div class="task-schedule-group">
+            <div class="task-schedule-item">
+              <span class="task-name">定时图库更新任务:</span>
+              <span class="cron-expression">每十二小时 | 0 */12 * * *</span>
+            </div>
+            <div class="task-schedule-item">
+              <span class="task-name">定时清理临时文件任务:</span>
+              <span class="cron-expression">每天凌晨三点 | 0 0 3 * * *</span>
+            </div>
+            <div class="task-schedule-item">
+              <span class="task-name">社区图库定时更新任务:</span>
+              <span class="cron-expression">每周日凌晨四点 | 0 0 4 * * 0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="storage-details-block seamless-top">
+          <div class="category-title tech-divider-header">
+            <span class="section-badge-title">
+              <span class="icon"></span>仓库详情
+            </span>
+            <span class="install-time-display">安装时间:{{ config.installationTime || 'N/A' }}</span>
+          </div>
+          <div class="storage-repo-columns">
+            <div class="storage-column">
+              {{ if stats.repos['1'] }}
+              <h3>
+                <span class="icon"><svg viewBox="0 0 24 24">
+                    <path
+                      d="M21.99 8c0-.55-.45-1-1-1h-8.59l-1.58-1.58C10.66 5.21 10.41 5 10.16 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-.55-.45-1-1-1z" />
+                  </svg></span>{{ stats.repos['1'].name }}
+              </h3>
+              {{ if stats.repos['1'].exists }}
+              <ul>
+                <li>
+                  <span class="label">文件:</span>
+                  <span class="value">{{ stats.repos['1'].filesSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">Git:</span>
+                  <span class="value">{{ stats.repos['1'].gitSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">占用:</span>
+                  <span class="value">{{ stats.repos['1'].sizeFormatted || 'N/A' }}</span>
+                </li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['1'].nodeName || '未知' }}</span>
+              </div>
+              <div class="repo-sha-display">
+                <span class="sha-icon">#</span>
+                <span class="sha-value">{{ stats.repos['1'].sha }}</span>
+              </div>
+              {{ else }}
+              <p class="repo-not-exist">(未下载)</p>
+              {{ /if }} {{ /if }}
+            </div>
+            <div class="storage-column">
+              {{ if stats.repos['2'] }}
+              <h3>
+                <span class="icon"><svg viewBox="0 0 24 24">
+                    <path
+                      d="M21.99 8c0-.55-.45-1-1-1h-8.59l-1.58-1.58C10.66 5.21 10.41 5 10.16 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-.55-.45-1-1-1z" />
+                  </svg></span>{{ stats.repos['2'].name }}
+              </h3>
+              {{ if stats.repos['2'].exists }}
+              <ul>
+                <li>
+                  <span class="label">文件:</span>
+                  <span class="value">{{ stats.repos['2'].filesSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">Git:</span>
+                  <span class="value">{{ stats.repos['2'].gitSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">占用:</span>
+                  <span class="value">{{ stats.repos['2'].sizeFormatted || 'N/A' }}</span>
+                </li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['2'].nodeName || '未知' }}</span>
+              </div>
+              <div class="repo-sha-display">
+                <span class="sha-icon">#</span>
+                <span class="sha-value">{{ stats.repos['2'].sha }}</span>
+              </div>
+              {{ else }}
+              <p class="repo-not-exist">(未下载)</p>
+              {{ /if }} {{ /if }}
+            </div>
+            <div class="storage-column">
+              {{ if stats.repos['3'] }}
+              <h3>
+                <span class="icon"><svg viewBox="0 0 24 24">
+                    <path
+                      d="M21.99 8c0-.55-.45-1-1-1h-8.59l-1.58-1.58C10.66 5.21 10.41 5 10.16 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-.55-.45-1-1-1z" />
+                  </svg></span>{{ stats.repos['3'].name }}
+              </h3>
+              {{ if stats.repos['3'].exists }}
+              <ul>
+                <li>
+                  <span class="label">文件:</span>
+                  <span class="value">{{ stats.repos['3'].filesSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">Git:</span>
+                  <span class="value">{{ stats.repos['3'].gitSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">占用:</span>
+                  <span class="value">{{ stats.repos['3'].sizeFormatted || 'N/A' }}</span>
+                </li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['3'].nodeName || '未知' }}</span>
+              </div>
+              <div class="repo-sha-display">
+                <span class="sha-icon">#</span>
+                <span class="sha-value">{{ stats.repos['3'].sha }}</span>
+              </div>
+              {{ else }}
+              <p class="repo-not-exist">(未下载)</p>
+              {{ /if }} {{ else }}
+              <h3>
+                <span class="icon"><svg viewBox="0 0 24 24">
+                    <path
+                      d="M21.99 8c0-.55-.45-1-1-1h-8.59l-1.58-1.58C10.66 5.21 10.41 5 10.16 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-.55-.45-1-1-1z" />
+                  </svg></span>三号仓库
+              </h3>
+              <p class="repo-not-exist">(未配置)</p>
+              {{ /if }}
+            </div>
+            <div class="storage-repo4-column">
+              {{ if stats.repos['4'] }}
+              <h3>
+                <span class="icon"><svg viewBox="0 0 24 24">
+                    <path
+                      d="M21.99 8c0-.55-.45-1-1-1h-8.59l-1.58-1.58C10.66 5.21 10.41 5 10.16 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-.55-.45-1-1-1z" />
+                  </svg></span>{{ stats.repos['4'].name }}
+              </h3>
+              {{ if stats.repos['4'].exists }}
+              <ul>
+                <li>
+                  <span class="label">文件:</span>
+                  <span class="value">{{ stats.repos['4'].filesSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">Git:</span>
+                  <span class="value">{{ stats.repos['4'].gitSizeFormatted || 'N/A' }}</span>
+                </li>
+                <li>
+                  <span class="label">占用:</span>
+                  <span class="value">{{ stats.repos['4'].sizeFormatted || 'N/A' }}</span>
+                </li>
+              </ul>
+              <div class="repo-node-source">
+                <span class="label">来源:</span>
+                <span class="value">{{ stats.repos['4'].nodeName || '未知' }}</span>
+              </div>
+              <div class="repo-sha-display">
+                <span class="sha-icon">#</span>
+                <span class="sha-value">{{ stats.repos['4'].sha }}</span>
+              </div>
+              {{ else }}
+              <p class="repo-not-exist">(未下载)</p>
+              {{ /if }} {{ else }}
+              <h3>
+                <span class="icon"><svg viewBox="0 0 24 24">
+                    <path
+                      d="M21.99 8c0-.55-.45-1-1-1h-8.59l-1.58-1.58C10.66 5.21 10.41 5 10.16 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-.55-.45-1-1-1z" />
+                  </svg></span>四号仓库
+              </h3>
+              <p class="repo-not-exist">(未配置)</p>
+              {{ /if }}
+            </div>
+          </div>
+        </div>
+
+        <div class="system-overview-block seamless-bottom">
+          <div class="resource-usage-row">
+            <div class="resource-card disk-card">
+              <div class="resource-info">
+                <div class="resource-title">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M6 2h12c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2zm0 2v16h12V4H6zm2 2h8v2H8V6zm0 4h8v2H8v-2z" />
+                  </svg>
+                  硬盘信息
+                </div>
+                <div class="resource-data-list">
+                  <div class="resource-data-item">
+                    <span>已用</span>
+                    <span class="resource-data-val">{{ diskChartData.usedSizeFormatted }}</span>
+                  </div>
+                  <div class="resource-data-item">
+                    <span>剩余</span>
+                    <span class="resource-data-val">{{ diskChartData.freeSizeFormatted }}</span>
+                  </div>
+                  <div class="resource-data-item">
+                    <span>总计</span>
+                    <span class="resource-data-val">{{ diskChartData.totalSizeFormatted }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="gauge-container">
+                <svg class="gauge-svg" viewBox="0 0 100 100">
+                  <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                  <circle class="gauge-inner-circle" cx="50" cy="50" r="32"></circle>
+                  <circle class="gauge-inner-circle" cx="50" cy="50" r="24"></circle>
+                  <circle class="gauge-progress" cx="50" cy="50" r="40"
+                    style="stroke-dashoffset: calc(251.2px - (251.2px * {{ diskChartData.usedPercentage }} / 100));">
+                  </circle>
+                </svg>
+                <div class="gauge-text">
+                  <div class="gauge-percent">{{ diskChartData.usedPercentage }}<span style="font-size:0.5em">%</span>
+                  </div>
+                  <div class="gauge-label">USED</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="resource-card robot-card">
+              <div class="resource-info">
+                <div class="resource-title">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 2c1.1 0 2 .9 2 2v2h4c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2h4V4c0-1.1.9-2 2-2zm0 4V4h-2v2h2zm-4 4v2h2v-2H8zm8 0v2h2v-2h-2z" />
+                  </svg>
+                  机器人存储
+                </div>
+                <div class="resource-data-list">
+                  <div class="resource-data-item">
+                    <span>图库</span>
+                    <span class="resource-data-val">{{ Footprint.HostPlugin.sizeFormatted }}</span>
+                  </div>
+                  <div class="resource-data-item">
+                    <span>Yunzai占用</span>
+                    <span class="resource-data-val">{{ robotChartData.totalSizeFormatted }}</span>
+                  </div>
+                  <div class="resource-data-item" style="visibility: hidden;">
+                    <span>Placeholder</span>
+                    <span class="resource-data-val">-</span>
+                  </div>
+                </div>
+              </div>
+              <div class="gauge-container">
+                <svg class="gauge-svg" viewBox="0 0 100 100">
+                  <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                  <circle class="gauge-inner-circle" cx="50" cy="50" r="32"></circle>
+                  <circle class="gauge-inner-circle" cx="50" cy="50" r="24"></circle>
+                  <circle class="gauge-progress" cx="50" cy="50" r="40"
+                    style="stroke-dashoffset: calc(251.2px - (251.2px * {{ Footprint.HostPlugin.percentage || 0 }} / 100));">
+                  </circle>
+                </svg>
+                <div class="gauge-text">
+                  <div class="gauge-percent">{{ Footprint.HostPlugin.percentage || 0 }}<span
+                      style="font-size:0.5em">%</span></div>
+                  <div class="gauge-label">RATIO</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="static-zone-container">
+            <div class="merged-visual-wrapper">
+              <div class="donut-chart-container">
+                <div class="donut-chart-item">
+                  <div class="donut-chart" style="--progress: {{ Footprint.genshin.percentage || 0 }}%;">
+                    <div class="chart-text">
+                      <span class="chart-value">{{ Footprint.genshin.percentage || 0 }}%</span>
+                      <span class="chart-sub-value">({{ Footprint.genshin.size.display }})</span>
+                    </div>
+                  </div>
+                  <span class="chart-label">原神</span>
+                </div>
+
+                <div class="donut-chart-item">
+                  <div class="donut-chart" style="--progress: {{ Footprint.starRail.percentage || 0 }}%;">
+                    <div class="chart-text">
+                      <span class="chart-value">{{ Footprint.starRail.percentage || 0 }}%</span>
+                      <span class="chart-sub-value">({{ Footprint.starRail.size.display }})</span>
+                    </div>
+                  </div>
+                  <span class="chart-label">星铁</span>
+                </div>
+
+                <div class="donut-chart-item">
+                  <div class="donut-chart" style="--progress: {{ Footprint.zzz.percentage || 0 }}%;">
+                    <div class="chart-text">
+                      <span class="chart-value">{{ Footprint.zzz.percentage || 0 }}%</span>
+                      <span class="chart-sub-value">({{ Footprint.zzz.size.display }})</span>
+                    </div>
+                  </div>
+                  <span class="chart-label">绝区零</span>
+                </div>
+
+                <div class="donut-chart-item">
+                  <div class="donut-chart" style="--progress: {{ Footprint.waves.percentage || 0 }}%;">
+                    <div class="chart-text">
+                      <span class="chart-value">{{ Footprint.waves.percentage || 0 }}%</span>
+                      <span class="chart-sub-value">({{ Footprint.waves.size.display }})</span>
+                    </div>
+                  </div>
+                  <span class="chart-label">鸣潮</span>
+                </div>
+              </div>
+
+              <div class="info-card-item last-card">
+                <div class="wave-container">
+                  <div class="wave-bg" style="--wave-height: {{ Footprint.HostPlugin.percentage || 0 }}%;">
+                    <div class="wave-surface"></div>
+                    <div class="wave-surface-2"></div>
+                  </div>
+                  <div class="bubble"></div>
+                  <div class="bubble"></div>
+                  <div class="bubble"></div>
+                  <div class="bubble"></div>
+                </div>
+                <div class="wave-content">
+                  <div class="wave-info-left">
+                    <span class="wave-title">图库占机器人</span>
+                    <span class="wave-big-value">{{ Footprint.HostPlugin.percentage || 0 }}%</span>
+                  </div>
+                  <div class="wave-details-right">
+                    <span>文件: <strong>{{ Footprint.Contents.display }}</strong></span>
+                    <span>GIT缓存: <strong>{{ Footprint.GitCache.display }}</strong></span>
+                    <span>仓库总占用: <strong>{{ Footprint.Occupancy.display }}</strong></span>
+                    <h3>
+                      图库/机器人占用：
+                      <span style="float: right">[{{ Footprint.HostPlugin.sizeFormatted }} / {{
+                        robotChartData.totalSizeFormatted }}]</span>
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">Miao-Plugin-MBT v{{ Version }} © 咕咕牛</footer>
+    </div>
+  </div>
+</body>
+
+</html>

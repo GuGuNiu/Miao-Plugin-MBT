@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色图片可视化 - {{ characterName }}</title>
+    <style>
+        :root {
+            --bg-color: #f4f7fc;
+            --container-bg: #ffffff;
+            --container-border: #4285f4;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --header-bg: #4285f4;
+            --header-title-color: #ffffff;
+            --header-underline-color: #a3c4f7;
+            --header-stat-color: #d2e3fc;
+            --tag-bg: rgba(255, 255, 255, 0.15);
+            --tag-char-color: #ffffff;
+            --digit-bg: rgba(0, 0, 0, 0.2);
+            --digit-color: #ffffff;
+            --item-bg: #eaf1fe;
+            --item-border: #d2e3fc;
+            --item-shadow: rgba(66, 133, 244, 0.1);
+            --error-text-color: #c5221f;
+            --error-bg-color: #fce8e6;
+
+            --gu-item-bg: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+            --gu-item-border: #ffc107;
+            --gu-item-shadow: rgba(255, 193, 7, 0.3);
+            --gu-label-bg: linear-gradient(45deg, #e69100, #ffb300);
+            --filename-gu-color: #8c5c00;
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2'); 
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2'); 
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            width: 1000px;
+            margin: 20px auto;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            border: 2px solid var(--container-border);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.15);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 25px 30px; 
+            background-color: var(--header-bg);
+            background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08) 10px, transparent 10px, transparent 20px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .header-content-left {
+            display: flex;
+            flex-direction: column; 
+            align-items: flex-start;
+            gap: 12px; 
+        }
+
+        .main-title {
+            position: relative;
+            padding-bottom: 8px;
+            font-size: 24px;
+            color: var(--header-title-color);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            font-family: "Orbitron", sans-serif; 
+            font-weight: 500;
+            letter-spacing: 0.25px;
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 80%; 
+            height: 2px;
+            background-color: var(--header-underline-color);
+            border-radius: 1px;
+        }
+
+        .tags-row { 
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .list-type-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--tag-bg);
+            color: var(--tag-char-color);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
+        
+        .source-plugin-tag { 
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: "Orbitron", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+            line-height: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .source-plugin-tag.source-miao {
+            background-color: #28a745;
+        }
+        .source-plugin-tag.source-zzz {
+            background-color: #fd7e14;
+        }
+        .source-plugin-tag.source-waves {
+            background-color: #d63384;
+        }
+
+        .folder-size-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #ffffff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: "Orbitron", sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .folder-size-tag svg {
+            margin-right: 2px;
+            opacity: 0.8;
+        }
+
+
+        .header-stats-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--header-stat-color);
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+        }
+
+        .digit-container {
+            display: flex;
+            gap: 3px;
+        }
+
+        .digit {
+            background-color: var(--digit-bg);
+            color: var(--digit-color);
+            padding: 4px 7px;
+            border-radius: 4px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4em;
+            font-weight: 700;
+            line-height: 1;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
+
+        .pagination-info {
+            color: var(--header-stat-color);
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: 500;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+            background-color: rgba(0, 0, 0, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .pagination-info .page-number {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 20px 30px;
+        }
+
+        .ban-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 10px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .ban-item { 
+            background-color: var(--item-bg);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid var(--item-border);
+            box-shadow: 0 2px 4px var(--item-shadow);
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            position: relative;
+        }
+
+        .ban-item.is-gu {
+            background: var(--gu-item-bg);
+            border: 2px solid var(--gu-item-border);
+            box-shadow: 0 5px 15px var(--gu-item-shadow);
+            padding: 9px;
+        }
+
+        .ban-item img {
+            display: block;
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+
+        .ban-item .error-placeholder {
+            width: 100%;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--error-bg-color);
+            color: var(--error-text-color);
+            font-size: 12px;
+            border-radius: 6px;
+            margin: 0 auto 10px;
+            padding: 10px;
+            text-align: center;
+            border: 1px dashed var(--error-text-color);
+        }
+
+        .filename-area {
+            margin-top: auto;
+            padding-top: 5px;
+        }
+
+        .ban-item .filename {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            word-break: break-all;
+            line-height: 1.3;
+            font-weight: 500;
+        }
+
+        .gu-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--gu-label-bg);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 0 6px 0 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .is-gu .filename {
+            color: var(--filename-gu-color);
+            font-weight: 700;
+        }
+
+        .empty-list {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 20px;
+            font-size: 0.95em;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 10px;
+            border: 1px dashed #bbdefb;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                width: 100%;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-stats-area {
+                width: 100%;
+                justify-content: flex-start; 
+                align-items: flex-start;
+            }
+
+            .ban-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 14px;
+        color: var(--text-secondary);
+        letter-spacing: 0.25px;
+        font-family: "Orbitron", sans-serif;
+        font-weight: 500;
+        background-color: #eaf1fe;
+        border-top: 1px solid #d2e3fc;
+      }
+    </style>
+</head>
+
+<body style="{{RenderMatrix}}">
+    <div class="container">
+      <div class="header">
+        <div class="header-content-left">
+          <div class="main-title">咕咕牛的面板图可视化 v{{ Version }}  </div>
+          <div class="tags-row">
+            {{ if sourcePlugin }}
+            <div class="source-plugin-tag source-{{ sourcePlugin.toLowerCase() }}">
+              {{ sourcePlugin }}
+            </div>
+            {{ /if }} {{ if folderSize }}
+            <div class="folder-size-tag">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path
+                  d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"
+                />
+              </svg>
+              <span>{{ folderSize }}</span>
+            </div>
+            {{ /if }}
+            <div class="list-type-tag">{{ characterName }}</div>
+          </div>
+        </div>
+        <div class="header-stats-area">
+          <div class="stat-item">
+            <span>总数</span>
+            <div class="digit-container">
+              {{ each odometer digit }}
+              <div class="digit">{{ digit }}</div>
+              {{ /each }}
+            </div>
+          </div>
+          {{ if totalPages > 1 }}
+          <div class="pagination-info">
+            PAGE <span class="page-number">{{ batchNum }}</span> / {{ totalPages }}
+          </div>
+          {{ /if }}
+        </div>
+      </div>
+        <div class="main-content">
+            {{ if images && images.length > 0 }}
+            <div class="ban-grid">
+                {{ each images item index }}
+                <li class="ban-item {{ if item.isGu }}is-gu{{ /if }}">
+                    {{ if item.isGu }}<span class="gu-label">GU</span>{{ /if }}
+                    <img src="{{ item.filePath }}" alt="{{ item.fileName }}"
+                        onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.textContent='图片加载失败: ' + this.alt; this.parentNode.insertBefore(ph, this);" />
+                    <div class="filename-area">
+                        <div class="filename">
+                            {{ item.originalIndex + 1 }}. {{ item.fileName }}
+                        </div>
+                    </div>
+                </li>
+                {{ /each }}
+            </div>
+            {{ else }}
+            <p class="empty-list">当前页面无内容</p>
+            {{ /if }}
+        </div>
+        <div class="footer"></div>
+    </div>
+    <script>
+        window.addEventListener('load', function() {
+            const images = document.querySelectorAll('img');
+            let loadedCount = 0;
+            const totalImages = images.length;
+            
+            if (totalImages === 0) {
+              console.log('Yunara:Render-Ready');
+              return;
+            }
+            
+            images.forEach(img => {
+              if (img.complete) {
+                loadedCount++;
+                checkAllLoaded();
+              } else {
+                img.addEventListener('load', () => {
+                  loadedCount++;
+                  checkAllLoaded();
+                });
+                img.addEventListener('error', () => {
+                  loadedCount++;
+                  checkAllLoaded();
+                });
+              }
+            });
+            
+            function checkAllLoaded() {
+              if (loadedCount === totalImages) {
+                console.log('Yunara:Render-Ready');
+              }
+            }
+          });
+    </script>
+</body>
+
+</html>
