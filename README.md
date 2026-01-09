@@ -36,7 +36,7 @@
 
 ---
 
-## 🛡️ 内容净化与过滤系统
+## 内容净化与过滤系统
 
 > [!WARNING]
 > 为应对潜在的平台风控，建议根据自身需求配置，此功能是贯穿全图库业务的核心，优先级最高请着重考虑！
@@ -69,10 +69,10 @@
 
 ---
 
-## 🏘️ 社区面板图库的支持
+## 社区面板图库的支持
 
 > [!NOTE]
-> 在许多参与提供面板图的维护者中，仅咕咕牛一家提供了全链路的垂直适配，本着开源精神希望能够带着其它还在弄面板图的维护者们一起玩，你不需要再设计复杂的下载器了，咕咕牛提供了多模态的下载器足够应对超大型仓库
+> 在许多参与提供面板图的维护者中，仅咕咕牛图库提供了全链路的垂直适配，本着开源精神希望能够带着其它还在弄面板图的维护者们一起玩，咕咕牛在©️ v5.2.0提供了多模态的下载器，可以让你更加专注提供内容。
 
 - 支持从 **GitHub、Gitee、GitCode、Gitea** 平台克隆并自动探测仓库内的文件夹结构
 - **示例**: `#咕咕牛安装https://github.com/user/repo:我哈`
@@ -95,8 +95,7 @@
 | `#咕咕牛过滤列表`                 | 展示已安装图库封禁情况 |
 
 > [!TIP] 
-> 插件在每个星期都会自动更新社区图库 <br>
-> 鸣朝的角色识别非常复杂涉及到用户TOKEN，比如【早柚】核心的鸣朝插件资源就无法兼容，缺少ID和角色名映射表
+> 插件在每个星期都会自动更新社区图库，【早柚】核心的鸣朝插件资源就无法兼容，缺少ID和角色名映射表
 
 </details>
 
@@ -151,7 +150,7 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
   </tr>
   
   <tr>
-    <td style="white-space: nowrap;">FsTreeSync</td> 
+    <td style="white-space: nowrap;">树复制</td> 
     <td>以下对该模块/功能简称<strong>"资源同步":</strong> <br>
      <strong>资源同步模块/功能</strong>仅用于保障<strong>“原创者“</strong>的版权追溯清理遗留在用户本地的图片文件，<br>
   </tr>
@@ -195,19 +194,9 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 </details>
 
 
-## 分流仓库列表
+## 收纳柜
 
-<details> <summary>展开查看</summary>
-<p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT&show_owner=true&theme=transparent"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-2"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-2&show_owner=true&theme=transparent"></a>
-  <br>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-3"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-3&show_owner=true&theme=transparent"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT-4"><img src="https://github-readme-stats.vercel.app/api/pin/?username=GuGuNiu&repo=Miao-Plugin-MBT-4&show_owner=true&theme=transparent"></a>
-</p>
-</details>
-
-<details> <summary> 🌏 GuTools Web控制台 </summary>
+<details> <summary> 🌏 CowCoo Web控制台 </summary>
 
 <br>
   
