@@ -27,19 +27,21 @@
 
 </div> 
 
----
+### 图库介绍
 
-## ⚠️ 使用须知 · 请务必仔细阅读
+  图库目前已应用了`Nano-Banana-Pro`,`Comfyui`技术对面板图进行优化，并且对图片都会进行二次调色/二次扩图，在保证不无序扩张数量的前提下每隔一段时间都会替换原有的不符合当下审美条件的面板图。管理器采用全链路自洽闭环设计，内置脱离主框架的独立进程管理与生命周期总线，支持热重载，并针对重型下载任务实现了高可用的并发竞速调度策略，同时提供了更多元的图片管理方式。
 
-- 项目除图片资源外基于 **MIT协议** 开源，**图片资源严禁用于任何商业用途**。如有侵权请联系删除。
-- **部分图片为付费商业素材**，咕咕牛已购买此素材仅用于展示用途，咕咕牛不拥有其版权**后续使用或传播行为与本项目无关**。
+### ⚠️ 使用须知 · 请务必仔细阅读
+
+- **部分图片为付费商业素材**，**图片资源严禁用于任何商业用途**。如有侵权请联系删除。
+- 咕咕牛已购买此素材仅用于展示用途，咕咕牛不拥有其版权**后续使用或传播行为与本项目无关**。
 
 ---
 
 ## 内容净化与过滤系统
 
 > [!WARNING]
-> 为应对潜在的平台风控，建议根据自身需求配置，此功能是贯穿全图库业务的核心，优先级最高请着重考虑！
+> 为应对潜在的封号威胁建议根据自身需求配置，此功能是贯穿全图库业务的核心优先级最高请着重考虑！
 
 | 等级 | 效果         | 说明                                              |
 |:----:|:-------------|:--------------------------------------------------|
@@ -52,15 +54,14 @@
 - #咕咕牛封禁 / 解禁 ```角色名``` | ```[二级标签]``` 
 
 > [!TIP]  
-> [二级标签] 可选参数，用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级
-
->在5.0.3版本引入了二级标签，作为辅助查找封禁，可以用 #咕咕牛查看 具体了解有哪些
+> [二级标签] 作为可选参数用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级
 
 <details>
 <summary>📌 标签说明</summary>
 
-- **Px18**：轻微暗示，未暴露关键部位
-- **Rx18**：暴露明显，尺度较大
+- **P18**：轻微暗示，未暴露关键部位
+- **R18**：暴露明显，尺度较大
+- **SR18**：无尺
 - **AI图**：由 AI 画图大模型生成
 - **彩蛋图**：咕咕牛内置逻辑，与各个插件无关
 - **横屏图**：横向全屏的面板图 [如果你使用了自己改的背景图那么建议还是关闭横屏图不然会非常的突兀]
@@ -72,7 +73,7 @@
 ## 社区面板图库的支持
 
 > [!NOTE]
-> 在许多参与提供面板图的维护者中，仅咕咕牛图库提供了全链路的垂直适配，本着开源精神希望能够带着其它还在弄面板图的维护者们一起玩，咕咕牛在©️ v5.2.0提供了多模态的下载器，可以让你更加专注提供内容。
+> 咕咕牛提供了对Yunzai框架下的插件完整的垂直适配，在©️ v5.2.0版本提供了多模态的下载器，可以让你更加专注提供内容，可在issues反馈你的仓库地址加入到一键安装列表中，管理器在每个星期都会自动更新社区图库。
 
 - 支持从 **GitHub、Gitee、GitCode、Gitea** 平台克隆并自动探测仓库内的文件夹结构
 - **示例**: `#咕咕牛安装https://github.com/user/repo:我哈`
@@ -93,9 +94,6 @@
 |:-------------------------------------|:------------------------------------|
 | `#咕咕牛封/解禁芙芙<CID>`                 | 封/解禁指定图库的指定面板图 |
 | `#咕咕牛过滤列表`                 | 展示已安装图库封禁情况 |
-
-> [!TIP] 
-> 插件在每个星期都会自动更新社区图库，【早柚】核心的鸣朝插件资源就无法兼容，缺少ID和角色名映射表
 
 </details>
 
@@ -191,6 +189,91 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 ## 🍵 开发资料 & 杂谈
 
 <details> <summary> 🫳 1. Spawn Git 调度研究 </summary> 
+
+```mermaid
+graph LR
+
+subgraph Orchestrator ["Orchestrator"]
+    O_Start([开始下载])
+    O_EnvCheck{环境探测}
+    O_NodeSelect[筛选可用节点]
+    O_InitCRS[初始化 MBTQuoCRS]
+    O_TaskFactory[创建任务工厂]
+
+    O_Start --> O_EnvCheck
+    O_EnvCheck -->|CN / Global| O_NodeSelect
+    O_NodeSelect --> O_InitCRS
+    O_InitCRS --> O_TaskFactory
+end
+
+subgraph Scheduler ["MBTQuoCRS"]
+    S_AddTask[addTask 挂载任务]
+    S_Monitor{心跳监控循环}
+    S_Compare[比较 Leader 与 Task]
+    S_Kill[中止任务]
+    S_Success[任务成功]
+    S_Fail[全部失败]
+
+    S_AddTask --> S_Monitor
+    S_Monitor -->|进度更新| S_Compare
+    S_Compare -->|落后或假死| S_Kill
+    S_Compare -->|正常| S_Monitor
+    S_Monitor -->|至少一个成功| S_Success
+    S_Monitor -->|全部失败| S_Fail
+end
+
+subgraph Executor ["MBTPipeControl"]
+    E_Spawn[spawn git clone]
+    E_ProcPool[注册进程池]
+    E_Parse[解析 stderr 进度]
+    E_Error[执行错误]
+
+    S_AddTask -->|激活| E_Spawn
+    E_Spawn --> E_ProcPool
+    E_Spawn --> E_Parse
+    E_Spawn -->|Error| E_Error
+end
+
+subgraph Analyzer ["PoseidonSpear"]
+    A_Analyze{错误分析}
+    A_Downgrade[触发 H1 降级]
+    A_Break[节点熔断]
+    A_Retry[允许重试]
+
+    E_Error --> A_Analyze
+    A_Analyze -->|H2 协议错误| A_Downgrade
+    A_Analyze -->|IP 封禁| A_Break
+    A_Analyze -->|网络波动| A_Retry
+    A_Downgrade -->|动态添加任务| S_AddTask
+    A_Retry --> S_AddTask
+end
+
+O_TaskFactory --> S_AddTask
+E_Parse -->|回调进度| S_Monitor
+S_Kill -->|AbortSignal| E_Spawn
+S_Success --> F_FileOps[文件移动与校验]
+F_FileOps --> F_End([结束])
+
+```
+
+### 主架构联动性
+
+#### 1. Quo -> Pipe -> Pool (清理链)
+- `CRS` 决定淘汰 -> `controller.abort()`。
+- `MBTPipeControl` 捕获 `abort` -> 发送 `SIGTERM` 给子进程。
+- 子进程退出 -> 触发 `exit` 事件。
+- `MBTProcX` (v10.0) 监听到 `exit` -> 从 `pool` 中移除引用。
+- **闭环完成**。
+
+#### 2. Smart -> Quo (调度链)
+- `SmartTaskHeavy` 使用 `delayAcc` -> `CRS` 收到 `delay` -> `setTimeout` -> 挂载任务。
+- **并发风暴解决**：`GhLLKK` 先跑 6秒，建立连接后，`GhddlcTop` 再启动。
+
+#### 3. Smart -> Quo (补员链)
+- `SmartTaskHeavy` 的 `setInterval` 监控 `CRS.getStatus()`。
+- 发现 `activeCount < 2` -> 从 `reserveNodes` 取出新节点 -> `CRS.addTask`。
+- **饥饿问题解决**：即使开局两个节点挂了一个，替补队员会立即上场，保持场上始终有竞争压力。
+  
 </details>
 
 
