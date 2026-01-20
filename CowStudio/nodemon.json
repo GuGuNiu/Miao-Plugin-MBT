@@ -1,8 +1,0 @@
-{
-  "ignore": [
-    "CowCoo/*",
-    "server/temp_plugin.js",
-    "node_modules/*",
-    "temp/*"
-  ]
-}
