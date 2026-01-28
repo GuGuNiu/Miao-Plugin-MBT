@@ -1,94 +1,55 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛网络测速</title>
+    <title>咕咕牛工具箱-网络测速</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        @font-face {
-            font-family: 'Orbitron';
-            font-style: normal;
-            font-weight: 700;
-            font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
-        }
-
-        @font-face {
-            font-family: 'Orbitron';
-            font-style: normal;
-            font-weight: 500;
-            font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
-        }
-
-        @font-face {
-            font-family: 'Rajdhani';
-            font-style: normal;
-            font-weight: 500;
-            font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
-        }
-
-        @font-face {
-            font-family: 'Noto Sans SC';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
-        }
-
         :root {
-            --bg-color: #f8f9fa;
-            --container-bg: #ffffff;
-            --container-border: #333333;
-            --text-primary: #212529;
-            --text-secondary: #495057;
-            --text-muted: #adb5bd;
-            --accent-color: #00acc1;
-
-            --success-color: #28a745;
-            --glow-color: #39ff14;
-            --fail-color: #dc3545;
-            --na-color: #78909c;
-            --default-color: #3f51b5;
-
-            --soft-shadow: rgba(0, 0, 0, 0.08);
-            --header-bg: #333333;
+            --bg-color: #212428;
+            --container-bg: #212428;
+            --item-bg-card: #2d3039;
+            --text-primary: #ffffff;
+            --text-secondary: #a7a9ad;
+            --text-muted: #7f8185;
             --header-title-color: #ffffff;
-            --header-subtitle-color: rgba(255, 255, 255, 0.6);
-            --header-underline-color: #1395ff;
+            --header-subtitle-color: #a7a9ad;
+            --header-underline-color: #43d8b8;
+            --success-color: #3cb371;
+            --warning-color: #e6c35c;
+            --fail-color: #d9585b;
+            --na-color: #80848e;
+            --best-choice-bg: #e6c35c;
+            --best-choice-text: #2d3039;
+            --container-border: rgba(67, 216, 184, 0.2);
+            --accent-color: var(--header-underline-color);
+            --glow-color: transparent;
+            --soft-shadow: none;
+            --header-bg: var(--container-bg);
             --header-border-line: rgba(255, 255, 255, 0.1);
-
-            --item-bg-card: rgba(255, 255, 255, 0.95);
-            --item-border-card: #e0e0e0;
-            --item-shadow-card: rgba(0, 0, 0, 0.05);
-            --accent-glow: rgba(0, 0, 0, 0.4);
-            --panel-backdrop-blur: 5px;
+            --item-border-card: transparent;
+            --item-shadow-card: rgba(0, 0, 0, 0.2);
+            --accent-glow: rgba(67, 216, 184, 0.1);
+            --panel-backdrop-blur: 0px;
+            --mode-bg: rgba(67, 216, 184, 0.05);
+            --mode-border: rgba(67, 216, 184, 0.3);
         }
-
-        @keyframes glow-animation {
-            0%, 100% {
-                box-shadow: 0 0 7px rgba(40, 167, 69, 0.5), 0 0 12px rgba(40, 167, 69, 0.3);
-            }
-            50% {
-                box-shadow: 0 0 12px rgba(40, 167, 69, 0.8), 0 0 24px rgba(40, 167, 69, 0.5);
-            }
-        }
-
+        
         * {
             box-sizing: border-box;
         }
-
+        
         html,
         body {
             margin: 0;
             padding: 0;
         }
-
+        
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background: linear-gradient(145deg, #e6f0ff 0%, #f0f9ff 100%);
+            background-color: var(--bg-color);
             color: var(--text-primary);
             padding: 10px;
             font-size: 14px;
@@ -101,101 +62,297 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-
+        
+        .background-layer {
+            display: none;
+        }
+        
         .container-shadow-wrapper {
             position: relative;
             z-index: 2;
-            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
             padding: 0;
             box-sizing: border-box;
             border-radius: 16px;
             width: 100%;
             margin: 0 auto;
         }
-
+        
         .container {
             background-color: var(--container-bg);
+            background-image: url('https://s2.loli.net/2026/01/27/3bzaNVlquiGQjxO.webp');
+            background-size: cover;
+            background-position: center calc(50% + 30px);
+            background-repeat: no-repeat;
             border-radius: 16px;
             border: 1px solid var(--container-border);
-            width: 100%;
-            margin: 0 auto;
-            box-shadow: 0 0 15px 5px var(--accent-glow);
-            padding: 0;
-            box-sizing: border-box;
-            z-index: 1;
-            overflow: hidden;
-            backdrop-filter: blur(var(--panel-backdrop-blur));
-            -webkit-backdrop-filter: blur(var(--panel-backdrop-blur));
-            background-image:
-                repeating-linear-gradient(45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px),
-                repeating-linear-gradient(-45deg, rgba(79, 195, 247, 0.07) 0, rgba(79, 195, 247, 0.07) 1px, transparent 1px, transparent 20px);
-            background-size: 20px 20px;
+            overflow: hidden; 
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
-
+        
         .container::before,
         .container::after,
         body::before,
         body::after {
             display: none;
         }
-
+        
         .header {
-            text-align: left;
-            margin-bottom: 20px;
-            padding: 25px 30px 15px 30px;
-            background-color: var(--header-bg);
-            position: relative;
-            z-index: 1;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            box-shadow: inset 0 -1px 0 var(--header-border-line);
-            background-image:
-                radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
-                linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
-            background-size: 100% 100%, 50% 100%;
-            background-position: center, center;
-            background-repeat: no-repeat, repeat-x;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-family: 'Noto Sans SC', sans-serif;
-            font-weight: 700;
-            font-size: 26px;
-            color: var(--header-title-color);
+            background: linear-gradient(135deg, #1a1d21 0%, #111316 100%);
             margin: 0;
-            letter-spacing: 0.5px;
-            position: relative;
+            padding: 0;
+            height: 150px;
             display: flex;
-            align-items: baseline;
-            padding-bottom: 4px;
+            position: relative;
+            z-index: 100;
+            border-bottom: 2px solid #000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
 
-        .header h1 span {
-            font-family: 'Orbitron', monospace;
-            color: var(--header-subtitle-color);
-            font-size: 16px;
-            margin-left: 10px;
-            font-weight: 500;
-            letter-spacing: 0.25px;
-        }
-
-        .header h1::after {
-            content: '';
+        .header::before {
+            content: "";
             position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 40%;
-            height: 3px;
-            background-color: var(--header-underline-color);
-            border-radius: 1px;
-            box-shadow: 0 0 4px var(--header-underline-color);
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: repeating-linear-gradient(45deg, #43d8b8, #43d8b8 2px, #1a1d21 2px, #1a1d21 10px);
+            opacity: 0.8;
         }
 
-        .header-image-container {
-            width: 50px;
+        .header-identity {
+            position: relative;
+            width: 460px;
+            height: 100%;
+            background: #080a0c;
+            overflow: hidden;
+            clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
+            border-right: 1px solid rgba(67, 216, 184, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .abyss-container {
+            position: relative;
+            width: 92%;
+            height: 80%;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            perspective: 1000px;
+        }
+
+        .abyss-grid {
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(rgba(67, 216, 184, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(67, 216, 184, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: rotateX(60deg) translateZ(-150px);
+            mask-image: radial-gradient(circle at center, black, transparent 70%);
+            opacity: 0.5;
+        }
+
+        .abyss-content {
+            display: flex;
+            align-items: center;
+            z-index: 5;
+            transform: rotateY(10deg);
+        }
+
+        .abyss-logo-group {
+            position: relative;
+        }
+
+        .main-logo {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            filter: 
+                drop-shadow(0 0 5px rgba(67, 216, 184, 0.8))
+                drop-shadow(-12px 6px 2px rgba(67, 216, 184, 0.3))
+                drop-shadow(-24px 12px 4px rgba(67, 216, 184, 0.15))
+                drop-shadow(-40px 20px 8px rgba(67, 216, 184, 0.05));
+        }
+
+        .abyss-title-group {
+            margin-left: 20px;
+        }
+
+        .abyss-main-title {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px #000;
+            filter: 
+                drop-shadow(0 0 8px rgba(67, 216, 184, 0.6))
+                drop-shadow(-15px 5px 4px rgba(67, 216, 184, 0.2))
+                drop-shadow(-30px 10px 8px rgba(67, 216, 184, 0.1));
+        }
+
+        .abyss-tag {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            color: var(--header-underline-color);
+            background: rgba(67, 216, 184, 0.1);
+            padding: 2px 6px;
+            display: inline-block;
+            margin-bottom: 4px;
+            border-left: 2px solid var(--header-underline-color);
+        }
+
+        .abyss-status-line {
+            height: 2px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--header-underline-color), transparent);
+            margin-top: 5px;
+            opacity: 0.6;
+        }
+
+        .abyss-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.1) 50%
+            ), linear-gradient(
+                90deg, 
+                rgba(255, 0, 0, 0.03), 
+                rgba(0, 255, 0, 0.01), 
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .header-sys-status {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .status-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-label-mini {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            color: var(--text-muted);
+            width: 80px;
+        }
+
+        .status-progress-static {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            position: relative;
+        }
+
+        .status-progress-static::before {
+            content: "";
+            position: absolute;
+            left: 0; top: 0; height: 100%;
+            width: 65%;
+            background: var(--header-underline-color);
+            box-shadow: 0 0 10px var(--header-underline-color);
+        }
+
+        .header-meta-panel {
+            width: 260px;
+            padding: 25px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            background: rgba(0,0,0,0.2);
+            border-left: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-meta-panel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(67, 216, 184, 0.2) 0px,
+                rgba(67, 216, 184, 0.2) 4px,
+                transparent 4px,
+                transparent 16px
+            );
+            mask-image: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(0, 0, 0, 0.3) 25%,
+                rgba(0, 0, 0, 0.6) 50%,
+                black 100%
+            );
+            -webkit-mask-image: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(0, 0, 0, 0.3) 25%,
+                rgba(0, 0, 0, 0.6) 50%,
+                black 100%
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .meta-tech-id {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            color: var(--header-underline-color);
+            margin-bottom: 10px;
+            background: rgba(67, 216, 184, 0.1);
+            padding: 2px 8px;
+            border-radius: 2px;
+        }
+
+        .clock-date {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #ffffff;
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: right;
+        }
+
+        .clock-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: var(--header-underline-color);
+            font-weight: 900;
+            margin-top: 2px;
+        }
+
+        .header-footer-decor {
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            opacity: 0.5;
+        }
+        
+        .header-date-container {
+            width: auto;
+            min-width: 180px;
             height: 50px;
             overflow: hidden;
             flex-shrink: 0;
@@ -205,46 +362,154 @@
             align-items: center;
         }
 
-        .header-cute-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+        .header-date-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            color: var(--header-subtitle-color);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-align: right;
+        }
+
+        .mode-display-section {
+            margin: 20px 25px 15px 25px;
+            padding: 12px 20px;
+            background-color: var(--mode-bg);
+            border: 1px solid var(--mode-border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .mode-info-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .mode-diagnostic-col {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .mode-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: var(--header-underline-color);
+            margin-bottom: 4px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .mode-value {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .mode-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .mode-detail-row {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--mode-border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .mode-detail-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .mode-detail-icon {
+            font-size: 14px;
+            margin-right: 6px;
+            opacity: 0.8;
+        }
+
+        .ip-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border: 1px solid var(--header-underline-color);
+            border-radius: 6px;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--header-underline-color);
+            margin-right: 6px;
+            min-width: 36px;
         }
 
         .category-title {
             font-family: 'Noto Sans SC', sans-serif;
             font-size: 18px;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: var(--text-primary);
             text-align: left;
             margin: 20px 0 10px 0;
-            padding-left: 10px;
-            border-left: 4px solid var(--header-underline-color);
+            padding-left: 0;
             letter-spacing: 0.5px;
+            position: relative;
+            padding-bottom: 5px;
+            z-index: 1;
         }
 
+        .category-title::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: -5px;
+            width: 280px;
+            height: 12px;
+            background: linear-gradient(90deg, var(--header-underline-color) 0%, rgba(67, 216, 184, 0.2) 80%, transparent 100%);
+            transform: skewX(-20deg);
+            opacity: 0.4;
+            z-index: -1;
+        }
+        
         .speedtest-section {
             padding: 0 25px;
         }
-
+        
         .speed-cards-list {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-bottom: 18px;
         }
-
+        
         .speedtest-category:last-of-type .speed-cards-list {
             margin-bottom: 0;
         }
-
+        
         .speed-card {
-            background-color: var(--item-bg-card);
+            background-color: rgba(45, 48, 57, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 8px;
             padding: 15px 20px;
-            border: 1px solid var(--item-border-card);
-            box-shadow: 0 2px 8px var(--item-shadow-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            --shadow-color: var(--item-shadow-card);
+            box-shadow: 0 4px 12px var(--shadow-color);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -255,7 +520,7 @@
             transition: all 0.2s ease-in-out;
             padding-left: 20px;
         }
-
+        
         .speed-card::before {
             content: '';
             position: absolute;
@@ -263,29 +528,222 @@
             left: 0;
             width: 5px;
             height: 100%;
-            background-color: var(--default-color);
+            background: var(--bar-color, var(--default-color));
             border-radius: 8px 0 0 8px;
             z-index: 0;
+            opacity: 0.8;
+        }
+
+        .speed-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--bar-color, var(--default-color));
+            border-radius: 0 8px 8px 0;
+            z-index: 0;
+            opacity: 0.8;
         }
         
         .speed-card.best-node-glow {
-            border: 1px solid var(--success-color);
-            transform: scale(1.02);
-            animation: glow-animation 2.5s infinite ease-in-out;
+            border: 1px solid var(--shadow-color);
+            transform: none;
+            box-shadow: 0 0 15px var(--shadow-color);
         }
-
-        .speed-card.bar-green::before { background-color: #28a745; }
-        .speed-card.bar-yellow::before { background-color: #ffb300; }
-        .speed-card.bar-orange::before { background-color: #ff5722; }
-        .speed-card.bar-gray::before { background-color: #bdbdbd; }
-        .speed-card.bar-red::before { background-color: #dc3545; }
-
-        .speed-card-content {
+        
+        .speed-card.bar-green { 
+            --shadow-color: rgba(60, 179, 113, 0.2);
+            --bar-color: var(--success-color);
+            border-top: 1px solid rgba(60, 179, 113, 0.2);
+            border-bottom: 1px solid rgba(60, 179, 113, 0.2);
+        }
+        
+        .speed-card.bar-yellow { 
+            --shadow-color: rgba(230, 195, 92, 0.2);
+            --bar-color: var(--warning-color);
+            border-top: 1px solid rgba(230, 195, 92, 0.2);
+            border-bottom: 1px solid rgba(230, 195, 92, 0.2);
+        }
+        
+        .speed-card.bar-orange { 
+            --shadow-color: rgba(217, 88, 91, 0.2);
+            --bar-color: var(--fail-color);
+            border-top: 1px solid rgba(217, 88, 91, 0.2);
+            border-bottom: 1px solid rgba(217, 88, 91, 0.2);
+        }
+        
+        .speed-card.bar-red { 
+            --shadow-color: rgba(217, 88, 91, 0.2);
+            --bar-color: var(--fail-color);
+            border-top: 1px solid rgba(217, 88, 91, 0.2);
+            border-bottom: 1px solid rgba(217, 88, 91, 0.2);
+        }
+        
+        .speed-card.bar-gray { 
+            --shadow-color: rgba(128, 132, 142, 0.2);
+            --bar-color: var(--na-color);
+            border-top: 1px solid rgba(128, 132, 142, 0.2);
+            border-bottom: 1px solid rgba(128, 132, 142, 0.2);
+        }
+        
+        .diagnostic-card {
+            background-color: rgba(20, 20, 30, 0.6);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            padding: 4px;
+            border: 1px solid var(--item-border-card);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             position: relative;
-            z-index: 1;
-            width: 100%;
+            overflow: visible;
+            backdrop-filter: blur(4px);
         }
 
+        .diagnostic-card::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px solid var(--item-border-card);
+            background: transparent;
+            z-index: 1;
+        }
+
+        .diagnostic-card::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .diagnostic-card.status-ok::after {
+            box-shadow: 
+                inset 4px 4px 0 0 #52d681,
+                inset -4px 4px 0 0 #2d8655,
+                inset 4px -4px 0 0 #2d8655,
+                inset -4px -4px 0 0 #3cb371,
+                inset 6px 6px 2px 0 rgba(0,0,0,0.6),
+                inset -6px -6px 2px 0 rgba(0,0,0,0.4);
+        }
+
+        .diagnostic-card.status-warning::after {
+            box-shadow: 
+                inset 4px 4px 0 0 #f6e08b,
+                inset -4px 4px 0 0 #b39847,
+                inset 4px -4px 0 0 #b39847,
+                inset -4px -4px 0 0 #e6c35c,
+                inset 6px 6px 2px 0 rgba(0,0,0,0.6),
+                inset -6px -6px 2px 0 rgba(0,0,0,0.4);
+        }
+
+        .diagnostic-card.status-timeout::after {
+            box-shadow: 
+                inset 4px 4px 0 0 #ee8688,
+                inset -4px 4px 0 0 #a64245,
+                inset 4px -4px 0 0 #a64245,
+                inset -4px -4px 0 0 #d9585b,
+                inset 6px 6px 2px 0 rgba(0,0,0,0.6),
+                inset -6px -6px 2px 0 rgba(0,0,0,0.4);
+        }
+        
+        .diagnostic-card.status-ok { 
+            border-color: rgba(60, 179, 113, 0.6); 
+            box-shadow: 0 0 10px rgba(60, 179, 113, 0.2), inset 0 0 5px rgba(60, 179, 113, 0.1);
+        }
+        
+        .diagnostic-card.status-ok::before {
+            border-color: rgba(60, 179, 113, 0.4);
+        }
+        
+        .diagnostic-card.status-timeout { 
+            border-color: rgba(217, 88, 91, 0.6);
+            box-shadow: 0 0 10px rgba(217, 88, 91, 0.2), inset 0 0 5px rgba(217, 88, 91, 0.1);
+        }
+
+        .diagnostic-card.status-timeout::before {
+            border-color: rgba(217, 88, 91, 0.4);
+        }
+
+        .diagnostic-icon-wrapper {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2px;
+            border: none;
+            z-index: 2;
+        }
+
+        .diagnostic-icon-img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .diagnostic-info {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            z-index: 2;
+        }
+
+        .diagnostic-name {
+            font-size: 9px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 0;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        .diagnostic-meta {
+            font-size: 8px;
+            color: rgba(255,255,255,0.7);
+            background: transparent;
+            padding: 0;
+            margin-top: 0;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .diagnostic-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .diagnostic-meta-external {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-primary);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            min-width: 50px;
+            text-align: center;
+        }
+        
         .card-initial {
             position: absolute;
             top: 35%;
@@ -294,8 +752,8 @@
             font-family: 'Orbitron', 'Rajdhani', Arial, sans-serif;
             font-size: 54px;
             font-weight: 700;
-            color: #2e2e2e;
-            opacity: 0.13;
+            color: rgba(255, 255, 255, 0.05);
+            opacity: 1;
             pointer-events: none;
             user-select: none;
             letter-spacing: 2px;
@@ -303,15 +761,15 @@
             -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 40%, #000 100%);
             mask-image: linear-gradient(to left, transparent 0%, #000 40%, #000 100%);
         }
-
+        
         .node-id {
             font-family: 'Rajdhani', monospace;
             font-size: 11px;
-            color: #888;
+            color: var(--text-muted);
             margin-bottom: 5px;
             letter-spacing: 0.5px;
         }
-
+        
         .node-name {
             font-family: 'Noto Sans SC', sans-serif;
             font-size: 16px;
@@ -320,120 +778,100 @@
             line-height: 1.2;
             margin-bottom: 8px;
         }
-
+        
         .status-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            font-size: 13px;
+            font-size: 12px;
         }
-
+        
         .latency-status {
-            font-weight: bold;
-            padding: 4px 8px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            padding: 2px 10px;
             border-radius: 4px;
             text-align: center;
+            background: transparent;
+            border: 1px solid currentColor;
+            letter-spacing: 0.5px;
         }
-
-        .latency-status.status-ok {
-            background-color: rgba(0, 200, 83, 0.1);
-            color: var(--success-color);
-        }
-        .latency-status.status-timeout {
-            background-color: rgba(220, 53, 69, 0.1);
-            color: var(--fail-color);
-        }
-        .latency-status.status-na {
-            background-color: rgba(120, 144, 156, 0.1);
-            color: var(--na-color);
-        }
+        
+        .latency-status.status-ok,
         .latency-status.latency-green {
-            background-color: rgba(0, 200, 83, 0.1);
-            color: #28a745;
+            color: var(--success-color);
+            border-color: var(--success-color);
+            background: rgba(60, 179, 113, 0.1);
         }
-        .latency-status.latency-yellow {
-            background-color: rgba(255, 193, 7, 0.13);
-            color: #ffb300;
+        
+        .latency-status.status-timeout {
+            color: var(--fail-color);
+            border-color: var(--fail-color);
+            background: rgba(217, 88, 91, 0.1);
         }
+        
+        .latency-status.status-na {
+            color: var(--na-color);
+            border-color: var(--na-color);
+            background: rgba(128, 132, 142, 0.1);
+        }
+        
+        .latency-status.latency-yellow,
         .latency-status.latency-orange {
-            background-color: rgba(255, 87, 34, 0.12);
-            color: #ff5722;
+            color: var(--warning-color);
+            border-color: var(--warning-color);
+            background: rgba(230, 195, 92, 0.1);
         }
-
+        
         .priority-label {
             color: var(--text-secondary);
-            font-size: 12px;
-            margin-left: 10px;
+            font-size: 10px;
+            /* margin-left: 10px; */
         }
-
+        
         .priority-value {
             font-family: 'Orbitron', monospace;
             font-weight: 500;
             color: var(--text-secondary);
         }
-
+        
         .best-choice {
             margin-top: 20px;
-            padding: 15px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid var(--success-color);
-            box-shadow: 0 0 8px rgba(0, 200, 83, 0.2);
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: var(--best-choice-bg);
+            border: none;
+            box-shadow: none;
             text-align: center;
             font-size: 16px;
-            font-weight: 500;
-            color: var(--success-color);
+            font-weight: bold;
+            color: var(--best-choice-text);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Noto Sans SC', sans-serif;
         }
-
+        
         .best-choice .icon {
             margin-right: 8px;
             font-size: 18px;
-            color: var(--success-color);
-        }
-
-        .duration-text {
-            font-family: 'Orbitron', monospace;
-            font-size: 13px;
-            color: #888;
-            white-space: nowrap;
-            margin-left: 10px;
+            color: var(--best-choice-text);
         }
         
-        .gitclone-grid {
-            align-items: stretch;
-        }
-
-        .info-tip {
-            background-color: rgba(40, 167, 69, 0.05);
-            border: 1px solid var(--success-color);
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .tip-title {
-            font-weight: bold;
-            color: var(--success-color);
-            font-size: 14px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-        }
-
-        .tip-text {
+        .best-choice .duration-text {
+            font-family: 'Orbitron', monospace;
             font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin: 0;
+            color: var(--best-choice-text);
+            opacity: 0.8;
+            margin-left: 0;
         }
-
+        
+        .best-choice .separator {
+            margin: 0 10px;
+            opacity: 0.7;
+        }
+        
         .footer {
             text-align: center;
             padding: 15px 0px 15px 0px;
@@ -449,21 +887,116 @@
 </head>
 
 <body style="{{RenderMatrix}}">
+    <div class="background-layer"></div>
     <div class="container-shadow-wrapper">
         <div class="container">
             <header class="header">
-                <h1>咕咕牛的网络测速<span>/ISPEEDI/</span></h1>
-                <div class="header-image-container">
-                    {{ if headerImage }}
-                    <img src="{{ headerImage }}" class="header-cute-image">
-                    {{ /if }}
+                <div class="header-identity">
+                    <div class="abyss-container">
+                        <div class="abyss-grid"></div>
+                        
+                        <div class="abyss-content">
+                            <div class="abyss-logo-group">
+                                <img src="https://s2.loli.net/2026/01/25/aBjAZo3N9twQkVz.png" class="main-logo" alt="Logo">
+                            </div>
+                            <div class="abyss-title-group">
+                                <div class="abyss-tag">UNIT_ID：NETWORK-SPEEDTEST</div>
+                                <h1 class="abyss-main-title">网络测速报告</h1>
+                                <div class="abyss-status-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="abyss-overlay"></div>
+                </div>
+
+                <div class="header-sys-status">
+                    <div class="status-bar-item">
+                        <span class="status-label-mini">CPU_LOAD</span>
+                        <div class="status-progress-static" style="width: 100px;"></div>
+                    </div>
+                    <div class="status-bar-item">
+                        <span class="status-label-mini">MEM_USAGE</span>
+                        <div class="status-progress-static" style="width: 100px; opacity: 0.5;"></div>
+                    </div>
+                    <div class="status-bar-item">
+                        <span class="status-label-mini">NET_TRAFFIC</span>
+                        <div class="status-progress-static" style="width: 100px; background: rgba(67, 216, 184, 0.4);"></div>
+                    </div>
+                </div>
+
+                <div class="header-meta-panel">
+                    <div class="meta-tech-id">ISPEEDI_TEST</div>
+                    <div class="clock-date">{{ sysTimestamp.split(' ')[0] }}</div>
+                    <div class="clock-time">{{ sysTimestamp.split(' ')[1].split('.')[0] }}</div>
+                </div>
+
+                <div class="header-footer-decor">
+                    COORD: 35.6895° N, 139.6917° E // AUTH: CowCoo_CORE
                 </div>
             </header>
+
+            <div class="mode-display-section">
+                <div class="mode-info-col">
+                    <div class="mode-title">CURRENT RUNNING MODE</div>
+                    <div class="mode-value">
+                        {{ runModeMsg }} <span style="margin-left:8px; opacity:0.6; font-size:12px; font-family:'Orbitron'">[{{ runMode }}]</span>
+                    </div>
+                    
+                    {{ if clientIp && clientIp != 'N/A' }}
+                    <div class="mode-detail-row">
+                        <div class="mode-detail-item">
+                            <span class="ip-label">IPv4</span> {{ clientIp }}
+                        </div>
+                        {{ if clientIpv6 && clientIpv6 != 'N/A' }}
+                        <div class="mode-detail-item">
+                            <span class="ip-label">IPv6</span> {{ clientIpv6 }}
+                        </div>
+                        {{ /if }}
+                        {{ if clientGeo && clientGeo != '未知地区' }}
+                        <div class="mode-detail-item">
+                            <span class="mode-detail-icon">📍</span> {{ clientGeo }}
+                        </div>
+                        {{ /if }}
+                    </div>
+                    {{ /if }}
+                </div>
+                
+                {{ if speeds.priority2 && speeds.priority2.length > 0 }}
+                <div class="mode-diagnostic-col">
+                    {{ each speeds.priority2 s }}
+                    <div class="diagnostic-group">
+                        <div class="diagnostic-card {{ s.statusClass }}">
+                            <div class="diagnostic-icon-wrapper">
+                                {{ if s.logoUrl }}
+                                <img src="{{ s.logoUrl }}" class="diagnostic-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                                <div class="diagnostic-icon-large" style="display:none">{{ s.name.charAt(0).toUpperCase() }}</div>
+                                {{ else }}
+                                <div class="diagnostic-icon-large" style="font-size: 12px; font-weight: bold; color: #fff;">{{ s.name.charAt(0).toUpperCase() }}</div>
+                                {{ /if }}
+                            </div>
+                            <div class="diagnostic-info">
+                                <div class="diagnostic-name">{{ s.name }}</div>
+                            </div>
+                        </div>
+                        <div class="diagnostic-meta-external">
+                            <span>{{ s.statusText }}</span>
+                        </div>
+                    </div>
+                    {{ /each }}
+                </div>
+                {{ /if }}
+            </div>
 
             <main class="speedtest-section">
                 {{ if speeds.priority1 && speeds.priority1.length > 0 }}
                 <div class="speedtest-category">
-                    <h2 class="category-title">主镜像 (优选节点)</h2>
+                    <h2 class="category-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="https://s2.loli.net/2026/01/26/OxVmXgfvpRtaK19.webp" style="height: 24px; width: auto;" alt="icon">
+                            <span>云端鱼池库 (优选节点)</span>
+                        </div>
+                        <span style="font-size: 12px; font-weight: normal; color: var(--text-muted); letter-spacing: 0;">Tip: 基于双层测速H代表HTTP协议，G代表GIT协议</span>
+                    </h2>
                     <div class="speed-cards-list">
                         {{ each speeds.priority1 s }}
                         <div class="speed-card {{ s.statusClass }} {{ s.barColorClass }} {{ if s.isBest }}best-node-glow{{/if}}">
@@ -473,64 +1006,19 @@
                                 <div class="card-initial">{{ s.name.charAt(0).toUpperCase() }}</div>
                                 <span class="latency-status {{ s.statusClass }} {{ s.latencyColorClass }}">{{
                                     s.statusText }}</span>
-                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority ?? 'N/A'
-                                        }}</span></span>
+                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority }}</span></span>
                             </div>
                         </div>
                         {{ /each }}
-                    </div>
-                </div>
-                {{ /if }}
-
-                {{ if speeds.priority2 && speeds.priority2.length > 0 }}
-                <div class="speedtest-category">
-                    <h2 class="category-title">官方</h2>
-                    <div class="speed-cards-list">
-                        {{ each speeds.priority2 s }}
-                        <div class="speed-card {{ s.statusClass }} {{ s.barColorClass }} {{ if s.isBest }}best-node-glow{{/if}}">
-                            <div class="node-id">[NODE-{{ s.id }}]</div>
-                            <div class="node-name">{{ s.name }}</div>
-                            <div class="status-info">
-                                <div class="card-initial">{{ s.name.charAt(0).toUpperCase() }}</div>
-                                <span class="latency-status {{ s.statusClass }} {{ s.latencyColorClass }}">{{
-                                    s.statusText }}</span>
-                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority ?? 'N/A'
-                                        }}</span></span>
-                            </div>
-                        </div>
-                        {{ /each }}
-                    </div>
-                </div>
-                {{ /if }}
-
-                {{ if speeds.priority3 && speeds.priority3.length > 0 }}
-                <div class="speedtest-category">
-                    <h2 class="category-title">无法测速 (Git Clone)</h2>
-                    <div class="speed-cards-list gitclone-grid">
-                        {{ each speeds.priority3 s }}
-                        <div class="speed-card {{ s.statusClass }} {{ s.barColorClass }}">
-                            <div class="node-id">[NODE-{{ s.id }}]</div>
-                            <div class="node-name">{{ s.name }}</div>
-                            <div class="status-info">
-                                <div class="card-initial">{{ s.name.charAt(0).toUpperCase() }}</div>
-                                <span class="latency-status {{ s.statusClass }} {{ s.latencyColorClass }}">{{
-                                    s.statusText }}</span>
-                                <span class="priority-label">优先级: <span class="priority-value">{{ s.priority ?? 'N/A'
-                                        }}</span></span>
-                            </div>
-                        </div>
-                        {{ /each }}
-
-                        <div class="info-tip">
-                            <div class="tip-title">💡 TIP</div>
-                            <p class="tip-text">  网络测速结果仅供参考，实际下载节点以后续为准。</p>
-                        </div>
                     </div>
                 </div>
                 {{ /if }}
 
                 <div class="best-choice">
-                    <span class="icon">✅</span>优选:<span style="padding-left:10px">{{ best1Display }}</span>
+                    <span class="icon">🏆</span>
+                    <span>优选鱼池：{{ best1Display }}</span>
+                    <span class="separator">|</span>
+                    <span class="duration-text">耗时: {{ duration }}s</span>
                 </div>
             </main>
 
