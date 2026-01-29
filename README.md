@@ -29,7 +29,9 @@
 
 ### 图库介绍
 
-  图库目前已应用了`Nano-Banana-Pro`,`Comfyui`技术对面板图进行优化，并且对图片都会进行二次调色/二次扩图，在保证不无序扩张数量的前提下每隔一段时间都会替换原有的不符合当下审美条件的面板图。管理器采用全链路自洽闭环设计，内置脱离主框架的独立进程管理与生命周期总线，支持热重载，并针对重型下载任务实现了高可用的并发竞速调度策略，同时提供了更多元的图片管理方式。
+  图库目前已应用了`Nano-Banana-Pro`,`Comfyui`技术对面板图进行优化，并且对图片都会进行二次调色/二次扩图，在保证不无序扩张数量的前提下每隔一段时间都会替换原有的不符合当下审美条件的面板图。管理器内置脱离主框架的独立进程管理与生命周期总线，支持热重载，并针对重型下载任务实现了高效的调度策略，同时提供了更多元的图片管理方式。
+
+**<ins>注意：在©️ v5.2.0版本，管理器已经提供了热重载[HMR]能力，因此JS插件基本进入无需人工干预的运行状态</ins>**
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -54,10 +56,10 @@
 - #咕咕牛封禁 / 解禁 ```角色名``` | ```[二级标签]``` 
 
 > [!TIP]  
-> [二级标签] 作为可选参数用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级
+> [二级标签] 作为可选参数用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级，使用 #咕咕牛查看 指令查询二级标签信息
 
 <details>
-<summary>📌 标签说明</summary>
+<summary>📌 更多标签说明</summary>
 
 - **P18**：轻微暗示，未暴露关键部位
 - **R18**：暴露明显，尺度较大
@@ -96,7 +98,6 @@
 | `#咕咕牛过滤列表`                 | 展示已安装图库封禁情况 |
 
 </details>
-
 
 ---
 
@@ -152,43 +153,12 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
     <td>以下对该模块/功能简称<strong>"资源同步":</strong> <br>
      <strong>资源同步模块/功能</strong>仅用于保障<strong>“原创者“</strong>的版权追溯清理遗留在用户本地的图片文件，<br>
   </tr>
-  
-</table>
 
-## 公益的节点列表
-
-> [!NOTE]
-> 虽然部分节点拉黑了仓库，但是非常感谢曾经的帮助！以下排名不分先后按照增加日期排序
-
-<table border="1" style="width: 100%; table-layout: fixed;">
-  <tr>
-    <th>简称</th> 
-    <th>URL</th>
-    <th>备注</th>
-  </tr>
-  <tr>
-    <td style="white-space: nowrap;">Moeyy</td> 
-    <td>https://moeyy.cn/blog</td> 
-    <td>已经停止运营了</td>
-  </tr>
-  
-  <tr>
-    <td style="white-space: nowrap;">KGithub</td> 
-    <td>https://help.kkgithub.com/</td> 
-    <td>捐助链接：https://help.kkgithub.com/donate/</td>
-  </tr>
-
-  <tr>
-    <td style="white-space: nowrap;">老牌镜像站</td> 
-    <td>https://ghproxy.link/</td> 
-    <td>捐助链接：https://ghproxy.link/donate</td>
-  </tr>
-  
 </table>
 
 ## 🍵 开发资料 & 杂谈
 
-<details> <summary> 🫳 1. Spawn Git 调度研究 </summary> 
+<details> <summary> 🫳 1.  并发调度研究 </summary> 
 
 ```mermaid
 graph LR
@@ -262,12 +232,12 @@ F_FileOps --> F_End([结束])
 - `CRS` 决定淘汰 -> `controller.abort()`。
 - `MBTPipeControl` 捕获 `abort` -> 发送 `SIGTERM` 给子进程。
 - 子进程退出 -> 触发 `exit` 事件。
-- `MBTProcX` (v10.0) 监听到 `exit` -> 从 `pool` 中移除引用。
+- `MBTQuoCRS` 监听到 `exit` -> 从 `pool` 中移除引用。
 - **闭环完成**。
 
 #### 2. Smart -> Quo (调度链)
 - `SmartTaskHeavy` 使用 `delayAcc` -> `CRS` 收到 `delay` -> `setTimeout` -> 挂载任务。
-- **并发风暴解决**：`GhLLKK` 先跑 6秒，建立连接后，`GhddlcTop` 再启动。
+- **并发风暴解决**：`节点A` 先跑 6秒，建立连接后，`节点B` 再启动。
 
 #### 3. Smart -> Quo (补员链)
 - `SmartTaskHeavy` 的 `setInterval` 监控 `CRS.getStatus()`。
@@ -276,6 +246,48 @@ F_FileOps --> F_End([结束])
   
 </details>
 
+<details>
+<summary> 🫳 2. CRS / Pipe 采样模型 </summary>
+
+### 动态权重评估模型
+
+- **CRS 周期**：2000 ms  
+- **Pipe 脉冲**：5000 ms  
+
+**风险说明：**
+
+在 `T = 4.9 s` 时，CRS 读取的是 `T = 0 s` 的遥测数据（已过期 4.9 s）。  
+如果网络在 `T = 1 s` 时断开，CRS 仍会误判连接健康并维持任务，额外浪费约 3 s 的时间窗口。
+
+---
+
+### 修正算法
+
+在计算动态权重时，引入 **时间衰减因子**，用于抑制过期遥测数据对决策的影响。
+
+#### 权重公式
+
+```text
+Score = (W_p × P) + (W_t × T_norm × F_decay)
+````
+
+**参数说明：**
+
+* `P`：业务进度（0–100）
+
+* `T_norm`：归一化吞吐量
+
+  ```text
+  T_norm = min(Speed / 5MB/s, 1.0) × 100
+  ```
+
+* `F_decay`：新鲜度衰减因子（基于遥测时间戳）
+
+  * `now - last_tick < 3000 ms` → `F_decay = 1.0`
+  * `now - last_tick > 5000 ms` → `F_decay = 0.0`
+    （数据视为过期，等效为 0 流量）
+
+</details>
 
 ## 收纳柜
 
