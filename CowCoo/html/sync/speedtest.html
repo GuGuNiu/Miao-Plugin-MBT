@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -942,14 +942,14 @@
                         {{ runModeMsg }} <span style="margin-left:8px; opacity:0.6; font-size:12px; font-family:'Orbitron'">[{{ runMode }}]</span>
                     </div>
                     
-                    {{ if clientIp && clientIp != 'N/A' }}
+                    {{ if v4Ip && v4Ip != 'N/A' }}
                     <div class="mode-detail-row">
                         <div class="mode-detail-item">
-                            <span class="ip-label">IPv4</span> {{ clientIp }}
+                            <span class="ip-label">IPv4</span> {{ v4Ip }}
                         </div>
-                        {{ if clientIpv6 && clientIpv6 != 'N/A' }}
+                        {{ if v6Ip && v6Ip != 'N/A' }}
                         <div class="mode-detail-item">
-                            <span class="ip-label">IPv6</span> {{ clientIpv6 }}
+                            <span class="ip-label">IPv6</span> {{ v6Ip }}
                         </div>
                         {{ /if }}
                         {{ if clientGeo && clientGeo != '未知地区' }}

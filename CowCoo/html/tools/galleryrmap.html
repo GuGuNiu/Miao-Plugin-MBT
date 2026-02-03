@@ -677,7 +677,7 @@
             <img class="game-logo"
                 src="{{ guguniu_res_path }}html/img/maplogo/{{ game.key }}.{{ if game.key === 'zzz' }}svg{{ else }}png{{ /if }}"
                 alt="{{ game.name }} Logo">
-            <span class="game-summary-stats">共 {{ game.imgCountDisplay }} 张 | 总占用: {{ game.queryTotalAssets }}</span>
+            <span class="game-summary-stats">共 {{ game.imgCountDisplay }} 张 | 总占用: {{ game.assetsSizeFormatted }}</span>
         </div>
         <div class="game-content-block">
             <div class="{{if game.key === 'gs' || game.key === 'sr'}}elements-grid{{/if}}">
@@ -707,8 +707,7 @@
                                     alt="{{ character.name }}" class="character-face"></div>
                             <div class="character-info">
                                 <span class="name">{{ character.name }}</span>
-                                <span class="stats">{{ character.imageCount }}张 | <span class="size">{{
-                                        character.totalSizeFormatted }}</span></span>
+                                <span class="stats">{{ character.imageCount }}张 | <span class="size">{{ character.sizeFormatted }}</span></span>
                             </div>
                         </li>
                         {{ /each }}
@@ -724,8 +723,7 @@
                         </div>
                         <div class="character-info">
                             <span class="name">{{ character.name }}</span>
-                            <span class="stats">{{ character.imageCount }}张 | <span class="size">{{
-                                    character.totalSizeFormatted }}</span></span>
+                            <span class="stats">{{ character.imageCount }}张 | <span class="size">{{ character.sizeFormatted }}</span></span>
                         </div>
                     </li>
                     {{ /each }}

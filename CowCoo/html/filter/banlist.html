@@ -324,14 +324,14 @@
         <div class="stat-item">
           <span>总数</span>
           <div class="digit-container">
-            {{ each totalCountDigits digit }}
+            {{ each countDigits digit }}
             <div class="digit">{{ digit }}</div>
             {{ /each }}
           </div>
         </div>
-        {{ if totalPages > 1 }}
+        {{ if pageCount > 1 }}
         <div class="pagination-info">
-          PAGE <span class="page-number">{{ currentPage }}</span> / {{ totalPages }}
+          PAGE <span class="page-number">{{ currentPage }}</span> / {{ pageCount }}
         </div>
         {{ /if }}
       </div>

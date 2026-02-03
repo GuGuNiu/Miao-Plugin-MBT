@@ -60,7 +60,7 @@
             --card-text-color: #ffffff;
             --success-color: #28a745;
             --fail-color: #dc3545;
-            --force-sync-color: #14b8a6;
+            --hard-sync-color: #14b8a6;
             --auto-switch-color: #6f42c1;
             --update-ok-text-color: #8a6ebe;
             --no-change-color: #6c757d;
@@ -299,8 +299,8 @@
             box-shadow: 0 0 10px 2px rgba(220, 53, 69, 0.4);
         }
 
-        .repo-item.status-force-synced {
-            border-color: var(--force-sync-color);
+        .repo-item.status-hard-synced {
+            border-color: var(--hard-sync-color);
             box-shadow: 0 0 10px 2px rgba(45, 212, 191, 0.8);
         }
 
@@ -474,8 +474,8 @@
             color: var(--update-ok-text-color);
         }
 
-        .repo-item.status-force-synced .log-status {
-            color: var(--force-sync-color);
+        .repo-item.status-hard-synced .log-status {
+            color: var(--hard-sync-color);
         }
 
         .repo-item.status-auto-switch .log-status {
