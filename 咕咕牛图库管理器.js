@@ -3066,17 +3066,19 @@ class MBTWorker {
             }
 
             if (script) {
+                const dirNamesJson = JSON.stringify(Nomos.DirNames || []);
+                script = script.replace(/\$\{JSON\.stringify\(Nomos\.DirNames\)\}/g, dirNamesJson);
                 await Ananke.writeText(this.workerPath, script);
                 this.worker = new Worker(this.workerPath);
                 this.worker.on('error', (err) => {
-                    this.logger.error(`[MBTWorker] 线程错误:`, err);
+                    Hades.E(`[MBTWorker] 线程错误:`, err);
                 });
                 this.worker.on('exit', () => {
                    this.worker = null;
                 });
             }
         } catch (err) {
-            this.logger.error(`[MBTWorker] 初始化失败:`, err);
+            Hades.E(`[MBTWorker] 初始化失败:`, err);
         }
     }
 
@@ -3088,6 +3090,7 @@ class MBTWorker {
     }
 
     async run(type, payload) {
+        const Hades = this.logger;
         if (!this.worker) {
             await this._initWorker();
         }
@@ -3096,19 +3099,39 @@ class MBTWorker {
             return this._dispatch(type, payload);
         }
 
-        return new Promise((resolve, reject) => {
-            const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-            
-            const handler = (msg) => {
-                if (msg.id !== id) return;
-                this.worker.off('message', handler);
-                if (msg.type === 'ERROR') reject(new Error(msg.error));
-                else resolve(msg.result);
-            };
+        try {
+            return await new Promise((resolve, reject) => {
+                const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                
+                const handler = (msg) => {
+                    if (msg.id !== id) return;
+                    cleanup();
+                    if (msg.type === 'ERROR') reject(new Error(msg.error));
+                    else resolve(msg.result);
+                };
+                const handleError = (err) => {
+                    cleanup();
+                    reject(err);
+                };
+                const handleExit = (code) => {
+                    cleanup();
+                    reject(new Error(`Worker 线程异常退出，退出码: ${code}`));
+                };
+                const cleanup = () => {
+                    this.worker.off('message', handler);
+                    this.worker.off('error', handleError);
+                    this.worker.off('exit', handleExit);
+                };
 
-            this.worker.on('message', handler);
-            this.worker.postMessage({ type, id, payload });
-        });
+                this.worker.on('message', handler);
+                this.worker.once('error', handleError);
+                this.worker.once('exit', handleExit);
+                this.worker.postMessage({ type, id, payload });
+            });
+        } catch (err) {
+            Hades.D(`[MBTWorker] 线程任务失败正在降级执行:`, err);
+            return this._dispatch(type, payload);
+        }
     }
 
     async _dispatch(type, payload) {
@@ -6951,7 +6974,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const Hades = HadesEntry({}, logger || getCore());
     try {
       Hades.D(`[调试日志] === 进入 ProvisionPhase (阶段: ${stage}) ===`);
-      // await MiaoPluginMBT.SyncSpecificFiles(logger);
+      await MiaoPluginMBT.SyncSpecificFiles(logger);
       Hades.D(`[调试日志] 加载最新配置...`);
       MiaoPluginMBT.MBTConfig = await Ananke.LoadCfg(
           MiaoPluginMBT.Paths.ConfigFilePath,
@@ -6964,16 +6987,16 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         return; 
       }
 
-      Hades.D(`[调试日志] 加载图片元数据 (ImgMetaAC)...`);
+      Hades.D(`[调试日志] 加载图片元数据...`);
       const imageData = await MiaoPluginMBT.ImgMetaAC(true, Hades);
       MiaoPluginMBT._MetaCache = Object.freeze(imageData);
       await MiaoPluginMBT.MetaHub.AC(true);
       
-      Hades.D(`[调试日志] 生成并应用封禁列表 (GenerateList)...`);
+      Hades.D(`[调试日志] 生成并应用封禁列表...`);
       await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, Hades);
       
       if (MiaoPluginMBT.MBTConfig.Repo_Ops) {
-        Hades.D(`[调试日志] 图库已启用，同步所有角色文件夹 (SyncCharacterDir)...`);
+        Hades.D(`[调试日志] 图库已启用，同步所有角色文件夹...`);
         await MiaoPluginMBT.SyncCharacterDir(Hades);
       } else {
         Hades.D(`[调试日志] 图库已禁用，跳过同步角色文件夹。`);
@@ -7013,9 +7036,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       MiaoPluginMBT._MetaCache = Object.freeze(imageData);
       
       await MiaoPluginMBT.MetaHub.AC(true);
-      
-      // await MiaoPluginMBT.SyncSpecificFiles(logger);
-
+      await MiaoPluginMBT.SyncSpecificFiles(logger);
       await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, Hades);
       if (MiaoPluginMBT.MBTConfig.Repo_Ops) {
         await MiaoPluginMBT.SyncCharacterDir(Hades);
@@ -7401,7 +7422,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
       if (repoManifest.every(r => r.status === 'skipped' && r.nodeName === '本地')) {
         if (redisKey) await redis.del(redisKey);
-        return e.reply(`${DFC.logPrefix}所有已配置的图库均已存在。`, true);
+        return e.reply(`咕咕牛图库的资产均已存在。`, true);
       }
 
       const HttpResultMap = await MiaoPluginMBT.TestCaVoice(Hades);
@@ -7459,7 +7480,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           const mirrorSpeed = bestMirror ? bestMirror.speed : Infinity;
           const senseChain = await Proteus.sense(envInfo, mirrorSpeed);
           const { runMode, runModeMsg } = await this._ResolveRunMode(envInfo, mirrorSpeed, senseChain);
-          Hades.D(`${DFC.logPrefix}测速模式: ${runMode} | 理由: ${runModeMsg}`);
+          Hades.D(`测速模式: ${runMode} | 理由: ${runModeMsg}`);
 
           const ViewProps = {
             speeds: tiers,
