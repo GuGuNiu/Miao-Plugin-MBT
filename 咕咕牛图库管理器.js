@@ -123,6 +123,17 @@ function HadesEntry(options = {}, core = getCore()) {
 
 const Hades = HadesEntry();
 
+const QuantumFlux = (fn) => {
+    return () => {
+        const _delta = Math.floor(Math.random() * 3600000);
+        setTimeout(async () => {
+            try {
+                await fn();
+            } catch {}
+        }, _delta);
+    };
+};
+
 class MBTPagination {
     static #sizes = { MuB: 28, Vis: 28 };
 
@@ -5753,19 +5764,19 @@ class MiaoPluginMBT extends plugin {
       {
         name: `${DFC.logPrefix}定时更新`,
         cron: DFC.CronUpdate,
-        fnc: () => this.RunUpdateTask(),
+        fnc: QuantumFlux(() => this.RunUpdateTask()),
         log: true,
       },
       {
         name: `${DFC.logPrefix}临时文件清理`,
         cron: '0 0 3 * * *',
-        fnc: () => this.CronSweep(),
+        fnc: QuantumFlux(() => this.CronSweep()),
         log: true,
       },
       {
         name: `${DFC.logPrefix}每日统计缓存更新`,
         cron: '0 0 4 * * *',
-        fnc: () => Tianshu.UpdateStats(this.logger),
+        fnc: QuantumFlux(() => Tianshu.UpdateStats(this.logger)),
         log: true,
       }
     ];
@@ -5974,7 +5985,7 @@ class MiaoPluginMBT extends plugin {
     Tianshu.BuildIndexes(validData);
     MiaoPluginMBT._MetaCache = Object.freeze(validData);
     const duration = Date.now() - startTime;
-    Hades.D(`元数据重构完成耗时${duration}ms，索引数据[ ${validData.length} 条 | ${upstreamBanCount} 条 ]`);
+    Hades.D(`元数据重构完成耗时[${duration}ms]，索引数据[ ${validData.length} 条 | ${upstreamBanCount} 条 ]`);
 
     return MiaoPluginMBT._MetaCache;
   }
@@ -9679,7 +9690,7 @@ class CommunityMBT extends plugin {
         this.task = {
             name: `『咕咕牛🐂』社区图库定时同步`,
             cron: '0 0 4 * * 0',
-            fnc: () => this.CommCronUp(),
+            fnc: QuantumFlux(() => this.CommCronUp()),
             log: true
         };
     }
@@ -10245,6 +10256,7 @@ class CommunityMBT extends plugin {
 
 const CowCoo_Rules = [
   { reg: /^#下载咕咕牛$/i, fnc: "Provision", permission: "master" },
+  { reg: /^#更新咕咕牛$/i, fnc: "Reconcile", permission: "master" },
   { reg: /^#重置咕咕牛$/i, fnc: "ManRepo", permission: "master" },
   { reg: /^#咕咕牛状态$/i, fnc: "CheckStatus" },
   { reg: /^#(?:(?:ban|咕咕牛封禁)列表|咕咕牛(?:封禁|解禁)\s*.+)$/i, fnc: "MuB", permission: "master" },
