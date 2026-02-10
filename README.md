@@ -6,7 +6,7 @@
 
 <div align="center">
   
-🏵️**2023年10月**创建至今不断在打磨方便、高效且安全的 **“一体化面板图库生态”** 体验
+🏵️**2023年10月**创建至今不断在打磨方便且安全的 **“一体化面板图库生态”** 体验
   <a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
     <button style="
       padding: 10px 20px;
@@ -21,7 +21,7 @@
       transition: background 0.3s ease;
     " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'" 
        onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-      💬 QQ群：移民交流群
+      💬 QQ群：留学交流群
     </button>
   </a>🏵️
 
