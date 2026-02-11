@@ -928,6 +928,12 @@
                                                 <div class="body">{{@ commit.descriptionBodyHtml }}</div>
                                                 {{ /if }}
                                             </div>
+                                            {{ else if !commit.displayParts || commit.displayParts.length === 0 }}
+                                            <div class="description-commit">
+                                                <div class="title">
+                                                    <span>{{@ commit.commitTitle }}</span>
+                                                </div>
+                                            </div>
                                             {{ /if }}
 
                                             {{ if commit.displayParts && commit.displayParts.length > 0 }}
@@ -966,6 +972,12 @@
                                             <div class="body">{{@ commit.descriptionBodyHtml }}</div>
                                             {{ /if }}
                                         </div>
+                                        {{ else if !commit.displayParts || commit.displayParts.length === 0 }}
+                                        <div class="description-commit">
+                                            <div class="title">
+                                                <span>{{@ commit.commitTitle }}</span>
+                                            </div>
+                                        </div>
                                         {{ /if }}
 
                                         {{ if commit.displayParts && commit.displayParts.length > 0 }}
@@ -993,8 +1005,8 @@
                     {{ /each }}
                 </main>
                 <footer
-                    class="summary-bar {{ if !overallSuccess }}has-errors{{ else if !overallHasChanges }}no-changes{{ else }}success{{ /if }}">
-                    <span class="icon">{{ if !overallSuccess }}💔{{ else if !overallHasChanges }}⭐{{ else }}🎉{{ /if
+                    class="summary-bar {{ if !allSuccess }}has-errors{{ else if !HasAnyChanges }}no-changes{{ else }}success{{ /if }}">
+                    <span class="icon">{{ if !allSuccess }}💔{{ else if !HasAnyChanges }}⭐{{ else }}🎉{{ /if
                         }}</span>
                     {{ summaryText }}
                     <span class="duration">[耗时: {{ duration }} s]</span>

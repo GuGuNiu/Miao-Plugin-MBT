@@ -2429,7 +2429,7 @@ const DFC = {
   Repo_Ops: true,  PFL_Ops: PFL.NONE, RenderScale: 300,
   Ai: true, EasterEgg: true, layout: true,
   logPrefix: Charon,
-  LogDateFormat: "format:%m-%d %H:%M",
+  logDateFormat: "format:%m-%d %H:%M",
 };
 
 const Repos_List = {
@@ -6820,7 +6820,7 @@ class MiaoPluginMBT extends plugin {
       let rawLog = "";
       
       try {
-        rawLog = (await MBTPipeControl("git", ["log", `-n ${logCount}`, `--date=${DFC.LogDateFormat}`, `--pretty=format:${logFormat}`], { cwd: localPath }, 5000)).stdout;
+        rawLog = (await MBTPipeControl("git", ["log", `-n ${logCount}`, `--date=${DFC.logDateFormat}`, `--pretty=format:${logFormat}`], { cwd: localPath }, 5000)).stdout;
       } catch { rawLog = ""; }
 
       if (rawLog) {
