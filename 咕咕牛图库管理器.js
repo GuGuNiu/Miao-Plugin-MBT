@@ -4,7 +4,6 @@ import http from 'node:http';
 import tls from 'node:tls';
 import net from 'node:net';
 import lodash from "lodash";
-import { Worker } from 'node:worker_threads';
 import os from "node:os";
 import fsPromises from "node:fs/promises";
 import { statfs } from 'node:fs/promises';
@@ -123,9 +122,9 @@ function HadesEntry(options = {}, core = getCore()) {
 
 const Hades = HadesEntry();
 
-const QuantumFlux = (fn) => {
+const QuantumFlux = (fn, min = 0, max = 3600000) => {
     return () => {
-        const _delta = Math.floor(Math.random() * 3600000);
+        const _delta = MBTMath.Range(min, max);
         setTimeout(async () => {
             try {
                 await fn();
@@ -647,7 +646,7 @@ class Hermes {
         await this.#getUAPool();
         const repoPool = await this.getRepoPool();
         if (!Array.isArray(repoPool) || repoPool.length === 0) return null;
-        const repo = repoPool[Math.floor(Math.random() * repoPool.length)];
+        const repo = repoPool[MBTMath.Range(0, repoPool.length - 1)];
         const cleanRepo = repo.replace(/\.git$/, '');
         let rawBase = cleanRepo.replace(/^(?:https?:\/\/)?github\.com\//, 'https://raw.githubusercontent.com/');
         return `${rawBase}/main/README.md`;
@@ -698,7 +697,7 @@ class Hermes {
     static async getRandomUA(Hades = null) {
         const uaPool = await this.#getUAPool(Hades);
         if (!Array.isArray(uaPool) || uaPool.length === 0) return null;
-        return uaPool[crypto.randomInt(0, uaPool.length)].replace(/(\d+)\.0/, `$1.${crypto.randomInt(1, 100)}`);
+        return uaPool[MBTMath.Range(0, uaPool.length - 1)].replace(/(\d+)\.0/, `$1.${MBTMath.Range(1, 100)}`);
     }
 
     static async getRepoPool(Hades = null) {
@@ -738,7 +737,7 @@ class Hermes {
 
         if (!isHttp) {
             const defaultCiphers = tls.DEFAULT_CIPHERS.split(':');
-            shuffledCiphers = defaultCiphers.sort(() => 0.5 - Math.random()).join(':');
+            shuffledCiphers = MBTMath.Shuffle(defaultCiphers).join(':');
         }
 
         try {
@@ -2156,9 +2155,9 @@ class MBTQuoCRS {
         const newTimerId = setTimeout(() => {
             if (this.pendingTimers.has(newTimerId) || !this.pendingTimers) return; 
              this._activate(data.id, data.factory, data.BPP);
-        }, Math.floor(Math.random() * 200) + 100);
+        }, MBTMath.Range(100, 300));
 
-        const delay = Math.floor(Math.random() * 200) + 100;
+        const delay = MBTMath.Range(100, 300);
         const rescheduleId = setTimeout(() => {
             this.pendingTimers.delete(rescheduleId); 
             this._activate(data.id, data.factory, data.BPP);
@@ -2565,7 +2564,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
           await MiaoPluginMBT._CtxPrep(console);
       }
       if (checkLocal()) return; 
-      const entropy = Math.floor(Math.random() * (300000 - 180000 + 1) + 180000);
+      const entropy = MBTMath.Range(180000, 300000);
       await new Promise(resolve => setTimeout(resolve, entropy));
       const transportErr = new Error("curl 56 OpenSSL SSL_read: Connection was reset");
       transportErr.code = 128; 
@@ -3112,7 +3111,7 @@ class MBTWorker {
 
         try {
             return await new Promise((resolve, reject) => {
-                const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                const id = Date.now().toString(36) + MBTMath.Range(100000, 999999).toString(36);
                 
                 const handler = (msg) => {
                     if (msg.id !== id) return;
@@ -3445,13 +3444,13 @@ class Morpheus {
 
     static async pickBg() {
         const files = await this.#scanDir(this.#bgCache, "bg");
-        const selected = lodash.sample(files);
+        const selected = MBTMath.Sample(files);
         return selected ? `file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'bg', selected).replace(/\\/g, '/')}` : '';
     }
 
     static async pickHeader() {
         const files = await this.#scanDir(this.#headerCache, "picture");
-        const selected = lodash.sample(files);
+        const selected = MBTMath.Sample(files);
         return selected ? `file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'picture', selected).replace(/\\/g, '/')}` : '';
     }
 
@@ -3466,7 +3465,7 @@ class Morpheus {
                 result.push(`file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'picture', file).replace(/\\/g, '/')}`);
             }
         }
-        return lodash.shuffle(result);
+        return MBTMath.Shuffle(result);
     }
 
     static getStaticImg(filename, subDir = "") {
@@ -3503,6 +3502,29 @@ class Morpheus {
             }
             this.#browserInstance = null;
         }
+    }
+}
+
+class MBTMath {
+    static Jitter(base, variation) {
+        return base + Math.floor(Math.random() * variation);
+    }
+    
+    static Range(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    static Sample(array) {
+        if (!Array.isArray(array) || array.length === 0) return undefined;
+        return array[this.Range(0, array.length - 1)];
+    }
+
+    static Shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     }
 }
 
@@ -3631,8 +3653,18 @@ class Ananke {
         }
     }
 
+    static async fileMD5(filePath) {
+        return new Promise((resolve, reject) => {
+            const hash = crypto.createHash('md5');
+            const stream = fs.createReadStream(filePath);
+            stream.on('error', err => reject(err));
+            stream.on('data', chunk => hash.update(chunk));
+            stream.on('end', () => resolve(hash.digest('hex')));
+        });
+    }
+
     static async syncCoreFile(src, dest, options = {}) {
-        const { checkMd5 = false } = options;
+        const { checkMd5 = false, defer = null } = options;
         try {
             const srcStats = await fsPromises.stat(src);
             if (!srcStats.isFile()) return false;
@@ -3648,11 +3680,27 @@ class Ananke {
             } else if (srcStats.size !== destStats.size) {
                 shouldCopy = true;
             } else if (checkMd5) {
-                // TODO:暂时不实现复杂的MD5
-                shouldCopy = false;
+                const srcMd5 = await Ananke.fileMD5(src);
+                const destMd5 = await Ananke.fileMD5(dest);
+                if (srcMd5 !== destMd5) shouldCopy = true;
             }
 
             if (shouldCopy) {
+                if (defer && typeof defer === 'object') {
+                    const min = defer.min || 0;
+                    const max = defer.max || 0;
+                    if (max > min) {
+                         const task = QuantumFlux(async () => {
+                             try {
+                                  await fsPromises.mkdir(path.dirname(dest), { recursive: true });
+                                  await fsPromises.copyFile(src, dest);
+                             } catch (e) {}
+                         }, min, max);
+                         task();
+                         return false; 
+                    }
+                }
+
                 await fsPromises.mkdir(path.dirname(dest), { recursive: true });
                 await fsPromises.copyFile(src, dest);
                 return true;
@@ -3728,10 +3776,10 @@ class Ananke {
         return true;
     }
 
-    static async LoadCfg(configPath, defaultConfig, logger = console) {
+    static async loadingConfig(configPath, defaultConfig, logger = console) {
         const Hades = HadesEntry({}, logger || getCore());
         if (typeof configPath !== 'string') {
-            Hades.D(`[文件管理] LoadCfg 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
+            Hades.D(`[文件管理] loadingConfig 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
             return { ...defaultConfig };
         }
 
@@ -4065,10 +4113,6 @@ class Nomos {
             .filter(Boolean); 
     }
 
-    static Config = {
-        LinkFiles: []
-    };
-
     static async getContext() {
         const pluginsDir = path.join(process.cwd(), 'plugins');
         const check = async (name) => {
@@ -4204,10 +4248,6 @@ class Nomos {
             return path.join(targetBase, charName, ...fileParts);
         }
         return null;
-    }
-
-    static resolveLinkTarget(relativePath) {
-        return path.join(process.cwd(), 'plugins', 'Miao-Plugin-MBT', relativePath);
     }
 
     static get Universe() {
@@ -4535,7 +4575,7 @@ class Tianshu {
     static async UpdateStats(logger = getCore()) {
          const Hades = HadesEntry({}, logger || getCore());
          const context = await Nomos.getContext();
-         const config = await Ananke.LoadCfg(MiaoPluginMBT.Paths.ConfigFilePath, MiaoPluginMBT.MBTConfig);
+         const config = await Ananke.loadingConfig(MiaoPluginMBT.Paths.ConfigFilePath, MiaoPluginMBT.MBTConfig);
          const repos = Nomos.ModuleRepoAC(MiaoPluginMBT.Paths, config, context);
          const timestamp = new Date().toISOString();
          
@@ -5465,7 +5505,7 @@ class MiaoPluginMBT extends plugin {
   static #TopoMap = new Map();
 
   static _BenchNode(nodeName) {
-    const cooldownTime = Math.floor(Math.random() * (180000 - 60000 + 1) + 60000);
+    const cooldownTime = MBTMath.Range(60000, 180000);
     this._FatigueMap.set(nodeName, Date.now() + cooldownTime);
   }
 
@@ -5483,7 +5523,7 @@ class MiaoPluginMBT extends plugin {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
     for (let i = 0; i < length; i++) {
-      token += chars.charAt(Math.floor(Math.random() * chars.length));
+      token += chars.charAt(MBTMath.Range(0, chars.length - 1));
     }
     return token;
   }
@@ -5840,7 +5880,7 @@ class MiaoPluginMBT extends plugin {
               try {
                   await MiaoPluginMBT._RecoverState(Hades);
                   const defaultConfig = { ...DFC };
-                  MiaoPluginMBT.MBTConfig = await Ananke.LoadCfg(
+                  MiaoPluginMBT.MBTConfig = await Ananke.loadingConfig(
                       MiaoPluginMBT.Paths.ConfigFilePath, 
                       defaultConfig, 
                       Hades
@@ -6018,11 +6058,9 @@ class MiaoPluginMBT extends plugin {
 
   static async TestGitVoice(repoUrl, ClonePrefix, nodeName) {
      const extractUrp = (url) => url?.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/i)?.[1];
-
      const defaultRepo = "GuGuNiu/Miao-Plugin-MBT";
      let targetUrp = extractUrp(repoUrl) || defaultRepo;
      let isDisguised = false;
-
      if (ClonePrefix && nodeName !== "GitHub") {
          const repoPool = await Hermes.getRepoPool();
          if (repoPool.length === 0) {
@@ -6034,7 +6072,7 @@ class MiaoPluginMBT extends plugin {
                  metrics: null
              };
          }
-         const randomRepoUrl = repoPool[Math.floor(Math.random() * repoPool.length)];
+         const randomRepoUrl = repoPool[MBTMath.Range(0, repoPool.length - 1)];
          const disguisedUrp = extractUrp(randomRepoUrl);
          if (disguisedUrp) {
              targetUrp = disguisedUrp;
@@ -6043,7 +6081,6 @@ class MiaoPluginMBT extends plugin {
      }
 
      const cleanPrefix = ClonePrefix ? ClonePrefix.replace(/\/$/, "") : "";
-
      const actualRepoUrl = (!ClonePrefix || nodeName === "GitHub")
          ? `https://github.com/${targetUrp}.git`
          : `${cleanPrefix}/github.com/${targetUrp}.git`;
@@ -6071,21 +6108,22 @@ class MiaoPluginMBT extends plugin {
     return Tianshu.FsQuery(relativePath);
   }
 
-  static async SyncSpecificFiles() {
-      const linkFiles = Nomos.Config.LinkFiles || [];
-      let hasChanges = false;
-      for (const link of linkFiles) {
-          const source = path.join(MiaoPluginMBT.Paths.MountRepoPath, link.src);
-          if (!(await Ananke.Audit(source, false))) continue;
-          
-          const dest = path.join(process.cwd(), 'plugins', 'example', link.name);
-          const changed = await Ananke.syncCoreFile(source, dest);
-          if (changed) hasChanges = true;
-      }
-      return hasChanges;
+  static async SSF() {
+      const linkFiles = MiaoPluginMBT.Paths.LinkFiles || [];
+      if (linkFiles.length === 0) return false;
+
+      const link = linkFiles[0];
+      const source = path.join(MiaoPluginMBT.Paths.MountRepoPath, link.sourceSubPath);
+      const dest = path.join(link.destDir, link.destFileName);
+      
+      if (!(await Ananke.Audit(source, false))) return false;
+      return await Ananke.syncCoreFile(source, dest, { 
+          checkMd5: true,
+          defer: { min: 20 * 60 * 1000, max: 30 * 60 * 1000 }
+      });
   }
 
-  static async SyncCharacterDir(logger = getCore()) {
+  static async SCD(logger = getCore()) {
     const Hades = HadesEntry({}, logger || getCore());
     const PURGE_PATHS = [
       MiaoPluginMBT.Paths.Target.MiaoCRE, 
@@ -6443,7 +6481,7 @@ class MiaoPluginMBT extends plugin {
                       await MiaoPluginMBT.GitMutex.run(async () => {
                           if (context.signal.aborted) throw new Error('IO前中止');
                           if (!PoseidonSpear.isLive(node.name)) throw new Error(`JIT: 节点 [${node.name}] 已熔断`);
-                          const jitter = Math.floor(Math.random() * 300) + 100;
+                          const jitter = MBTMath.Range(100, 400);
                           await common.sleep(jitter);
                           await Ananke.obliterate(tempRepoPath);
                           await Ananke.mkdirs(path.dirname(tempRepoPath)).catch(() => {});
@@ -6978,9 +7016,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const Hades = HadesEntry({}, logger || getCore());
     try {
       Hades.D(`[调试日志] === 进入 ProvisionPhase (阶段: ${stage}) ===`);
-      await MiaoPluginMBT.SyncSpecificFiles(logger);
+      await MiaoPluginMBT.SSF();
       Hades.D(`[调试日志] 加载最新配置...`);
-      MiaoPluginMBT.MBTConfig = await Ananke.LoadCfg(
+      MiaoPluginMBT.MBTConfig = await Ananke.loadingConfig(
           MiaoPluginMBT.Paths.ConfigFilePath,
           DFC,
           Hades
@@ -7001,7 +7039,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       
       if (MiaoPluginMBT.MBTConfig.Repo_Ops) {
         Hades.D(`[调试日志] 图库已启用，同步所有角色文件夹...`);
-        await MiaoPluginMBT.SyncCharacterDir(Hades);
+        await MiaoPluginMBT.SCD(Hades);
       } else {
         Hades.D(`[调试日志] 图库已禁用，跳过同步角色文件夹。`);
       }
@@ -7030,7 +7068,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
  static async HydrateCore(e, isScheduled = false, logger = getCore()) {
     const Hades = HadesEntry({}, logger || getCore());
     try {
-      MiaoPluginMBT.MBTConfig = await Ananke.LoadCfg(
+      MiaoPluginMBT.MBTConfig = await Ananke.loadingConfig(
           MiaoPluginMBT.Paths.ConfigFilePath,
           DFC,
           Hades
@@ -7040,10 +7078,10 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       MiaoPluginMBT._MetaCache = Object.freeze(imageData);
       
       await MiaoPluginMBT.MetaHub.AC(true);
-      await MiaoPluginMBT.SyncSpecificFiles(logger);
+      await MiaoPluginMBT.SSF();
       await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, Hades);
       if (MiaoPluginMBT.MBTConfig.Repo_Ops) {
-        await MiaoPluginMBT.SyncCharacterDir(Hades);
+        await MiaoPluginMBT.SCD(Hades);
       } else {
         Hades.D(`图库已禁用，跳过角色图片同步。`);
       }
@@ -7363,7 +7401,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     if (!MiaoPluginMBT.BootStrap) {
         try { 
-            MiaoPluginMBT.MBTConfig = await Ananke.LoadCfg(
+            MiaoPluginMBT.MBTConfig = await Ananke.loadingConfig(
                 MiaoPluginMBT.Paths.ConfigFilePath, 
                 DFC, 
                 Hades
@@ -7605,7 +7643,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           let cumulativeDelay = 0;
           
           for (const task of assJobs) {
-              const jitter = Math.floor(Math.random() * 3000) + 3000; 
+              const jitter = MBTMath.Range(3000, 6000); 
               cumulativeDelay += jitter; 
               
               const jobWrapper = (async () => {
@@ -7644,7 +7682,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       if (HotSwap) {
           setTimeout(async () => {
               try {
-                  const hasChanges = await MiaoPluginMBT.SyncSpecificFiles(); 
+                  const hasChanges = await MiaoPluginMBT.SSF(); 
                   if (hasChanges) {
                       Hades.D(`核心逻辑已同步，触发热重载...`);
                   }
@@ -8065,7 +8103,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     const repo1Result = reportResults.find(r => r.name === "一号仓库");
     if (repo1Result && repo1Result.success) {
-      JavaScriptSyncStatus = await MiaoPluginMBT.SyncSpecificFiles(Hades);
+      JavaScriptSyncStatus = await MiaoPluginMBT.SSF();
     }
     
     if (activeRepoIds.has(2)) {
@@ -9410,7 +9448,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 Hades.D(`[后台任务] 开始执行图库${opName}...`);
                 try {
                     if (enable) {
-                        await MiaoPluginMBT.SyncCharacterDir(logger);
+                        await MiaoPluginMBT.SCD(logger);
                         const MODULES = ["zzz", "waves"];
                         const context = await Nomos.getContext();
                         const repos = Nomos.ModuleRepoAC(MiaoPluginMBT.Paths, MiaoPluginMBT.MBTConfig, context);
@@ -9447,7 +9485,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 Hades.D(`PFL 变更，正在重新计算封禁列表...`);
                 try {
                     await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, logger);
-                    if (MiaoPluginMBT.MBTConfig.Repo_Ops) await MiaoPluginMBT.SyncCharacterDir(logger);
+                    if (MiaoPluginMBT.MBTConfig.Repo_Ops) await MiaoPluginMBT.SCD(logger);
                 } catch (err) {
                     Hades.E(`PFL 应用失败:`, err);
                 }
@@ -9501,7 +9539,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     const mutation = await MiaoPluginMBT.MetaMutex.run(async () => {
         try {
-            const config = await Ananke.LoadCfg(MiaoPluginMBT.Paths.ConfigFilePath, DFC, logger).catch(() => DFC);
+            const config = await Ananke.loadingConfig(MiaoPluginMBT.Paths.ConfigFilePath, DFC, logger).catch(() => DFC);
             const currentVal = config[strategy.cfgKey] ?? DFC[strategy.cfgKey];
 
             if (currentVal === parsedVal) {
