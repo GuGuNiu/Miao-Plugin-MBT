@@ -2209,14 +2209,14 @@ class MBTSignalTrap extends EventEmitter {
         const Hades = HadesEntry({}, logger || getCore());
         const oldInstance = global[Trap_Symbol];
         if (oldInstance) {
-            Hades.D(`[HMR] 检测到『咕咕牛🐂』旧实例正在执行卸载...`);
+            Hades.D(`[HMR] 检测到旧实例正在执行卸载...`);
             try {
                 oldInstance.dispose();
                 oldInstance.emit('reload');
                 oldInstance.removeAllListeners('shutdown');
                 oldInstance.removeAllListeners('reload');
             } catch (e) {
-                Hades.E(`[HMR] 咕咕牛🐂旧实例清理异常:`, e);
+                Hades.E(`[HMR] 旧实例清理异常:`, e);
             }
             global[Trap_Symbol] = null;
         }
@@ -3540,7 +3540,7 @@ class Ananke {
         } catch (err) {
             if (err.code !== 'ENOENT') {
                 const Hades = HadesEntry();
-                Hades.D(`[Ananke] 删除失败: ${targetPath} (${err.code})`);
+                Hades.D(`[文件管理] 删除失败: ${targetPath} (${err.code})`);
             }
             return false;
         }
@@ -3577,7 +3577,7 @@ class Ananke {
             if (error.code === 'ENOENT') return false;
             const Hades = HadesEntry();
             if (!['EEXIST', 'EACCES', 'EPERM'].includes(error.code)) {
-                Hades.D(`[Ananke] 树复制失败 ${source} -> ${dest}:`, error.message);
+                Hades.D(`[文件管理] 树复制失败 ${source} -> ${dest}:`, error.message);
             }
             return false;
         }
@@ -3660,7 +3660,7 @@ class Ananke {
             return false;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.D(`[Ananke] 同步文件失败 ${src} -> ${dest}: ${err.message}`);
+            Hades.D(`[文件管理] 同步文件失败 ${src} -> ${dest}: ${err.message}`);
             return false;
         }
     }
@@ -3672,7 +3672,7 @@ class Ananke {
             return true;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.E(`[Ananke] 写入文件失败 ${filePath}:`, err);
+            Hades.E(`[文件管理] 写入文件失败 ${filePath}:`, err);
             return false;
         }
     }
@@ -3692,7 +3692,7 @@ class Ananke {
             return true;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.E(`[Ananke] 重命名失败 ${oldPath} -> ${newPath}:`, err);
+            Hades.E(`[文件管理] 重命名失败 ${oldPath} -> ${newPath}:`, err);
             throw err;
         }
     }
@@ -3731,7 +3731,7 @@ class Ananke {
     static async LoadCfg(configPath, defaultConfig, logger = console) {
         const Hades = HadesEntry({}, logger || getCore());
         if (typeof configPath !== 'string') {
-            Hades.D(`[Ananke] LoadCfg 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
+            Hades.D(`[文件管理] LoadCfg 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
             return { ...defaultConfig };
         }
 
@@ -3745,15 +3745,15 @@ class Ananke {
                 throw new Error("无效的YAML内容");
             } catch (error) {
                 if (error.code === 'ENOENT') {
-                    Hades.D(`[Ananke] 配置文件 ${path.basename(configPath)} 不存在，正在初始化默认配置...`);
+                    Hades.D(`[文件管理] 配置文件 ${path.basename(configPath)} 不存在，正在初始化默认配置...`);
                     try {
                         await Ananke.#PersistCfg(configPath, defaultConfig);
-                        Hades.D(`[Ananke] 默认配置已写入: ${configPath}`);
+                        Hades.D(`[文件管理] 默认配置已写入: ${configPath}`);
                     } catch (writeErr) {
-                        Hades.E(`[Ananke] 初始化配置文件失败: ${writeErr.message}`);
+                        Hades.E(`[文件管理] 初始化配置文件失败: ${writeErr.message}`);
                     }
                 } else {
-                    Hades.D(`[Ananke] 配置文件读取失败，使用内存默认值: ${error.message}`);
+                    Hades.D(`[文件管理] 配置文件读取失败，使用内存默认值: ${error.message}`);
                 }
                 return { ...defaultConfig };
             }
@@ -3767,7 +3767,7 @@ class Ananke {
                 await Ananke.#PersistCfg(configPath, data);
                 return true;
             } catch (error) {
-                Hades.D(`[Ananke] 配置文件写入失败:`, error);
+                Hades.D(`[文件管理] 配置文件写入失败:`, error);
                 return false;
             }
         });
@@ -3783,7 +3783,7 @@ class Ananke {
                 await fsPromises.writeFile(listPath, jsonStr, "utf8");
                 return true;
             } catch (error) {
-                Hades.E(`[Ananke] 封禁列表写入失败:`, error);
+                Hades.E(`[文件管理] 封禁列表写入失败:`, error);
                 return false;
             }
         });
@@ -3817,7 +3817,7 @@ class Ananke {
                 }
             }
         } catch (err) {
-            if (err.code !== 'ENOENT') Hades.D(`[Ananke] 清理目录异常 ${targetDir}: ${err.message}`);
+            if (err.code !== 'ENOENT') Hades.D(`[文件管理] 清理目录异常 ${targetDir}: ${err.message}`);
         }
     }
 
@@ -3829,7 +3829,7 @@ class Ananke {
             const result = await worker.run('SYNC_BATCH', tasks);
             return result;
         } catch (err) {
-            Hades.D(`[Ananke] Worker 同步任务失败:`, err);
+            Hades.D(`[文件管理] Worker 同步任务失败:`, err);
             return { success: 0, fail: tasks.length, error: err };
         } finally {
             worker.terminate();
@@ -3851,7 +3851,7 @@ class Ananke {
         } catch (err) {
             if (err.code === 'ENOENT') return [];
             const Hades = HadesEntry();
-            Hades.W(`[Ananke] 读取目录失败 ${targetPath}: ${err.message}`);
+            Hades.W(`[文件管理] 读取目录失败 ${targetPath}: ${err.message}`);
             return [];
         }
     }
@@ -3862,7 +3862,7 @@ class Ananke {
             return true;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.E(`[Ananke] 复制文件失败 ${src} -> ${dest}:`, err);
+            Hades.E(`[文件管理] 复制文件失败 ${src} -> ${dest}:`, err);
             return false;
         }
     }
@@ -4066,11 +4066,7 @@ class Nomos {
     }
 
     static Config = {
-        LinkFiles: [
-            { name: "index.js", src: "index.js" },
-            { name: "package.json", src: "package.json" },
-            { name: "README.md", src: "README.md" }
-        ]
+        LinkFiles: []
     };
 
     static async getContext() {
@@ -4188,11 +4184,6 @@ class Nomos {
         if (!relativePath) return null;
         const normPath = relativePath.replace(/\\/g, "/");
 
-        if (this.Config.LinkFiles) {
-             const specialLink = this.Config.LinkFiles.find(f => normPath === f.src);
-             if (specialLink) return this.resolveLinkTarget(specialLink.name);
-        }
-
         const parts = normPath.split("/");
         if (parts.length < 3) return null;
 
@@ -4216,7 +4207,7 @@ class Nomos {
     }
 
     static resolveLinkTarget(relativePath) {
-        return path.join(process.cwd(), relativePath);
+        return path.join(process.cwd(), 'plugins', 'Miao-Plugin-MBT', relativePath);
     }
 
     static get Universe() {
@@ -6085,7 +6076,9 @@ class MiaoPluginMBT extends plugin {
       let hasChanges = false;
       for (const link of linkFiles) {
           const source = path.join(MiaoPluginMBT.Paths.MountRepoPath, link.src);
-          const dest = Nomos.resolveLinkTarget(link.name);
+          if (!(await Ananke.Audit(source, false))) continue;
+          
+          const dest = path.join(process.cwd(), 'plugins', 'example', link.name);
           const changed = await Ananke.syncCoreFile(source, dest);
           if (changed) hasChanges = true;
       }
