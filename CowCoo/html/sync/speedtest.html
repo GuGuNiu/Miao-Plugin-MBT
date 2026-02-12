@@ -835,71 +835,179 @@
             color: var(--text-secondary);
         }
         
-        .best-choice-container {
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            padding: 0;
+        .summary-panel {
+            margin-top: 25px;
+            position: relative;
+            padding: 25px 0;
+            background: rgba(15, 17, 21, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-image: 
+                linear-gradient(rgba(67, 216, 184, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(67, 216, 184, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .summary-card {
-            background-color: rgba(45, 48, 57, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 8px;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .summary-panel::before, .summary-panel::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--header-underline-color);
+            box-shadow: 0 0 10px var(--header-underline-color);
+        }
+        .summary-panel::before { top: -1px; left: -1px; }
+        .summary-panel::after { bottom: -1px; right: -1px; }
+
+        .summary-item {
+            flex: 1;
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            padding: 5px 0;
         }
 
-        .summary-card.highlight {
-            background: rgba(230, 195, 92, 0.1);
-            border-color: rgba(230, 195, 92, 0.3);
-            box-shadow: 0 0 15px rgba(230, 195, 92, 0.1);
+        .summary-item::before {
+            content: '00';
+            position: absolute;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 80px;
+            color: rgba(255, 255, 255, 0.02);
+            line-height: 1;
+            z-index: -1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        
+        .summary-item:nth-child(1)::before { content: '01'; }
+        .summary-item:nth-child(3)::before { content: '02'; }
+        .summary-item:nth-child(5)::before { content: '03'; }
+
+        .summary-divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
         }
 
-        .summary-icon {
-            font-size: 20px;
-            margin-bottom: 5px;
-            color: var(--text-secondary);
-        }
-
-        .summary-card.highlight .summary-icon {
-            color: var(--warning-color);
+        .summary-divider::after {
+            content: '+';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 10px;
+            font-family: monospace;
         }
 
         .summary-label {
-            font-family: 'Noto Sans SC', sans-serif;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 2px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px 10px;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid var(--header-underline-color);
         }
 
         .summary-value {
-            font-family: 'Orbitron', monospace;
-            font-size: 16px;
+            font-family: 'Rajdhani', monospace;
+            font-size: 36px;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #ffffff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(67, 216, 184, 0.4);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
         }
 
-        .summary-card.highlight .summary-value {
-            color: var(--warning-color);
+        .summary-unit {
+            font-size: 16px;
+            color: var(--header-underline-color);
+            font-weight: 600;
+            opacity: 0.8;
+            text-shadow: none;
         }
         
         .footer {
-            text-align: center;
-            padding: 15px 0px 15px 0px;
+            margin-top: 20px;
+            padding: 20px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.2));
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .footer-pill {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            height: 24px;
+        }
+
+        .pill-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            padding: 0 8px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pill-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--header-underline-color);
+            padding: 0 8px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-copyright {
+            font-family: 'Orbitron', sans-serif;
             font-size: 14px;
             color: var(--text-secondary);
             letter-spacing: 0.25px;
-            font-family: 'Orbitron', sans-serif;
             font-weight: 500;
-            position: relative;
-            z-index: 1;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -962,12 +1070,13 @@
                     
                     {{ if nativeV4 && nativeV4 != 'N/A' }}
                     <div class="mode-detail-row">
+                        <div class="mode-detail-item" style="min-width: 60px; font-weight: bold; opacity: 0.8;">[NATIVE]</div>
                         <div class="mode-detail-item">
-                            <span class="ip-label">Nav-v4</span> {{ nativeV4 }}
+                            <span class="ip-label">Nat-v4</span> {{ nativeV4 }}
                         </div>
                         {{ if nativeV6 && nativeV6 != 'N/A' }}
                         <div class="mode-detail-item">
-                            <span class="ip-label">Nav-v6</span> {{ nativeV6 }}
+                            <span class="ip-label">Nat-v6</span> {{ nativeV6 }}
                         </div>
                         {{ /if }}
                     </div>
@@ -1048,31 +1157,45 @@
                 </div>
                 {{ /if }}
 
-                <div class="best-choice-container">
-                    <div class="summary-card highlight">
-                        <div class="summary-icon">🏆</div>
-                        <div class="summary-label">优选鱼池</div>
-                        <div class="summary-value" style="font-size: 14px;">{{ best1Display.split(' ')[0] }}</div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon">⏱️</div>
+                <div class="summary-panel">
+                    <div class="summary-item">
                         <div class="summary-label">测速耗时</div>
-                        <div class="summary-value">{{ duration }}s</div>
+                        <div class="summary-value">{{ duration }}<span class="summary-unit">s</span></div>
                     </div>
-                    <div class="summary-card">
-                        <div class="summary-icon">📊</div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-item">
                         <div class="summary-label">消耗流量</div>
                         <div class="summary-value">{{ trafficFormatted }}</div>
                     </div>
-                    <div class="summary-card">
-                        <div class="summary-icon">🔄</div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-item">
                         <div class="summary-label">IO / 包处理</div>
                         <div class="summary-value">{{ ioChunks }}</div>
                     </div>
                 </div>
             </main>
 
-            <footer class="footer">Miao-Plugin-MBT v{{ Version }}</footer>
+            <footer class="footer">
+                <div class="footer-content">
+                    <div class="footer-pill">
+                        <span class="pill-label">运行版本</span>
+                        <span class="pill-val">v{{ Version }}</span>
+                    </div>
+                    <div class="footer-pill">
+                        <span class="pill-label">机器人框架</span>
+                        <span class="pill-val">Yunzai</span>
+                    </div>
+                    <div class="footer-pill">
+                        <span class="pill-label">UI界面</span>
+                        <span class="pill-val">v3.0</span>
+                    </div>
+                    <div class="footer-pill">
+                        <span class="pill-label">插件架构</span>
+                        <span class="pill-val">v3.1</span>
+                    </div>
+                </div>
+                <div class="footer-copyright">Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
+            </footer>
         </div>
     </div>
 </body>

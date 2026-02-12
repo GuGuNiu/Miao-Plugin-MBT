@@ -76,6 +76,8 @@
 			background: var(--panel-border); 
 			box-shadow: 0 0 40px rgba(0, 246, 255, 0.2);
 			clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
+			border-top-right-radius: 10px;
+			border-bottom-left-radius: 10px;
 		}
 
 		.wrapper {
@@ -88,6 +90,8 @@
 			padding: 25px 30px;
 			box-shadow: inset 0 0 20px rgba(100, 220, 255, 0.1);
 			clip-path: polygon(30px 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%, 0 30px);
+			border-top-right-radius: 10px;
+			border-bottom-left-radius: 10px;
 		}
 		
 		.hud-panel {
@@ -120,7 +124,7 @@
 		}
 		
 		.title {
-			font-size: 24px;
+			font-size: 32px;
 			font-weight: 700;
 			margin: 0 0 10px 0;
 			color: var(--text-light);
@@ -129,7 +133,7 @@
 		
 		.title span {
 			font-family: 'Orbitron', sans-serif;
-			font-size: 14px;
+			font-size: 16px;
 			color: var(--text-secondary);
 			margin-left: 8px;
 		}
@@ -179,9 +183,22 @@
 		}
 		
 		.section-header .stripes {
-			width: 40px;
+			width: 100px;
 			height: 100%;
-			background: repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(0, 246, 255, 0.2) 4px, rgba(0, 246, 255, 0.2) 6px);
+			background-image: 
+				linear-gradient(rgba(0, 246, 255, 0.6) 2px, transparent 2px),
+				linear-gradient(90deg, rgba(0, 246, 255, 0.6) 2px, transparent 2px);
+			background-size: 15px 15px;
+			
+			mask-image: linear-gradient(to right, transparent 10%, black 90%);
+			-webkit-mask-image: linear-gradient(to right, transparent 10%, black 90%);
+			
+			transform: skewX(-20deg);
+			transform-origin: bottom;
+			
+			opacity: 1;
+			box-shadow: 0 0 15px rgba(0, 246, 255, 0.6);
+			border-right: 2px solid rgba(0, 246, 255, 0.8); 
 		}
 		
 		.repo-status-list {
@@ -235,17 +252,14 @@
 		
 		.status-ok .repo-icon-container {
 			background-color: var(--success-border);
-			text-shadow: 0 0 8px var(--text-light);
 		}
 		
 		.status-fail .repo-icon-container {
 			background-color: var(--fail-border);
-			text-shadow: 0 0 8px var(--text-light);
 		}
 		
 		.status-local .repo-icon-container {
 			background-color: var(--local-border);
-			text-shadow: 0 0 8px var(--text-light);
 		}
 		
 		.repo-number {
@@ -396,14 +410,14 @@
 			<div class="hud-panel">
 				<header class="hud-header">
 					<div class="rating-bar">
-						<span class="stars">{{'★'.repeat(successCount)}}{{'☆'.repeat(configuredCount-successCount)}}</span> {{ successCount }}/{{ configuredCount }} 成功
+						<span class="stars">{{ stars }}</span> {{ completedCount }}/{{ configuredCount }} 成功
 					</div>
 					<h1 class="title">咕咕牛的下载报告 <span>/IDOWNLOADI/</span></h1>
 					<div class="progress-container">
 						<div class="progress-bar">
-							<div class="progress-bar-fill" style="width: {{ successRate }}%;"></div>
+							<div class="progress-bar-fill" style="width: {{ completionRate }}%;"></div>
 						</div>
-						<div class="progress-text">{{ successRateRounded }}%</div>
+						<div class="progress-text">{{ completionRateRounded }}%</div>
 					</div>
 				</header>
 
@@ -428,7 +442,7 @@
 						{{ /each }}
 					</div>
 
-					{{ if !overallSuccess }}
+					{{ if !allOk }}
 					<div class="action-tip-module">
 						<div class="action-tip-inner">
 							<div class="tip-icon">🎯</div>

@@ -1787,7 +1787,7 @@ class MBTProcPool {
   async killAll(sig = 'SIGTERM', reason = 'shutdown') {
     if (!this.pool.size) return;
 
-    this.logger.warn(`[MBTProcPool] 正在终止 ${this.pool.size} 个进程 (${reason})`);
+    this.logger.warn(`[进程池]正在终止 ${this.pool.size} 个进程 (${reason})`);
 
     const ops = [];
     for (const [p, meta] of this.pool) {
@@ -4202,7 +4202,7 @@ class Nomos {
             ? await this.PackOps(repoPath, [normalized], null)
             : await this.PackOps(repoPath, null, [normalized]);
 
-        if (!ok) Hades.D(`[Nomos] ModuleOps 失败: ${action || 'check'} ${gameKey} @ ${repoPath}`);
+        if (!ok) Hades.D(`[资产管理] ModuleOps 失败: ${action || 'check'} ${gameKey} @ ${repoPath}`);
         return ok;
     }
 
@@ -4617,7 +4617,7 @@ class Tianshu {
              ...Object.fromEntries(results)
          };
          await Ananke.writeText(MiaoPluginMBT.Paths.RTCPath, JSON.stringify(statsCache, null, 2))
-             .catch(err => Hades.E(`[Tianshu] 写入仓库统计缓存失败:`, err));
+             .catch(err => Hades.E(`[索引] 写入仓库统计缓存失败:`, err));
     }
 
     static GetStrategy(gameKey) {
@@ -6869,9 +6869,15 @@ class MiaoPluginMBT extends plugin {
             commitScopeClass: 'scope-default'
           };
 
-          const ccMatch = subject.match(/^([a-zA-Z]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/);
+          const commitPrefixMap = {
+            '修复': 'fix', '新增': 'feat', '文档': 'docs', '样式': 'style',
+            '重构': 'refactor', '性能': 'perf', '测试': 'test', '构建': 'build',
+            '部署': 'deploy', '回滚': 'revert', '杂项': 'chore', '持续集成': 'ci'
+          };
+          const ccMatch = subject.match(/^([a-zA-Z\u4e00-\u9fa5]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/);
           if (ccMatch) {
-            commit.commitPrefix = ccMatch[1].toLowerCase();
+            const rawPrefix = ccMatch[1].toLowerCase();
+            commit.commitPrefix = commitPrefixMap[rawPrefix] || rawPrefix;
             commit.commitScope = ccMatch[2] || ccMatch[3];
             commit.commitTitle = ccMatch[4].trim();
             
@@ -7495,88 +7501,17 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       }
 
       const HttpResultMap = await MiaoPluginMBT.TestCaVoice(Hades);
-      let validNodes = HttpResultMap.filter(r => r.speed !== Infinity);
-      validNodes.sort((a, b) => a.speed - b.speed);
+      let validNodes = [];
       let capturedMode = "UNKNOWN";
       let capturedModeMsg = "未执行下载任务";
 
       try {
-        const diagResults = await Hermes.SwarmSense(Proteus.getSenseBeacons(), 5000);
-
-        const tplResult = await Hermes.getTemplate('speedtest.html', Hades);
-        const DL_SpeedTestTpl = (tplResult.success && tplResult.data) ? tplResult.data : null;
-
-        if (DL_SpeedTestTpl) {
-          const optimalSource = validNodes[0] || null;
-          let bestNodeDisplay = "无可用源";
-          if (optimalSource) bestNodeDisplay = `${optimalSource.name} (${optimalSource.speed}ms)`;
-
-          const p1Stats = HttpResultMap.map((s, i) => {
-            const isFiniteSpeed = Number.isFinite(s.speed);
-            return {
-              id: String(i + 1).padStart(2, '0'),
-              name: s.name,
-              priority: s.priority,
-              statusText: isFiniteSpeed ? `${s.speed}ms` : (s.TestUrlPrefix === null ? "N/A" : "超时"),
-              latencyColorClass: !isFiniteSpeed ? 'latency-timeout' : (s.speed > 3000 ? 'latency-orange' : (s.speed > 2000 ? 'latency-yellow' : 'latency-green')),
-              barColorClass: !isFiniteSpeed ? 'bar-red' : (s.speed > 3000 ? 'bar-orange' : (s.speed > 2000 ? 'bar-yellow' : 'bar-green')),
-              statusClass: s.TestUrlPrefix === null ? 'status-na' : (isFiniteSpeed ? 'status-ok' : 'status-timeout')
-            };
-          });
-
-          const p2Stats = diagResults.map((s, i) => {
-             const isFiniteSpeed = Number.isFinite(s.speed);
-             return {
-                id: String(i + 1).padStart(2, '0'),
-                name: s.name,
-                priority: 2,
-                statusText: isFiniteSpeed ? `${s.speed}ms` : "超时",
-                latencyColorClass: !isFiniteSpeed ? 'latency-timeout' : (s.speed > 1000 ? 'latency-yellow' : 'latency-green'),
-                barColorClass: !isFiniteSpeed ? 'bar-red' : (s.speed > 1000 ? 'bar-yellow' : 'bar-green'),
-                statusClass: isFiniteSpeed ? 'status-ok' : 'status-timeout'
-             };
-          });
-
-          const tiers = { priority1: [], priority2: [], priority3: [] };
-          p1Stats.forEach(s => tiers.priority1.push(s));
-          p2Stats.forEach(s => tiers.priority2.push(s));
-
-          const sortTier = (arr) => arr.sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
-          sortTier(tiers.priority1); 
-
-          const envInfo = await Hermes.getEnvInfo(Hades);
-          const bestMirror = validNodes.find(n => n.name !== "GitHub" && Number.isFinite(n.speed));
-          const mirrorSpeed = bestMirror ? bestMirror.speed : Infinity;
-          const senseChain = await Proteus.sense(envInfo, mirrorSpeed);
-          const { runMode, runModeMsg } = await this._ResolveRunMode(envInfo, mirrorSpeed, senseChain);
-          Hades.D(`测速模式: ${runMode} | 理由: ${runModeMsg}`);
-
-          const ViewProps = {
-            speeds: tiers,
-            best1Display: bestNodeDisplay,
-            duration: ((Date.now() - startTime) / 1000).toFixed(1),
-            runMode: runMode,
-            runModeMsg: runModeMsg,
-            testDateTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            v4Ip: envInfo?.v4Ip || 'N/A',
-            v6Ip: envInfo?.v6Ip || 'N/A',
-            clientGeo: envInfo?.country || envInfo?.country_name || '未知地区'
-          };
-
-          const imgBuffer = await Morpheus.shot("DL-SpeedTest", {  
-            htmlContent: DL_SpeedTestTpl, 
-            data: ViewProps, 
-            logger: Hades, 
-            pageBoundingRect: { selector: ".container" }
-          });
-
-          if (imgBuffer) {
-            await e.reply(segment.image(imgBuffer));
-            await e.reply("测速结果仅供参考，实际下载将根据[CRS动态决策]选择最佳方式", true);
-          }
-        }
+          const sortedNodes = await this._VoiceCore(e, Hades, HttpResultMap, [], startTime);
+          validNodes = sortedNodes;
+          await e.reply("测速结果仅供参考，实际下载将根据[CRS动态决策]选择最佳方式", true);
       } catch (err) {
-        Hades.D(`测速报告生成跳过:`, err);
+          Hades.E(`测速报告生成跳过:`, err);
+          validNodes = HttpResultMap.filter(r => r.speed !== Infinity).sort((a, b) => a.speed - b.speed);
       }
 
       if (redisKey) { await redis.set(redisKey, '1', { EX: cooldownDuration }); }
@@ -7765,13 +7700,17 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       const successCount = results.filter(r => ['status-ok', 'status-local'].includes(r.statusClass)).length;
       const configuredCount = results.length;
       const percent = configuredCount > 0 ? Math.round((successCount / configuredCount) * 100) : 0;
+      const stars = '★'.repeat(successCount) + '☆'.repeat(configuredCount - successCount);
 
       const ViewProps = {
           results,
-          allSuccess,
-          successCount,
+          allOk: allSuccess,
+          completedCount: successCount,
           configuredCount, 
-          percent,    
+          percent,
+          completionRate: percent,
+          completionRateRounded: percent,
+          stars,
           duration: ((Date.now() - startTime) / 1000).toFixed(1),
           bgImg: await Morpheus.pickBg(),
           isArray: Array.isArray,
@@ -7864,11 +7803,28 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         return { httpResults, gitResults };
     });
 
+    try {
+        const { httpResults, gitResults } = await taskCoreProbe;
+        await this._VoiceCore(e, Hades, httpResults, gitResults, startTime);
+    } catch (err) {
+        Hades.E(`测速异常:`, err);
+        await e.reply("测速过程中发生错误，请查看日志。");
+    }
+    return true;
+  }
+
+  async _VoiceCore(e, Hades, httpResults, gitResults = [], startTime) {
     const taskEnvInfo = Hermes.getEnvInfo(Hades).catch(() => ({}));
+    
+    let sortedNodes = [];
+    if (gitResults && gitResults.length > 0) {
+        sortedNodes = await MiaoPluginMBT.AdaptiveSpeed(httpResults, gitResults, Hades);
+    } else {
+        sortedNodes = httpResults.filter(r => r.speed !== Infinity).sort((a, b) => a.speed - b.speed);
+    }
 
     try {
-        const [coreData, envInfo] = await Promise.all([taskCoreProbe, taskEnvInfo]);
-        const { httpResults, gitResults } = coreData;
+        const envInfo = await taskEnvInfo;
         const bestMirror = httpResults.find(r => r.name !== 'GitHub' && Number.isFinite(r.speed));
         const mirrorSpeed = bestMirror ? bestMirror.speed : Infinity;
         const senseChain = await Proteus.sense(envInfo, mirrorSpeed);
@@ -7877,17 +7833,19 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         let rxBytes = 0;
         let ioChunks = 0;
 
-        gitResults.forEach(item => {
-            if (item.gitResult && item.gitResult.metrics) {
-                rxBytes += (item.gitResult.metrics.rx_bytes || 0);
-                ioChunks += (item.gitResult.metrics.io_chunks || 0);
-            }
-        });
+        if (gitResults && gitResults.length > 0) {
+            gitResults.forEach(item => {
+                if (item.gitResult && item.gitResult.metrics) {
+                    rxBytes += (item.gitResult.metrics.rx_bytes || 0);
+                    ioChunks += (item.gitResult.metrics.io_chunks || 0);
+                }
+            });
+        }
 
         const trafficFormatted = await Ananke.measure(rxBytes, true);
-        Hades.D(`测速总消耗流量: ${trafficFormatted} (IO: ${ioChunks})`);
-
-        const sortedNodes = await MiaoPluginMBT.AdaptiveSpeed(httpResults, gitResults, Hades);
+        if (gitResults && gitResults.length > 0) {
+             Hades.D(`测速总消耗流量: ${trafficFormatted} (IO: ${ioChunks})`);
+        }
 
         const ping = async (host, port = 443) => {
             const start = Date.now();
@@ -7947,14 +7905,21 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         const tplResult = await Hermes.getTemplate('speedtest.html', Hades);
         if (!tplResult.success) throw new Error("模板加载失败");
 
-        const p1Stats = httpResults.map((s, i) => {
-            const gitData = gitResults.find(g => g.name === s.name)?.gitResult;
-            const isGitOk = gitData?.success;
+        const p1Stats = httpResults.filter(s => s.name !== 'GitHub').map((s, i) => {
+            let gitData = null;
+            let isGitOk = false;
+            if (gitResults && gitResults.length > 0) {
+                 gitData = gitResults.find(g => g.name === s.name)?.gitResult;
+                 isGitOk = gitData?.success;
+            }
+            
             const isHttpOk = Number.isFinite(s.speed);
             
             let statusText = "超时";
             if (isHttpOk) statusText = `H:${s.speed}ms`;
-            if (isGitOk) statusText += ` / G:${gitData.duration}ms`;
+            if (gitData) {
+                 statusText += ` / G:${gitData.duration}ms`;
+            }
 
             return {
                 id: String(i + 1).padStart(2, '0'),
@@ -8009,10 +7974,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         else await e.reply("测速报告生成失败。");
 
     } catch (err) {
-        Hades.E(`测速异常:`, err);
-        await e.reply("测速过程中发生错误，请查看日志。");
+        Hades.E(`测速报告生成异常:`, err);
+        await e.reply("测速报告生成过程中发生错误，请查看日志。");
     }
-    return true;
+    
+    return sortedNodes;
   }
 
   async Reconcile(e, isScheduled = false) {
