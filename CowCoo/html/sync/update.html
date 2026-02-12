@@ -186,47 +186,112 @@
         }
 
         .header {
+            position: relative;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .header-identity {
+            position: relative;
+            background: transparent;
+            border-radius: 12px;
+            padding: 20px 25px;
+            overflow: hidden;
+        }
+
+        .header-grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(79, 195, 247, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79, 195, 247, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--container-border);
+            align-items: center;
         }
 
-        .title {
-            display: inline-block;
-            position: relative;
-            font-family: 'Noto Sans SC';
-            font-size: 24px;
-            font-weight: 500;
-            color: var(--text-title);
-            padding-bottom: 8px;
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .header .title::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: -2px;
-            width: 35%;
+        .header-title {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-status-line {
+            width: 60px;
             height: 3px;
-            background: #1395ff;
+            background: linear-gradient(90deg, #1395ff, transparent);
             border-radius: 2px;
-            box-shadow: 0 0 8px rgba(19, 149, 255, 0.5);
+            margin-top: 4px;
         }
 
-        .title span {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 500;
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
         }
 
-        .report-time {
+        .header-time-value {
             font-family: 'Orbitron', sans-serif;
             font-size: 16px;
+            font-weight: 500;
+            color: #1395ff;
+        }
+
+        .header-date-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
             color: var(--text-secondary);
+        }
+
+        .header-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(19, 149, 255, 0.05));
+            pointer-events: none;
+        }
+
+        .header-deco-corner {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(19, 149, 255, 0.2);
+            pointer-events: none;
+        }
+
+        .header-deco-corner.top-left {
+            top: 8px;
+            left: 8px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .header-deco-corner.bottom-right {
+            bottom: 8px;
+            right: 8px;
+            border-left: none;
+            border-top: none;
         }
 
         .repo-list {
@@ -307,6 +372,11 @@
         .repo-item.status-auto-switch {
             border-color: var(--auto-switch-color);
             box-shadow: 0 0 10px 2px rgba(111, 66, 193, 0.4);
+        }
+
+        .repo-item.status-skipped {
+            border-color: var(--container-border);
+            opacity: 0.7;
         }
 
         .repo-card {
@@ -481,6 +551,10 @@
         .repo-item.status-auto-switch .log-status {
             font-weight: 700;
             color: var(--auto-switch-color);
+        }
+
+        .repo-item.status-no-change .log-status {
+            color: var(--no-change-color);
         }
 
         .log-content-container {
@@ -835,7 +909,7 @@
     </style>
 </head>
 
-<body style="{{scaleStyleValue}}">
+<body style="{{RenderMatrix}}">
     <div class="wrapper">
         <div class="glow-border">
             <div class="glow-clip-inner"></div>
@@ -847,8 +921,22 @@
         <div class="container-shadow-wrapper">
             <div class="container">
                 <header class="header">
-                    <h1 class="title">咕咕牛图库的更新报告 <span>/IREPOPORTI/</span></h1>
-                    <div class="report-time">{{ reportTime }}</div>
+                    <div class="header-identity">
+                        <div class="header-grid-bg"></div>
+                        <div class="header-deco-corner top-left"></div>
+                        <div class="header-deco-corner bottom-right"></div>
+                        <div class="header-overlay"></div>
+                        <div class="header-content">
+                            <div class="header-left">
+                                <h1 class="header-title">咕咕牛图库更新报告</h1>
+                                <div class="header-status-line"></div>
+                            </div>
+                            <div class="header-right">
+                                <div class="header-time-value">{{ reportTime.split('   ')[1] || reportTime }}</div>
+                                <div class="header-date-value">{{ reportTime.split('   ')[0] || '' }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </header>
                 <main class="repo-list">
                     {{ each results repoResult index }}
@@ -909,6 +997,7 @@
                                 {{ if repoResult.shouldHighlight }}
                                 <div class="commit-entry-highlight">
                                     {{ each repoResult.log.slice(0, repoResult.newCommitsCount) commit }}
+                                    {{ if commit.commitTitle }}
                                     <div class="commit-entry">
                                         <div class="commit-meta">{{ commit.date }}</div>
                                         <div class="commit-content-wrapper">
@@ -950,10 +1039,12 @@
                                             {{ /if }}
                                         </div>
                                     </div>
+                                    {{ /if }}
                                     {{ /each }}
                                 </div>
                                 {{ /if }}
                                 {{ each repoResult.log.slice(repoResult.newCommitsCount) commit }}
+                                {{ if commit.commitTitle }}
                                 <div class="commit-entry">
                                     <div class="commit-meta">{{ commit.date }}</div>
                                     <div class="commit-content-wrapper">
@@ -994,6 +1085,7 @@
                                         {{ /if }}
                                     </div>
                                 </div>
+                                {{ /if }}
                                 {{ /each }}
                                 {{ else }}
                                 <div class="commit-entry">(无有效提交记录)</div>

@@ -17,6 +17,7 @@ import template from "art-template";
 import PuppCow from 'puppeteer'; 
 import common from "../../lib/common/common.js";
 import dgram from 'node:dgram';
+import { Worker } from 'node:worker_threads';
 const Trap_Symbol = Symbol.for('Yz.CowCoo.MBT.SignalTrap.Lifecycle.v2');
 const Charon = "『咕咕牛🐂』";
 const Hades_Symbol = Symbol.for('Yz.CowCoo.MBT.Hades.Entry');
@@ -887,6 +888,7 @@ class Hermes {
                     minVersion: 'TLSv1.2',
                     ciphers: opts.ciphers
                 });
+                tlsSocket.on('error', (err) => onFail(err));
                 const req = https.request({
                     host: target.hostname,
                     method: opts.method,
@@ -1036,6 +1038,7 @@ class Hermes {
                 const port = target.port ? Number(target.port) : 443;
                 const socket = await this.#socksConnect(target.hostname, port, proxy, opts.timeout, opts.signal);
                 const tlsSocket = tls.connect({ socket, servername: target.hostname, minVersion: 'TLSv1.2', ciphers: opts.ciphers });
+                tlsSocket.on('error', (err) => resolve({ success: false, status: 0, body: null, error: err }));
                 const req = https.request({
                     host: target.hostname,
                     port,
@@ -5970,8 +5973,6 @@ class MiaoPluginMBT extends plugin {
       }
   }
 
-
-
   static async ImgMetaAC(reloadCache = false, logger = getCore()) {
     if (MiaoPluginMBT._MetaCache?.length > 0 && !reloadCache) return MiaoPluginMBT._MetaCache;
     const Hades = HadesEntry({}, logger || getCore());
@@ -6702,7 +6703,8 @@ class MiaoPluginMBT extends plugin {
       const Network_Err_KeyWords = [
         "connection timed out", "connection was reset", "could not resolve host",
         "unable to access", "handshake failed", "error: 502", "error: 522", 
-        "error: 504", "etimedout", "gnutls_handshake", "rpc failed"
+        "error: 504", "etimedout", "gnutls_handshake", "rpc failed", 
+        "unable to update url base from redirection", "recv failure", "error: 429"
       ];
 
       const executeSyncLogic = async (isRetry = false) => {
@@ -6719,8 +6721,8 @@ class MiaoPluginMBT extends plugin {
             result.success = true;
           } catch (err) {
             pullErr = err;
-            const stderr = (err.stderr || "").toLowerCase();
-            const isConflict = ["not possible to fast-forward", "diverging branches", "unrelated histories", "needs merge", "commit your changes or stash them"].some(k => stderr.includes(k));
+            const stderr = (err.rawStderr || err.stderr || "").toLowerCase();
+            const isConflict = ["not possible to fast-forward", "diverging branches", "unrelated histories", "needs merge", "commit your changes or stash them", "your local changes to the following files would be overwritten by merge"].some(k => stderr.includes(k));
             
             if (err.code !== 0 && isConflict) {
               try {
@@ -6779,7 +6781,8 @@ class MiaoPluginMBT extends plugin {
       );
 
       if (!syncResult.success && isNetErr) {
-        Hades.W(`${RepoName} 同步失败 (网络波动)，启动自动切源流程...`);
+        const currentRemote = (await MBTPipeControl("git", ["remote", "get-url", "origin"], { cwd: localPath }).catch(() => ({ stdout: "未知" }))).stdout.trim();
+        Hades.W(`${RepoName} 同步失败 (网络波动) [当前源: ${currentRemote}]，启动自动切源流程...`);
         const proxies = await MiaoPluginMBT.TestCaVoice(logger);
         const survivors = proxies.filter(r => r.speed !== Infinity);
         
@@ -6789,27 +6792,50 @@ class MiaoPluginMBT extends plugin {
           ));
           
           const bestNodes = await MiaoPluginMBT.AdaptiveSpeed(proxies, gitTests, logger);
-          const winner = bestNodes[0];
-
-          if (winner) {
-            const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-            const urp = repoPathMatch?.[1]?.replace(/\.git$/, "");
-            
-            if (urp) {
-              let newUrl = winner.name === "GitHub" 
-                ? `https://github.com/${urp}.git`
-                : `${winner.ClonePrefix.replace(/\/$/, "")}/github.com/${urp}.git`;
-
-              try {
-                await MBTPipeControl("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
-                Hades.D(`${RepoName} 远程源已切换至: ${winner.name}`);
-                state.autoSwitchedNode = winner.name;
-                
-                syncResult = await executeSyncLogic(true);
-              } catch (switchErr) {
-                Hades.E(`${RepoName} 切源失败:`, switchErr);
+          
+          if (!bestNodes.some(n => n.name === 'GitHub')) {
+              const githubNode = proxies.find(n => n.name === 'GitHub');
+              if (githubNode) {
+                  bestNodes.push(githubNode);
               }
-            }
+          }
+
+          if (bestNodes.length === 0) {
+              Hades.W(`${RepoName} 测速后无可用节点，本次放弃切源。`);
+          }
+
+          for (const winner of bestNodes) {
+             const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
+             const urp = repoPathMatch?.[1]?.replace(/\.git$/, "");
+            
+             if (urp) {
+               let newUrl = winner.name === "GitHub" 
+                 ? `https://github.com/${urp}.git`
+                 : `${winner.ClonePrefix.replace(/\/$/, "")}/github.com/${urp}.git`;
+
+               try {
+                 await MBTPipeControl("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
+                 
+                 try {
+                     const lsResult = await MBTPipeControl("git", ["ls-remote", "--heads", "origin", branch], { cwd: localPath }, 5000);
+                     if (!lsResult.stdout || !lsResult.stdout.trim()) {
+                         continue;
+                     }
+                 } catch (lsErr) {
+                     continue;
+                 }
+
+                 Hades.D(`${RepoName} 远程源已切换至: ${winner.name}`);
+                 state.autoSwitchedNode = winner.name;
+                
+                 syncResult = await executeSyncLogic(true);
+                 if (syncResult.success) {
+                     break;
+                 }
+               } catch (switchErr) {
+                 Hades.E(`${RepoName} 切源/验证过程失败:`, switchErr);
+               }
+             }
           }
         }
       }
@@ -6944,6 +6970,7 @@ class MiaoPluginMBT extends plugin {
     const repoPool = (await Hermes.getRepoPool())
         .map(url => url.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/)?.[1])
         .filter(Boolean);
+
     if (repoPool.length === 0) {
         return {
             success: false,
@@ -9414,6 +9441,10 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   async RouteOpsHub(e) {
     if (!(await this.CheckInit(e))) return true;
     if (!e.isMaster) return e.reply(`只有主人才能使用设置命令哦~`, true);
+
+    if (!(await Ananke.Audit(MiaoPluginMBT.Paths.GitFilePath))) {
+        return e.reply("『咕咕牛🐂』图库未下载，请先发送 #下载咕咕牛", true);
+    }
 
     const msg = e.msg.trim();
 
