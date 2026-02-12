@@ -1229,36 +1229,45 @@ class Hermes {
         return HermesMatrix.Synthesize(v4Result, v6Result, Hades, 'Hermes:Native');
     }
 
-    static async findActiveProxyPort(Hades = console) {
-        const ports = Proteus._setup.agentGates || [7890, 7891, 1080, 10808, 8888];
-        if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 正在扫描代理端口: ${ports.join(', ')}`);
+    static async ActiveProxyPort(ports = null, Hades = console) {
+        if (ports && !Array.isArray(ports) && typeof ports === 'object') {
+            Hades = ports;
+            ports = null;
+        }
 
-        const checkPort = (port) => new Promise(resolve => {
+        const targetPorts = ports || Proteus._setup.agentGates || [7890, 7891, 1080, 10808, 8888];
+        if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 正在扫描代理端口: ${targetPorts.join(', ')}`);
+
+        const checkPort = (port) => new Promise((resolve, reject) => {
             const socket = new net.Socket();
             socket.setTimeout(400); 
+            
+            const cleanup = () => {
+                if (!socket.destroyed) socket.destroy();
+            };
+
             socket.on('connect', () => {
-                socket.destroy();
+                cleanup();
                 resolve(port);
             });
             socket.on('timeout', () => {
-                socket.destroy();
-                resolve(null);
+                cleanup();
+                reject(new Error('timeout'));
             });
-            socket.on('error', () => {
-                socket.destroy();
-                resolve(null);
+            socket.on('error', (err) => {
+                cleanup();
+                reject(err);
             });
             socket.connect(port, '127.0.0.1');
         });
 
-        const results = await Promise.all(ports.map(p => checkPort(p)));
-        const found = results.find(p => p !== null);
-        
-        if (found) {
+        try {
+            const found = await Promise.any(targetPorts.map(p => checkPort(p)));
             if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 捕获到活跃端口: ${found}`);
             return found;
+        } catch {
+            return null;
         }
-        return null;
     }
 
     static async getEnvInfo(Hades = console) {
@@ -1617,14 +1626,11 @@ class Proteus {
             } catch { return false; }
         };
 
-        const scanPorts = async () => {
-            const checks = this._setup.agentGates.map(g => this._checkGate(g));
-            try {
-                return await Promise.any(checks);
-            } catch { return null; }
-        };
+        const [procActive, portResult] = await Promise.all([
+            scanProc(), 
+            Hermes.ActiveProxyPort(this._setup.agentGates)
+        ]);
 
-        const [procActive, portResult] = await Promise.all([scanProc(), scanPorts()]);
         const portActive = Number.isFinite(portResult);
         const proxyPort = portActive ? portResult : null;
         if (procActive || portActive) active = true;
@@ -1632,41 +1638,13 @@ class Proteus {
         return { active, envSet, procActive, portActive, proxyPort };
     }
 
-    static _checkGate(gate) {
-        return new Promise((resolve, reject) => {
-            Hermes.TcpProbe('127.0.0.1', gate, 200)
-                .then(() => resolve(gate))
-                .catch(() => reject(false));
-        });
-    }
+
 
     static async _dialBeacons() {
-        const dial = async (host, port = 80) => {
-            try {
-                await this._GateWeb(host, port);
-                return true;
-            } catch {
-                return false;
-            }
-        };
-
-        const [cn, global, udp, gitee] = await Promise.all([
-            dial(this._setup.BeaconCN, 80),
-            dial(this._setup.BeaconGlobal, 443),
-            Hermes.UdpPulse('8.8.8.8', 53),
-            dial(this._setup.BeaconGitee, 443)
-        ]);
-
-        return { cn, global, udp, gitee };
+        return Hermes.dialBeacons(this._setup);
     }
 
-    static _GateWeb(host, port = 80) {
-        return new Promise((resolve, reject) => {
-            Hermes.TcpProbe(host, port, 1500)
-                .then(() => resolve(true))
-                .catch(reject);
-        });
-    }
+
 
     static _describe(mode) {
         const map = {
