@@ -1525,6 +1525,7 @@ class Proteus {
         agentGates: [7890, 7891, 7892, 7893, 7894, 7895, 7896, 7897, 7898, 7899, 1080, 10808, 8888],
         agentProcs: ["clash", "v2ray", "ss-local", "sing-box", "nekoray", "clash-verge"],
         thresholdV6: 800,
+        thresholdV4: 400,
         bonusOfficial: 0.7
     };
 
@@ -1697,6 +1698,7 @@ class ProteusMatrix {
         const v4Ready = Number.isFinite(v4Lat);
         const v6Ready = Number.isFinite(v6Lat);
         const v6Threshold = Proteus._setup.thresholdV6; 
+        const v4Threshold = Proteus._setup.thresholdV4; 
         
         if (v6Ready && v6Lat < v6Threshold) {
             if (!v4Ready || (v4Ready && v6Lat * 0.7 < v4Lat)) {
@@ -1711,7 +1713,7 @@ class ProteusMatrix {
         if (biz && v4Ready) {
              const mirrorLatency = mirror || Infinity;
              const mirrorBetter = Number.isFinite(mirrorLatency) && mirrorLatency < v4Lat;
-             if (!mirrorBetter || v4Lat < 800) {
+             if (!mirrorBetter || v4Lat < v4Threshold) {
                  return Proteus.State.NATIVE;
              }
         }
@@ -3128,7 +3130,7 @@ class MBTWorker {
     async _dispatch(type, payload) {
         if (type === 'SYNC_BATCH') {
             let success = 0, fail = 0;
-            const limit = 10;
+            const limit = 100;
             const executing = [];
             for (const { src, dest } of payload) {
                 const p = Promise.resolve().then(async () => {
@@ -3789,7 +3791,7 @@ class Ananke {
         });
     }
 
-    static async SaveCfg(configPath, data, logger = console) {
+    static async SaveConfig(configPath, data, logger = console) {
         const Hades = HadesEntry({}, logger || getCore());
         return this.#locks.config.run(async () => {
             try {
@@ -6377,10 +6379,11 @@ class MiaoPluginMBT extends plugin {
 
           const getStartDelay = (node, index, riskMode) => {
               const latency = getNodeLatency(node);
+              const v4Threshold = Proteus._setup.thresholdV4;
               let delay = 0;
               if (!Number.isFinite(latency)) delay = 6000;
               else if (latency < 200) delay = 0;
-              else if (latency < 800) delay = 1500;
+              else if (latency < v4Threshold) delay = 1500;
               else delay = 4000;
               if (riskMode && index > 0) delay = Math.min(delay, 5000);
               return delay;
@@ -6573,7 +6576,8 @@ class MiaoPluginMBT extends plugin {
 
               activeCRS = new MBTQuoCRS(logger, Rid, logTag, colorCode, signal);
               
-              const riskMode = (!Number.isFinite(getNodeLatency(waveNodes[0])) || getNodeLatency(waveNodes[0]) > 800 || udpReach === false);
+              const v4Threshold = Proteus._setup.thresholdV4;
+              const riskMode = (!Number.isFinite(getNodeLatency(waveNodes[0])) || getNodeLatency(waveNodes[0]) > v4Threshold || udpReach === false);
               const orderedWave = waveNodes.sort((a, b) => getNodeLatency(a) - getNodeLatency(b));
               orderedWave.forEach((node, index) => {
                   const delay = getStartDelay(node, index, riskMode);
@@ -6646,15 +6650,15 @@ class MiaoPluginMBT extends plugin {
                   Hades.D(`${RidColored} | [Smart] 本轮调度结束: ${waveError.message}`);
                   activeCRS.stop();
                   if (isShuttingDown) break;
-                  if (nodePool.length === 0) return { success: false, nodeName: "All Failed", error: waveError, mode: MODE, modeMsg: logModeMsg };
+                  if (nodePool.length === 0) return { success: false, nodeName: "全部失败", error: waveError, mode: MODE, modeMsg: logModeMsg };
                   await common.sleep(2000);
               }
           }
-          return { success: false, nodeName: "All Failed", error: new Error("所有可用节点均尝试失败"), mode: MODE, modeMsg: logModeMsg };
+          return { success: false, nodeName: "全部失败", error: new Error("所有可用节点均尝试失败"), mode: MODE, modeMsg: logModeMsg };
 
       } catch (SmartErr) {
           Hades.E(`${RidColored} ${logTag} | [Smart] 调度失败: ${SmartErr.message}`);
-          return { success: false, nodeName: "All Failed", error: SmartErr, mode: MODE, modeMsg: logModeMsg };
+          return { success: false, nodeName: "全部失败", error: SmartErr, mode: MODE, modeMsg: logModeMsg };
       } finally {
           SignalTrap.off('shutdown', onShutdown);
           if (retryTimer) clearInterval(retryTimer);
@@ -8121,7 +8125,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
     
     if (ConfigChanged) {
-      await Ananke.SaveCfg(
+      await Ananke.SaveConfig(
           MiaoPluginMBT.Paths.ConfigFilePath,
           MiaoPluginMBT.MBTConfig,
           Hades
@@ -9522,7 +9526,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             }
 
             config[strategy.cfgKey] = parsedVal;
-            const saved = await Ananke.SaveCfg(MiaoPluginMBT.Paths.ConfigFilePath, config, logger);
+            const saved = await Ananke.SaveConfig(MiaoPluginMBT.Paths.ConfigFilePath, config, logger);
             
             if (saved) {
                 MiaoPluginMBT.MBTConfig = config;
@@ -9540,7 +9544,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
 
     if (mutation.changed && strategy.sideEffect) {
-        setImmediate(() => strategy.sideEffect(parsedVal).catch(err => Hades.E("后台任务执行异常", err)));
+        try {
+            await strategy.sideEffect(parsedVal);
+        } catch (err) {
+            Hades.E("后台任务执行异常", err);
+        }
     }
 
     try {
