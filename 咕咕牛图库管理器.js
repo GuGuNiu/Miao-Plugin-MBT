@@ -168,6 +168,219 @@ class MBTPagination {
     }
 }
 
+class Nyx {
+    static Proxy_Pro = [
+        'clash', 'v2ray', 'sing-box', 'naive', 'hysteria', 'tuic', 'ss-local', 
+        'clash-verge', 'nekoray', 'clash-win64', 'clash-linux', 'mihomo'
+    ];
+
+    static async scan(ports = null, logger = console) {
+        let candidates = new Set();
+
+        try {
+            const processPorts = await this._scanSystemProcesses();
+            processPorts.forEach(p => candidates.add(p));
+            if (candidates.size > 0 && logger?.debug) {
+                logger.debug(`扫描发现端口: ${Array.from(candidates).join(', ')}`);
+            }
+        } catch (e) {
+        }
+
+        if (candidates.size === 0 && ports) {
+            ports.forEach(p => candidates.add(p));
+        }
+
+        if (candidates.size === 0) return null;
+
+        return await this._auditPorts(Array.from(candidates), logger);
+    }
+
+    static async _auditPorts(ports, logger) {
+        const checks = ports.map(port => this._handshake(port));
+        const results = await Promise.allSettled(checks);
+        
+        const valid = results
+            .filter(r => r.status === 'fulfilled' && r.value !== null)
+            .map(r => r.value);
+
+        if (valid.length === 0) return null;
+
+        valid.sort((a, b) => {
+            if (a.protocol === 'socks5' && b.protocol !== 'socks5') return -1;
+            if (b.protocol === 'socks5' && a.protocol !== 'socks5') return 1;
+            return 0;
+        });
+
+        const best = valid[0];
+        if (logger?.debug) logger.debug(`[Nyx] 审计锁定最佳代理: ${best.protocol}://${best.host}:${best.port}`);
+        return best;
+    }
+
+    static _handshake(port) {
+        return new Promise((resolve) => {
+            const socket = new net.Socket();
+            socket.setTimeout(1500);
+            let resolved = false;
+
+            const cleanup = () => { if (!socket.destroyed) socket.destroy(); };
+            
+            const finish = (res) => {
+                if (resolved) return;
+                resolved = true;
+                cleanup();
+                resolve(res);
+            };
+
+            socket.on('connect', () => {
+                socket.write(Buffer.from([0x05, 0x01, 0x00]));
+            });
+
+            socket.on('data', (data) => {
+                if (resolved) return;
+
+                if (data.length >= 2 && data[0] === 0x05 && (data[1] === 0x00 || data[1] === 0x02)) {
+                    finish({ host: '127.0.0.1', port, protocol: 'socks5' });
+                    return;
+                }
+
+                cleanup();
+                this._testHttp(port).then(res => {
+                    if (resolved) return;
+                    resolved = true;
+                    resolve(res);
+                });
+            });
+
+            socket.on('error', () => finish(null));
+            socket.on('timeout', () => finish(null));
+        });
+    }
+
+    static _testHttp(port) {
+        return new Promise(resolve => {
+            const socket = new net.Socket();
+            socket.setTimeout(1500);
+            let buffer = '';
+            
+            socket.connect(port, '127.0.0.1', () => {
+                socket.write('CONNECT www.google.com:80 HTTP/1.1\r\nHost: www.google.com:80\r\n\r\n');
+            });
+
+            socket.on('data', (data) => {
+                buffer += data.toString();
+                if (buffer.includes('HTTP/1.1 200') && buffer.includes('Connection established')) {
+                    socket.destroy();
+                    resolve({ host: '127.0.0.1', port, protocol: 'http' });
+                } 
+                else if (buffer.includes('404 Not Found') || buffer.includes('400 Bad Request') || buffer.includes('<html')) {
+                    socket.destroy();
+                    resolve(null);
+                }
+            });
+
+            socket.on('error', () => resolve(null));
+            socket.on('timeout', () => { socket.destroy(); resolve(null); });
+            socket.on('close', () => resolve(null));
+        });
+    }
+
+    static async _scanSystemProcesses() {
+        const platform = os.platform();
+        const ports = new Set();
+
+        if (platform === 'win32') {
+            try {
+                const netstatOut = await this._execFile('netstat', ['-ano', '-p', 'tcp']);
+                const lines = netstatOut.split('\n');
+                const pidMap = new Map();
+
+                for (const line of lines) {
+                    const parts = line.trim().split(/\s+/);
+                    if (parts.length > 4 && parts[3] === 'LISTENING') {
+                        const localAddr = parts[1];
+                        const pid = parts[4];
+                        const port = parseInt(localAddr.split(':').pop());
+                        if (localAddr.includes('127.0.0.1') || localAddr.includes('0.0.0.0') || localAddr.startsWith('[')) {
+                            pidMap.set(pid, port);
+                        }
+                    }
+                }
+
+                if (pidMap.size > 0) {
+                    const tasklistOut = await this._execFile('tasklist', ['/FO', 'CSV', '/NH']);
+                    const taskLines = tasklistOut.split('\r\n');
+                    for (const line of taskLines) {
+                        const parts = line.split(',');
+                        if (parts.length < 2) continue;
+                        const procName = parts[0].replace(/"/g, '').toLowerCase();
+                        const pid = parts[1].replace(/"/g, '');
+                        
+                        if (this.Proxy_Pro.some(p => procName.includes(p))) {
+                            if (pidMap.has(pid)) ports.add(pidMap.get(pid));
+                        }
+                    }
+                }
+            } catch (e) {}
+        } else if (platform === 'linux') {
+            try {
+                const tcpContent = await fsPromises.readFile('/proc/net/tcp', 'utf-8');
+                const inodes = new Map();
+                
+                const lines = tcpContent.split('\n').slice(1);
+                for (const line of lines) {
+                    const parts = line.trim().split(/\s+/);
+                    if (parts.length < 10) continue;
+                    if (parts[3] !== '0A') continue;
+
+                    const port = parseInt(parts[1].split(':')[1], 16);
+                    const inode = parts[9];
+                    inodes.set(inode, port);
+                }
+
+                const pids = await fsPromises.readdir('/proc');
+                let loopCount = 0;
+                
+                for (const pid of pids) {
+                    if (!/^\d+$/.test(pid)) continue;
+                    
+                    if (++loopCount % 50 === 0) await new Promise(r => setImmediate(r));
+
+                    try {
+                        const commPath = `/proc/${pid}/comm`;
+                        const comm = (await fsPromises.readFile(commPath, 'utf-8')).trim().toLowerCase();
+                        
+                        if (!this.Proxy_Pro.some(p => comm.includes(p))) continue;
+
+                        const fdDir = `/proc/${pid}/fd`;
+                        const fds = await fsPromises.readdir(fdDir);
+                        for (const fd of fds) {
+                            try {
+                                const link = await fsPromises.readlink(path.join(fdDir, fd));
+                                const match = link.match(/socket:\[(\d+)\]/);
+                                if (match) {
+                                    const inode = match[1];
+                                    if (inodes.has(inode)) ports.add(inodes.get(inode));
+                                }
+                            } catch {}
+                        }
+                    } catch {}
+                }
+            } catch (e) {}
+        }
+        return ports;
+    }
+
+    static _execFile(cmd, args) {
+        return new Promise((resolve, reject) => {
+            const cp = spawn(cmd, args, { windowsHide: true });
+            let out = '';
+            cp.stdout.on('data', d => out += d);
+            cp.on('close', () => resolve(out));
+            cp.on('error', reject);
+        });
+    }
+}
+
 class Hermes {
     static #cache = new Map();
     static #envCache = null; 
@@ -727,6 +940,10 @@ class Hermes {
     static async request(url, options = {}, redirects = 0) {
         if (redirects > 3) return { success: false, error: new Error('重定向次数过多') };
         const { timeout = 10000, method = 'GET', headers = {}, signal, skipUAPool = false, family = 0, skipSense = false, proxy = null, forceProxy = false } = options;
+        
+        const isWhiteListed = url.includes('gitee.com');
+        const effSkipSense = skipSense || (isWhiteListed && !forceProxy);
+        
         const isHttp = url.startsWith('http:');
 
         let agent = null;
@@ -751,12 +968,12 @@ class Hermes {
                     proxyPort = proxy.port;
                     proxyScheme = proxy.scheme || 'http';
                 }
-            } else if (!skipSense) {
+            } else if (!effSkipSense) {
                 const envData = (this.#envCache && (Date.now() - this.#envCacheTime < this.#ENV_TTL)) ? this.#envCache : null;
                 const sense = await this.getSenseSnapshot(envData);
                 const mode = sense?.mode;
-                const sysProxy = sense?.vector?.sysProxy || null;
-                const proxyPortCandidate = sense?.vector?.proxyPort || null;
+                const sysProxy = await this.getSystemProxy();
+                const proxyContext = sense?.vector?.proxyContext || null;
                 const entry = (() => {
                     if (sysProxy && Array.isArray(sysProxy.entries) && sysProxy.entries.length > 0) {
                         const pick = (schemes) => sysProxy.entries.find(e => schemes.includes(e.scheme));
@@ -765,8 +982,8 @@ class Hermes {
                     if (sysProxy && sysProxy.host && Number.isFinite(sysProxy.port)) {
                         return { host: sysProxy.host, port: sysProxy.port, scheme: sysProxy.scheme || 'http' };
                     }
-                    if (Number.isFinite(proxyPortCandidate)) {
-                        return { host: '127.0.0.1', port: proxyPortCandidate, scheme: proxyPortCandidate === 1080 ? 'socks5' : 'http' };
+                    if (proxyContext && proxyContext.host && proxyContext.port) {
+                        return { host: proxyContext.host, port: proxyContext.port, scheme: proxyContext.protocol || 'http' };
                     }
                     return null;
                 })();
@@ -1230,66 +1447,18 @@ class Hermes {
     }
 
     static async ActiveProxyPort(ports = null, Hades = console) {
-        if (ports && !Array.isArray(ports) && typeof ports === 'object') {
-            Hades = ports;
-            ports = null;
-        }
-
-        const targetPorts = ports || Proteus._setup.agentGates || [7890, 7891, 1080, 10808];
-        if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 正在扫描代理端口: ${targetPorts.join(', ')}`);
-
-        const checkPort = (port) => new Promise((resolve, reject) => {
-            const socket = new net.Socket();
-            socket.setTimeout(600);
-            let isResolved = false;
-            let timer = null;
-
-            const cleanup = () => {
-                if (timer) clearTimeout(timer);
-                if (!socket.destroyed) socket.destroy();
-            };
-
-            const finish = (valid) => {
-                if (isResolved) return;
-                isResolved = true;
-                cleanup();
-                if (valid) resolve(port);
-                else reject(new Error('无效代理或宝塔面板'));
-            };
-
-            socket.on('connect', () => {
-                socket.write('GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n');
-                
-                timer = setTimeout(() => {
-                    finish(true);
-                }, 200);
-            });
-
-            socket.on('data', (data) => {
-                const body = data.toString();
-                if (body.includes('Bt-Panel') || body.includes('宝塔') || body.includes('class="bt-panel"')) {
-                    finish(false);
-                } else {
-                    finish(true);
-                }
-            });
-
-            socket.on('timeout', () => {
-                finish(false);
-            });
-            socket.on('error', (err) => {
-                finish(false);
-            });
-            socket.connect(port, '127.0.0.1');
-        });
-
         try {
-            const found = await Promise.any(targetPorts.map(p => checkPort(p)));
-            if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 捕获到活跃端口: ${found}`);
-            return found;
-        } catch {
-            return null;
+            const result = await Nyx.scan(ports, Hades);
+            if (result) {
+                if (Hades?.debug) {
+                    Hades.debug(`[网络管理] Nyx: ${result.protocol}://${result.host}:${result.port}`);
+                }
+                return result;
+            }
+        } catch (e) {
+            if (Hades?.debug) Hades.debug(`[网络管理] 扫描异常: ${e.message}`);
         }
+        return null;
     }
 
     static async getEnvInfo(Hades = console) {
@@ -1545,7 +1714,6 @@ class Proteus {
         BeaconBiz: "github.com",
         BeaconGitee: "gitee.com",
         agentGates: [7890, 7891, 7892, 7893, 7894, 7895, 7896, 7897, 7898, 7899, 1080, 10808],
-        agentProcs: ["clash", "v2ray", "ss-local", "sing-box", "nekoray", "clash-verge"],
         thresholdV6: 800,
         thresholdV4: 400,
         bonusOfficial: 0.7
@@ -1612,14 +1780,16 @@ class Proteus {
         let desc = this._describe(mode);
         if (linkState.udp) desc += " [UDP]";
         if (v6State.v6Ip && v6State.v6Ip !== 'N/A') desc += " [V6]";
-        if (fingerprint.proxyPort) desc += ` [Proxy:${fingerprint.proxyPort}]`;
+        const displayPort = fingerprint.proxyContext ? fingerprint.proxyContext.port : null;
+        if (displayPort) desc += ` [Proxy:${displayPort}]`;
 
         return {
             vector: {
                 localAgent: fingerprint.active,
                 procActive: fingerprint.procActive,
                 portActive: fingerprint.portActive,
-                proxyPort: fingerprint.proxyPort,
+                proxyContext: fingerprint.proxyContext,
+                proxyPort: displayPort,
                 envSet: fingerprint.envSet,
                 cnLink: linkState.cn,
                 globalLink: linkState.global,
@@ -1645,20 +1815,21 @@ class Proteus {
         const scanProc = async () => {
             try {
                 const procList = await this._getProcNames();
-                return this._setup.agentProcs.some(p => procList.some(n => n.includes(p)));
+                return Nyx.Proxy_Pro.some(p => procList.some(n => n.includes(p)));
             } catch { return false; }
         };
 
-        const [procActive, portResult] = await Promise.all([
+        const [procActive, nyxResult] = await Promise.all([
             scanProc(), 
             Hermes.ActiveProxyPort(this._setup.agentGates)
         ]);
 
-        const portActive = Number.isFinite(portResult);
-        const proxyPort = portActive ? portResult : null;
+        const proxyContext = nyxResult || null;
+        const portActive = !!proxyContext;
+        
         if (procActive || portActive) active = true;
 
-        return { active, envSet, procActive, portActive, proxyPort };
+        return { active, envSet, procActive, portActive, proxyContext };
     }
 
 
@@ -1712,7 +1883,7 @@ class Proteus {
 
 class ProteusMatrix {
     static evaluate(context) {
-        const { envSet, cn, global, biz, race, mirror, env, udp, portActive, proxyPort, v6State } = context;   
+        const { envSet, cn, global, biz, race, mirror, env, udp, portActive, proxyContext, v6State } = context;   
         if (envSet) return Proteus.State.USER_AGENT;
         if (env && !env.regionCN) return Proteus.State.NATIVE;
         const v4Lat = race ? race.v4 : Infinity;
@@ -1728,7 +1899,7 @@ class ProteusMatrix {
             }
         }
 
-        if ((portActive || proxyPort) && (!v4Ready || v4Lat > 1000)) {
+        if ((portActive || proxyContext) && (!v4Ready || v4Lat > 1000)) {
             return Proteus.State.IDLE_AGENT;
         }
 
@@ -1980,6 +2151,12 @@ class MBTQuoCRS {
         const snapshot = Array.from(this.tasks.values()); 
         
         for (const task of snapshot) {
+            if (now - task.start > 30 * 60 * 1000) {
+                 this.logger.warn(`${this.uiRid} | [Quo] 任务 [${task.name}] 超过最大运行时限正在强制处决`);
+                 this._kill(task, '全局运行时限已超');
+                 continue;
+            }
+
             this._ForceModel(task, now);
             if (!leader || task.curr > leader.curr) {
                 leader = task;
@@ -2634,11 +2811,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
         const err = new MetisError(reason || "Process Terminated", code || "SIGTERM");
         err.stdout = stdout; err.stderr = PoseidonSpear.sanitize(stderr); err.rawStderr = stderr;
         err.metrics = _finalizeMetrics();
-        if (MBTProcc?.kill) {
-            await MBTProcc.kill(proc, 'SIGTERM');
-        } else {
-            await MBTProcPool.kill(proc, 'SIGTERM');
-        }
+
         Fuse = setTimeout(async () => {
             if (currentState !== STATE.CLOSED) {
                 try {
@@ -2648,7 +2821,16 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
                 currentState = STATE.DEAD;
                 reject(err);
             }
-        }, 2000);
+        }, 5000);
+
+        try {
+            if (MBTProcc?.kill) {
+                await MBTProcc.kill(proc, 'SIGTERM');
+            } else {
+                await MBTProcPool.kill(proc, 'SIGTERM');
+            }
+        } catch (killErr) {
+        }
     };
 
     const abortHandler = () => {
@@ -6266,7 +6448,7 @@ class MiaoPluginMBT extends plugin {
           const senseChain = await Proteus.sense(envData, mirrorSpeed);
           const netMode = senseChain.mode;
           const enableV6 = senseChain.vector.v6Link;
-          const proxyPort = senseChain.vector.proxyPort;
+          const proxyContext = senseChain.vector.proxyContext;
           const sysProxy = senseChain.vector.sysProxy;
           const v6Bias = Proteus._setup.bonusOfficial;
           const v6Lat = senseChain.vector.v6Lat;
@@ -6320,13 +6502,15 @@ class MiaoPluginMBT extends plugin {
                   MODE = 'NATIVE';
                   useAirlock = false;
                   inheritEnv = true;
-                  if (proxyPort) {
+                  if (proxyContext) {
+                      const proto = proxyContext.protocol || 'http';
+                      const proxyUrl = `${proto}://127.0.0.1:${proxyContext.port}`;
                       extraEnv = {
-                          HTTP_PROXY: `http://127.0.0.1:${proxyPort}`,
-                          HTTPS_PROXY: `http://127.0.0.1:${proxyPort}`,
-                          ALL_PROXY: `http://127.0.0.1:${proxyPort}`
+                          HTTP_PROXY: proxyUrl,
+                          HTTPS_PROXY: proxyUrl,
+                          ALL_PROXY: proxyUrl
                       };
-                      logModeMsg += ` [注入:${proxyPort}]`;
+                      logModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
                   }
                   break;
               case Proteus.State.USER_AGENT:
@@ -6336,26 +6520,30 @@ class MiaoPluginMBT extends plugin {
                   
                   if (sysProxyEnv) {
                       extraEnv = sysProxyEnv;
-                  } else if (proxyPort) {
+                  } else if (proxyContext) {
+                       const proto = proxyContext.protocol || 'http';
+                       const proxyUrl = `${proto}://127.0.0.1:${proxyContext.port}`;
                        extraEnv = {
-                            HTTP_PROXY: `http://127.0.0.1:${proxyPort}`,
-                            HTTPS_PROXY: `http://127.0.0.1:${proxyPort}`,
-                            ALL_PROXY: `http://127.0.0.1:${proxyPort}`
+                            HTTP_PROXY: proxyUrl,
+                            HTTPS_PROXY: proxyUrl,
+                            ALL_PROXY: proxyUrl
                        };
-                       logModeMsg += ` [自动注入:${proxyPort}]`;
+                       logModeMsg += ` [自动注入:${proto.toUpperCase()}:${proxyContext.port}]`;
                   }
                   break;
               case Proteus.State.IDLE_AGENT:
                   MODE = 'USER_PROXY';
                   useAirlock = false;
                   inheritEnv = true;
-                  if (proxyPort) {
+                  if (proxyContext) {
+                      const proto = proxyContext.protocol || 'http';
+                      const proxyUrl = `${proto}://127.0.0.1:${proxyContext.port}`;
                       extraEnv = {
-                          HTTP_PROXY: `http://127.0.0.1:${proxyPort}`,
-                          HTTPS_PROXY: `http://127.0.0.1:${proxyPort}`,
-                          ALL_PROXY: `http://127.0.0.1:${proxyPort}`
+                          HTTP_PROXY: proxyUrl,
+                          HTTPS_PROXY: proxyUrl,
+                          ALL_PROXY: proxyUrl
                       };
-                      logModeMsg += ` [注入:${proxyPort}]`;
+                      logModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
                   }
                   break;
               case Proteus.State.RULE_SPLIT:
@@ -6399,6 +6587,8 @@ class MiaoPluginMBT extends plugin {
           };
 
           const getStartDelay = (node, index, riskMode) => {
+              if (node.retryDelay) return node.retryDelay + MBTMath.Range(0, 500);
+
               const latency = getNodeLatency(node);
               const v4Threshold = Proteus._setup.thresholdV4;
               let delay = 0;
@@ -6412,6 +6602,13 @@ class MiaoPluginMBT extends plugin {
 
           if (MODE === 'NATIVE_V6' || MODE === 'NATIVE' || MODE === 'USER_PROXY') {
               RacingQueue = [githubNode];
+              
+              if (MODE !== 'USER_PROXY') { 
+                  RacingQueue.push({ ...githubNode, name: "GitHub_R1", priority: githubNode.priority - 1, retryDelay: 2000 });
+                  RacingQueue.push({ ...githubNode, name: "GitHub_R2", priority: githubNode.priority - 2, retryDelay: 4500 });
+                  Hades.D(`${RidColored} | [Smart] 注入 GitHub 竞速重试组`);
+              }
+
               useGitHubAsBackup = false;
           } else if (MODE === 'NATIVE_FAST') {
               RacingQueue = [githubNode, ...primaryMirrors];
@@ -6429,7 +6626,8 @@ class MiaoPluginMBT extends plugin {
           const createTaskFactory = (node, isDowngrade = false) => {
               return (context, sitRep) => {
                   const protocol = isDowngrade ? 'HTTP/1.1' : (node.protocol || 'HTTP');
-                  const nodeDisplayName = node.name === "GitHub" ? "GitHub(直连)" : `${node.name}(${protocol})`;
+                  const isGithubTarget = node.name === "GitHub" || node.name.startsWith("GitHub_");
+                  const nodeDisplayName = isGithubTarget ? `GitHub(直连${node.retryDelay ? '/重试' : ''})` : `${node.name}(${protocol})`;
                   const taskName = isDowngrade ? `${nodeDisplayName}(H1)` : nodeDisplayName;
                   
                   const uniqueSuffix = crypto.randomBytes(4).toString('hex');
@@ -6438,7 +6636,7 @@ class MiaoPluginMBT extends plugin {
 
                   let actualCloneUrl = "";
                   const cleanPrefix = node.ClonePrefix ? node.ClonePrefix.replace(/\/$/, "") : "";
-                  if (node.name === "GitHub") actualCloneUrl = cleanRepoUrl;
+                  if (isGithubTarget) actualCloneUrl = cleanRepoUrl;
                   else actualCloneUrl = `${cleanPrefix}/${cleanRepoUrl}`;
 
                   const executeGit = async () => {
@@ -6462,13 +6660,25 @@ class MiaoPluginMBT extends plugin {
 
                       const normalizedPrefix = node.ClonePrefix ? node.ClonePrefix.trim().toLowerCase().replace(/\/$/, "") : null;
                       const topoAllowed = normalizedPrefix ? MiaoPluginMBT.#TopoMap.has(normalizedPrefix) : false;
-                      const caDisabled = node.name === "GitHub" || topoAllowed;
+                      const caDisabled = isGithubTarget || topoAllowed;
+
+                      let finalEnv = extraEnv || sysProxyEnv || undefined;
+                      
+                      if (actualCloneUrl.includes('gitee.com')) {
+                          if (finalEnv && (finalEnv.HTTP_PROXY || finalEnv.HTTPS_PROXY)) {
+                              finalEnv = { ...finalEnv };
+                              delete finalEnv.HTTP_PROXY;
+                              delete finalEnv.HTTPS_PROXY;
+                              delete finalEnv.ALL_PROXY;
+                              finalEnv.NO_PROXY = 'gitee.com,localhost,127.0.0.1';
+                          }
+                      }
 
                       const gitOptions = { 
                           cwd: MiaoPluginMBT.Paths.YzPath, shell: false, signal: context.signal, Rid: Rid, 
                           inheritEnv: inheritEnv, airlock: useAirlock, gitConfigs: currentGitConfigs,
                           preferV6: preferV6,
-                          env: extraEnv || sysProxyEnv || undefined,
+                          env: finalEnv,
                           RidTag: RidColored,
                           caWhitelist: [actualCloneUrl, cleanRepoUrl].filter(Boolean),
                           caDisabled: caDisabled,
@@ -7757,7 +7967,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   async _ResolveRunMode(envInfo, mirrorSpeed = Infinity, senseChain = null) {
     const chain = senseChain || await Proteus.sense(envInfo, mirrorSpeed);
     const netMode = chain.mode;
-    const proxyPort = chain.vector.proxyPort;
+    const proxyContext = chain.vector.proxyContext;
     const v6Lat = chain.vector.v6Lat;
 
     let runMode = "AIRLOCK_PROXY";
@@ -7770,14 +7980,20 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             break;
         case Proteus.State.NATIVE:
             runMode = 'NATIVE';
-            if (proxyPort) runModeMsg += ` [注入:${proxyPort}]`;
+            if (proxyContext) {
+                const proto = proxyContext.protocol || 'http';
+                runModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
+            }
             break;
         case Proteus.State.USER_AGENT:
             runMode = 'USER_PROXY';
             break;
         case Proteus.State.IDLE_AGENT:
             runMode = 'USER_PROXY';
-            if (proxyPort) runModeMsg += ` [注入:${proxyPort}]`;
+            if (proxyContext) {
+                const proto = proxyContext.protocol || 'http';
+                runModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
+            }
             break;
         case Proteus.State.RULE_SPLIT:
             runMode = 'AIRLOCK_PROXY';
