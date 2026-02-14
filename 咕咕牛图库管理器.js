@@ -5553,7 +5553,6 @@ class MiaoPluginMBT extends plugin {
             }
             uiList.push(node);
           });
-          Hades.D(`识别到 ${MiaoPluginMBT.#TopoMap.size} 个有效节点`);
           
           DFC.F2Pool = uiList;
           if (MiaoPluginMBT.MBTConfig) {
@@ -5997,7 +5996,7 @@ class MiaoPluginMBT extends plugin {
     Tianshu.BuildIndexes(validData);
     MiaoPluginMBT._MetaCache = Object.freeze(validData);
     const duration = Date.now() - startTime;
-    Hades.D(`元数据重构完成耗时[${duration}ms]，索引数据[ ${validData.length} 条 | ${upstreamBanCount} 条 ]`);
+    Hades.D(`元数据重构完成耗时[ ${duration}ms ]，索引数据[ ${validData.length} 条 | ${upstreamBanCount} 条 ]`);
 
     return MiaoPluginMBT._MetaCache;
   }
@@ -9114,6 +9113,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       const PAGE_SIZE = MBTPagination.getPageSize('Vis');
       const SplashCount = allimgFiles.length;
       const pageCount = Math.ceil(SplashCount / PAGE_SIZE);
+      const pageCountNum = pageCount === 1 ? 2 : pageCount;
 
       let waitMsg = `[${primaryName}] 有 ${SplashCount} 张面板图，正在生成可视化预览...`;
       if (pageCount > 1) {
@@ -9136,13 +9136,39 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           isGu: /gu/i.test(fileName)
         }));
 
+        const PluginRolePath = roleFolderPath.replace(/\\/g, '/').toLowerCase();
+        const miaoRoot = MiaoPluginMBT.Paths.MiaoPluginPath.replace(/\\/g, '/').toLowerCase();
+        const zzzRoot = MiaoPluginMBT.Paths.ZZZPluginPath.replace(/\\/g, '/').toLowerCase();
+        const wavesRoot = MiaoPluginMBT.Paths.WavesPluginPath.replace(/\\/g, '/').toLowerCase();
+        let originPlugin = null;
+        let originPluginKey = null;
+        if (PluginRolePath.startsWith(miaoRoot)) {
+          originPlugin = 'Miao-Plugin';
+          originPluginKey = 'miao';
+        } else if (PluginRolePath.startsWith(zzzRoot)) {
+          originPlugin = 'ZZZ-Plugin';
+          originPluginKey = 'zzz';
+        } else if (PluginRolePath.startsWith(wavesRoot)) {
+          originPlugin = 'Waves-Plugin';
+          originPluginKey = 'waves';
+        }
+
+        const folderSizeBytes = await Ananke.measure(roleFolderPath);
+        const folderSizeFormatted = await Ananke.measure(folderSizeBytes, true);
+        const totalDigits = String(SplashCount).split('');
         const ViewProps = {
           CREName: primaryName,
+          characterName: primaryName,
           imageCount: SplashCount,
           images: VisCharaterdata,
           batchNum: pageNum,
-          pageCount: pageCount,
-          countDigits: String(SplashCount).split(''), 
+          pageCount: pageCountNum,
+          totalPages: pageCount,
+          countDigits: totalDigits,
+          odometer: totalDigits,
+          originPlugin: originPlugin,
+          originPluginKey: originPluginKey,
+          folderSize: folderSizeFormatted,
         };
 
         const imgBuffer = await Morpheus.shot(`Vis-${primaryName}-P${pageNum}`, {

@@ -137,7 +137,7 @@
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
         }
         
-        .source-plugin-tag { 
+        .origin-plugin-tag { 
             padding: 8px 15px;
             border-radius: 8px;
             font-family: "Orbitron", sans-serif;
@@ -149,13 +149,13 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .source-plugin-tag.source-miao {
+        .origin-plugin-tag.origin-miao {
             background-color: #28a745;
         }
-        .source-plugin-tag.source-zzz {
+        .origin-plugin-tag.origin-zzz {
             background-color: #fd7e14;
         }
-        .source-plugin-tag.source-waves {
+        .origin-plugin-tag.origin-waves {
             background-color: #d63384;
         }
 
@@ -432,9 +432,10 @@
         <div class="header-content-left">
           <div class="main-title">咕咕牛图库管理器的面板图可视化</div>
           <div class="tags-row">
-            {{ if sourcePlugin }}
-            <div class="source-plugin-tag source-{{ sourcePlugin.toLowerCase() }}">
-              {{ sourcePlugin }}
+            <div class="list-type-tag">{{ characterName || CREName }}</div>
+            {{ if originPlugin }}
+            <div class="origin-plugin-tag origin-{{ (originPluginKey || originPlugin).toLowerCase() }}">
+              {{ originPlugin }}
             </div>
             {{ /if }} {{ if folderSize }}
             <div class="folder-size-tag">
@@ -452,23 +453,28 @@
               <span>{{ folderSize }}</span>
             </div>
             {{ /if }}
-            <div class="list-type-tag">{{ characterName }}</div>
           </div>
         </div>
         <div class="header-stats-area">
           <div class="stat-item">
             <span>总数</span>
             <div class="digit-container">
+              {{ if odometer && odometer.length > 0 }}
               {{ each odometer digit }}
               <div class="digit">{{ digit }}</div>
               {{ /each }}
+              {{ else if countDigits && countDigits.length > 0 }}
+              {{ each countDigits digit }}
+              <div class="digit">{{ digit }}</div>
+              {{ /each }}
+              {{ else }}
+              <div class="digit">0</div>
+              {{ /if }}
             </div>
           </div>
-          {{ if totalPages > 1 }}
           <div class="pagination-info">
-            PAGE <span class="page-number">{{ batchNum }}</span> / {{ totalPages }}
+            PAGE <span class="page-number">{{ batchNum }}</span> / {{ totalPages || pageCount }}
           </div>
-          {{ /if }}
         </div>
       </div>
         <div class="main-content">
