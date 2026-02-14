@@ -1235,28 +1235,50 @@ class Hermes {
             ports = null;
         }
 
-        const targetPorts = ports || Proteus._setup.agentGates || [7890, 7891, 1080, 10808, 8888];
+        const targetPorts = ports || Proteus._setup.agentGates || [7890, 7891, 1080, 10808];
         if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 正在扫描代理端口: ${targetPorts.join(', ')}`);
 
         const checkPort = (port) => new Promise((resolve, reject) => {
             const socket = new net.Socket();
-            socket.setTimeout(400); 
-            
+            socket.setTimeout(600);
+            let isResolved = false;
+            let timer = null;
+
             const cleanup = () => {
+                if (timer) clearTimeout(timer);
                 if (!socket.destroyed) socket.destroy();
             };
 
+            const finish = (valid) => {
+                if (isResolved) return;
+                isResolved = true;
+                cleanup();
+                if (valid) resolve(port);
+                else reject(new Error('无效代理或宝塔面板'));
+            };
+
             socket.on('connect', () => {
-                cleanup();
-                resolve(port);
+                socket.write('GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n');
+                
+                timer = setTimeout(() => {
+                    finish(true);
+                }, 200);
             });
+
+            socket.on('data', (data) => {
+                const body = data.toString();
+                if (body.includes('Bt-Panel') || body.includes('宝塔') || body.includes('class="bt-panel"')) {
+                    finish(false);
+                } else {
+                    finish(true);
+                }
+            });
+
             socket.on('timeout', () => {
-                cleanup();
-                reject(new Error('timeout'));
+                finish(false);
             });
             socket.on('error', (err) => {
-                cleanup();
-                reject(err);
+                finish(false);
             });
             socket.connect(port, '127.0.0.1');
         });
@@ -1522,7 +1544,7 @@ class Proteus {
         BeaconGlobal: "google.com",
         BeaconBiz: "github.com",
         BeaconGitee: "gitee.com",
-        agentGates: [7890, 7891, 7892, 7893, 7894, 7895, 7896, 7897, 7898, 7899, 1080, 10808, 8888],
+        agentGates: [7890, 7891, 7892, 7893, 7894, 7895, 7896, 7897, 7898, 7899, 1080, 10808],
         agentProcs: ["clash", "v2ray", "ss-local", "sing-box", "nekoray", "clash-verge"],
         thresholdV6: 800,
         thresholdV4: 400,
