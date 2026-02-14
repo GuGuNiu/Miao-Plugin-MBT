@@ -4,9 +4,9 @@
   </a>
 </p> 
 
-<div align="center">
-  
-🏵️**2023年10月**创建至今不断在打磨方便且安全的 **“一体化面板图库生态”** 体验
+### 图库介绍
+
+  图库目前已应用了`Nano-Banana-Pro`,`Comfyui`技术对面板图进行优化，并且对图片都会进行二次调色/扩图，在保证不无序扩张数量的前提下每隔一段时间都会替换原有的不符合当下审美条件的面板图，管理器提供了更多元的图片管理方式。🏵️**2023年10月**创建至今不断在打磨方便且安全的 **“一体化面板图库生态”** 体验
   <a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
     <button style="
       padding: 10px 20px;
@@ -21,17 +21,21 @@
       transition: background 0.3s ease;
     " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'" 
        onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-      💬 QQ群：留学交流群
+      💬 QQ群：留学移民交流群
     </button>
   </a>🏵️
 
-</div> 
+管理器插件采用基于 **Symbol 索引的全局事件总线架构**，核心底座 `SignalTrap` 继承自 `EventEmitter`，利用 `Symbol.for` 在全局作用域注册唯一实例（跨热重载持久化），作为**中央事件总线**，通过 **EventListener** 统一接管信号与生命周期事件，驱动模块协同。
 
-### 图库介绍
+| 核心模块 | 实现 | 架构职责 |
+| :--- | :--- | :--- |
+| **SignalTrap** | `EventEmitter` + `Symbol` | **全局事件总线**。利用 Symbol 确保实例唯一，监听 OS 信号并广播事件，是插件的生命周期锚点。 |
+| **ProcPool** | `EventListener` | **进程生命周期管理**。订阅 Trap 的事件，在插件重载或关闭时，自动捕获并销毁所有挂起的子进程。 |
+| **QuoCRS** | `AbortController` + `Listener` | **并发任务调度底座**。监听上游信号与 Trap 事件，负责异步任务队列的竞态控制、熔断保护与中止。 |
 
-  图库目前已应用了`Nano-Banana-Pro`,`Comfyui`技术对面板图进行优化，并且对图片都会进行二次调色/二次扩图，在保证不无序扩张数量的前提下每隔一段时间都会替换原有的不符合当下审美条件的面板图。管理器内置脱离主框架的独立进程管理与生命周期总线，支持热重载，并针对重型下载任务实现了高效的调度策略，同时提供了更多元的图片管理方式。
-
-**<ins>注意：在©️ v5.2.0版本，管理器已经提供了热重载[HMR]能力，因此JS插件基本进入无需人工干预的运行状态</ins>**
+<p>
+  
+</p>
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
