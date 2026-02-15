@@ -3,7 +3,6 @@ import https from 'node:https';
 import http from 'node:http'; 
 import tls from 'node:tls';
 import net from 'node:net';
-import lodash from "lodash";
 import os from "node:os";
 import fsPromises from "node:fs/promises";
 import { statfs } from 'node:fs/promises';
@@ -174,14 +173,14 @@ class Nyx {
         'clash-verge', 'nekoray', 'clash-win64', 'clash-linux', 'mihomo'
     ];
 
-    static async scan(ports = null, logger = console) {
+    static async scan(ports = null, Hades = console) {
         let candidates = new Set();
 
         try {
             const processPorts = await this._scanSystemProcesses();
             processPorts.forEach(p => candidates.add(p));
-            if (candidates.size > 0 && logger?.debug) {
-                logger.debug(`扫描发现端口: ${Array.from(candidates).join(', ')}`);
+            if (candidates.size > 0 && Hades?.D) {
+                Hades.D(`扫描发现端口: ${Array.from(candidates).join(', ')}`);
             }
         } catch (e) {
         }
@@ -192,10 +191,10 @@ class Nyx {
 
         if (candidates.size === 0) return null;
 
-        return await this._auditPorts(Array.from(candidates), logger);
+        return await this._auditPorts(Array.from(candidates), Hades);
     }
 
-    static async _auditPorts(ports, logger) {
+    static async _auditPorts(ports, Hades) {
         const checks = ports.map(port => this._handshake(port));
         const results = await Promise.allSettled(checks);
         
@@ -212,7 +211,7 @@ class Nyx {
         });
 
         const best = valid[0];
-        if (logger?.debug) logger.debug(`[Nyx] 审计锁定最佳代理: ${best.protocol}://${best.host}:${best.port}`);
+        if (Hades?.D) Hades.D(`锁定代理: ${best.protocol}://${best.host}:${best.port}`);
         return best;
     }
 
@@ -649,17 +648,7 @@ class Hermes {
         return null;
     }
 
-    static #getIPStrategy(strategy) {
-        if (strategy === 'native') {
-            return {
-                sources: {
-                    IPv4: [{ url: 'https://api.ipify.org?format=json', type: 'json', field: 'ip' }],
-                    IPv6: [{ url: 'https://api64.ipify.org?format=json', type: 'json', field: 'ip' }]
-                },
-                timeout: 3000,
-                cacheKey: 'Env:NativeIPStack'
-            };
-        }
+    static #getIPStrategy() {
         return {
             sources: HermesMatrix.Sources,
             timeout: 3000,
@@ -669,7 +658,7 @@ class Hermes {
 
     static async #probeIPStack(strategy, options = {}) {
         const { Hades = console, requestFn = this.request.bind(this), useCache = true } = options;
-        const cfg = this.#getIPStrategy(strategy);
+        const cfg = this.#getIPStrategy();
         const cacheKey = cfg.cacheKey;
         if (useCache && cacheKey) {
             if (this.#cache.has(cacheKey)) {
@@ -1450,13 +1439,13 @@ class Hermes {
         try {
             const result = await Nyx.scan(ports, Hades);
             if (result) {
-                if (Hades?.debug) {
-                    Hades.debug(`[网络管理] Nyx: ${result.protocol}://${result.host}:${result.port}`);
+                if (Hades?.D) {
+                    Hades.D(`[网络管理] Nyx: ${result.protocol}://${result.host}:${result.port}`);
                 }
                 return result;
             }
         } catch (e) {
-            if (Hades?.debug) Hades.debug(`[网络管理] 扫描异常: ${e.message}`);
+            if (Hades?.D) Hades.D(`[网络管理] 扫描异常: ${e.message}`);
         }
         return null;
     }
@@ -1482,9 +1471,14 @@ class Hermes {
 
         const v6Ip = browserSnapshot?.v6?.ip || nativeSnapshot?.v6Ip;
         const v4Ip = browserSnapshot?.v4?.ip || nativeSnapshot?.v4Ip;
-        
-        const country = browserSnapshot?.v4?.country || nativeSnapshot?.geoData?.country || nativeSnapshot?.geoData?.country_code || (nativeSnapshot?.regionCN ? 'CN' : 'US');
-        const regionCN = country === 'CN';
+
+        const browserCountry = browserSnapshot?.v4?.country;
+        const nativeCountry = nativeSnapshot?.geoData?.country || nativeSnapshot?.geoData?.country_code;
+
+        const effectiveCountry = browserCountry || nativeCountry;
+        const regionCN = effectiveCountry === 'CN';
+
+        const needsAirlock = !!browserCountry && browserCountry !== 'CN';
 
         const result = {
             meta: {
@@ -1503,7 +1497,8 @@ class Hermes {
             inference: {
                 v4Ip: v4Ip || 'N/A',
                 v6Ip: v6Ip || 'N/A',
-                regionCN
+                regionCN,
+                needsAirlock
             }
         };
 
@@ -1635,6 +1630,7 @@ class Hermes {
 class HermesMatrix {
     static Sources = {
         IPv4: [
+            { url: 'https://api.ipify.org?format=json', type: 'json', field: 'ip' },
             { url: 'https://ipapi.co/json/', type: 'json', field: 'ip', geoField: 'country_code', cnVal: 'CN' },
             { url: 'https://api.ip.sb/geoip', type: 'json', field: 'ip', geoField: 'country_code', cnVal: 'CN' },
             { url: 'https://free.freeipapi.com/api/json', type: 'json', field: 'ipAddress', geoField: 'countryCode', cnVal: 'CN' },
@@ -1772,7 +1768,8 @@ class Proteus {
             race: raceData, 
             mirror: mirrorSpeed,
             env: envData,
-            fingerprint 
+            fingerprint,
+            needsAirlock: envData?.inference?.needsAirlock
         };
 
         const mode = ProteusMatrix.evaluate({ ...fingerprint, ...ctx, v6State });
@@ -1883,7 +1880,7 @@ class Proteus {
 
 class ProteusMatrix {
     static evaluate(context) {
-        const { envSet, cn, global, biz, race, mirror, env, udp, portActive, proxyContext, v6State } = context;   
+        const { envSet, cn, global, biz, race, mirror, env, udp, portActive, proxyContext, v6State, needsAirlock } = context;   
         if (envSet) return Proteus.State.USER_AGENT;
         if (env && !env.regionCN) return Proteus.State.NATIVE;
         const v4Lat = race ? race.v4 : Infinity;
@@ -1901,6 +1898,10 @@ class ProteusMatrix {
 
         if ((portActive || proxyContext) && (!v4Ready || v4Lat > 1000)) {
             return Proteus.State.IDLE_AGENT;
+        }
+
+        if (needsAirlock && v4Ready) {
+            return Proteus.State.AIRLOCK;
         }
 
         if (biz && v4Ready) {
@@ -6436,6 +6437,7 @@ class MiaoPluginMBT extends plugin {
       let useAirlock = true;
       let inheritEnv = false;
       let extraEnv = null;
+      let retryWithAirlock = false;
 
       try {
           const healthyCount = sortedNodes.filter(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name)).length;
@@ -6875,11 +6877,31 @@ class MiaoPluginMBT extends plugin {
 
               } catch (waveError) {
                   if (waveError.isFatal) {
-                      Hades.F(`${RidColored} | [Smart] 触发致命错误熔断: ${waveError.message}`);
+                      Hades.E(`${RidColored} | [Smart] 触发致命错误熔断: ${waveError.message}`);
                       if (activeCRS) activeCRS.stop(); throw waveError; 
                   }
                   Hades.D(`${RidColored} | [Smart] 本轮调度结束: ${waveError.message}`);
                   activeCRS.stop();
+
+                  if (MODE === 'NATIVE' && !retryWithAirlock) {
+                      Hades.W(`${RidColored} | [Smart] 模式失败，正在切换至气闸模式...`);
+                      retryWithAirlock = true;
+                      MODE = 'AIRLOCK_PROXY';
+                      useAirlock = true;
+                      inheritEnv = false;
+
+                      const airlockNodes = mirrorNodes
+                          .filter(n => PoseidonSpear.isLive(n.name))
+                          .sort((a, b) => getNodeLatency(a) - getNodeLatency(b));
+                      if (airlockNodes.length > 0) {
+                          nodePool.length = 0;
+                          nodePool.push(...airlockNodes);
+                          Hades.D(`${RidColored} | [Smart] 已切换至气闸节点: [${airlockNodes.map(n => n.name).join(', ')}]`);
+                          await common.sleep(1000);
+                          continue;
+                      }
+                  }
+
                   if (isShuttingDown) break;
                   if (nodePool.length === 0) return { success: false, nodeName: "全部失败", error: waveError, mode: MODE, modeMsg: logModeMsg };
                   await common.sleep(2000);
@@ -7301,7 +7323,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         }
       }
     } catch (error) {
-      Hades.F(`ProvisionPhase (阶段: ${stage}) 内部发生致命错误:`, error);
+      Hades.E(`ProvisionPhase (阶段: ${stage}) 内部发生致命错误:`, error);
       if (e) {
         await DocHub.report(e, `安装设置 (${stage}阶段)`, error, "", Hades);
       }
@@ -7616,7 +7638,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
 
     if (!MiaoPluginMBT.InitPromise) {
-        Hades.F(`高危: CheckInit 无法建立初始化`);
+        Hades.E(`高危: CheckInit 无法建立初始化`);
         await e.reply('『咕咕牛🐂』插件初始化失败，请检查后台日志。', true);
         return false;
     }
