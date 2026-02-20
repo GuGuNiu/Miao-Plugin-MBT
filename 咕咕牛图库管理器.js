@@ -22,6 +22,15 @@ const Charon = "『咕咕牛🐂』";
 const Hades_Symbol = Symbol.for('Yz.CowCoo.MBT.Hades.Entry');
 const getCore = () => global.logger || console;
 
+class RuntimeCtx {
+    constructor() {
+        this.vectors = null;
+        this.decision = null;
+        this.history = [];
+        this.timestamp = Date.now();
+    }
+}
+
 function HadesEntry(options = {}, core = getCore()) {
     const TrimPrefix = (text, prefixes) => {
         const list = Array.isArray(prefixes) ? prefixes : [prefixes];
@@ -169,117 +178,251 @@ class MBTPagination {
 
 class Nyx {
     static Proxy_Pro = [
-        'clash', 'v2ray', 'sing-box', 'naive', 'hysteria', 'tuic', 'ss-local', 
-        'clash-verge', 'nekoray', 'clash-win64', 'clash-linux', 'mihomo'
+        {
+            name: 'clash',
+            aliases: ['clash-verge', 'clash verge', 'clashverge', 'clash_for_windows', 'clashforwindows'],
+            secondary: ['cfw', 'clash-win64', 'clash-linux', 'clash-meta', 'mihomo', 'clash.meta'],
+            threshold: 0.75
+        },
+        {
+            name: 'v2ray',
+            aliases: ['v2rayn', 'v2ray-core', 'v2raycore'],
+            secondary: ['v2rayn-core', 'v2rayncore', 'v2rayng'],
+            threshold: 0.75
+        },
+        {
+            name: 'sing-box',
+            aliases: ['singbox', 'sing_box'],
+            secondary: [],
+            threshold: 0.8
+        },
+        {
+            name: 'naive',
+            aliases: ['naiveproxy'],
+            secondary: [],
+            threshold: 0.8
+        },
+        {
+            name: 'hysteria',
+            aliases: ['hysteria2'],
+            secondary: [],
+            threshold: 0.8
+        },
+        {
+            name: 'shadowsocks',
+            aliases: ['shadowsocksr', 'ss-local', 'sslocal'],
+            secondary: [],
+            threshold: 0.75
+        },
+        {
+            name: 'trojan',
+            aliases: ['trojan-go', 'trojango'],
+            secondary: [],
+            threshold: 0.8
+        },
+        {
+            name: 'nekoray',
+            aliases: ['nekobox'],
+            secondary: [],
+            threshold: 0.8
+        },
+        {
+            name: 'tuic',
+            aliases: [],
+            secondary: [],
+            threshold: 0.85
+        },
+        {
+            name: 'proxy',
+            aliases: ['vpn'],
+            secondary: [],
+            threshold: 0.7
+        }
     ];
 
-    static async scan(ports = null, Hades = console) {
-        let candidates = new Set();
+    static _nor(str) {
+        return str.toLowerCase().replace(/[\s\-_.]/g, '');
+    }
+
+    static _calcs(a, b) {
+        const s1 = this._nor(a);
+        const s2 = this._nor(b);
+        if (s1 === s2) return 1.0;
+        if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+        let matches = 0;
+        const minLen = Math.min(s1.length, s2.length);
+        for (let i = 0; i < minLen; i++) {
+            if (s1[i] === s2[i]) matches++;
+        }
+        return matches / Math.max(s1.length, s2.length);
+    }
+
+    static _againstMatrix(procName, entry) {
+        const normalized = this._nor(procName);
+        const normName = this._nor(entry.name);
+
+        if (normalized === normName || normalized.includes(normName)) {
+            return { matched: true, pattern: entry.name, score: 1.0, level: 'primary' };
+        }
+
+        for (const alias of entry.aliases) {
+            const normAlias = this._nor(alias);
+            if (normalized === normAlias || normalized.includes(normAlias)) {
+                return { matched: true, pattern: entry.name, score: 0.95, level: 'alias' };
+            }
+        }
+
+        for (const sec of entry.secondary) {
+            const normSec = this._nor(sec);
+            if (normalized === normSec || normalized.includes(normSec)) {
+                return { matched: true, pattern: entry.name, score: 0.9, level: 'secondary' };
+            }
+        }
+
+        const score = this._calcs(procName, entry.name);
+        if (score >= entry.threshold) {
+            return { matched: true, pattern: entry.name, score, level: 'fuzzy' };
+        }
+
+        return null;
+    }
+
+    static fuzzyMatch(procName) {
+        for (const entry of this.Proxy_Pro) {
+            const result = this._againstMatrix(procName, entry);
+            if (result) return result;
+        }
+        return { matched: false, pattern: null, score: 0, level: null };
+    }
+
+    static async scan(agentGates = [], Hades = console) {
+        const candidates = await this._buildDiscoveryPool(agentGates, Hades);
+        if (candidates.size === 0) return [];
+
+        if (Hades?.D) {
+            const portsStr = Array.from(candidates.values())
+                .map(c => `${c.port}(分:${c.score})`)
+                .join(', ');
+            Hades.D(`[Nyx] 候选端口池: ${portsStr}`);
+        }
+
+        const sniffPromises = Array.from(candidates.values()).map(candidate => this._evaluateCandidate(candidate));
+        const results = (await Promise.all(sniffPromises)).filter(Boolean);
+
+        results.sort((a, b) => {
+            if (a.verified !== b.verified) return a.verified ? -1 : 1;
+            if (a.protocol === 'socks5' && b.protocol !== 'socks5') return -1;
+            if (b.protocol === 'socks5' && a.protocol !== 'socks5') return 1;
+            return b.score - a.score;
+        });
+
+        return results; 
+    }
+
+    static async _buildDiscoveryPool(agentGates, Hades) {
+        const pool = new Map();
+
+        const addPort = (port, score, source) => {
+            if (!port || isNaN(port)) return;
+            const p = parseInt(port, 10);
+            if (!pool.has(p)) pool.set(p, { port: p, score: 0, sources: new Set() });
+            const entry = pool.get(p);
+            entry.score = Math.min(100, entry.score + score);
+            entry.sources.add(source);
+        };
 
         try {
             const processPorts = await this._scanSystemProcesses();
-            processPorts.forEach(p => candidates.add(p));
-            if (candidates.size > 0 && Hades?.D) {
-                Hades.D(`扫描发现端口: ${Array.from(candidates).join(', ')}`);
-            }
+            processPorts.forEach(p => addPort(p, 60, 'os_process'));
         } catch (e) {
+            if (Hades?.D) Hades.D(`[Nyx] OS进程扫描异常(已降级): ${e.message}`);
         }
 
-        if (candidates.size === 0 && ports) {
-            ports.forEach(p => candidates.add(p));
+        if (Array.isArray(agentGates)) {
+            agentGates.forEach(p => addPort(p, 40, 'common_port'));
         }
 
-        if (candidates.size === 0) return null;
-
-        return await this._auditPorts(Array.from(candidates), Hades);
+        return pool;
     }
 
-    static async _auditPorts(ports, Hades) {
-        const checks = ports.map(port => this._handshake(port));
-        const results = await Promise.allSettled(checks);
-        
-        const valid = results
-            .filter(r => r.status === 'fulfilled' && r.value !== null)
-            .map(r => r.value);
+    static async _evaluateCandidate(candidate) {
+        let protocol = null;
+        let verified = false;
 
-        if (valid.length === 0) return null;
+        if (await this._sniffSocks5(candidate.port)) {
+            protocol = 'socks5';
+            verified = true;
+        }
+        else if (await this._sniffHttp(candidate.port)) {
+            protocol = 'http';
+            verified = true;
+        }
 
-        valid.sort((a, b) => {
-            if (a.protocol === 'socks5' && b.protocol !== 'socks5') return -1;
-            if (b.protocol === 'socks5' && a.protocol !== 'socks5') return 1;
-            return 0;
-        });
-
-        const best = valid[0];
-        if (Hades?.D) Hades.D(`锁定代理: ${best.protocol}://${best.host}:${best.port}`);
-        return best;
-    }
-
-    static _handshake(port) {
-        return new Promise((resolve) => {
-            const socket = new net.Socket();
-            socket.setTimeout(1500);
-            let resolved = false;
-
-            const cleanup = () => { if (!socket.destroyed) socket.destroy(); };
-            
-            const finish = (res) => {
-                if (resolved) return;
-                resolved = true;
-                cleanup();
-                resolve(res);
+        if (verified) {
+            return {
+                host: '127.0.0.1',
+                port: candidate.port,
+                protocol: protocol,
+                source: Array.from(candidate.sources).join('+'),
+                verified: true,
+                score: candidate.score
             };
+        } else if (candidate.score >= 60) {
+            return {
+                host: '127.0.0.1',
+                port: candidate.port,
+                protocol: 'unknown',
+                source: 'os_process_unverified',
+                verified: false,
+                score: candidate.score
+            };
+        }
 
-            socket.on('connect', () => {
-                socket.write(Buffer.from([0x05, 0x01, 0x00]));
-            });
-
-            socket.on('data', (data) => {
-                if (resolved) return;
-
-                if (data.length >= 2 && data[0] === 0x05 && (data[1] === 0x00 || data[1] === 0x02)) {
-                    finish({ host: '127.0.0.1', port, protocol: 'socks5' });
-                    return;
-                }
-
-                cleanup();
-                this._testHttp(port).then(res => {
-                    if (resolved) return;
-                    resolved = true;
-                    resolve(res);
-                });
-            });
-
-            socket.on('error', () => finish(null));
-            socket.on('timeout', () => finish(null));
-        });
+        return null;
     }
 
-    static _testHttp(port) {
+    static _sniffSocks5(port) {
         return new Promise(resolve => {
             const socket = new net.Socket();
             socket.setTimeout(1500);
-            let buffer = '';
-            
-            socket.connect(port, '127.0.0.1', () => {
-                socket.write('CONNECT www.google.com:80 HTTP/1.1\r\nHost: www.google.com:80\r\n\r\n');
-            });
+            let resolved = false;
+            const finish = (res) => { if (!resolved) { resolved = true; socket.destroy(); resolve(res); } };
 
+            socket.on('connect', () => socket.write(Buffer.from([0x05, 0x01, 0x00])));
             socket.on('data', (data) => {
-                buffer += data.toString();
-                if (buffer.includes('HTTP/1.1 200') && buffer.includes('Connection established')) {
-                    socket.destroy();
-                    resolve({ host: '127.0.0.1', port, protocol: 'http' });
-                } 
-                else if (buffer.includes('404 Not Found') || buffer.includes('400 Bad Request') || buffer.includes('<html')) {
-                    socket.destroy();
-                    resolve(null);
+                if (data.length >= 2 && data[0] === 0x05 && [0x00, 0x02, 0xFF].includes(data[1])) {
+                    finish(true);
+                } else {
+                    finish(false);
                 }
             });
+            socket.on('error', () => finish(false));
+            socket.on('timeout', () => finish(false));
+            socket.connect(port, '127.0.0.1');
+        });
+    }
 
-            socket.on('error', () => resolve(null));
-            socket.on('timeout', () => { socket.destroy(); resolve(null); });
-            socket.on('close', () => resolve(null));
+    static _sniffHttp(port) {
+        return new Promise(resolve => {
+            const socket = new net.Socket();
+            socket.setTimeout(1500);
+            let resolved = false;
+            const finish = (res) => { if (!resolved) { resolved = true; socket.destroy(); resolve(res); } };
+
+            socket.on('connect', () => {
+                socket.write('CONNECT www.google.com:80 HTTP/1.1\r\nHost: www.google.com:80\r\n\r\n');
+            });
+            socket.on('data', (data) => {
+                const str = data.toString();
+                if (/HTTP\/1\.[01] (200|403|407|502|503)/.test(str)) {
+                    finish(true);
+                } else {
+                    finish(false);
+                }
+            });
+            socket.on('error', () => finish(false));
+            socket.on('timeout', () => finish(false));
+            socket.connect(port, '127.0.0.1');
         });
     }
 
@@ -314,7 +457,8 @@ class Nyx {
                         const procName = parts[0].replace(/"/g, '').toLowerCase();
                         const pid = parts[1].replace(/"/g, '');
                         
-                        if (this.Proxy_Pro.some(p => procName.includes(p))) {
+                        const matchResult = this.fuzzyMatch(procName, 0.75);
+                        if (matchResult.matched) {
                             if (pidMap.has(pid)) ports.add(pidMap.get(pid));
                         }
                     }
@@ -348,7 +492,8 @@ class Nyx {
                         const commPath = `/proc/${pid}/comm`;
                         const comm = (await fsPromises.readFile(commPath, 'utf-8')).trim().toLowerCase();
                         
-                        if (!this.Proxy_Pro.some(p => comm.includes(p))) continue;
+                        const matchResult = this.fuzzyMatch(comm, 0.75);
+                        if (!matchResult.matched) continue;
 
                         const fdDir = `/proc/${pid}/fd`;
                         const fds = await fsPromises.readdir(fdDir);
@@ -412,7 +557,8 @@ class Hermes {
         try {
             const content = await fsPromises.readFile(this.#CACHE_PATH, 'utf-8');
             const data = JSON.parse(content);
-            if (Date.now() - new Date(data.updateTime).getTime() < 2 * 60 * 60 * 1000) {
+            const updateTime = data?.meta?.updateTime || data?.updateTime;
+            if (updateTime && Date.now() - new Date(updateTime).getTime() < 2 * 60 * 60 * 1000) {
                 if (Hades) Hades.D(`[网络管理] 从磁盘加载网络态势感知信息: ${this.#CACHE_PATH}`);
                 return data;
             }
@@ -444,12 +590,12 @@ class Hermes {
         if (this.#senseDepth > 0) this.#senseDepth -= 1;
     }
 
-    static async getSenseSnapshot(envData = null) {
+    static async getSenseSnapshot(envData = null, Hades = console) {
         if (this.#senseCache && (Date.now() - this.#senseCacheTime < this.#SENSE_TTL)) return this.#senseCache;
         if (this.#senseDepth > 0) return this.#senseCache;
         this.enterSense();
         try {
-            const sense = await Proteus.sense(envData || {}, Infinity).catch(() => null);
+            const sense = await Proteus.sense(envData || {}, Infinity, Hades).catch(() => null);
             if (sense) {
                 this.#senseCache = sense;
                 this.#senseCacheTime = Date.now();
@@ -941,6 +1087,7 @@ class Hermes {
         let proxyPort = null;
         let proxyScheme = null;
         let shuffledCiphers = undefined;
+        let finalFamily = family;
 
         if (!isHttp) {
             const defaultCiphers = tls.DEFAULT_CIPHERS.split(':');
@@ -961,6 +1108,7 @@ class Hermes {
                 const envData = (this.#envCache && (Date.now() - this.#envCacheTime < this.#ENV_TTL)) ? this.#envCache : null;
                 const sense = await this.getSenseSnapshot(envData);
                 const mode = sense?.mode;
+                if (mode === Proteus.State.V6_TURBO) finalFamily = 6;
                 const sysProxy = await this.getSystemProxy();
                 const proxyContext = sense?.vector?.proxyContext || null;
                 const entry = (() => {
@@ -1000,11 +1148,11 @@ class Hermes {
         if (ua) baseHeaders['User-Agent'] = ua;
 
         if (useProxy) {
-            return this.#proxyRequest(url, { method, timeout, signal, headers: baseHeaders, family, ciphers: shuffledCiphers }, { host: proxyHost, port: proxyPort, scheme: proxyScheme }, options, redirects);
+            return this.#proxyRequest(url, { method, timeout, signal, headers: baseHeaders, family: finalFamily, ciphers: shuffledCiphers }, { host: proxyHost, port: proxyPort, scheme: proxyScheme }, options, redirects);
         }
 
         return new Promise((resolve) => {
-            const req = requestModule.request(url, { method, agent, timeout, signal, family, headers: baseHeaders }, (res) => {
+            const req = requestModule.request(url, { method, agent, timeout, signal, family: finalFamily, headers: baseHeaders }, (res) => {
                 if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location) {
                     let nextUrl = res.headers.location;
                     if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
@@ -1369,7 +1517,15 @@ class Hermes {
                 detect(Hermes.Sources.IPv6, 6)
             ]);
 
-            if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] Pupp感知结果: v4=${v4?.ip}(${v4?.country}), v6=${v6?.ip}`);
+            const formatPuppResult = (result, family) => {
+                if (!result) return 'N/A';
+                const via = result.src ? new URL(result.src).hostname : 'unknown';
+                const country = result.country || result.data?.country_code || result.data?.countryCode || result.data?.country || result.data?.country_name || 'N/A';
+                return `${result.ip}(${country})[${via}]`;
+            };
+            const v4Log = formatPuppResult(v4, 4);
+            const v6Log = formatPuppResult(v6, 6);
+            if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] Pupp感知结果: v4=${v4Log}, v6=${v6Log}`);
             return { v4, v6 };
 
         } catch (e) {
@@ -1437,12 +1593,13 @@ class Hermes {
 
     static async ActiveProxyPort(ports = null, Hades = console) {
         try {
-            const result = await Nyx.scan(ports, Hades);
-            if (result) {
+            const results = await Nyx.scan(ports, Hades);
+            if (results && results.length > 0) {
+                const best = results[0];
                 if (Hades?.D) {
-                    Hades.D(`[网络管理] Nyx: ${result.protocol}://${result.host}:${result.port}`);
+                    Hades.D(`[网络管理] Nyx: ${best.protocol}://${best.host}:${best.port}`);
                 }
-                return result;
+                return best;
             }
         } catch (e) {
             if (Hades?.D) Hades.D(`[网络管理] 扫描异常: ${e.message}`);
@@ -1456,7 +1613,7 @@ class Hermes {
         }
 
         const diskCache = await this.#loadEnvFromDisk(Hades);
-        if (diskCache) {
+        if (diskCache && diskCache.inference && typeof diskCache.inference.nativeCN === 'boolean') {
             this.#envCache = diskCache;
             this.#envCacheTime = Date.now();
             return diskCache;
@@ -1473,12 +1630,12 @@ class Hermes {
         const v4Ip = browserSnapshot?.v4?.ip || nativeSnapshot?.v4Ip;
 
         const browserCountry = browserSnapshot?.v4?.country;
-        const nativeCountry = nativeSnapshot?.geoData?.country || nativeSnapshot?.geoData?.country_code;
+        const nativeCountry = nativeSnapshot?.geoData?.country_code || nativeSnapshot?.geoData?.countryCode || nativeSnapshot?.geoData?.country;
 
         const effectiveCountry = browserCountry || nativeCountry;
         const regionCN = effectiveCountry === 'CN';
 
-        const needsAirlock = !!browserCountry && browserCountry !== 'CN';
+        const needsAirlock = !nativeCountry && !browserCountry;
 
         const result = {
             meta: {
@@ -1497,7 +1654,9 @@ class Hermes {
             inference: {
                 v4Ip: v4Ip || 'N/A',
                 v6Ip: v6Ip || 'N/A',
-                regionCN,
+                regionCN: nativeSnapshot?.geoData?.country_code === 'CN' || nativeSnapshot?.geoData?.countryCode === 'CN' || nativeSnapshot?.geoData?.country === 'CN' || regionCN, 
+                nativeCN: nativeCountry === 'CN',
+                browserCN: browserCountry === 'CN',
                 needsAirlock
             }
         };
@@ -1630,7 +1789,6 @@ class Hermes {
 class HermesMatrix {
     static Sources = {
         IPv4: [
-            { url: 'https://api.ipify.org?format=json', type: 'json', field: 'ip' },
             { url: 'https://ipapi.co/json/', type: 'json', field: 'ip', geoField: 'country_code', cnVal: 'CN' },
             { url: 'https://api.ip.sb/geoip', type: 'json', field: 'ip', geoField: 'country_code', cnVal: 'CN' },
             { url: 'https://free.freeipapi.com/api/json', type: 'json', field: 'ipAddress', geoField: 'countryCode', cnVal: 'CN' },
@@ -1733,7 +1891,7 @@ class Proteus {
         V6_TURBO: 6      
     };
 
-    static async sense(envData, mirrorSpeed = Infinity) {
+    static async sense(envData, mirrorSpeed = Infinity, Hades = console) {
         const v6StatePromise = (envData && (envData.v4Ip || envData.v6Ip)) 
             ? Promise.resolve({ v4Ip: envData.v4Ip, v6Ip: envData.v6Ip, regionCN: envData.regionCN, geoData: envData, detected: true })
             : Hermes.getIPStack();
@@ -1747,7 +1905,7 @@ class Proteus {
         })();
 
         const [fingerprint, linkStateRaw, v6State, raceData] = await Promise.all([
-            this._scanLocal(envSet),
+            this._scanLocal(envSet, envData?.network?.proxy, Hades),
             this._dialBeacons(),
             v6StatePromise, 
             Hermes.dualStackRace(this._setup.BeaconBiz)
@@ -1773,7 +1931,26 @@ class Proteus {
         };
 
         const mode = ProteusMatrix.evaluate({ ...fingerprint, ...ctx, v6State });
-        
+
+        let gitEnv = null;
+        const pCtx = fingerprint.proxyContext;
+
+        if (pCtx && (mode === this.State.USER_AGENT || mode === this.State.IDLE_AGENT || mode === this.State.NATIVE)) {
+            const scheme = pCtx.protocol === 'unknown' ? 'socks5' : pCtx.protocol;
+            const proxyUrl = `${scheme}://${pCtx.host}:${pCtx.port}`;
+            gitEnv = {
+                HTTP_PROXY: proxyUrl,
+                HTTPS_PROXY: proxyUrl,
+                ALL_PROXY: proxyUrl
+            };
+        }
+
+        const executionContext = {
+            isAirlock: [this.State.AIRLOCK, this.State.RULE_SPLIT, this.State.V6_TURBO].includes(mode),
+            inheritEnv: [this.State.NATIVE, this.State.USER_AGENT, this.State.IDLE_AGENT].includes(mode),
+            gitEnv: gitEnv
+        };
+
         let desc = this._describe(mode);
         if (linkState.udp) desc += " [UDP]";
         if (v6State.v6Ip && v6State.v6Ip !== 'N/A') desc += " [V6]";
@@ -1795,47 +1972,67 @@ class Proteus {
                 udpReach: linkState.udp,
                 v6Link: v6State.v6Ip !== 'N/A',
                 v6Ip: v6State.v6Ip,
-                v4Ip: v6State.v4Ip, 
+                v4Ip: v6State.v4Ip,
                 v4Lat: raceData.v4,
                 v6Lat: raceData.v6,
-                mirrorLat: mirrorSpeed
+                mirrorLat: mirrorSpeed,
+                sysProxy: envData?.network?.proxy
             },
             mode: mode,
-            desc: desc
+            desc: desc,
+            executionContext: executionContext
         };
     }
 
-    static async _scanLocal(envSet = false) {
+    static async _scanLocal(envSet = false, sysProxy = null, Hades = console) {
         let active = false;
         envSet = !!envSet;
 
         const scanProc = async () => {
             try {
                 const procList = await this._getProcNames();
-                return Nyx.Proxy_Pro.some(p => procList.some(n => n.includes(p)));
+                return procList.some(n => Nyx.fuzzyMatch(n, 0.75).matched);
             } catch { return false; }
         };
 
-        const [procActive, nyxResult] = await Promise.all([
+        const [procActive, nyxProxies] = await Promise.all([
             scanProc(), 
-            Hermes.ActiveProxyPort(this._setup.agentGates)
+            Nyx.scan(this._setup.agentGates, Hades)
         ]);
 
-        const proxyContext = nyxResult || null;
+        let proxyContext = null;
+
+        if (sysProxy && (sysProxy.host || (sysProxy.entries && sysProxy.entries.length > 0))) {
+            const entry = sysProxy.entries?.[0] || sysProxy;
+            proxyContext = {
+                protocol: entry.scheme || 'http',
+                host: entry.host || '127.0.0.1',
+                port: entry.port,
+                source: 'system',
+                verified: false 
+            };
+        } else if (nyxProxies && nyxProxies.length > 0) {
+            proxyContext = nyxProxies[0];
+
+            if (proxyContext.protocol === 'unknown') {
+                proxyContext.protocol = 'socks5';
+            }
+
+            if (Hades?.D) {
+                const status = proxyContext.verified ? '已验证' : '未验证(盲猜SOCKS5)';
+                Hades.D(`[网络管理] 锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [${status}]`);
+            }
+        }
+
         const portActive = !!proxyContext;
-        
         if (procActive || portActive) active = true;
 
         return { active, envSet, procActive, portActive, proxyContext };
     }
 
-
-
     static async _dialBeacons() {
         return Hermes.dialBeacons(this._setup);
     }
-
-
 
     static _describe(mode) {
         const map = {
@@ -1879,42 +2076,143 @@ class Proteus {
 }
 
 class ProteusMatrix {
+    static _bus = new EventEmitter();
+    static _matrixReady = false;
+    static _evalPipeline = [];
+
     static evaluate(context) {
-        const { envSet, cn, global, biz, race, mirror, env, udp, portActive, proxyContext, v6State, needsAirlock } = context;   
-        if (envSet) return Proteus.State.USER_AGENT;
-        if (env && !env.regionCN) return Proteus.State.NATIVE;
-        const v4Lat = race ? race.v4 : Infinity;
-        const v6Lat = race ? race.v6 : Infinity;
-        const v4Ready = Number.isFinite(v4Lat);
-        const v6Ready = Number.isFinite(v6Lat);
-        const v6Threshold = Proteus._setup.thresholdV6; 
-        const v4Threshold = Proteus._setup.thresholdV4; 
-        
-        if (v6Ready && v6Lat < v6Threshold) {
-            if (!v4Ready || (v4Ready && v6Lat * 0.7 < v4Lat)) {
-                return Proteus.State.V6_TURBO;
+        this._ensureInit();
+        const decision = { mode: null, reason: null };
+        this._bus.emit('before', context, decision);
+        for (const step of this._evalPipeline) {
+            this._bus.emit(`rule:${step}`, context, decision);
+            if (decision.mode) break;
+        }
+        this._bus.emit('after', context, decision);
+        return decision.mode ?? Proteus.State.AIRLOCK;
+    }
+
+    static on(event, handler) {
+        this._ensureInit();
+        this._bus.on(event, handler);
+        return () => this._bus.off(event, handler);
+    }
+
+    static once(event, handler) {
+        this._ensureInit();
+        this._bus.once(event, handler);
+        return () => this._bus.off(event, handler);
+    }
+
+    static off(event, handler) {
+        this._ensureInit();
+        this._bus.off(event, handler);
+    }
+
+    static _ensureInit() {
+        if (this._matrixReady) return;
+        this._matrixReady = true;
+        this._evalPipeline = [
+            'envSet',
+            'nativeCN',
+            'overseasGlobal',
+            'v6Turbo',
+            'idleAgent',
+            'overseasRegion',
+            'biz',
+            'ruleSplit',
+            'needsAirlock',
+            'fallback'
+        ];
+        this._bus.on('rule:envSet', (ctx, decision) => {
+            if (!decision.mode && ctx.envSet) {
+                decision.mode = Proteus.State.USER_AGENT;
+                decision.reason = 'envSet';
             }
-        }
-
-        if ((portActive || proxyContext) && (!v4Ready || v4Lat > 1000)) {
-            return Proteus.State.IDLE_AGENT;
-        }
-
-        if (needsAirlock && v4Ready) {
-            return Proteus.State.AIRLOCK;
-        }
-
-        if (biz && v4Ready) {
-             const mirrorLatency = mirror || Infinity;
-             const mirrorBetter = Number.isFinite(mirrorLatency) && mirrorLatency < v4Lat;
-             if (!mirrorBetter || v4Lat < v4Threshold) {
-                 return Proteus.State.NATIVE;
-             }
-        }
-
-        if (global && !biz) return Proteus.State.RULE_SPLIT;
-
-        return Proteus.State.AIRLOCK;
+        });
+        this._bus.on('rule:nativeCN', (ctx, decision) => {
+            if (!decision.mode && ctx.env?.inference?.nativeCN && !ctx.env.inference.browserCN) {
+                decision.mode = Proteus.State.USER_AGENT;
+                decision.reason = 'nativeCN';
+            }
+        });
+        this._bus.on('rule:overseasGlobal', (ctx, decision) => {
+            if (!decision.mode && ctx.global && !ctx.cn) {
+                decision.mode = Proteus.State.NATIVE;
+                decision.reason = 'overseasGlobal';
+            }
+        });
+        this._bus.on('rule:v6Turbo', (ctx, decision) => {
+            if (decision.mode) return;
+            const v4Lat = ctx.race ? ctx.race.v4 : Infinity;
+            const v6Lat = ctx.race ? ctx.race.v6 : Infinity;
+            const v4Ready = Number.isFinite(v4Lat);
+            const v6Ready = Number.isFinite(v6Lat);
+            const v6Threshold = Proteus._setup.thresholdV6;
+            if (v6Ready && v6Lat < v6Threshold) {
+                if (!v4Ready || (v4Ready && v6Lat * 0.7 < v4Lat)) {
+                    decision.mode = Proteus.State.V6_TURBO;
+                    decision.reason = 'v6Turbo';
+                }
+            }
+        });
+        this._bus.on('rule:idleAgent', (ctx, decision) => {
+            if (decision.mode) return;
+            const v4Lat = ctx.race ? ctx.race.v4 : Infinity;
+            const v4Ready = Number.isFinite(v4Lat);
+            if ((ctx.portActive || ctx.proxyContext) && (!v4Ready || v4Lat > 200)) {
+                decision.mode = Proteus.State.IDLE_AGENT;
+                decision.reason = 'idleAgent';
+            }
+        });
+        this._bus.on('rule:overseasRegion', (ctx, decision) => {
+            if (decision.mode) return;
+            const v4Lat = ctx.race ? ctx.race.v4 : Infinity;
+            const v4Ready = Number.isFinite(v4Lat);
+            const v4Threshold = Proteus._setup.thresholdV4;
+            if (ctx.env && !ctx.env.inference.regionCN) {
+                if (ctx.biz && v4Ready && v4Lat < v4Threshold) {
+                    decision.mode = Proteus.State.NATIVE;
+                    decision.reason = 'overseasRegionFast';
+                    return;
+                }
+                decision.mode = Proteus.State.NATIVE;
+                decision.reason = 'overseasRegion';
+            }
+        });
+        this._bus.on('rule:needsAirlock', (ctx, decision) => {
+            if (decision.mode) return;
+            if (ctx.needsAirlock) {
+                decision.mode = Proteus.State.AIRLOCK;
+                decision.reason = 'needsAirlock';
+            }
+        });
+        this._bus.on('rule:biz', (ctx, decision) => {
+            if (decision.mode) return;
+            const v4Lat = ctx.race ? ctx.race.v4 : Infinity;
+            const v4Ready = Number.isFinite(v4Lat);
+            const v4Threshold = Proteus._setup.thresholdV4;
+            if (ctx.biz && v4Ready) {
+                const mirrorLatency = ctx.mirror ?? Infinity;
+                const mirrorBetter = Number.isFinite(mirrorLatency) && mirrorLatency < v4Lat;
+                if (!mirrorBetter || v4Lat < v4Threshold) {
+                    decision.mode = Proteus.State.NATIVE;
+                    decision.reason = 'biz';
+                }
+            }
+        });
+        this._bus.on('rule:ruleSplit', (ctx, decision) => {
+            if (!decision.mode && ctx.global && !ctx.biz) {
+                decision.mode = Proteus.State.RULE_SPLIT;
+                decision.reason = 'ruleSplit';
+            }
+        });
+        this._bus.on('rule:fallback', (ctx, decision) => {
+            if (!decision.mode) {
+                decision.mode = Proteus.State.AIRLOCK;
+                decision.reason = 'fallback';
+            }
+        });
     }
 }
 
@@ -2522,11 +2820,13 @@ class PoseidonSpear {
 
 class Cerberus {
     static #instance = null;
+    #timer = null;
 
     constructor() {
         this.tier = 3; 
         this.freeMemMB = 0;
-        setInterval(() => this._monitor(), 2000).unref();
+        this.#timer = setInterval(() => this._monitor(), 2000);
+        this.#timer.unref();
         this._monitor(); 
     }
 
@@ -2535,6 +2835,20 @@ class Cerberus {
             this.#instance = new Cerberus();
         }
         return this.#instance;
+    }
+
+    stop() {
+        if (this.#timer) {
+            clearInterval(this.#timer);
+            this.#timer = null;
+        }
+    }
+
+    static reset() {
+        if (this.#instance) {
+            this.#instance.stop();
+            this.#instance = null;
+        }
     }
 
     _monitor() {
@@ -3373,6 +3687,7 @@ class MBTWorker {
 class Morpheus {
     static #initDone = false;
     static #browserInstance = null; 
+    static #cleanupHandlers = new Set();
     
     static get RenderDir() {
         return path.join(MiaoPluginMBT.Paths.TempNiuPath, "Render");
@@ -3431,9 +3746,16 @@ class Morpheus {
                 const cleanup = async () => {
                     if (this.#browserInstance) await this.#browserInstance.close();
                 };
-                process.on('exit', cleanup);
-                process.on('SIGINT', cleanup);
-                process.on('SIGTERM', cleanup);
+                
+                const register = (evt) => {
+                    process.on(evt, cleanup);
+                    this.#cleanupHandlers.add({ event: evt, fn: cleanup });
+                };
+
+                register('exit');
+                register('SIGINT');
+                register('SIGTERM');
+                
                 this.#hasBoundExit = true;
             }
             
@@ -3444,6 +3766,17 @@ class Morpheus {
         }
     }
     static #hasBoundExit = false;
+
+    static async reset() {
+        if (this.#cleanupHandlers.size > 0) {
+            for (const handler of this.#cleanupHandlers) {
+                process.removeListener(handler.event, handler.fn);
+            }
+            this.#cleanupHandlers.clear();
+        }
+        this.#hasBoundExit = false;
+        await this.closeBrowser();
+    }
 
     static async shot(businessName, options = {}) {
         const Hades = HadesEntry({}, options.logger || getCore());
@@ -3721,6 +4054,11 @@ class Ananke {
         config: new Metis('AnankeConfig'),
         banList: new Metis('AnankeBanList')
     };
+
+    static reset() {
+        if (this.#locks.config) this.#locks.config.emergencyReset('Hot Reload');
+        if (this.#locks.banList) this.#locks.banList.emergencyReset('Hot Reload');
+    }
 
     static async parallel(items, fn, concurrency = 10) {
         const results = [];
@@ -5196,7 +5534,11 @@ class DocHub {
 
         if (!isStressed) {
             try {
-                const snap = { git: await Nomos.getRepoStatus(MiaoPluginMBT.Paths.MountRepoPath), system: Nomos.getHostEnv() };
+                const snap = {
+                    git: await Nomos.getRepoStatus(MiaoPluginMBT.Paths.MountRepoPath),
+                    system: Nomos.getHostEnv(),
+                    file: { size: 'N/A', mtime: 'N/A' }
+                };
                 const tplResult = await Hermes.getTemplate('error_report.html', Hades);
 
                 if (tplResult.success) {
@@ -6092,10 +6434,10 @@ class MiaoPluginMBT extends plugin {
                   MiaoPluginMBT.BootStrap = true;
 
                   const vColor = `\x1b[38;5;229mv${Version}\x1b[0m`;
-                  Hades.O(`===============================`);
+                  Hades.O(`╔══════════════════════════════╗`);
                   Hades.O(` 全局初始化完成`);
                   Hades.O(` 版本号：${vColor}`);
-                  Hades.O(`===============================`);
+                  Hades.O(`╚══════════════════════════════╝`);
                   
                   setImmediate(() => {
                       Tianshu.UpdateStats(Hades).catch(() => {});
@@ -6137,6 +6479,10 @@ class MiaoPluginMBT extends plugin {
       if (MiaoPluginMBT._indexByTag) MiaoPluginMBT._indexByTag.clear();
       Tianshu._aliasReverseIndex = new Map();
       MBTCF.reset();
+      PoseidonSpear.reset();
+      Ananke.reset();
+      Cerberus.reset();
+      Morpheus.reset().catch(() => {});
   }
 
   static async _teardown(isReload = false, logger = console) {
@@ -6401,17 +6747,17 @@ class MiaoPluginMBT extends plugin {
     return `transform:scale(${scale}); transform-origin: top left;`;
   }
 
-  static async SmartTaskHeavy(repoNum, repoUrl, branch, finalLocalPath, e, logger, sortedNodes = [], MBTProcc, signal = null, lockId = null) {
+  static async SmartTaskHeavy(runtimeContext, repoNum, repoUrl, branch, finalLocalPath, e, logger, sortedNodes = [], MBTProcc, signal = null, lockId = null) {
       const coreLogger = logger || getCore();
       const Hades = HadesEntry({}, coreLogger);
       logger = coreLogger;
       const Rid = crypto.randomBytes(3).toString('hex').toUpperCase();
       const colorCode = Hades.nextColor();
       const RidColored = Hades.colorize(`[${Rid}]`, colorCode);
-      
+
       const cleanRepoUrl = repoUrl.replace(/\/+$/, "");
       const repoRealName = cleanRepoUrl.split("/").pop().replace(/\.git$/, "");
-      const logTag = `[${repoRealName}]`; 
+      const logTag = `[${repoRealName}]`;
       const targetBranch = branch || "main";
 
       const commitLockId = lockId || `SmartTask:Commit:${crypto.randomBytes(2).toString('hex')}`;
@@ -6420,7 +6766,7 @@ class MiaoPluginMBT extends plugin {
       let isShuttingDown = false;
       let activeCRS = null;
       let retryTimer = null;
-      let githubTimer = null; 
+      let githubTimer = null;
 
       const onShutdown = () => {
           if (isShuttingDown) return;
@@ -6446,36 +6792,25 @@ class MiaoPluginMBT extends plugin {
           const bestMirror = sortedNodes.find(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
           const mirrorSpeed = bestMirror ? (bestMirror.time || Infinity) : Infinity;
 
-          const envData = await Hermes.getEnvInfo(logger);
-          const senseChain = await Proteus.sense(envData, mirrorSpeed);
+          let vectors = runtimeContext?.vectors || null;
+          let senseChain = runtimeContext?.decision || null;
+          if (!vectors || !senseChain) {
+              const envData = await Hermes.getEnvInfo(Hades);
+              const fallbackSense = await Proteus.sense(envData, mirrorSpeed, Hades);
+              vectors = fallbackSense.vector;
+              senseChain = fallbackSense;
+              if (runtimeContext) {
+                  runtimeContext.vectors = vectors;
+                  runtimeContext.decision = senseChain;
+              }
+          }
           const netMode = senseChain.mode;
-          const enableV6 = senseChain.vector.v6Link;
-          const proxyContext = senseChain.vector.proxyContext;
-          const sysProxy = senseChain.vector.sysProxy;
+          const execCtx = senseChain.executionContext;
+          const enableV6 = vectors.v6Link;
           const v6Bias = Proteus._setup.bonusOfficial;
-          const v6Lat = senseChain.vector.v6Lat;
-          const v4Lat = senseChain.vector.v4Lat;
-          const udpReach = senseChain.vector.udpReach;
-          const buildProxyEnv = (proxy) => {
-              if (!proxy) return null;
-              const entries = Array.isArray(proxy.entries) ? proxy.entries : [];
-              const primary = (proxy.host && Number.isFinite(proxy.port)) ? { host: proxy.host, port: proxy.port, scheme: proxy.scheme || 'http' } : null;
-              const list = entries.length ? entries : (primary ? [primary] : []);
-              if (list.length === 0) return null;
-              const pick = (schemes) => list.find(e => schemes.includes(e.scheme));
-              const httpEntry = pick(['http']) || pick(['https']) || list[0];
-              const httpsEntry = pick(['https']) || pick(['http']) || httpEntry;
-              const socksEntry = pick(['socks5', 'socks']);
-              const env = {};
-              if (httpEntry) env.HTTP_PROXY = `${httpEntry.scheme || 'http'}://${httpEntry.host}:${httpEntry.port}`;
-              if (httpsEntry) env.HTTPS_PROXY = `${httpsEntry.scheme || 'http'}://${httpsEntry.host}:${httpsEntry.port}`;
-              if (socksEntry) env.ALL_PROXY = `${socksEntry.scheme}://${socksEntry.host}:${socksEntry.port}`;
-              else if (httpEntry) env.ALL_PROXY = `${httpEntry.scheme || 'http'}://${httpEntry.host}:${httpEntry.port}`;
-              return env;
-          };
-          const sysProxyEnv = buildProxyEnv(sysProxy);
-
-          logModeMsg = senseChain.desc;
+          const v6Lat = vectors.v6Lat;
+          const v4Lat = vectors.v4Lat;
+          const udpReach = vectors.udpReach;
 
           let targetNode = null;
           let preferV6 = enableV6 && Number.isFinite(v6Lat)
@@ -6486,79 +6821,26 @@ class MiaoPluginMBT extends plugin {
               Hades.D(`${RidColored} | [Smart] 检测到 IPv6 双栈环境注入策略中...`);
           }
 
-          switch (netMode) {
-              case Proteus.State.V6_TURBO:
-                  MODE = 'NATIVE_V6';
-                  useAirlock = true;
-                  inheritEnv = false;
-                  preferV6 = true;
-                  
-                  targetNode = sortedNodes.find(n => n.name === "GitHub");
-                  if (!targetNode) {
-                      targetNode = { name: "GitHub", ClonePrefix: "https://github.com/", protocol: 'HTTPS' };
-                  }
-                  
-                  logModeMsg = `${senseChain.desc} -> 强制 GitHub [${senseChain.vector.v6Lat}ms]`;
-                  break;
-              case Proteus.State.NATIVE:
-                  MODE = 'NATIVE';
-                  useAirlock = false;
-                  inheritEnv = true;
-                  if (proxyContext) {
-                      const proto = proxyContext.protocol || 'http';
-                      const proxyUrl = `${proto}://127.0.0.1:${proxyContext.port}`;
-                      extraEnv = {
-                          HTTP_PROXY: proxyUrl,
-                          HTTPS_PROXY: proxyUrl,
-                          ALL_PROXY: proxyUrl
-                      };
-                      logModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
-                  }
-                  break;
-              case Proteus.State.USER_AGENT:
-                  MODE = 'USER_PROXY';
-                  useAirlock = false; 
-                  inheritEnv = true;  
-                  
-                  if (sysProxyEnv) {
-                      extraEnv = sysProxyEnv;
-                  } else if (proxyContext) {
-                       const proto = proxyContext.protocol || 'http';
-                       const proxyUrl = `${proto}://127.0.0.1:${proxyContext.port}`;
-                       extraEnv = {
-                            HTTP_PROXY: proxyUrl,
-                            HTTPS_PROXY: proxyUrl,
-                            ALL_PROXY: proxyUrl
-                       };
-                       logModeMsg += ` [自动注入:${proto.toUpperCase()}:${proxyContext.port}]`;
-                  }
-                  break;
-              case Proteus.State.IDLE_AGENT:
-                  MODE = 'USER_PROXY';
-                  useAirlock = false;
-                  inheritEnv = true;
-                  if (proxyContext) {
-                      const proto = proxyContext.protocol || 'http';
-                      const proxyUrl = `${proto}://127.0.0.1:${proxyContext.port}`;
-                      extraEnv = {
-                          HTTP_PROXY: proxyUrl,
-                          HTTPS_PROXY: proxyUrl,
-                          ALL_PROXY: proxyUrl
-                      };
-                      logModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
-                  }
-                  break;
-              case Proteus.State.RULE_SPLIT:
-                  MODE = 'AIRLOCK_PROXY';
-                  useAirlock = true;
-                  inheritEnv = false;
-                  break;
-              case Proteus.State.AIRLOCK:
-              default:
-                  MODE = 'AIRLOCK_PROXY';
-                  useAirlock = true;
-                  inheritEnv = false;
-                  break;
+          useAirlock = execCtx.isAirlock;
+          inheritEnv = execCtx.inheritEnv;
+          extraEnv = execCtx.gitEnv;
+
+          if (netMode === Proteus.State.V6_TURBO) {
+              MODE = 'NATIVE_V6';
+              preferV6 = true;
+              targetNode = sortedNodes.find(n => n.name === "GitHub");
+              if (!targetNode) {
+                  targetNode = { name: "GitHub", ClonePrefix: "https://github.com/", protocol: 'HTTPS' };
+              }
+              logModeMsg = `${senseChain.desc} -> 强制 GitHub [${senseChain.vector.v6Lat}ms]`;
+          } else {
+              MODE = netMode === Proteus.State.NATIVE ? 'NATIVE' :
+                     (netMode === Proteus.State.USER_AGENT || netMode === Proteus.State.IDLE_AGENT) ? 'USER_PROXY' : 'AIRLOCK_PROXY';
+
+              logModeMsg = senseChain.desc;
+              if (extraEnv && extraEnv.ALL_PROXY) {
+                  logModeMsg += ` [注入:${extraEnv.ALL_PROXY}]`;
+              }
           }
 
           Hades.D(`${RidColored} | [Smart] 运行模式: ${MODE} | 理由: ${logModeMsg}`);
@@ -7761,8 +8043,16 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           if (TheGrid.length === 0) TheGrid = validNodes;
 
           const branch = MiaoPluginMBT.MBTConfig.RepoBranch || "main";
+          const runtimeContext = new RuntimeCtx();
+          const envData = await Hermes.getEnvInfo(Hades);
+          const bestMirror = TheGrid.find(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
+          const mirrorSpeed = bestMirror ? (bestMirror.time || Infinity) : Infinity;
+          const senseChain = await Proteus.sense(envData, mirrorSpeed, Hades);
+          runtimeContext.vectors = senseChain.vector;
+          runtimeContext.decision = senseChain;
+
           const result = await MiaoPluginMBT.SmartTaskHeavy(
-              repoNum, repoUrl, branch, 
+              runtimeContext, repoNum, repoUrl, branch,
               repoPath, e, Hades, TheGrid, MBTProcc
           );
 
@@ -7986,8 +8276,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       }
   }
 
-  async _ResolveRunMode(envInfo, mirrorSpeed = Infinity, senseChain = null) {
-    const chain = senseChain || await Proteus.sense(envInfo, mirrorSpeed);
+  async _ResolveRunMode(envInfo, mirrorSpeed = Infinity, senseChain = null, Hades = console) {
+    const chain = senseChain || await Proteus.sense(envInfo, mirrorSpeed, Hades);
     const netMode = chain.mode;
     const proxyContext = chain.vector.proxyContext;
     const v6Lat = chain.vector.v6Lat;
@@ -8068,7 +8358,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         const envInfo = await taskEnvInfo;
         const bestMirror = httpResults.find(r => r.name !== 'GitHub' && Number.isFinite(r.speed));
         const mirrorSpeed = bestMirror ? bestMirror.speed : Infinity;
-        const senseChain = await Proteus.sense(envInfo, mirrorSpeed);
+        const senseChain = await Proteus.sense(envInfo, mirrorSpeed, Hades);
         const vector = senseChain.vector;
 
         let rxBytes = 0;
@@ -8141,7 +8431,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         let clientGeo = geoParts.join(' / ') || "未知地区";
         if (isp) clientGeo += ` [${isp}]`;
         
-        const { runMode, runModeMsg } = await this._ResolveRunMode(envInfo, mirrorSpeed, senseChain);
+        const { runMode, runModeMsg } = await this._ResolveRunMode(envInfo, mirrorSpeed, senseChain, Hades);
 
         const tplResult = await Hermes.getTemplate('speedtest.html', Hades);
         if (!tplResult.success) throw new Error("模板加载失败");
@@ -10364,9 +10654,17 @@ class CommunityMBT extends plugin {
                             .then(gitResult => ({ name: node.name, gitResult }))
                     );
                     const sortedNodes = await MiaoPluginMBT.AdaptiveSpeed(HttpResultMap, await Promise.all(gitTestPromises), this.logger);
-                    
+
+                    const runtimeContext = new RuntimeCtx();
+                    const envData = await Hermes.getEnvInfo(this.logger);
+                    const bestMirror = sortedNodes.find(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
+                    const mirrorSpeed = bestMirror ? (bestMirror.time || Infinity) : Infinity;
+                    const senseChain = await Proteus.sense(envData, mirrorSpeed, this.logger);
+                    runtimeContext.vectors = senseChain.vector;
+                    runtimeContext.decision = senseChain;
+
                     const downloadResult = await MiaoPluginMBT.SmartTaskHeavy(
-                        `Comm-${alias}`, `https://github.com/${urp}.git`, 'main', targetPath, e, this.logger, sortedNodes, MiaoPluginMBT.MBTProcc
+                        runtimeContext, `Comm-${alias}`, `https://github.com/${urp}.git`, 'main', targetPath, e, this.logger, sortedNodes, MiaoPluginMBT.MBTProcc
                     );
                     
                     if (!downloadResult.success) throw downloadResult.error || new Error("GitHub 链路调度失败");
