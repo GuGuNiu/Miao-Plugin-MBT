@@ -5245,7 +5245,7 @@ class Tianshu {
     static async Search(inputMsg) {
         const msg = inputMsg.trim();
         if (!msg) {
-            const stats = await this.Dashboard(MiaoPluginMBT._indexByCRE);
+            const stats = await this.Dashboard(Tianshu._indexByCRE);
             return { type: 'dashboard', stats };
         }
 
@@ -5256,7 +5256,7 @@ class Tianshu {
 
         if (Valid_Tags[lowerInput]) {
             const tagKey = Valid_Tags[lowerInput].key;
-            const items = MiaoPluginMBT._indexByTag.get(tagKey) || [];
+            const items = Tianshu._indexByTag.get(tagKey) || [];
             return { type: 'tag', title: `[${inputName.toUpperCase()}] 标签图库`, items };
         }
 
@@ -5268,7 +5268,7 @@ class Tianshu {
         const gameMeta = Nomos.MatchGame(inputName);
         if (gameMeta) {
             if (!secInput && (gameMeta.key === 'gs' || gameMeta.key === 'sr')) {
-                 const stats = await this.Dashboard(MiaoPluginMBT._indexByCRE);
+                 const stats = await this.Dashboard(Tianshu._indexByCRE);
                  return { type: 'dashboard', stats };
             }
 
@@ -5307,7 +5307,7 @@ class Tianshu {
 
         const aliasRes = await this.NormalizeName(inputName);
         const primaryName = aliasRes.exists ? aliasRes.mainName : inputName;
-        const items = MiaoPluginMBT._indexByCRE.get(primaryName) || [];
+        const items = Tianshu._indexByCRE.get(primaryName) || [];
 
         if (items.length > 0) {
             const storageType = items[0].storagebox_type;
@@ -5881,7 +5881,7 @@ class MBTCF {
         if (this.isPurified(p)) throw new Error("目标已被净化规则屏蔽，无法手动封禁");
         if (this.#BanMap.has(p)) throw new Error("该图片已在封禁列表中");
 
-        const item = MiaoPluginMBT._indexByGid.get(p);
+        const item = Tianshu._indexByGid.get(p);
         const md5 = item?.attributes?.md5 || null;
 
         this.#BanMap.set(p, { md5, timestamp: new Date().toISOString() });
@@ -9401,7 +9401,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
           const VewItems = await Promise.all(batchItems.map(async (item, index) => {
             const thumbnailPath = await getThumbPath(item.path);
-            const imgDataEntry = MiaoPluginMBT._indexByGid.get(item.path);
+            const imgDataEntry = Tianshu._indexByGid.get(item.path);
             const reasons = [];
             
             if (imgDataEntry) {
@@ -9498,7 +9498,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         const primaryName = aliasResult.exists ? aliasResult.mainName : rawMainName;
 
         let imageData = null;
-        const imagesForCharacter = MiaoPluginMBT._indexByCRE.get(primaryName);
+        const imagesForCharacter = Tianshu._indexByCRE.get(primaryName);
         if (imagesForCharacter && imagesForCharacter.length > 0) {
           const Fingerprint = `${primaryName.toLowerCase()}gu${imgNum}.webp`;
           imageData = imagesForCharacter.find((img) =>
