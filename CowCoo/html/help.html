@@ -5,24 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>咕咕牛图库帮助菜单</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b0c10;
-            --card-bg: rgba(21, 23, 26, 0.4);
-            --neon-cyan: #66fcf1;
-            --neon-cyan-rgb: 102, 252, 241;
-            --neon-green: #2ecc71;
-            --neon-green-rgb: 46, 204, 113;
-            --neon-red: #ff3860;
-            --neon-red-rgb: 255, 56, 96;
-            --neon-yellow: #f2c94c;
-            --neon-yellow-rgb: 242, 201, 76;
-            --warm-amber: #ffb347;
-            --warm-amber-rgb: 255, 179, 71;
-            --dim-text: #a0a9c5;
-            --dark-line: rgba(102, 252, 241, 0.2);
-            --glass-blur: blur(12px);
+            --bg-color: #e0f7fa;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #5d4037;
+            --text-sub: #8d6e63;
+            --summer-blue: #4fc3f7;
+            --summer-green: #81c784;
+            --summer-red: #ff8a65;
+            --summer-yellow: #ffd54f;
+            --glass-blur: blur(10px);
         }
 
         * {
@@ -31,435 +25,243 @@
 
         body {
             margin: 0;
-            padding: 20px;
             font-family: 'Noto Sans SC', sans-serif;
             background-color: var(--bg-color);
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            color: #fff;
+            color: var(--text-main);
             width: 900px;
             margin: 0 auto;
             overflow-x: hidden;
         }
 
         .main-wrapper {
-            display: grid;
-            grid-template-columns: 60px 1fr;
-            gap: 20px;
             position: relative;
-            background-image: url('https://s2.loli.net/2026/02/02/Yq6NVRDGcxKnzUZ.webp');
-            background-size: cover;
-            background-position: center;
-            border-radius: 15px;
+            background-color: white;
             overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .main-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                rgba(0, 0, 0, 0.4);
-            background-size: 30px 30px, 30px 30px, auto;
-            z-index: 0;
-        }
-
-        .main-wrapper::after {
-            content: '';
-            position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(255, 179, 71, 0.15) 0%, transparent 70%);
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .side-decor, .content-area {
+        .content-area {
             position: relative;
             z-index: 1;
-        }
-
-        .side-decor {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 50px;
-            border-right: 1px solid var(--dark-line);
-            backdrop-filter: var(--glass-blur);
-            background: rgba(0, 0, 0, 0.2);
-            margin: -20px 0;
-            height: calc(100% + 40px);
-        }
-
-        .side-text {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            font-family: 'Orbitron';
-            font-weight: 900;
-            font-size: 24px;
-            color: rgba(255, 255, 255, 0.1);
-            letter-spacing: 10px;
-            margin-top: 100px;
-            text-transform: uppercase;
-            position: relative;
-            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.05);
-        }
-
-        .side-text span.tail-p {
-            position: relative;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 10px var(--neon-cyan);
-            display: inline-block;
-        }
-
-        .side-text span.tail-p::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 150px;
-            background: linear-gradient(to bottom, 
-                var(--neon-cyan) 0%, 
-                rgba(102, 252, 241, 0.5) 20%, 
-                rgba(102, 252, 241, 0.1) 60%, 
-                transparent 100%);
-            box-shadow: 0 0 8px var(--neon-cyan);
-            filter: blur(1px);
-        }
-
-        .side-line {
-            width: 2px;
-            height: 100px;
-            background: linear-gradient(to bottom, var(--neon-cyan), transparent);
-            margin-bottom: 20px;
         }
 
         .header-hud {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 2px solid var(--neon-cyan);
-            padding: 15px;
-            margin-bottom: 25px;
-            position: relative;
-            background: rgba(102, 252, 241, 0.05);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 8px;
-        }
-
-        .header-hud::before {
-            content: '';
-            position: absolute;
-            bottom: -6px;
-            right: 0;
-            width: 30%;
-            height: 6px;
-            background-color: var(--neon-cyan);
-            clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+            align-items: center;
+            padding: 20px 25px;
+            margin: 0;
+            height: 220px;
+            background-image: url('{{guguniu_res_path}}html/img/bg/Help/help_bg_layout_02.png');
+            background-size: 100%;
+            background-position: center bottom;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
         }
 
         .title-block h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 42px;
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-size: 55px;
             margin: 0;
-            line-height: 1;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(102, 252, 241, 0.6);
+            line-height: 1.2;
+            background: linear-gradient(to right, #be543d, #275b19cf, #1f5471, #cc8eeb, #000000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8), 4px 4px 0px rgba(79, 195, 247, 0.3);
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            padding: 4px 4px;
+            border-radius: 16px;
+            display: inline-block;
         }
 
         .title-block .subtitle {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 16px;
-            color: var(--neon-cyan);
-            letter-spacing: 4px;
-            margin-top: 5px;
+            font-size: 15px;
+            color: #e0e0e0;
+            margin-top: 12px;
             font-weight: 700;
+            background: rgba(0, 0, 0, 0.4);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            display: block;
+            width: fit-content;
         }
 
         .ver-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-size: 16px;
+            color: var(--summer-red);
             margin-left: 5px;
-            opacity: 0.8;
         }
 
-        .footer-terminal {
-            margin-top: 30px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid rgba(255, 179, 71, 0.15);
-            border-radius: 4px;
-            font-family: 'Rajdhani', sans-serif;
+        .sys-info-wrapper {
             position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(255, 179, 71, 0.05);
-        }
-
-        .terminal-header {
+            width: 140px;
+            height: 180px;
+            margin-right: 20px;
+            margin-top: -30px;
             display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            color: var(--warm-amber);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            opacity: 0.8;
+            justify-content: center;
         }
 
-        .terminal-body {
-            font-size: 12px;
-            color: var(--dim-text);
-            line-height: 1.6;
-            font-family: 'Orbitron', monospace;
+        .sys-info-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            z-index: 1;
         }
 
-        .terminal-body span {
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .terminal-body .highlight {
-            color: var(--warm-amber);
-            opacity: 1;
-            text-shadow: 0 0 8px rgba(255, 179, 71, 0.4);
-        }
-
-        .terminal-cursor {
-            display: inline-block;
-            width: 8px;
-            height: 14px;
-            background-color: var(--warm-amber);
-            vertical-align: middle;
-            margin-left: 5px;
-            box-shadow: 0 0 8px var(--warm-amber);
-        }
-
-        .sys-info {
-            text-align: right;
-            font-family: 'Orbitron', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+        .sys-text-content {
+            position: absolute;
+            top: 75px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
+            transform: rotate(-2deg);
         }
 
         .sys-days {
-            font-size: 10px;
-            color: var(--warm-amber);
-            opacity: 0.8;
-            letter-spacing: 1px;
+            font-size: 12px;
+            color: #5d4037;
+            font-weight: 900;
             margin-bottom: 2px;
-            text-transform: uppercase;
+            opacity: 0.8;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
         }
 
         .sys-counter {
+            font-family: 'ZCOOL KuaiLe', cursive;
             font-size: 28px;
-            font-weight: 800;
-            color: #fff;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
-            padding: 4px 12px;
-            position: relative;
-            letter-spacing: -1px;
-            text-shadow: 0 0 10px rgba(255, 179, 71, 0.4);
-        }
-
-        .sys-counter::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, var(--warm-amber) 0%, transparent 100%);
-            box-shadow: 0 0 8px rgba(255, 179, 71, 0.5);
-        }
-
-        .sys-counter::before {
-            content: 'DAYS';
-            position: absolute;
-            left: -35px;
-            bottom: 6px;
-            font-size: 8px;
-            color: var(--warm-amber);
-            opacity: 0.5;
-            letter-spacing: 1px;
-            transform: rotate(-90deg);
+            color: #3e2723;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
         }
 
         .dashboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .module-group {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 15px;
+            gap: 18px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: var(--glass-blur);
+            border-radius: 20px;
+            border: 2px solid var(--color-theme);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
         }
 
         .module-header {
             grid-column: span 6;
-            margin-top: 25px;
-            margin-bottom: 5px;
+            margin-top: -20px;
+            margin-bottom: 10px;
+            margin-left: -20px;
+            margin-right: -20px;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             position: relative;
-            height: 36px;
-            padding: 0;
-            background: none;
-            backdrop-filter: none;
-        }
-
-        .header-tag {
-            background-color: var(--color-theme);
-            width: 8px;
-            height: 24px;
-            margin-right: 12px;
-            clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
-            box-shadow: 0 0 10px var(--color-theme);
+            z-index: 1;
         }
 
         .header-content {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: var(--glass-blur);
-            height: 100%;
-            padding: 0 30px 0 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--color-theme);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border: 2px solid white;
             position: relative;
-            clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 100%, 0 100%);
-        }
-
-        .header-content::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background-color: var(--color-theme);
+            top: 12px;
         }
 
         .header-title {
-            font-family: 'Orbitron';
-            font-weight: 800;
-            font-size: 15px;
-            color: #fff;
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-size: 18px;
             letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .header-decoration {
-            margin-left: 15px;
-            display: flex;
-            gap: 4px;
-        }
-
-        .header-decoration span {
-            width: 4px;
-            height: 4px;
-            background-color: var(--color-theme);
-            opacity: 0.5;
-            transform: rotate(45deg);
         }
 
         .header-line {
             flex-grow: 1;
-            height: 1px;
-            background: linear-gradient(90deg, var(--color-theme), transparent);
-            opacity: 0.3;
+            height: 4px;
+            background: var(--color-theme);
             margin-left: 15px;
+            border-radius: 2px;
+            opacity: 0.5;
         }
 
         .hud-card {
             grid-column: span 2;
-            border-radius: 8px;
-            border: 1px solid var(--color-theme);
-            background-color: var(--card-bg);
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--card-bg) 0%, rgba(255, 255, 255, 0.95) 100%);
             backdrop-filter: var(--glass-blur);
+            border: 2px solid color-mix(in srgb, var(--color-theme) 30%, white);
             position: relative;
-            height: 80px;
+            height: 85px;
             display: flex;
             overflow: hidden;
-            pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s;
         }
 
         .card-icon-section {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 85px;
-            background: linear-gradient(135deg, 
-                rgba(0, 0, 0, 0.6) 0%, 
-                rgba(var(--color-theme-rgb), 0.4) 100%);
-            backdrop-filter: blur(5px);
-            clip-path: polygon(0 0, 100% 0, 75% 100%, 0 100%);
-            z-index: 1;
+            width: 80px;
+            background: rgba(255, 255, 255, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding-right: 15px;
-        }
-
-        .card-icon-section::before, .card-icon-section::after {
-            display: none;
+            border-right: 2px dashed rgba(0, 0, 0, 0.05);
         }
 
         .card-icon-section img {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
         }
 
         .card-text-section {
             flex: 1;
-            margin-left: 75px;
-            padding: 0 15px 0 10px;
+            padding: 0 12px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            z-index: 0;
-            background-image: repeating-linear-gradient(45deg,
-                    rgba(255, 255, 255, 0.02) 0px,
-                    rgba(255, 255, 255, 0.02) 2px,
-                    transparent 2px,
-                    transparent 8px);
         }
 
         .cmd-title {
-            font-family: 'Noto Sans SC', sans-serif;
-            font-weight: 700;
+            font-weight: 900;
             font-size: 15px;
-            color: #fff;
+            color: var(--text-main);
             margin-bottom: 4px;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
         .cmd-hl {
             color: var(--color-theme);
-            font-family: 'Orbitron', monospace;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 13px;
             margin-left: 4px;
-            text-shadow: 0 0 8px var(--color-theme);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .cmd-desc {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-sub);
             line-height: 1.4;
-            margin-top: 4px;
-            font-weight: 400;
+            font-weight: 700;
         }
 
         .span-3 {
@@ -475,49 +277,19 @@
         }
 
         .theme-green {
-            --color-theme: var(--neon-green);
-            --color-theme-rgb: var(--neon-green-rgb);
+            --color-theme: var(--summer-green);
         }
 
         .theme-cyan {
-            --color-theme: var(--neon-cyan);
-            --color-theme-rgb: var(--neon-cyan-rgb);
+            --color-theme: var(--summer-blue);
         }
 
         .theme-red {
-            --color-theme: var(--neon-red);
-            --color-theme-rgb: var(--neon-red-rgb);
+            --color-theme: var(--summer-red);
         }
 
         .theme-yellow {
-            --color-theme: var(--neon-yellow);
-            --color-theme-rgb: var(--neon-yellow-rgb);
-        }
-
-        .footer-bar {
-            margin-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 10px;
-            display: flex;
-            justify-content: space-between;
-            font-family: 'Rajdhani', monospace;
-            font-size: 12px;
-            color: var(--dim-text);
-            text-transform: uppercase;
-        }
-
-        .footer-bar span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--neon-green);
-            border-radius: 50%;
-            box-shadow: 0 0 5px var(--neon-green);
+            --color-theme: var(--summer-yellow);
         }
     </style>
 </head>
@@ -525,233 +297,244 @@
 <body style="{{RenderMatrix}}">
 
     <div class="main-wrapper">
-        <div class="side-decor">
-            <div class="side-line"></div>
-                <img src="https://s2.loli.net/2026/01/25/aBjAZo3N9twQkVz.png"
-                    style="width: 40px; opacity: 0.8; filter: drop-shadow(0 0 5px var(--neon-cyan));">
-                <div class="side-text">CowCoo SYSTEM HEL<span class="tail-p">P</span></div>
-        </div>
-
         <div class="content-area">
 
             <header class="header-hud">
                 <div class="title-block">
-                    <h1>咕咕牛图库的管理帮助手册</h1>
+                    <h1>咕咕牛图库菜单</h1>
                     <div class="subtitle">当前使用的版本:<span class="ver-text">v{{ Version }}</span></div>
                 </div>
-                <div class="sys-info">
-                    <div class="sys-days">已陪伴的时间 (天)</div>
-                    <div class="sys-counter">{{ insDays }}</div>
+                
+                <div class="sys-info-wrapper">
+                    <svg class="sys-info-svg" viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#8d6e63;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#a1887f;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#8d6e63;stop-opacity:1" />
+                            </linearGradient>
+                            <filter id="roughPaper">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise"/>
+                                <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2">
+                                    <feDistantLight azimuth="45" elevation="60"/>
+                                </feDiffuseLighting>
+                            </filter>
+                        </defs>
+                        <path d="M35 0 L35 60 M105 0 L105 60" stroke="#5d4037" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 1"/>
+                        <g transform="rotate(-2 70 90)">
+                            <path d="M10 60 H130 V110 L115 125 H10 V60 Z" fill="url(#woodGrad)" stroke="#5d4037" stroke-width="2"/>
+                            <path d="M15 70 H120 M20 80 H110 M15 90 H100 M25 100 H90" stroke="#3e2723" stroke-width="1" opacity="0.2"/>
+                            <circle cx="35" cy="70" r="3" fill="#3e2723"/>
+                            <circle cx="105" cy="70" r="3" fill="#3e2723"/>
+                        </g>
+                        <line x1="70" y1="120" x2="70" y2="135" stroke="#5d4037" stroke-width="2"/>
+                        <g transform="translate(70, 150)">
+                            <circle cx="0" cy="0" r="18" fill="#fff" stroke="#333" stroke-width="1.5"/>
+                            <path d="M-10 -5 Q-5 -5 -2 -10" fill="none" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="8" cy="5" r="3" fill="#333"/>
+                            <circle cx="-5" cy="-2" r="1.5" fill="#333"/>
+                            <circle cx="5" cy="-2" r="1.5" fill="#333"/>
+                            <path d="M-2 2 Q0 4 2 2" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M-12 -12 L-16 -20 L-8 -15 Z" fill="#ffcc80"/>
+                            <path d="M12 -12 L16 -20 L8 -15 Z" fill="#ffcc80"/>
+                            <ellipse cx="-18" cy="-5" rx="5" ry="3" fill="#fff" stroke="#333" stroke-width="1"/>
+                            <ellipse cx="18" cy="-5" rx="5" ry="3" fill="#fff" stroke="#333" stroke-width="1"/>
+                        </g>
+                    </svg>
+                    
+                    <div class="sys-text-content">
+                        <div class="sys-days">已陪伴 (天)</div>
+                        <div class="sys-counter">{{ insDays }}</div>
+                    </div>
                 </div>
             </header>
 
             <div class="dashboard-grid">
 
-                <div class="module-header theme-green">
-                    <div class="header-tag"></div>
-                    <div class="header-content">
-                        <div class="header-title">图库安装</div>
-                        <div class="header-decoration">
-                            <span></span><span></span><span></span>
+                <div class="module-group theme-green">
+                    <div class="module-header">
+                        <div class="header-content">
+                            <div class="header-title">图库安装</div>
+                        </div>
+                        <div class="header-line"></div>
+                    </div>
+
+                    <div class="hud-card span-3">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[0]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#下载咕咕牛</div>
+                            <div class="cmd-desc">自动测速选择合适节点下载</div>
                         </div>
                     </div>
-                    <div class="header-line"></div>
-                </div>
 
-                <div class="hud-card theme-green span-3">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[0]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#下载咕咕牛</div>
-                        <div class="cmd-desc">自动测速选择合适节点下载</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-green span-3">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[1]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#更新咕咕牛</div>
-                        <div class="cmd-desc">手动执行更新 / 每天会自动更新</div>
-                    </div>
-                </div>
-
-                <div class="module-header theme-cyan">
-                    <div class="header-tag"></div>
-                    <div class="header-content">
-                        <div class="header-title">图库操作</div>
-                        <div class="header-decoration">
-                            <span></span><span></span><span></span>
+                    <div class="hud-card span-3">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[1]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#更新咕咕牛</div>
+                            <div class="cmd-desc">手动执行更新 / 每天会自动更新</div>
                         </div>
                     </div>
-                    <div class="header-line"></div>
                 </div>
 
-                <div class="hud-card theme-cyan">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[2]}}">
+                <div class="module-group theme-cyan">
+                    <div class="module-header">
+                        <div class="header-content">
+                            <div class="header-title">图库操作</div>
+                        </div>
+                        <div class="header-line"></div>
                     </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#启/禁用咕咕牛</div>
-                        <div class="cmd-desc">管理图库同步</div>
-                    </div>
-                </div>
 
-                <div class="hud-card theme-cyan">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[3]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛状态</div>
-                        <div class="cmd-desc">查看本地参数</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-cyan">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[4]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛查看<span class="cmd-hl">xx</span></div>
-                        <div class="cmd-desc">查看角色图片</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-cyan">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[5]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛导出<span class="cmd-hl">xx</span></div>
-                        <div class="cmd-desc">导出'角色'图片文件</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-cyan span-4">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[6]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#可视化<span class="cmd-hl">xx</span></div>
-                        <div class="cmd-desc">图形化显示面板图</div>
-                    </div>
-                </div>
-
-                <div class="module-header theme-red">
-                    <div class="header-tag"></div>
-                    <div class="header-content">
-                        <div class="header-title">封禁与设置</div>
-                        <div class="header-decoration">
-                            <span></span><span></span><span></span>
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[2]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#启/禁用咕咕牛</div>
+                            <div class="cmd-desc">管理图库同步</div>
                         </div>
                     </div>
-                    <div class="header-line"></div>
-                </div>
 
-                <div class="hud-card theme-red">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[8]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛封/解禁<span class="cmd-hl">ID</span></div>
-                        <div class="cmd-desc">管理图片黑名单</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-red">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[10]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛设置净化等级</div>
-                        <div class="cmd-desc">0:不过滤 / 1:仅R18 / 2:全部</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-red">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[11]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛面板</div>
-                        <div class="cmd-desc">设置状态概览</div>
-                    </div>
-                </div>
-
-                <div class="hud-card theme-red span-6">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[12]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛设置 <span class="cmd-hl">xx 开启/关闭</span></div>
-                        <div class="cmd-desc">Ai / 彩蛋 / 横屏</div>
-                    </div>
-                </div>
-
-                <div class="module-header theme-yellow">
-                    <div class="header-tag"></div>
-                    <div class="header-content">
-                        <div class="header-title">社区图库资源</div>
-                        <div class="header-decoration">
-                            <span></span><span></span><span></span>
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[3]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛状态</div>
+                            <div class="cmd-desc">查看本地参数</div>
                         </div>
                     </div>
-                    <div class="header-line"></div>
-                </div>
 
-                <div class="hud-card theme-yellow span-6">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[4]}}">
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[4]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛查看<span class="cmd-hl">xx</span></div>
+                            <div class="cmd-desc">查看角色图片</div>
+                        </div>
                     </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛安装 <span class="cmd-hl">URL:简称</span></div>
-                        <div class="cmd-desc">安装社区图库 | 示例: #咕咕牛安装https://github.com/...:Name</div>
-                    </div>
-                </div>
 
-                <div class="hud-card theme-yellow">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[5]}}">
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[5]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛导出<span class="cmd-hl">xx</span></div>
+                            <div class="cmd-desc">导出'角色'图片文件</div>
+                        </div>
                     </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛更新<span class="cmd-hl">简称</span></div>
-                        <div class="cmd-desc">更新第三方图库</div>
-                    </div>
-                </div>
-                <div class="hud-card theme-yellow">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[6]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛卸载<span class="cmd-hl">简称</span></div>
-                        <div class="cmd-desc">移除社区图库</div>
-                    </div>
-                </div>
-                <div class="hud-card theme-yellow">
-                    <div class="card-icon-section">
-                        <img src="{{headerImg[7]}}">
-                    </div>
-                    <div class="card-text-section">
-                        <div class="cmd-title">#咕咕牛列表</div>
-                        <div class="cmd-desc">查看已安装列表</div>
+
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[6]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#可视化<span class="cmd-hl">xx</span></div>
+                            <div class="cmd-desc">图形化显示面板图</div>
+                        </div>
                     </div>
                 </div>
 
-            </div>
+                <div class="module-group theme-red">
+                    <div class="module-header">
+                        <div class="header-content">
+                            <div class="header-title">封禁与设置</div>
+                        </div>
+                        <div class="header-line"></div>
+                    </div>
 
-            <div class="footer-terminal">
-                <div class="terminal-header">
-                    <span>System Status: Optimal</span>
-                    <span>Node: CowCoo_Main_v{{ Version }}</span>
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[8]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛封/解禁<span class="cmd-hl">ID</span></div>
+                            <div class="cmd-desc">管理图片黑名单</div>
+                        </div>
+                    </div>
+
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[10]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛设置净化等级</div>
+                            <div class="cmd-desc">0:不过滤 / 1:仅R18 / 2:全部</div>
+                        </div>
+                    </div>
+
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[11]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛面板</div>
+                            <div class="cmd-desc">设置状态概览</div>
+                        </div>
+                    </div>
+
+                    <div class="hud-card span-3">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[12]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛设置 <span class="cmd-hl">xx 开启/关闭</span></div>
+                            <div class="cmd-desc">Ai / 彩蛋 / 横屏</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="terminal-body">
-                    <span>> INITIALIZING NEURAL INTERFACE... <span class="highlight">DONE</span></span>
-                    <span>> SYNCHRONIZING WITH GLOBAL DATABASE... <span class="highlight">OK</span></span>
-                    <span>> ALL SYSTEMS NOMINAL. <span class="highlight">WELCOME HOME, OPERATOR.</span></span>
-                    <span>> SYSTEM_CORE_READY: <span class="highlight">STAY CREATIVE & STAY WARM</span><span class="terminal-cursor"></span></span>
+
+                <div class="module-group theme-yellow">
+                    <div class="module-header">
+                        <div class="header-content">
+                            <div class="header-title">社区图库资源</div>
+                        </div>
+                        <div class="header-line"></div>
+                    </div>
+
+                    <div class="hud-card span-6">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[4]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛安装 <span class="cmd-hl">URL:简称</span></div>
+                            <div class="cmd-desc">安装社区图库 | 示例: #咕咕牛安装https://github.com/...:Name</div>
+                        </div>
+                    </div>
+
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[5]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛更新<span class="cmd-hl">简称</span></div>
+                            <div class="cmd-desc">更新第三方图库</div>
+                        </div>
+                    </div>
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[6]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛卸载<span class="cmd-hl">简称</span></div>
+                            <div class="cmd-desc">移除社区图库</div>
+                        </div>
+                    </div>
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[7]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛列表</div>
+                            <div class="cmd-desc">查看已安装列表</div>
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
         </div>
@@ -759,4 +542,4 @@
 
 </body>
 
-</html>
+</html> 

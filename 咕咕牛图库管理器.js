@@ -3790,7 +3790,7 @@ class Morpheus {
             navOpts = { waitUntil: "networkidle0", timeout: 30000 },
             pageBoundingRect,
             width,
-            padding = 20,
+            // padding = 20,
             transparentBackground = false
         } = options;
 
@@ -4051,8 +4051,8 @@ class MBTMath {
 
 class Ananke {
     static #locks = {
-        config: new Metis('AnankeConfig'),
-        banList: new Metis('AnankeBanList')
+        config: new Metis('AnankeConfig', getCore()),
+        banList: new Metis('AnankeBanList', getCore())
     };
 
     static reset() {
@@ -6434,9 +6434,16 @@ class MiaoPluginMBT extends plugin {
                   MiaoPluginMBT.BootStrap = true;
 
                   const vColor = `\x1b[38;5;229mv${Version}\x1b[0m`;
+                  const boxWidth = 30;
+                  const padCenter = (text) => {
+                      const visibleLen = text.replace(/\x1b\[\d+(;\d+)*m/g, '').length;
+                      const pad = Math.max(0, boxWidth - visibleLen);
+                      const left = Math.floor(pad / 2);
+                      return ' '.repeat(left) + text;
+                  };
                   Hades.O(`╔══════════════════════════════╗`);
-                  Hades.O(` 全局初始化完成`);
-                  Hades.O(` 版本号：${vColor}`);
+                  Hades.O(padCenter(`全局初始化完成`));
+                  Hades.O(padCenter(`版本号：${vColor}`));
                   Hades.O(`╚══════════════════════════════╝`);
                   
                   setImmediate(() => {
