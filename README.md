@@ -4,38 +4,47 @@
   </a>
 </p> 
 
-### 图库的介绍
+### 图库的说明
 
-  面板图采用 `Nano-Banana-Pro`、`Comfyui` 等工具进行二次调色与扩图处理。在确保质量优先的前提下，定期替换不符合当前审美的旧图，避免无序扩张。管理器提供多元化的图片管理方案，全面支持 [原神/星铁] Miao-Plugin、[绝区零] ZZZ-Plugin、[鸣潮] Waves-Plugin（0卡苏打水版）。🏵️  **2023年10月** 创立以来，持续打磨便捷且安全的 **"一体化面板图库生态"** 体验
-  <a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
-    <button style="
-      padding: 10px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background: linear-gradient(to right, #00aaff, #0077ff);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: background 0.3s ease;
-    " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'" 
-       onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-      💬 QQ群：留学移民交流群
-    </button>
-  </a>🏵️
+图库是 Yunzai 框架下的游戏插件角色面板图资源补充，提供了涵盖**原神&星铁&绝区零&鸣潮的面板图资源**，自 **2023年10月** 创建以来，持续围绕安全、方便进行迭代优化，逐步构建面向多插件生态的 **一体化面板图库体系**，提升整体使用体验与管理效率。<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
+  <button style="
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(to right, #00aaff, #0077ff);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease;
+  " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'"
+     onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
+    💬 QQ群：留学移民交流群
+  </button>
+</a>
 
-管理器插件采用基于 **Symbol 索引的全局事件总线架构**，核心底座 `SignalTrap` 继承自 `EventEmitter`，利用 `Symbol.for` 在全局作用域注册唯一实例（跨热重载持久化），作为**中央事件总线**，通过 **EventListener** 统一接管信号与生命周期事件，驱动模块协同。
+#### 适配的游戏插件
+
+| 游戏 | 插件名称 |
+| :--- | :--- |
+| 原神 / 星铁 | Miao-Plugin |
+| 绝区零 | ZZZ-Plugin |
+| 鸣潮 | Waves-Plugin（0卡苏打水版） |
+
+#### 面板图处理
+
+面板图采用 `Nano-Banana-Pro`、`ComfyUI` 等工具进行二次调色与扩图处理，在质量优先的前提下持续优化视觉呈现。图库会定期替换不符合当前审美标准的旧图，避免无序扩张，保持整体风格统一。
+
+#### 架构设计
+
+管理器采用基于 **Symbol 索引的全局事件总线架构**，核心底座 `SignalTrap` 继承自 `EventEmitter`，通过 **EventListener** 统一接管信号与生命周期事件，驱动模块协同。
 
 | 核心模块 | 实现 | 架构职责 |
 | :--- | :--- | :--- |
-| **SignalTrap** | `EventEmitter` + `Symbol` | **全局事件总线**。利用 Symbol 确保实例唯一，监听 OS 信号并广播事件，是插件的生命周期锚点。 |
-| **ProcPool** | `EventListener` | **进程生命周期管理**。订阅 Trap 的事件，在插件重载或关闭时，自动捕获并销毁所有挂起的子进程。 |
-| **QuoCRS** | `AbortController` + `Listener` | **并发任务调度底座**。监听上游信号与 Trap 事件，负责异步任务队列的竞态控制、熔断保护与中止。 |
-
-<p>
-  
-</p>
+| **SignalTrap** | `EventEmitter` + `Symbol` | **全局事件总线** |
+| **ProcPool** | `EventListener` | **进程生命周期管理** |
+| **QuoCRS** | `AbortController` + `Listener` | **并发任务调度底座** |
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -54,7 +63,7 @@
 | 0    | 无过滤       | 显示所有面板图，含敏感内容 ( 轻微露点占比0.02% )        |
 | 1    | 常规净化     | 过滤全部 Rx18，保留低敏感的 Px18 内容                   |
 | 2    | 最高净化     | 严格过滤所有敏感内容（含 Rx18 + Px18）            |
-| SR18 | 性张力展示   | 包含了各种以及边缘性趣味的玩法内容，限制级较高 |
+| SR18 | 性张力展示   | 包含了各种姿势以及边缘性趣味的玩法内容，限制级较高 |
 
 配合以下指令可独立管理图片类型开关：
 - #咕咕牛设置 AI图 / 彩蛋图 / 横屏图 ```启|禁用```
@@ -81,7 +90,7 @@
 ## 社区面板图库的支持
 
 > [!NOTE]
-> 咕咕牛提供了对Yunzai框架下的插件完整的垂直适配，在©️ v5.2.0版本提供了多模态的下载器，可以让你更加专注提供内容，可在issues反馈你的仓库地址加入到一键安装列表中，管理器在每个星期都会自动更新社区图库。
+> 咕咕牛提供了对 Yunzai 框架下的插件完整的垂直适配，管理器在每个星期都会自动更新社区图库。
 
 - 支持从 **GitHub、Gitee、GitCode、Gitea** 平台克隆并自动探测仓库内的文件夹结构
 - **示例**: `#咕咕牛安装https://github.com/user/repo:我哈`
@@ -134,7 +143,8 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 
 > [!TIP]
 > 部署插件后输入 **#咕咕牛帮助** 查看命令，输入 **#下载咕咕牛** 安装图库自动启用。 <br>
-> 你至少需要准备 Nodejs 22 版本以上，否则会报错。
+> 你至少需要准备 Nodejs 22 版本以上，否则会报错。<br>
+> 如有疑问可联系QQ: 310126340 咨询或加群
 
 ---
 

@@ -118,7 +118,7 @@
 
         .sys-text-content {
             position: absolute;
-            top: 75px;
+            top: 62px;
             left: 0;
             width: 100%;
             text-align: center;
@@ -140,6 +140,39 @@
             font-size: 28px;
             color: #3e2723;
             text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+        }
+
+        .sand-wall {
+            height: 12px;
+            background:
+                linear-gradient(135deg, rgba(80, 60, 40, 0.7) 25%, transparent 25%) -8px 0,
+                linear-gradient(225deg, rgba(80, 60, 40, 0.7) 25%, transparent 25%) -8px 0,
+                linear-gradient(315deg, rgba(80, 60, 40, 0.7) 25%, transparent 25%),
+                linear-gradient(45deg, rgba(80, 60, 40, 0.7) 25%, transparent 25%);
+            background-size: 16px 16px;
+            background-color: rgba(60, 45, 30, 0.5);
+            position: relative;
+            margin: 0 -20px;
+        }
+
+        .sand-wall::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(100, 80, 60, 0.6), transparent);
+        }
+
+        .sand-wall::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(40, 30, 20, 0.5), transparent);
         }
 
         .dashboard-grid {
@@ -169,6 +202,7 @@
             margin-right: -20px;
             padding: 0 20px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             position: relative;
             z-index: 1;
@@ -177,29 +211,133 @@
         .header-content {
             display: inline-flex;
             align-items: center;
-            background: var(--color-theme);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            border: 2px solid white;
             position: relative;
             top: 12px;
+            padding: 0 10px;
         }
 
         .header-title {
             font-family: 'ZCOOL KuaiLe', cursive;
-            font-size: 18px;
-            letter-spacing: 2px;
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #fff;
+            position: relative;
+            z-index: 2;
+            background: var(--color-theme);
+            padding: 6px 14px;
+            border-radius: 15px;
+            border: 2px solid #fff;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+            margin: 0 4px;
+        }
+
+        .header-hulu {
+            width: 18px;
+            height: 24px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset -2px -2px 4px rgba(0, 0, 0, 0.1);
+            margin: 0 2px;
+        }
+
+        .header-hulu::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 4px;
+            background: #4a7c59;
+            border-radius: 50%;
+        }
+
+        .header-hulu-small {
+            width: 12px;
+            height: 16px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+            margin: 0 1px;
+        }
+
+        .header-hulu-small::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 3px;
+            background: #4a7c59;
+            border-radius: 50%;
+        }
+
+        .theme-green .header-hulu {
+            background: radial-gradient(ellipse at 30% 30%, #7dd3c0, #0d9488);
+            border: 1px solid #0f766e;
+        }
+
+        .theme-green .header-hulu-small {
+            background: radial-gradient(ellipse at 30% 30%, #99e6d6, #14b8a6);
+            border: 1px solid #0d9488;
+        }
+
+        .theme-cyan .header-hulu {
+            background: radial-gradient(ellipse at 30% 30%, #7dd3fc, #0284c7);
+            border: 1px solid #0369a1;
+        }
+
+        .theme-cyan .header-hulu-small {
+            background: radial-gradient(ellipse at 30% 30%, #a5e0fc, #0ea5e9);
+            border: 1px solid #0284c7;
+        }
+
+        .theme-red .header-hulu {
+            background: radial-gradient(ellipse at 30% 30%, #fca5a5, #dc2626);
+            border: 1px solid #b91c1c;
+        }
+
+        .theme-red .header-hulu-small {
+            background: radial-gradient(ellipse at 30% 30%, #fecaca, #ef4444);
+            border: 1px solid #dc2626;
+        }
+
+        .theme-yellow .header-hulu {
+            background: radial-gradient(ellipse at 30% 30%, #fde047, #ca8a04);
+            border: 1px solid #a16207;
+        }
+
+        .theme-yellow .header-hulu-small {
+            background: radial-gradient(ellipse at 30% 30%, #fef08a, #eab308);
+            border: 1px solid #ca8a04;
+        }
+
+        .header-line-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 15px;
         }
 
         .header-line {
-            flex-grow: 1;
             height: 4px;
             background: var(--color-theme);
-            margin-left: 15px;
             border-radius: 2px;
             opacity: 0.5;
+        }
+
+        .header-line-sub {
+            width: 60%;
+            height: 3px;
+            background: var(--color-theme);
+            margin-left: auto;
+            margin-right: 0;
+            margin-top: 6px;
+            border-radius: 2px;
+            opacity: 0.3;
         }
 
         .hud-card {
@@ -250,11 +388,14 @@
         .cmd-hl {
             color: var(--color-theme);
             background: rgba(255, 255, 255, 0.8);
-            padding: 2px 6px;
+            padding: 0 6px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 15px;
             margin-left: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: inline-block;
+            vertical-align: baseline;
+            line-height: 1.2;
         }
 
         .cmd-desc {
@@ -262,6 +403,10 @@
             color: var(--text-sub);
             line-height: 1.4;
             font-weight: 700;
+        }
+
+        .span-2 {
+            grid-column: span 2;
         }
 
         .span-3 {
@@ -308,37 +453,82 @@
                 <div class="sys-info-wrapper">
                     <svg class="sys-info-svg" viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style="stop-color:#8d6e63;stop-opacity:1" />
-                                <stop offset="50%" style="stop-color:#a1887f;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#8d6e63;stop-opacity:1" />
+                            <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d4a574;stop-opacity:1" />
+                                <stop offset="30%" style="stop-color:#c4956a;stop-opacity:1" />
+                                <stop offset="60%" style="stop-color:#b8885e;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#a67c52;stop-opacity:1" />
                             </linearGradient>
-                            <filter id="roughPaper">
-                                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise"/>
-                                <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2">
-                                    <feDistantLight azimuth="45" elevation="60"/>
-                                </feDiffuseLighting>
+                            <linearGradient id="woodDark" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#8b6914;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#6b4e0a;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="ropeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#f4e4c1;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#d4c4a1;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#b4a481;stop-opacity:1" />
+                            </linearGradient>
+                            <filter id="woodShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="#5d4037" flood-opacity="0.4"/>
                             </filter>
                         </defs>
-                        <path d="M35 0 L35 60 M105 0 L105 60" stroke="#5d4037" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 1"/>
-                        <g transform="rotate(-2 70 90)">
-                            <path d="M10 60 H130 V110 L115 125 H10 V60 Z" fill="url(#woodGrad)" stroke="#5d4037" stroke-width="2"/>
-                            <path d="M15 70 H120 M20 80 H110 M15 90 H100 M25 100 H90" stroke="#3e2723" stroke-width="1" opacity="0.2"/>
-                            <circle cx="35" cy="70" r="3" fill="#3e2723"/>
-                            <circle cx="105" cy="70" r="3" fill="#3e2723"/>
+
+                        <path d="M32 0 Q32 30 35 55 L35 58" fill="url(#ropeGrad)" stroke="#8b7355" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M108 0 Q108 30 105 55 L105 58" fill="url(#ropeGrad)" stroke="#8b7355" stroke-width="2" stroke-linecap="round"/>
+
+                        <g transform="rotate(-3 70 90)" filter="url(#woodShadow)">
+                            <path d="M15 55 Q12 50 18 48 H122 Q128 50 125 55 V115 Q128 120 122 122 H18 Q12 120 15 115 Z" fill="url(#woodGrad)" stroke="#6b4e0a" stroke-width="2.5"/>
+
+                            <path d="M25 65 Q40 68 55 65 Q70 62 85 65 Q100 68 115 65" stroke="#8b6914" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+                            <path d="M22 80 Q37 83 52 80 Q67 77 82 80 Q97 83 118 80" stroke="#8b6914" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+                            <path d="M28 95 Q43 98 58 95 Q73 92 88 95 Q103 98 112 95" stroke="#8b6914" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+                            <path d="M35 108 Q50 111 70 108 Q90 105 105 108" stroke="#8b6914" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round"/>
+
+                            <circle cx="35" cy="58" r="4" fill="url(#woodDark)" stroke="#4a3508" stroke-width="1"/>
+                            <circle cx="105" cy="58" r="4" fill="url(#woodDark)" stroke="#4a3508" stroke-width="1"/>
+                            <ellipse cx="35" cy="58" rx="2" ry="1" fill="#a08040" opacity="0.6"/>
+                            <ellipse cx="105" cy="58" rx="2" ry="1" fill="#a08040" opacity="0.6"/>
+
+                            <rect x="20" y="52" width="8" height="6" rx="2" fill="#6b4e0a" opacity="0.3"/>
+                            <rect x="112" y="52" width="8" height="6" rx="2" fill="#6b4e0a" opacity="0.3"/>
                         </g>
-                        <line x1="70" y1="120" x2="70" y2="135" stroke="#5d4037" stroke-width="2"/>
-                        <g transform="translate(70, 150)">
-                            <circle cx="0" cy="0" r="18" fill="#fff" stroke="#333" stroke-width="1.5"/>
-                            <path d="M-10 -5 Q-5 -5 -2 -10" fill="none" stroke="#333" stroke-width="4" stroke-linecap="round"/>
-                            <circle cx="8" cy="5" r="3" fill="#333"/>
-                            <circle cx="-5" cy="-2" r="1.5" fill="#333"/>
-                            <circle cx="5" cy="-2" r="1.5" fill="#333"/>
-                            <path d="M-2 2 Q0 4 2 2" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round"/>
-                            <path d="M-12 -12 L-16 -20 L-8 -15 Z" fill="#ffcc80"/>
-                            <path d="M12 -12 L16 -20 L8 -15 Z" fill="#ffcc80"/>
-                            <ellipse cx="-18" cy="-5" rx="5" ry="3" fill="#fff" stroke="#333" stroke-width="1"/>
-                            <ellipse cx="18" cy="-5" rx="5" ry="3" fill="#fff" stroke="#333" stroke-width="1"/>
+
+                        <line x1="70" y1="125" x2="70" y2="138" stroke="#8b7355" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="70" cy="125" r="3" fill="#6b4e0a"/>
+
+                        <g transform="translate(70, 155)">
+                            <ellipse cx="0" cy="2" rx="22" ry="20" fill="#8B4513" stroke="#5D3A1A" stroke-width="2.5"/>
+                            <ellipse cx="0" cy="2" rx="19" ry="17" fill="#A0522D"/>
+
+                            <path d="M-8 -8 Q-4 -4 0 -8 Q4 -4 8 -8" fill="none" stroke="#FFF8DC" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+                            <ellipse cx="-10" cy="0" rx="6" ry="7" fill="#1a1a1a"/>
+                            <circle cx="-9" cy="-1" r="2.5" fill="#fff"/>
+                            <circle cx="-11" cy="2" r="1.8" fill="#fff" opacity="0.7"/>
+                            <ellipse cx="10" cy="0" rx="6" ry="7" fill="#1a1a1a"/>
+                            <circle cx="9" cy="-1" r="2.5" fill="#fff"/>
+                            <circle cx="11" cy="2" r="1.8" fill="#fff" opacity="0.7"/>
+
+                            <path d="M-6 -12 Q-3 -8 0 -12 Q3 -8 6 -12" fill="none" stroke="#FFF8DC" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+
+                            <ellipse cx="0" cy="12" rx="9" ry="6" fill="#FFB6C1"/>
+                            <ellipse cx="0" cy="11" rx="4" ry="2.5" fill="#FF69B4"/>
+                            <ellipse cx="-2.5" cy="10" rx="2" ry="1.2" fill="#FFC0CB"/>
+                            <ellipse cx="2.5" cy="10" rx="2" ry="1.2" fill="#FFC0CB"/>
+
+                            <path d="M-6 19 Q0 22 6 19" fill="none" stroke="#5D3A1A" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M-4 18 Q0 19 4 18" fill="none" stroke="#FF69B4" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+
+                            <path d="M-18 -12 Q-22 -24 -15 -19 Q-11 -16 -13 -9" fill="#F5DEB3" stroke="#D2B48C" stroke-width="1.5"/>
+                            <path d="M18 -12 Q22 -24 15 -19 Q11 -16 13 -9" fill="#F5DEB3" stroke="#D2B48C" stroke-width="1.5"/>
+
+                            <ellipse cx="-22" cy="-1" rx="6" ry="4" fill="#8B4513" stroke="#5D3A1A" stroke-width="1.5"/>
+                            <ellipse cx="-22" cy="-1" rx="3" ry="2" fill="#FFB6C1"/>
+                            <ellipse cx="22" cy="-1" rx="6" ry="4" fill="#8B4513" stroke="#5D3A1A" stroke-width="1.5"/>
+                            <ellipse cx="22" cy="-1" rx="3" ry="2" fill="#FFB6C1"/>
+
+                            <ellipse cx="-14" cy="-7" rx="4" ry="2.5" fill="#FFF8DC" opacity="0.3"/>
+                            <ellipse cx="14" cy="-7" rx="4" ry="2.5" fill="#FFF8DC" opacity="0.3"/>
+                            <ellipse cx="0" cy="-15" rx="5" ry="3" fill="#FFF8DC" opacity="0.25"/>
                         </g>
                     </svg>
                     
@@ -349,14 +539,23 @@
                 </div>
             </header>
 
+            <div class="sand-wall"></div>
+
             <div class="dashboard-grid">
 
                 <div class="module-group theme-green">
                     <div class="module-header">
                         <div class="header-content">
+                            <div class="header-hulu-small"></div>
+                            <div class="header-hulu"></div>
                             <div class="header-title">图库安装</div>
+                            <div class="header-hulu"></div>
+                            <div class="header-hulu-small"></div>
                         </div>
-                        <div class="header-line"></div>
+                        <div class="header-line-wrapper">
+                            <div class="header-line"></div>
+                            <div class="header-line-sub"></div>
+                        </div>
                     </div>
 
                     <div class="hud-card span-3">
@@ -383,7 +582,12 @@
                 <div class="module-group theme-cyan">
                     <div class="module-header">
                         <div class="header-content">
+                            <div class="header-stick"></div>
+                            <div class="header-hulu-small"></div>
+                            <div class="header-hulu"></div>
                             <div class="header-title">图库操作</div>
+                            <div class="header-hulu"></div>
+                            <div class="header-hulu-small"></div>
                         </div>
                         <div class="header-line"></div>
                     </div>
@@ -442,7 +646,12 @@
                 <div class="module-group theme-red">
                     <div class="module-header">
                         <div class="header-content">
+                            <div class="header-stick"></div>
+                            <div class="header-hulu-small"></div>
+                            <div class="header-hulu"></div>
                             <div class="header-title">封禁与设置</div>
+                            <div class="header-hulu"></div>
+                            <div class="header-hulu-small"></div>
                         </div>
                         <div class="header-line"></div>
                     </div>
@@ -491,9 +700,16 @@
                 <div class="module-group theme-yellow">
                     <div class="module-header">
                         <div class="header-content">
+                            <div class="header-hulu-small"></div>
+                            <div class="header-hulu"></div>
                             <div class="header-title">社区图库资源</div>
+                            <div class="header-hulu"></div>
+                            <div class="header-hulu-small"></div>
                         </div>
-                        <div class="header-line"></div>
+                        <div class="header-line-wrapper">
+                            <div class="header-line"></div>
+                            <div class="header-line-sub"></div>
+                        </div>
                     </div>
 
                     <div class="hud-card span-6">
@@ -531,6 +747,24 @@
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛列表</div>
                             <div class="cmd-desc">查看已安装列表</div>
+                        </div>
+                    </div>
+                    <div class="hud-card span-3">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[8]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛封/解禁 <span class="cmd-hl">芙芙 CID</span></div>
+                            <div class="cmd-desc">封/解禁指定图库的指定面板图</div>
+                        </div>
+                    </div>
+                    <div class="hud-card">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[9]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#咕咕牛过滤列表</div>
+                            <div class="cmd-desc">展示已安装图库封禁情况</div>
                         </div>
                     </div>
                 </div>

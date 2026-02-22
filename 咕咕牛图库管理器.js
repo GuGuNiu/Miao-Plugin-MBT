@@ -3699,7 +3699,7 @@ class Morpheus {
         if (await Ananke.mkdirs(this.RenderDir)) {
             this.#initDone = true;
         } else {
-            Hades.E(`[Morpheus] 无法创建渲染目录`);
+            Hades.E(`[渲染器] 无法创建渲染目录`);
         }
     }
 
@@ -3761,7 +3761,7 @@ class Morpheus {
             
             return this.#browserInstance;
         } catch (err) {
-            Hades.E("[Morpheus] 致命错误：无法启动内置 Puppeteer", err);
+            Hades.E("[渲染器] 致命错误：无法启动内置 Puppeteer", err);
             throw err;
         }
     }
@@ -3816,7 +3816,7 @@ class Morpheus {
         try {
             await Ananke.mkdirs(targetDir);
         } catch (err) {
-            Hades.E(`[Morpheus] 创建业务子目录失败: ${targetDir}`, err);
+            Hades.E(`[渲染器] 创建业务子目录失败: ${targetDir}`, err);
             return null;
         }
 
@@ -3840,7 +3840,7 @@ class Morpheus {
             }
              await Ananke.writeText(htmlPath, renderHtml);
         } catch (err) {
-            Hades.E(`[Morpheus] HTML 生成失败: ${err.message}`);
+            Hades.E(`[渲染器] HTML 生成失败: ${err.message}`);
             return null;
         }
 
@@ -3907,7 +3907,7 @@ class Morpheus {
             return imgBuffer;
 
         } catch (err) {
-            Hades.E(`[Morpheus] 截图失败 [${businessName}]:`, err);
+            Hades.E(`[渲染器] 截图失败 [${businessName}]:`, err);
             return null;
         } finally {
             if (page) {
@@ -3954,9 +3954,9 @@ class Morpheus {
 
         try {
             await cleanDir(this.RenderDir);
-            if (cleaned > 0) Hades.D(`[Morpheus] 清理了 ${cleaned} 个过期渲染文件。`);
+            if (cleaned > 0) Hades.D(`[渲染器] 清理了 ${cleaned} 个过期渲染文件。`);
         } catch (err) { 
-            Hades.E(`[Morpheus] Housekeeping 失败:`, err); 
+            Hades.E(`[渲染器] Housekeeping 失败:`, err); 
         }
     }
 
@@ -4017,9 +4017,9 @@ class Morpheus {
         if (this.#browserInstance) {
             try {
                 await this.#browserInstance.close();
-                //console.log("[Morpheus] 已关闭内置浏览器实例");
+                //console.log("[渲染器] 已关闭内置浏览器实例");
             } catch (e) {
-                //console.error("[Morpheus] 关闭浏览器失败", e);
+                //console.error("[渲染器] 关闭浏览器失败", e);
             }
             this.#browserInstance = null;
         }
