@@ -3975,7 +3975,7 @@ class Morpheus {
         return selected ? `file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'picture', selected).replace(/\\/g, '/')}` : '';
     }
 
-    static async pickHeaderSet(count = 15) {
+    static async pickHeaderSet(count = 20) {
         const files = await this.#scanDir(this.#headerCache, "picture");
         if (files.length === 0) return [];
 

@@ -15,7 +15,8 @@
             --summer-blue: #4fc3f7;
             --summer-green: #81c784;
             --summer-red: #ff8a65;
-            --summer-yellow: #ffd54f;
+            --summer-yellow: #fbc02d;
+            --summer-purple: #ab47bc;
             --glass-blur: blur(10px);
         }
 
@@ -48,8 +49,8 @@
         .header-hud {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 20px 25px;
+            align-items: flex-start;
+            padding: 0 25px 20px;
             margin: 0;
             height: 220px;
             background-image: url('{{guguniu_res_path}}html/img/bg/Help/help_bg_layout_02.png');
@@ -61,13 +62,13 @@
         .title-block h1 {
             font-family: 'ZCOOL KuaiLe', cursive;
             font-size: 55px;
-            margin: 0;
+            margin: 55px 0 0 0;
             line-height: 1.2;
-            background: linear-gradient(to right, #be543d, #275b19cf, #1f5471, #cc8eeb, #000000);
+            background: linear-gradient(120deg, #1565C0 0%, #2E7D32 50%, #EF6C00 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8), 4px 4px 0px rgba(79, 195, 247, 0.3);
+            text-shadow: 3px 3px 0px rgba(255, 255, 255, 0.95), 6px 6px 0px rgba(21, 101, 192, 0.2), 9px 9px 0px rgba(239, 108, 0, 0.2);
             background-color: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(8px);
             padding: 4px 4px;
@@ -101,7 +102,7 @@
             width: 140px;
             height: 180px;
             margin-right: 20px;
-            margin-top: -30px;
+            margin-top: 0;
             display: flex;
             justify-content: center;
         }
@@ -127,12 +128,13 @@
         }
 
         .sys-days {
-            font-size: 12px;
-            color: #5d4037;
+            font-size: 13px;
+            color: #3e2723;
             font-weight: 900;
             margin-bottom: 2px;
-            opacity: 0.8;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            opacity: 0.9;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4), 0 -1px 0 rgba(0, 0, 0, 0.6);
+            letter-spacing: 1px;
         }
 
         .sys-counter {
@@ -218,7 +220,7 @@
 
         .header-title {
             font-family: 'ZCOOL KuaiLe', cursive;
-            font-size: 16px;
+            font-size: 20px;
             letter-spacing: 1px;
             color: #fff;
             position: relative;
@@ -231,88 +233,82 @@
             margin: 0 4px;
         }
 
+        .header-title::before,
+        .header-title::after {
+            content: '';
+            position: absolute;
+            top: -16px;
+            width: 8px;
+            height: 14px;
+            background: var(--color-theme);
+            z-index: -1;
+            clip-path: polygon(70% 0, 100% 0, 60% 50%, 90% 50%, 30% 100%, 0% 100%, 40% 50%, 10% 50%);
+        }
+
+        .header-title::before {
+            left: 11px;
+        }
+
+        .header-title::after {
+            right: 11px;
+            transform: scaleX(-1);
+        }
+
         .header-hulu {
-            width: 18px;
+            width: 24px;
             height: 24px;
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             position: relative;
             z-index: 2;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset -2px -2px 4px rgba(0, 0, 0, 0.1);
             margin: 0 2px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .header-hulu::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 4px;
-            background: #4a7c59;
-            border-radius: 50%;
+            display: none;
         }
 
         .header-hulu-small {
-            width: 12px;
+            width: 16px;
             height: 16px;
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             position: relative;
             z-index: 2;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
             margin: 0 1px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
         }
 
         .header-hulu-small::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 3px;
-            background: #4a7c59;
-            border-radius: 50%;
+            display: none;
         }
 
-        .theme-green .header-hulu {
-            background: radial-gradient(ellipse at 30% 30%, #7dd3c0, #0d9488);
-            border: 1px solid #0f766e;
-        }
-
+        .theme-green .header-hulu,
         .theme-green .header-hulu-small {
-            background: radial-gradient(ellipse at 30% 30%, #99e6d6, #14b8a6);
-            border: 1px solid #0d9488;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2381c784' stroke='%23558b2f' stroke-width='5'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23a5d6a7'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%23fff9c4'/%3E%3Cg fill='%23212121'%3E%3Ccircle cx='50' cy='30' r='3'/%3E%3Ccircle cx='50' cy='70' r='3'/%3E%3Ccircle cx='30' cy='50' r='3'/%3E%3Ccircle cx='70' cy='50' r='3'/%3E%3Ccircle cx='36' cy='36' r='3'/%3E%3Ccircle cx='64' cy='64' r='3'/%3E%3Ccircle cx='36' cy='64' r='3'/%3E%3Ccircle cx='64' cy='36' r='3'/%3E%3C/g%3E%3C/svg%3E");
         }
 
-        .theme-cyan .header-hulu {
-            background: radial-gradient(ellipse at 30% 30%, #7dd3fc, #0284c7);
-            border: 1px solid #0369a1;
-        }
-
+        .theme-cyan .header-hulu,
         .theme-cyan .header-hulu-small {
-            background: radial-gradient(ellipse at 30% 30%, #a5e0fc, #0ea5e9);
-            border: 1px solid #0284c7;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='55' r='42' fill='%234fc3f7' stroke='%230277bd' stroke-width='3'/%3E%3Cpath d='M30 25 L 40 35 L 50 25 L 60 35 L 70 25 L 50 45 Z' fill='%230277bd'/%3E%3C/svg%3E");
         }
 
-        .theme-red .header-hulu {
-            background: radial-gradient(ellipse at 30% 30%, #fca5a5, #dc2626);
-            border: 1px solid #b91c1c;
-        }
-
+        .theme-red .header-hulu,
         .theme-red .header-hulu-small {
-            background: radial-gradient(ellipse at 30% 30%, #fecaca, #ef4444);
-            border: 1px solid #dc2626;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 95 C 10 95 5 50 5 35 C 5 10 35 5 50 15 C 65 5 95 10 95 35 C 95 50 90 95 50 95 Z' fill='%23ff8a65' stroke='%23d84315' stroke-width='3'/%3E%3Cg fill='%23ffe0b2'%3E%3Ccircle cx='30' cy='40' r='2'/%3E%3Ccircle cx='50' cy='50' r='2'/%3E%3Ccircle cx='70' cy='40' r='2'/%3E%3Ccircle cx='40' cy='70' r='2'/%3E%3Ccircle cx='60' cy='70' r='2'/%3E%3C/g%3E%3Cpath d='M20 15 Q 50 30 80 15 L 50 5 Z' fill='%234caf50'/%3E%3C/svg%3E");
         }
 
-        .theme-yellow .header-hulu {
-            background: radial-gradient(ellipse at 30% 30%, #fde047, #ca8a04);
-            border: 1px solid #a16207;
-        }
-
+        .theme-yellow .header-hulu,
         .theme-yellow .header-hulu-small {
-            background: radial-gradient(ellipse at 30% 30%, #fef08a, #eab308);
-            border: 1px solid #ca8a04;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='50' cy='50' rx='45' ry='35' fill='%23ffd54f' stroke='%23fbc02d' stroke-width='3'/%3E%3Ccircle cx='10' cy='50' r='3' fill='%23fbc02d'/%3E%3Ccircle cx='90' cy='50' r='3' fill='%23fbc02d'/%3E%3Ccircle cx='30' cy='40' r='1' fill='%23f9a825' opacity='0.5'/%3E%3Ccircle cx='70' cy='60' r='1' fill='%23f9a825' opacity='0.5'/%3E%3Ccircle cx='50' cy='30' r='1' fill='%23f9a825' opacity='0.5'/%3E%3C/svg%3E");
+        }
+
+        .theme-purple .header-hulu,
+        .theme-purple .header-hulu-small {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='55' r='38' fill='%23ab47bc' stroke='%238e24aa' stroke-width='3'/%3E%3Cpath d='M50 20 L 30 40 Q 40 55 50 50 Q 60 55 70 40 Z' fill='%2366bb6a' stroke='%23388e3c' stroke-width='2'/%3E%3Crect x='47' y='12' width='6' height='12' rx='2' fill='%23558b2f'/%3E%3C/svg%3E");
         }
 
         .header-line-wrapper {
@@ -327,6 +323,20 @@
             background: var(--color-theme);
             border-radius: 2px;
             opacity: 0.5;
+            position: relative;
+        }
+
+        .header-line::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         .header-line-sub {
@@ -338,6 +348,33 @@
             margin-top: 6px;
             border-radius: 2px;
             opacity: 0.3;
+            position: relative;
+        }
+
+        .header-line-sub::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .header-line-wrapper::after {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 6px;
+            margin-top: 4px;
+            margin-left: auto;
+            border-radius: 2px;
+            background: color-mix(in srgb, var(--color-theme), transparent 80%);
+            box-shadow: -24px 0 0 color-mix(in srgb, var(--color-theme), transparent 50%),
+                        -48px 0 0 color-mix(in srgb, var(--color-theme), transparent 20%);
         }
 
         .hud-card {
@@ -350,13 +387,14 @@
             height: 85px;
             display: flex;
             overflow: hidden;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+            transform: translateY(-3px);
             transition: transform 0.2s;
         }
 
         .card-icon-section {
             width: 80px;
-            background: rgba(255, 255, 255, 0.6);
+            background: color-mix(in srgb, var(--color-theme) 12%, rgba(255, 255, 255, 0.4));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -372,7 +410,7 @@
 
         .card-text-section {
             flex: 1;
-            padding: 0 12px;
+            padding: 0 0 0 12px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -380,17 +418,17 @@
 
         .cmd-title {
             font-weight: 900;
-            font-size: 15px;
+            font-size: 18px;
             color: var(--text-main);
-            margin-bottom: 4px;
+            margin-bottom: 8px;
         }
 
         .cmd-hl {
             color: var(--color-theme);
             background: rgba(255, 255, 255, 0.8);
-            padding: 0 6px;
+            padding: 1px 6px;
             border-radius: 6px;
-            font-size: 15px;
+            font-size: 18px;
             margin-left: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: inline-block;
@@ -435,6 +473,10 @@
 
         .theme-yellow {
             --color-theme: var(--summer-yellow);
+        }
+
+        .theme-purple {
+            --color-theme: var(--summer-purple);
         }
     </style>
 </head>
@@ -496,39 +538,32 @@
                         <line x1="70" y1="125" x2="70" y2="138" stroke="#8b7355" stroke-width="3" stroke-linecap="round"/>
                         <circle cx="70" cy="125" r="3" fill="#6b4e0a"/>
 
-                        <g transform="translate(70, 155)">
-                            <ellipse cx="0" cy="2" rx="22" ry="20" fill="#8B4513" stroke="#5D3A1A" stroke-width="2.5"/>
-                            <ellipse cx="0" cy="2" rx="19" ry="17" fill="#A0522D"/>
+                        <g transform="translate(70, 155) scale(0.72)">
+                            <path d="M-20 -25 Q-25 -35 -15 -38 L-12 -28 Z" fill="#FFD54F" stroke="#4E342E" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M20 -25 Q25 -35 15 -38 L12 -28 Z" fill="#FFD54F" stroke="#4E342E" stroke-width="2" stroke-linejoin="round"/>
 
-                            <path d="M-8 -8 Q-4 -4 0 -8 Q4 -4 8 -8" fill="none" stroke="#FFF8DC" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
-                            <ellipse cx="-10" cy="0" rx="6" ry="7" fill="#1a1a1a"/>
-                            <circle cx="-9" cy="-1" r="2.5" fill="#fff"/>
-                            <circle cx="-11" cy="2" r="1.8" fill="#fff" opacity="0.7"/>
-                            <ellipse cx="10" cy="0" rx="6" ry="7" fill="#1a1a1a"/>
-                            <circle cx="9" cy="-1" r="2.5" fill="#fff"/>
-                            <circle cx="11" cy="2" r="1.8" fill="#fff" opacity="0.7"/>
+                            <path d="M-32 -10 Q-42 -5 -32 5 Z" fill="#EFEBE9" stroke="#4E342E" stroke-width="2"/>
+                            <path d="M32 -10 Q42 -5 32 5 Z" fill="#EFEBE9" stroke="#4E342E" stroke-width="2"/>
 
-                            <path d="M-6 -12 Q-3 -8 0 -12 Q3 -8 6 -12" fill="none" stroke="#FFF8DC" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+                            <defs>
+                                <clipPath id="cow-face-clip">
+                                    <rect x="-32" y="-25" width="64" height="55" rx="20" ry="20"/>
+                                </clipPath>
+                            </defs>
+                            <rect x="-32" y="-25" width="64" height="55" rx="20" ry="20" fill="#EFEBE9" stroke="#4E342E" stroke-width="2.5"/>
 
-                            <ellipse cx="0" cy="12" rx="9" ry="6" fill="#FFB6C1"/>
-                            <ellipse cx="0" cy="11" rx="4" ry="2.5" fill="#FF69B4"/>
-                            <ellipse cx="-2.5" cy="10" rx="2" ry="1.2" fill="#FFC0CB"/>
-                            <ellipse cx="2.5" cy="10" rx="2" ry="1.2" fill="#FFC0CB"/>
+                            <path clip-path="url(#cow-face-clip)" d="M-30 -20 Q-10 -20 -10 -5 Q-10 10 -32 5 Z" fill="#8D6E63" opacity="0.8"/>
 
-                            <path d="M-6 19 Q0 22 6 19" fill="none" stroke="#5D3A1A" stroke-width="2.5" stroke-linecap="round"/>
-                            <path d="M-4 18 Q0 19 4 18" fill="none" stroke="#FF69B4" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+                            <ellipse cx="0" cy="12" rx="16" ry="10" fill="#FFAB91" stroke="#4E342E" stroke-width="1.5"/>
+                            
+                            <circle cx="-5" cy="12" r="2" fill="#D84315"/>
+                            <circle cx="5" cy="12" r="2" fill="#D84315"/>
 
-                            <path d="M-18 -12 Q-22 -24 -15 -19 Q-11 -16 -13 -9" fill="#F5DEB3" stroke="#D2B48C" stroke-width="1.5"/>
-                            <path d="M18 -12 Q22 -24 15 -19 Q11 -16 13 -9" fill="#F5DEB3" stroke="#D2B48C" stroke-width="1.5"/>
+                            <circle cx="-12" cy="-5" r="2.5" fill="#3E2723"/>
+                            <circle cx="12" cy="-5" r="2.5" fill="#3E2723"/>
 
-                            <ellipse cx="-22" cy="-1" rx="6" ry="4" fill="#8B4513" stroke="#5D3A1A" stroke-width="1.5"/>
-                            <ellipse cx="-22" cy="-1" rx="3" ry="2" fill="#FFB6C1"/>
-                            <ellipse cx="22" cy="-1" rx="6" ry="4" fill="#8B4513" stroke="#5D3A1A" stroke-width="1.5"/>
-                            <ellipse cx="22" cy="-1" rx="3" ry="2" fill="#FFB6C1"/>
-
-                            <ellipse cx="-14" cy="-7" rx="4" ry="2.5" fill="#FFF8DC" opacity="0.3"/>
-                            <ellipse cx="14" cy="-7" rx="4" ry="2.5" fill="#FFF8DC" opacity="0.3"/>
-                            <ellipse cx="0" cy="-15" rx="5" ry="3" fill="#FFF8DC" opacity="0.25"/>
+                            <ellipse cx="-22" cy="5" rx="5" ry="3" fill="#FF8A65" opacity="0.4"/>
+                            <ellipse cx="22" cy="5" rx="5" ry="3" fill="#FF8A65" opacity="0.4"/>
                         </g>
                     </svg>
                     
@@ -589,7 +624,10 @@
                             <div class="header-hulu"></div>
                             <div class="header-hulu-small"></div>
                         </div>
-                        <div class="header-line"></div>
+                        <div class="header-line-wrapper">
+                            <div class="header-line"></div>
+                            <div class="header-line-sub"></div>
+                        </div>
                     </div>
 
                     <div class="hud-card">
@@ -598,7 +636,7 @@
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#启/禁用咕咕牛</div>
-                            <div class="cmd-desc">管理图库同步</div>
+                            <div class="cmd-desc">管理图库是否使用</div>
                         </div>
                     </div>
 
@@ -617,28 +655,28 @@
                             <img src="{{headerImg[4]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#咕咕牛查看<span class="cmd-hl">xx</span></div>
-                            <div class="cmd-desc">查看角色图片</div>
+                            <div class="cmd-title">#可视化<span class="cmd-hl">少女</span></div>
+                            <div class="cmd-desc">图形化显示面板图</div>
                         </div>
                     </div>
 
-                    <div class="hud-card">
+                    <div class="hud-card span-3">
                         <div class="card-icon-section">
                             <img src="{{headerImg[5]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#咕咕牛导出<span class="cmd-hl">xx</span></div>
-                            <div class="cmd-desc">导出'角色'图片文件</div>
+                            <div class="cmd-title">#咕咕牛导出<span class="cmd-hl">少女10</span></div>
+                            <div class="cmd-desc">导出角色图片文件</div>
                         </div>
                     </div>
 
-                    <div class="hud-card">
+                    <div class="hud-card  span-3">
                         <div class="card-icon-section">
                             <img src="{{headerImg[6]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#可视化<span class="cmd-hl">xx</span></div>
-                            <div class="cmd-desc">图形化显示面板图</div>
+                            <div class="cmd-title">#咕咕牛查看<span class="cmd-hl">少女</span></div>
+                            <div class="cmd-desc">查看角色图片</div>
                         </div>
                     </div>
                 </div>
@@ -653,35 +691,38 @@
                             <div class="header-hulu"></div>
                             <div class="header-hulu-small"></div>
                         </div>
-                        <div class="header-line"></div>
+                        <div class="header-line-wrapper">
+                            <div class="header-line"></div>
+                            <div class="header-line-sub"></div>
+                        </div>
                     </div>
 
-                    <div class="hud-card">
+                    <div class="hud-card span-3">
                         <div class="card-icon-section">
                             <img src="{{headerImg[8]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#咕咕牛封/解禁<span class="cmd-hl">ID</span></div>
+                            <div class="cmd-title">#咕咕牛封/解禁<span class="cmd-hl">少女10 | [二级标签]</span></div>
                             <div class="cmd-desc">管理图片黑名单</div>
                         </div>
                     </div>
 
-                    <div class="hud-card">
+                    <div class="hud-card span-3">
                         <div class="card-icon-section">
                             <img src="{{headerImg[10]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#咕咕牛设置净化等级</div>
+                            <div class="cmd-title">#咕咕牛设置净化等级<span class="cmd-hl">0|1|2</span></div>
                             <div class="cmd-desc">0:不过滤 / 1:仅R18 / 2:全部</div>
                         </div>
                     </div>
 
-                    <div class="hud-card">
+                    <div class="hud-card span-3">
                         <div class="card-icon-section">
                             <img src="{{headerImg[11]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#咕咕牛面板</div>
+                            <div class="cmd-title">#咕咕牛面板/设置</div>
                             <div class="cmd-desc">设置状态概览</div>
                         </div>
                     </div>
@@ -691,13 +732,13 @@
                             <img src="{{headerImg[12]}}">
                         </div>
                         <div class="card-text-section">
-                            <div class="cmd-title">#咕咕牛设置 <span class="cmd-hl">xx 开启/关闭</span></div>
-                            <div class="cmd-desc">Ai / 彩蛋 / 横屏</div>
+                            <div class="cmd-title">#咕咕牛设置 <span class="cmd-hl">[选项] 开启/关闭</span></div>
+                            <div class="cmd-desc">Ai / 彩蛋 / 横屏 / SR18</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="module-group theme-yellow">
+                <div class="module-group theme-purple">
                     <div class="module-header">
                         <div class="header-content">
                             <div class="header-hulu-small"></div>
@@ -714,26 +755,26 @@
 
                     <div class="hud-card span-6">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[4]}}">
+                            <img src="{{headerImg[13]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛安装 <span class="cmd-hl">URL:简称</span></div>
-                            <div class="cmd-desc">安装社区图库 | 示例: #咕咕牛安装https://github.com/...:Name</div>
+                             <div class="cmd-desc">安装社区图库 | 示例: #咕咕牛安装https://github.com/GuGuNiu/Miao-Plugin-MBT:新的图库</div>
                         </div>
                     </div>
 
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[5]}}">
+                            <img src="{{headerImg[14]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛更新<span class="cmd-hl">简称</span></div>
-                            <div class="cmd-desc">更新第三方图库</div>
+                            <div class="cmd-desc">更新社区图库</div>
                         </div>
                     </div>
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[6]}}">
+                            <img src="{{headerImg[15]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛卸载<span class="cmd-hl">简称</span></div>
@@ -742,7 +783,7 @@
                     </div>
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[7]}}">
+                            <img src="{{headerImg[16]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛列表</div>
@@ -751,16 +792,16 @@
                     </div>
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[8]}}">
+                            <img src="{{headerImg[17]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛封/解禁 <span class="cmd-hl">芙芙 CID</span></div>
                             <div class="cmd-desc">封/解禁指定图库的指定面板图</div>
                         </div>
                     </div>
-                    <div class="hud-card">
+                    <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[9]}}">
+                            <img src="{{headerImg[18]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛过滤列表</div>
