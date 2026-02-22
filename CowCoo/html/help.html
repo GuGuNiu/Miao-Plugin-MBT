@@ -182,6 +182,46 @@
             flex-direction: column;
             gap: 20px;
             padding: 20px;
+            background-color: #f8fbff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill-rule='evenodd'%3E%3Ccircle cx='20' cy='20' r='3' fill='rgba(79, 195, 247, 0.25)'/%3E%3Ccircle cx='50' cy='50' r='3' fill='rgba(129, 199, 132, 0.25)'/%3E%3Cg fill='rgba(255, 138, 101, 0.25)'%3E%3Crect x='48' y='16' width='4' height='12' rx='1'/%3E%3Crect x='44' y='20' width='12' height='4' rx='1'/%3E%3C/g%3E%3Crect x='17' y='47' width='6' height='6' rx='1' fill='rgba(255, 213, 79, 0.25)'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 60px 60px;
+            background-position: center;
+        }
+
+        .section-separator {
+            width: 100%;
+            height: 20px;
+            background: none;
+            margin: 25px 0 15px 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
+        }
+
+        .section-separator::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(129, 199, 132, 0.4), rgba(79, 195, 247, 0.4), rgba(171, 71, 188, 0.4), transparent);
+            border-radius: 2px;
+        }
+
+        .section-separator::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--summer-red);
+            position: relative;
+            z-index: 1;
+            box-shadow: 
+                -18px 0 0 var(--summer-yellow),
+                18px 0 0 var(--summer-green),
+                36px 0 0 var(--summer-blue);
+            margin-left: -18px; 
         }
 
         .module-group {
@@ -308,7 +348,7 @@
 
         .theme-purple .header-hulu,
         .theme-purple .header-hulu-small {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='55' r='38' fill='%23ab47bc' stroke='%238e24aa' stroke-width='3'/%3E%3Cpath d='M50 20 L 30 40 Q 40 55 50 50 Q 60 55 70 40 Z' fill='%2366bb6a' stroke='%23388e3c' stroke-width='2'/%3E%3Crect x='47' y='12' width='6' height='12' rx='2' fill='%23558b2f'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 35 Q 30 5 50 5 Q 70 5 50 35 Z' fill='%238bc34a' stroke='%23689f38' stroke-width='3'/%3E%3Cg fill='%23ab47bc' stroke='%238e24aa' stroke-width='2'%3E%3Ccircle cx='35' cy='45' r='11'/%3E%3Ccircle cx='65' cy='45' r='11'/%3E%3Ccircle cx='50' cy='45' r='11'/%3E%3Ccircle cx='42' cy='63' r='11'/%3E%3Ccircle cx='58' cy='63' r='11'/%3E%3Ccircle cx='50' cy='80' r='11'/%3E%3C/g%3E%3C/svg%3E");
         }
 
         .header-line-wrapper {
@@ -337,6 +377,8 @@
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border: 2px solid var(--color-theme);
+            box-sizing: border-box;
         }
 
         .header-line-sub {
@@ -362,6 +404,8 @@
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border: 2px solid var(--color-theme);
+            box-sizing: border-box;
         }
 
         .header-line-wrapper::after {
@@ -386,10 +430,32 @@
             position: relative;
             height: 85px;
             display: flex;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
             transform: translateY(-3px);
             transition: transform 0.2s;
+        }
+
+        .hud-card::before {
+            content: '';
+            position: absolute;
+            top: -6px; left: -6px; right: -6px; bottom: -6px;
+            border-radius: 24px;
+            border: 3px solid var(--color-theme);
+            z-index: -1;
+            pointer-events: none;
+            -webkit-mask-image: 
+                radial-gradient(circle at top left, black 30px, transparent 31px),
+                radial-gradient(circle at top right, black 30px, transparent 31px),
+                radial-gradient(circle at bottom left, black 30px, transparent 31px),
+                radial-gradient(circle at bottom right, black 30px, transparent 31px);
+            mask-image: 
+                radial-gradient(circle at top left, black 30px, transparent 31px),
+                radial-gradient(circle at top right, black 30px, transparent 31px),
+                radial-gradient(circle at bottom left, black 30px, transparent 31px),
+                radial-gradient(circle at bottom right, black 30px, transparent 31px);
+            -webkit-mask-composite: source-over;
+            mask-composite: add;
         }
 
         .card-icon-section {
@@ -399,6 +465,8 @@
             align-items: center;
             justify-content: center;
             border-right: 2px dashed rgba(0, 0, 0, 0.05);
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
         }
 
         .card-icon-section img {
@@ -595,7 +663,7 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[0]}}">
+                            <img src="{{headerImg[1]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#下载咕咕牛</div>
@@ -605,14 +673,23 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[1]}}">
+                            <img src="{{headerImg[2]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#更新咕咕牛</div>
                             <div class="cmd-desc">手动执行更新 / 每天会自动更新</div>
                         </div>
                     </div>
-                </div>
+                
+                    <div class="hud-card span-6">
+                        <div class="card-icon-section">
+                            <img src="{{headerImg[0]}}">
+                        </div>
+                        <div class="card-text-section">
+                            <div class="cmd-title">#重置咕咕牛</div>
+                            <div class="cmd-desc">重置范围：Temp & resources & 历史旧版本资源路径 & Redis缓存</div>
+                        </div>
+                    </div></div>
 
                 <div class="module-group theme-cyan">
                     <div class="module-header">
@@ -632,7 +709,7 @@
 
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[2]}}">
+                            <img src="{{headerImg[3]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#启/禁用咕咕牛</div>
@@ -642,7 +719,7 @@
 
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[3]}}">
+                            <img src="{{headerImg[4]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛状态</div>
@@ -652,7 +729,7 @@
 
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[4]}}">
+                            <img src="{{headerImg[5]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#可视化<span class="cmd-hl">少女</span></div>
@@ -662,7 +739,7 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[5]}}">
+                            <img src="{{headerImg[6]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛导出<span class="cmd-hl">少女10</span></div>
@@ -672,7 +749,7 @@
 
                     <div class="hud-card  span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[6]}}">
+                            <img src="{{headerImg[7]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛查看<span class="cmd-hl">少女</span></div>
@@ -699,7 +776,7 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[8]}}">
+                            <img src="{{headerImg[9]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛封/解禁<span class="cmd-hl">少女10 | [二级标签]</span></div>
@@ -709,7 +786,7 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[10]}}">
+                            <img src="{{headerImg[11]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛设置净化等级<span class="cmd-hl">0|1|2</span></div>
@@ -719,7 +796,7 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[11]}}">
+                            <img src="{{headerImg[12]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛面板/设置</div>
@@ -729,7 +806,7 @@
 
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[12]}}">
+                            <img src="{{headerImg[13]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛设置 <span class="cmd-hl">[选项] 开启/关闭</span></div>
@@ -737,6 +814,8 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="section-separator"></div>
 
                 <div class="module-group theme-purple">
                     <div class="module-header">
@@ -755,7 +834,7 @@
 
                     <div class="hud-card span-6">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[13]}}">
+                            <img src="{{headerImg[14]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛安装 <span class="cmd-hl">URL:简称</span></div>
@@ -765,7 +844,7 @@
 
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[14]}}">
+                            <img src="{{headerImg[15]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛更新<span class="cmd-hl">简称</span></div>
@@ -774,7 +853,7 @@
                     </div>
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[15]}}">
+                            <img src="{{headerImg[16]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛卸载<span class="cmd-hl">简称</span></div>
@@ -783,7 +862,7 @@
                     </div>
                     <div class="hud-card">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[16]}}">
+                            <img src="{{headerImg[17]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛列表</div>
@@ -792,7 +871,7 @@
                     </div>
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[17]}}">
+                            <img src="{{headerImg[18]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛封/解禁 <span class="cmd-hl">芙芙 CID</span></div>
@@ -801,7 +880,7 @@
                     </div>
                     <div class="hud-card span-3">
                         <div class="card-icon-section">
-                            <img src="{{headerImg[18]}}">
+                            <img src="{{headerImg[19]}}">
                         </div>
                         <div class="card-text-section">
                             <div class="cmd-title">#咕咕牛过滤列表</div>
