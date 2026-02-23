@@ -11,7 +11,7 @@
       font-style: normal;
       font-weight: 700;
       font-display: swap;
-      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+      src: url('{{Cow_Res_Path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
     }
 
     @font-face {
@@ -19,7 +19,7 @@
       font-style: normal;
       font-weight: 500;
       font-display: swap;
-      src: url('{{guguniu_res_path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+      src: url('{{Cow_Res_Path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
     }
 
     @font-face {
@@ -27,7 +27,7 @@
       font-style: normal;
       font-weight: 500;
       font-display: swap;
-      src: url('{{guguniu_res_path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+      src: url('{{Cow_Res_Path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
     }
 
     @font-face {
@@ -35,7 +35,7 @@
       font-style: normal;
       font-weight: 400;
       font-display: swap;
-      src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+      src: url('{{Cow_Res_Path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
     }
 
     :root {
@@ -706,15 +706,76 @@
     }
 
     .footer {
-      text-align: center;
-      padding: 0px 0px 20px 0px;
+      margin-top: 20px;
+      padding: 20px 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05));
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .footer-pill {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 0;
+      clip-path: polygon(
+        6px 0,
+        100% 0,
+        100% calc(100% - 6px),
+        calc(100% - 6px) 100%,
+        0 100%,
+        0 6px
+      );
+      overflow: visible;
+      height: 24px;
+      position: relative;
+    }
+
+    .pill-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-secondary);
+      padding: 0 8px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      border-right: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .pill-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--header-underline-color);
+      padding: 0 8px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .footer-copyright {
+      font-family: 'Orbitron', sans-serif;
       font-size: 14px;
       color: var(--text-secondary);
       letter-spacing: 0.25px;
-      font-family: 'Orbitron', sans-serif;
       font-weight: 500;
-      position: relative;
-      z-index: 1;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -804,7 +865,27 @@
           </div>
         </div>
       </main>
-      <footer class="footer">Miao-Plugin-MBT v{{ Version }} © 咕咕牛</footer>
+      <footer class="footer">
+        <div class="footer-content">
+          <div class="footer-pill">
+            <span class="pill-label">运行版本</span>
+            <span class="pill-val">v{{ Version }}</span>
+          </div>
+          <div class="footer-pill">
+            <span class="pill-label">机器人框架</span>
+            <span class="pill-val">Yunzai</span>
+          </div>
+          <div class="footer-pill">
+            <span class="pill-label">UI界面</span>
+            <span class="pill-val">v3.0</span>
+          </div>
+          <div class="footer-pill">
+            <span class="pill-label">插件架构</span>
+            <span class="pill-val">v3.1</span>
+          </div>
+        </div>
+        <div class="footer-copyright">Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
+      </footer>
     </div>
   </div>
 </body>

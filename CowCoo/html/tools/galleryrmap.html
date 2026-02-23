@@ -11,7 +11,7 @@
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
         }
 
         @font-face {
@@ -19,7 +19,7 @@
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
         }
 
         :root {
@@ -370,7 +370,7 @@
         }
 
         .theme-gs .element-banner-container.cryo:not([style*="background-image"]) {
-            background-image: url('{{guguniu_res_path}}html/img/ElementHeaderBg/genshin_cryo_flower.webp'),
+            background-image: url('{{Cow_Res_Path}}img/ElementHeaderBg/genshin_cryo_flower.webp'),
             linear-gradient(to right, #B2EBF2 0%, #4DD0E1 100%);
             background-size: 60% auto, cover;
             background-position: right center, center;
@@ -675,7 +675,7 @@
         <div class="game-header" {{ if game.key==='gs' && game.headerBgUrl
             }}style="background-image: url('{{ game.headerBgUrl }}');" {{ /if }}>
             <img class="game-logo"
-                src="{{ guguniu_res_path }}html/img/maplogo/{{ game.key }}.{{ if game.key === 'zzz' }}svg{{ else }}png{{ /if }}"
+                src="{{ Cow_Res_Path }}img/maplogo/{{ game.key }}.{{ if game.key === 'zzz' }}svg{{ else }}png{{ /if }}"
                 alt="{{ game.name }} Logo">
             <span class="game-summary-stats">共 {{ game.imgCountDisplay }} 张 | 总占用: {{ game.assetsSizeFormatted }}</span>
         </div>

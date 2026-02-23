@@ -2915,6 +2915,8 @@ const DFC = {
   Ass_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT-2/",   // 二号库 (原神)
   Ass2_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT-3/",  // 三号库 (星铁)
   Ass3_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT-4/",  // 四号库 (综合库)
+  Ass4_Github_URL: "https://github.com/Siluluna/Genshin-CR-Repos/",
+  Ass5_Github_URL: "https://github.com/Siluluna/StarRail-CR-Repos/",
   RepoBranch: "main",
   F2Pool: [],
   ProxyRepoFile: "README.md",
@@ -2924,7 +2926,7 @@ const DFC = {
   Depth: 1,
   CronUpdate: "0 */12 * * *",
   Repo_Ops: true,  PFL_Ops: PFL.NONE, RenderScale: 300,
-  Ai: true, EasterEgg: true, layout: true,
+  Ai: true, EasterEgg: true, layout: true, SR18_Ops: false,
   logPrefix: Charon,
   logDateFormat: "format:%m-%d %H:%M",
 };
@@ -3797,7 +3799,7 @@ class Morpheus {
         const defaultData = {
             Version: Version,
             RenderMatrix: MiaoPluginMBT.RenderMatrix(),
-            guguniu_res_path: `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/'),
+            Cow_Res_Path: `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/'),
             sysTimestamp: Morpheus.#nowStr()
         };
 
@@ -3807,7 +3809,7 @@ class Morpheus {
             categoryFolder = "Vis";
         } else if (businessName.startsWith("Map-")) {
             categoryFolder = "Map";
-        } else if (businessName.startsWith("banlist-")) {
+        } else if (businessName.startsWith("BanList-")) {
             categoryFolder = "BanList";
         }
         const subDir = categoryFolder ? path.join(categoryFolder, businessName) : businessName;
@@ -4553,6 +4555,24 @@ class Nomos {
             pathKey: "MountRepoPath4", 
             gitKey: "GitFilePath4",
             dependencies: ["zzz", "waves"] 
+        },
+        {
+            id: 5,
+            key: "Genshin-CR-Repos",
+            name: "五号仓库",
+            configKey: "Ass4_Github_URL",
+            pathKey: "MountRepoPath5",
+            gitKey: "GitFilePath5",
+            tags: ["SR18"]
+        },
+        {
+            id: 6,
+            key: "StarRail-CR-Repos",
+            name: "六号仓库",
+            configKey: "Ass5_Github_URL",
+            pathKey: "MountRepoPath6",
+            gitKey: "GitFilePath6",
+            tags: ["SR18"]
         }
     ];
 
@@ -4561,7 +4581,7 @@ class Nomos {
         return repo ? pathsMap[repo.pathKey] : null;
     }
 
-    static ActiveScope(config, context = {}) {
+    static ActiveScope(config, context = {}, options = {}) {
         return this.#REGISTRY.filter(repo => {
             if (repo.required) return true;
 
@@ -4571,12 +4591,18 @@ class Nomos {
                 const hasDep = repo.dependencies.some(dep => context[`${dep}Installed`]);
                 if (!hasDep) return false;
             }
+
+            if (repo.tags?.includes("SR18")) {
+                if (options.ignoreSR18) return true;
+                return !!config.SR18_Ops;
+            }
+
             return true;
         });
     }
 
-    static ScanQueue(pathsMap, config, context) {
-        const activeRepos = this.ActiveScope(config, context);
+    static ScanQueue(pathsMap, config, context, options = {}) {
+        const activeRepos = this.ActiveScope(config, context, options);
         return activeRepos.map(repo => ({
             num: repo.id,
             name: repo.name,
@@ -4696,7 +4722,7 @@ class Nomos {
     }
 
     static ModuleRepoAC(pathsMap, config, context) {
-        return this.ScanQueue(pathsMap, config, context);
+        return this.ScanQueue(pathsMap, config, context, { ignoreSR18: true });
     }
 
     static async ModuleOps(repoPath, gameKey, action) {
@@ -6189,6 +6215,8 @@ class MiaoPluginMBT extends plugin {
       MountRepoPath2: path.join(root, "Miao-Plugin-MBT-2"), GitFilePath2: path.join(root, "Miao-Plugin-MBT-2", ".git"),
       MountRepoPath3: path.join(root, "Miao-Plugin-MBT-3"), GitFilePath3: path.join(root, "Miao-Plugin-MBT-3", ".git"),
       MountRepoPath4: path.join(root, "Miao-Plugin-MBT-4"), GitFilePath4: path.join(root, "Miao-Plugin-MBT-4", ".git"),
+      MountRepoPath5: path.join(root, "Genshin-CR-Repos"), GitFilePath5: path.join(root, "Genshin-CR-Repos", ".git"),
+      MountRepoPath6: path.join(root, "StarRail-CR-Repos"), GitFilePath6: path.join(root, "StarRail-CR-Repos", ".git"),
       OpsPath: path.join(root, "Miao-Plugin-MBT", "CowCoo"),
       oldOpsPath: path.join(YzPath, "resources", "Miao-Plugin-MBT", "GuGuNiu-Gallery"),
       SecTagsPath: path.join(root, "Miao-Plugin-MBT", "CowCoo", "SecTags.json"),
@@ -6663,6 +6691,10 @@ class MiaoPluginMBT extends plugin {
 
   static async SCD(logger = getCore()) {
     const Hades = HadesEntry({}, logger || getCore());
+    const context = await Nomos.getContext();
+    const activeRepos = Nomos.ActiveScope(MiaoPluginMBT.MBTConfig, context);
+    const activeKeys = new Set(activeRepos.map(r => r.key));
+
     const PURGE_PATHS = [
       MiaoPluginMBT.Paths.Target.MiaoCRE, 
       MiaoPluginMBT.Paths.Target.ZZZCRE, 
@@ -6681,6 +6713,8 @@ class MiaoPluginMBT extends plugin {
             const storageBox = imgData.storagebox;
             
             if (!relativePath || !storageBox) continue;
+            
+            if (!activeKeys.has(storageBox)) continue;
             
             if (MiaoPluginMBT._activeBanSet.has(relativePath)) { 
                 skippedCount++; 
@@ -7375,7 +7409,7 @@ class MiaoPluginMBT extends plugin {
 
       if (rawLog) {
         const entries = rawLog.split(/(?=\d{2}-\d{2}\s\d{2}:\d{2}\s+\[)/).filter(s => s.trim());
-        const BtnFaceUrl = `file://${MiaoPluginMBT.Paths.OpsPath}/html/img/icon/null-btn.png`.replace(/\\/g, "/");
+        const BtnFaceUrl = `file://${MiaoPluginMBT.Paths.OpsPath}/img/icon/null-btn.png`.replace(/\\/g, "/");
 
         state.log = await Promise.all(entries.map(async (entry) => {
           const lines = entry.trim().split('\n');
@@ -8018,6 +8052,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       repoManifest.push(await BMF(2));
       repoManifest.push(await BMF(3));
       repoManifest.push(await BMF(4));
+      repoManifest.push(await BMF(5));
+      repoManifest.push(await BMF(6));
 
       if (repoManifest.every(r => r.status === 'skipped' && r.nodeName === '本地')) {
         if (redisKey) await redis.del(redisKey);
@@ -8203,7 +8239,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           1: "一号仓库 (核心)",
           2: "二号仓库 (原神)",
           3: "三号仓库 (星铁)",
-          4: "四号仓库 (综合库)"
+          4: "四号仓库 (综合库)",
+          5: "五号仓库 (SR18-GS)",
+          6: "六号仓库 (SR18-SR)"
       };
 
       const results = repoManifest.map(r => {
@@ -9857,7 +9895,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         const ViewProps = {
             insDays,           
             headerImg: await Morpheus.pickHeaderSet(20), 
-            guguniu_res_path: isInstalled
+            Cow_Res_Path: isInstalled
               ? `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/')
               : 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/'
         };
@@ -9985,7 +10023,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         return this.MutateSubState(e, '总开关', enable ? '开启' : '关闭');
     }
 
-    const subMatch = msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|渲染精度)(开启|关闭|[0-9]+)$/i);
+    const subMatch = msg.match(/^#咕咕牛设置(ai|彩蛋|横屏|净化等级|渲染精度|SR18)(开启|关闭|[0-9]+)$/i);
     if (subMatch) {
         const featureKey = subMatch[1].toLowerCase();
         const valueRaw = subMatch[2];
@@ -10062,6 +10100,23 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 return scale;
             },
             sideEffect: null
+        },
+        'sr18': {
+            cfgKey: 'SR18_Ops',
+            name: 'SR18仓库',
+            parse: (v) => {
+                if (v !== '开启' && v !== '关闭') throw new Error("只能是开启或关闭");
+                return v === '开启';
+            },
+            sideEffect: async () => {
+                Hades.D(`SR18 状态变更，正在重新计算资源...`);
+                try {
+                    await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, logger);
+                    if (MiaoPluginMBT.MBTConfig.Repo_Ops) await MiaoPluginMBT.SCD(logger);
+                } catch (err) {
+                    Hades.E(`SR18 应用失败:`, err);
+                }
+            }
         }
     };
 
@@ -10870,7 +10925,7 @@ const CowCoo_Rules = [
   { reg: /^#咕咕牛帮助$/i, fnc: "Help" },
   { reg: /^#咕咕牛测速$/i, fnc: "TestVoice" },
   { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: "MBTOpsDeck" },
-  { reg: /^#(?:(启用|禁用)咕咕牛|咕咕牛设置(ai|彩蛋|横屏|净化等级|渲染精度)(开启|关闭|[0-9]+))$/i, fnc: "RouteOpsHub", permission: "master" },
+  { reg: /^#(?:(启用|禁用)咕咕牛|咕咕牛设置(ai|彩蛋|横屏|净化等级|渲染精度|SR18)(开启|关闭|[0-9]+))$/i, fnc: "RouteOpsHub", permission: "master" },
   { reg: /^#可视化\s*.+$/i, fnc: "VisSplashes" },
 ];
 

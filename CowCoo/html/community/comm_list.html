@@ -10,7 +10,7 @@
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
         }
 
         @font-face {
@@ -18,7 +18,7 @@
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('{{guguniu_res_path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
         }
 
         :root {
@@ -312,7 +312,7 @@
 <body style="{{ RenderMatrix }}">
     <div class="container-wrapper">
         <header class="header">
-            <img class="header-logo" src="{{ guguniu_res_path }}html/img/logo.png" alt="Logo">
+            <img class="header-logo" src="{{ Cow_Res_Path }}img/logo.png" alt="Logo">
             <h1> · 第三方图库列表</h1>
         </header>
         <main class="main-content-area">
@@ -329,11 +329,11 @@
                 <div class="card-header">
                     <div class="alias-container">
                         {{ if item.platform === 'github' }}
-                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/github.png">
+                            <img class="platform-icon" src="{{ Cow_Res_Path }}img/icon/github.png">
                         {{ else if item.platform === 'gitee' }}
-                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitee.png">
+                            <img class="platform-icon" src="{{ Cow_Res_Path }}img/icon/gitee.png">
                         {{ else if item.platform === 'gitcode' }}
-                            <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitcode.png">
+                            <img class="platform-icon" src="{{ Cow_Res_Path }}img/icon/gitcode.png">
                         {{ /if }}
                         <div class="alias">{{ item.alias }}</div>
                     </div>
@@ -411,11 +411,11 @@
                     <div class="card-header">
                         <div class="alias-container">
                             {{ if item.platform === 'github' }}
-                                <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/github.png">
+                                <img class="platform-icon" src="{{ Cow_Res_Path }}img/icon/github.png">
                             {{ else if item.platform === 'gitee' }}
-                                <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitee.png">
+                                <img class="platform-icon" src="{{ Cow_Res_Path }}img/icon/gitee.png">
                             {{ else if item.platform === 'gitcode' }}
-                                <img class="platform-icon" src="{{ guguniu_res_path }}html/img/icon/gitcode.png">
+                                <img class="platform-icon" src="{{ Cow_Res_Path }}img/icon/gitcode.png">
                             {{ /if }}
                             <div class="alias">{{ item.alias }}</div>
                         </div>

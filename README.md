@@ -4,9 +4,9 @@
   </a>
 </p> 
 
-### 图库的说明
+## 咕咕咕 CowCoo
 
-图库是 Yunzai 框架下的游戏插件角色面板图资源补充，提供了涵盖**原神&星铁&绝区零&鸣潮的面板图资源**，自 **2023年10月** 创建以来，持续围绕安全、方便进行迭代优化，逐步构建面向多插件生态的 **一体化面板图库体系**，提升整体使用体验与管理效率。<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
+CowCoo库是 Yunzai 框架下的插件角色面板图资源补充，涵盖**原神&星铁&绝区零&鸣潮**的面板图资源，现已创建六仓进行分流，自 **2023年10月** 创建以来，持续围绕安全、方便进行迭代优化，逐步构建面向多插件的 **体系化的面板图库**，提升整体使用体验与管理效率。<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
   <button style="
     padding: 10px 20px;
     font-size: 16px;
@@ -24,6 +24,8 @@
   </button>
 </a>
 
+---
+
 #### 适配的游戏插件
 
 | 游戏 | 插件名称 |
@@ -32,19 +34,16 @@
 | 绝区零 | ZZZ-Plugin |
 | 鸣潮 | Waves-Plugin（0卡苏打水版） |
 
-#### 面板图处理
+#### 资源的制作与管理
 
-面板图采用 `Nano-Banana-Pro`、`ComfyUI` 等工具进行二次调色与扩图处理，在质量优先的前提下持续优化视觉呈现。图库会定期替换不符合当前审美标准的旧图，避免无序扩张，保持整体风格统一。
+面板图采用 `Nano-Banana-Pro`、`ComfyUI` 等工具进行二次调色与扩图处理，在质量优先的前提下持续优化视觉呈现。图库会定期替换不符合当前审美标准的旧图，避免无序扩张，避免出现超大体积图片，在保证图片画质与体积的前提下，提供最优的使用体验。 
 
-#### 架构设计
-
-管理器采用基于 **Symbol 索引的全局事件总线架构**，核心底座 `SignalTrap` 继承自 `EventEmitter`，通过 **EventListener** 统一接管信号与生命周期事件，驱动模块协同。
+管理器采用基于 **Symbol 索引的全局事件总线架构** 的大单体插件设计，内置独立的生命周期总线，支持 HMR 热重载无需经过 Yunzai 框架，通过以下模块实现：
 
 | 核心模块 | 实现 | 架构职责 |
 | :--- | :--- | :--- |
 | **SignalTrap** | `EventEmitter` + `Symbol` | **全局事件总线** |
 | **ProcPool** | `EventListener` | **进程生命周期管理** |
-| **QuoCRS** | `AbortController` + `Listener` | **并发任务调度底座** |
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -303,6 +302,10 @@ Score = (W_p × P) + (W_t × T_norm × F_decay)
   * `now - last_tick > 5000 ms` → `F_decay = 0.0`
     （数据视为过期，等效为 0 流量）
 
+</details>
+
+<details> <summary> 🫳 3.  状态流转图谱 </summary> 
+  <img src="https://files.seeusercontent.com/2026/02/23/B8ga/af0334d6-dff5-46ea-a692-58efb367.png" alt="af0334d6-dff5-46ea-a692-58efb3675bad.png" title="af0334d6-dff5-46ea-a692-58efb3675bad.png">
 </details>
 
 ## 收纳柜
