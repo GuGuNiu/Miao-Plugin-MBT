@@ -84,8 +84,7 @@
             background-size: cover;
             background-position: center calc(50% + 30px);
             background-repeat: no-repeat;
-            border-radius: 16px;
-            border: 1px solid var(--container-border);
+            border: 2px solid var(--container-border);
             overflow: hidden; 
             position: relative;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -442,6 +441,23 @@
             font-size: 14px;
             margin-right: 6px;
             opacity: 0.8;
+        }
+
+        .mode-detail-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            background: linear-gradient(135deg, rgba(230, 195, 92, 0.15), rgba(230, 195, 92, 0.05));
+            border: 1px solid rgba(230, 195, 92, 0.4);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            color: #e6c35c;
+            margin-right: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 0 8px rgba(230, 195, 92, 0.15);
         }
 
         .ip-label {
@@ -851,6 +867,15 @@
             background-size: 20px 20px;
             backdrop-filter: blur(5px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            clip-path: polygon(
+                0 0, 
+                calc(100% - 40px) 0, 
+                100% 40px, 
+                100% 100%, 
+                40px 100%, 
+                0 calc(100% - 40px)
+            );
+            overflow: visible;
         }
 
         .summary-panel::before, .summary-panel::after {
@@ -860,6 +885,7 @@
             height: 6px;
             background: var(--header-underline-color);
             box-shadow: 0 0 10px var(--header-underline-color);
+            z-index: 2;
         }
         .summary-panel::before { top: -1px; left: -1px; }
         .summary-panel::after { bottom: -1px; right: -1px; }
@@ -872,7 +898,7 @@
             align-items: center;
             justify-content: center;
             z-index: 1;
-            padding: 5px 0;
+            padding: 5px 0 18px 0;
         }
 
         .summary-item::before {
@@ -893,6 +919,7 @@
         .summary-item:nth-child(1)::before { content: '01'; }
         .summary-item:nth-child(3)::before { content: '02'; }
         .summary-item:nth-child(5)::before { content: '03'; }
+        .summary-item:nth-child(7)::before { content: '04'; }
 
         .summary-divider {
             width: 1px;
@@ -923,6 +950,21 @@
             letter-spacing: 1px;
             text-transform: uppercase;
             border: 1px solid var(--header-underline-color);
+            position: relative;
+        }
+
+        .summary-label::before {
+            content: '◆';
+            margin-right: 5px;
+            color: var(--header-underline-color);
+            font-size: 8px;
+        }
+
+        .summary-label::after {
+            content: '◆';
+            margin-left: 5px;
+            color: var(--header-underline-color);
+            font-size: 8px;
         }
 
         .summary-value {
@@ -943,6 +985,29 @@
             font-weight: 600;
             opacity: 0.8;
             text-shadow: none;
+        }
+
+        .summary-value .count-dead {
+            color: #d9585b;
+            text-shadow: 0 0 20px rgba(217, 88, 91, 0.4);
+        }
+
+        .summary-value .count-alive {
+            color: #43d8b8;
+            text-shadow: 0 0 20px rgba(67, 216, 184, 0.4);
+        }
+
+        .fail-rate {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Rajdhani', sans-serif;
+            position: absolute;
+            bottom: -2px;
+        }
+
+        .fail-rate-value {
+            color: #e6c35c;
+            font-weight: 600;
         }
         
         .footer {
@@ -1063,14 +1128,13 @@
 
             <div class="mode-display-section">
                 <div class="mode-info-col">
-                    <div class="mode-title">CURRENT RUNNING MODE</div>
+                    <div class="mode-title">CURRENT RUNNING MODE · 态势感知模式</div>
                     <div class="mode-value">
-                        {{ runModeMsg }} <span style="margin-left:8px; opacity:0.6; font-size:12px; font-family:'Orbitron'">[{{ runMode }}]</span>
+                        {{ runModeMsg }}
                     </div>
                     
                     {{ if nativeV4 && nativeV4 != 'N/A' }}
                     <div class="mode-detail-row">
-                        <div class="mode-detail-item" style="min-width: 60px; font-weight: bold; opacity: 0.8;">[NATIVE]</div>
                         <div class="mode-detail-item">
                             <span class="ip-label">Nat-v4</span> {{ nativeV4 }}
                         </div>
@@ -1086,7 +1150,7 @@
                     <div class="mode-detail-row" style="border-top: none; margin-top: 2px; padding-top: 2px;">
                         {{ if browserV4 && browserV4 != 'N/A' }}
                         <div class="mode-detail-item">
-                            <span class="ip-label" style="border-color: #e6c35c; color: #e6c35c;">Bro-v4</span> {{ browserV4 }}
+                            <span class="ip-label" style="border-color: #e6c35c; color: #e6c35c;">Bro-v4</span> {{ browserV4 }}{{ if clientGeo && clientGeo != '未知地区' }}<span style="color: #e6c35c; margin-left: 4px;">:{{ clientGeo }}</span>{{ /if }}
                         </div>
                         {{ if browserV6 && browserV6 != 'N/A' }}
                         <div class="mode-detail-item">
@@ -1094,12 +1158,14 @@
                         </div>
                         {{ /if }}
                         {{ /if }}
+                    </div>
+                    {{ /if }}
 
-                        {{ if clientGeo && clientGeo != '未知地区' }}
+                    {{ if bestPorts && bestPorts.length > 0 }}
+                    <div class="mode-detail-row" style="border-top: none; margin-top: 2px; padding-top: 2px;">
                         <div class="mode-detail-item">
-                            <span class="mode-detail-icon">📍</span> {{ clientGeo }}
+                            <span class="ip-label" style="border-color: #3cb371; color: #3cb371;">端口置信</span> {{ bestPorts.join(' / ') }}
                         </div>
-                        {{ /if }}
                     </div>
                     {{ /if }}
                 </div>
@@ -1172,6 +1238,12 @@
                         <div class="summary-label">IO / 包处理</div>
                         <div class="summary-value">{{ ioChunks }}</div>
                     </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-item">
+                        <div class="summary-label">节点失败率</div>
+                        <div class="summary-value"><span class="count-dead">{{ deadCount }}</span><span style="color:rgba(255,255,255,0.4)">/</span><span class="count-alive">{{ aliveCount }}</span></div>
+                        <div class="fail-rate">失败率: <span class="fail-rate-value">{{ failRate }}%</span></div>
+                    </div>
                 </div>
             </main>
 
@@ -1182,19 +1254,15 @@
                         <span class="pill-val">v{{ Version }}</span>
                     </div>
                     <div class="footer-pill">
-                        <span class="pill-label">机器人框架</span>
+                        <span class="pill-label">框架</span>
                         <span class="pill-val">Yunzai</span>
                     </div>
                     <div class="footer-pill">
-                        <span class="pill-label">UI界面</span>
-                        <span class="pill-val">v3.0</span>
-                    </div>
-                    <div class="footer-pill">
-                        <span class="pill-label">插件架构</span>
+                        <span class="pill-label">架构</span>
                         <span class="pill-val">v3.1</span>
                     </div>
                 </div>
-                <div class="footer-copyright">Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
+                <div class="footer-copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
             </footer>
         </div>
     </div>

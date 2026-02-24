@@ -1638,7 +1638,7 @@ class Hermes {
                     }, (res) => {
                         if (res.statusCode !== 200) {
                             res.resume();
-                            return reject(new Error(`Status ${res.statusCode}`));
+                            return reject(new Error(`状态 ${res.statusCode}`));
                         }
                         let data = '';
                         res.on('data', chunk => data += chunk);
@@ -1652,7 +1652,7 @@ class Hermes {
                         });
                     });
                     req.on('error', reject);
-                    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+                    req.on('timeout', () => { req.destroy(); reject(new Error('超时')); });
                     req.end();
                 });
             });
@@ -4050,13 +4050,13 @@ class Morpheus {
     static async pickBg() {
         const files = await this.#scanDir(this.#bgCache, "bg");
         const selected = MBTMath.Sample(files);
-        return selected ? `file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'bg', selected).replace(/\\/g, '/')}` : '';
+        return selected ? `file://${path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'bg', selected).replace(/\\/g, '/')}` : '';
     }
 
     static async pickHeader() {
         const files = await this.#scanDir(this.#headerCache, "picture");
         const selected = MBTMath.Sample(files);
-        return selected ? `file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'picture', selected).replace(/\\/g, '/')}` : '';
+        return selected ? `file://${path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'picture', selected).replace(/\\/g, '/')}` : '';
     }
 
     static async pickHeaderSet(count = 20) {
@@ -4067,7 +4067,7 @@ class Morpheus {
         for (let i = 0; i < count; i++) {
             const file = files[i % files.length]; 
             if (file) {
-                result.push(`file://${path.join(MiaoPluginMBT.Paths.BgImgPath, 'picture', file).replace(/\\/g, '/')}`);
+                result.push(`file://${path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'picture', file).replace(/\\/g, '/')}`);
             }
         }
         return MBTMath.Shuffle(result);
@@ -4075,15 +4075,15 @@ class Morpheus {
 
     static getStaticImg(filename, subDir = "") {
         const targetPath = subDir 
-            ? path.join(MiaoPluginMBT.Paths.BgImgPath, subDir, filename)
-            : path.join(MiaoPluginMBT.Paths.BgImgPath, filename);
+            ? path.join(MiaoPluginMBT.Paths.OpsPath, 'img', subDir, filename)
+            : path.join(MiaoPluginMBT.Paths.OpsPath, 'img', filename);
         return `file://${targetPath.replace(/\\/g, '/')}`;
     }
 
     static async #scanDir(cacheObj, subDirName) {
         const now = Date.now();
         if (now - cacheObj.lastScan < cacheObj.ttl && cacheObj.files.length > 0) return cacheObj.files;
-        const targetDir = path.join(MiaoPluginMBT.Paths.BgImgPath, subDirName);
+        const targetDir = path.join(MiaoPluginMBT.Paths.OpsPath, 'img', subDirName);
         try {
             const entries = await Ananke.readDir(targetDir);
             const newFiles = entries
@@ -6304,6 +6304,8 @@ class MiaoPluginMBT extends plugin {
     if (this._pathsCache) return this._pathsCache;
 
     const root = this.CowCooRepoRoot;
+    const ops = path.join(root, "Miao-Plugin-MBT", "CowCoo");
+    const cow = path.join(root, "CowCoo");
     
     this._pathsCache = {
       YzPath: typeof YzPath !== 'undefined' ? YzPath : process.cwd(),
@@ -6314,19 +6316,18 @@ class MiaoPluginMBT extends plugin {
       MountRepoPath4: path.join(root, "Miao-Plugin-MBT-4"), GitFilePath4: path.join(root, "Miao-Plugin-MBT-4", ".git"),
       MountRepoPath5: path.join(root, "Genshin-CR-Repos"), GitFilePath5: path.join(root, "Genshin-CR-Repos", ".git"),
       MountRepoPath6: path.join(root, "StarRail-CR-Repos"), GitFilePath6: path.join(root, "StarRail-CR-Repos", ".git"),
-      OpsPath: path.join(root, "Miao-Plugin-MBT", "CowCoo"),
+      OpsPath: ops,
       oldOpsPath: path.join(YzPath, "resources", "Miao-Plugin-MBT", "GuGuNiu-Gallery"),
-      SecTagsPath: path.join(root, "Miao-Plugin-MBT", "CowCoo", "SecTags.json"),
-      BgImgPath: path.join(root, "Miao-Plugin-MBT", "CowCoo", "html", "img"),
-      ComResPath: path.join(root, "CowCoo"),
-      ConfigFilePath: path.join(root, "CowCoo", "CowSet.yaml"),
-      BanListPath: path.join(root, "CowCoo", "banlist.json"),
+      SecTagsPath: path.join(ops, "SecTags.json"),
+      ComResPath: cow,
+      ConfigFilePath: path.join(cow, "CowSet.yaml"),
+      BanListPath: path.join(cow, "banlist.json"),
       ProvisionPath: path.join(root, ".install_lock"),
-      WavesRoleData: path.join(root, "CowCoo", "waves", "RoleData.json"),
+      WavesRoleData: path.join(cow, "waves", "RoleData.json"),
       MiaoPluginPath: path.join(YzPath, "plugins", "miao-plugin"),
       ZZZPluginPath: path.join(YzPath, "plugins", "ZZZ-Plugin"),
       WavesPluginPath: path.join(YzPath, "plugins", "waves-plugin"),
-      RTCPath: path.join(root, "CowCoo", "RepoCache.json"),
+      RTCPath: path.join(cow, "RepoCache.json"),
       TempHtmlPath: path.join(YzPath, "temp", "html"), TempNiuPath: path.join(YzPath, "temp", "CowCoo"), TempDownloadPath: path.join(YzPath, "temp", "CowCoo", "Tasks"),
       Target: {
         MiaoCRE: path.join(YzPath, "plugins", "miao-plugin", "resources", "profile", "normal-character"),
@@ -7577,7 +7578,7 @@ class MiaoPluginMBT extends plugin {
             }
             return commit;
           }));
-        } else throw new Error("Empty log");
+        } else throw new Error("日志内容为空");
       } catch {
         state.log = [{ isDescription: true, commitTitle: "无有效提交记录或获取失败", hash: 'N/A', date: '', commitPrefix: null, descriptionBodyHtml: '' }];
       }
@@ -8402,41 +8403,27 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const proxyContext = chain.vector.proxyContext;
     const v6Lat = chain.vector.v6Lat;
 
-    let runMode = "AIRLOCK_PROXY";
     let runModeMsg = chain.desc;
 
     switch (netMode) {
         case Proteus.State.V6_TURBO:
-            runMode = 'NATIVE_V6';
             if (Number.isFinite(v6Lat)) runModeMsg = `${runModeMsg} -> 强制 GitHub [${v6Lat}ms]`;
             break;
         case Proteus.State.NATIVE:
-            runMode = 'NATIVE';
             if (proxyContext) {
                 const proto = proxyContext.protocol || 'http';
                 runModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
             }
-            break;
-        case Proteus.State.USER_AGENT:
-            runMode = 'USER_PROXY';
             break;
         case Proteus.State.IDLE_AGENT:
-            runMode = 'USER_PROXY';
             if (proxyContext) {
                 const proto = proxyContext.protocol || 'http';
                 runModeMsg += ` [注入:${proto.toUpperCase()}:${proxyContext.port}]`;
             }
-            break;
-        case Proteus.State.RULE_SPLIT:
-            runMode = 'AIRLOCK_PROXY';
-            break;
-        case Proteus.State.AIRLOCK:
-        default:
-            runMode = 'AIRLOCK_PROXY';
             break;
     }
 
-    return { runMode, runModeMsg };
+    return { runModeMsg };
   }
 
   async TestVoice(e) {
@@ -8466,6 +8453,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async _VoiceCore(e, Hades, httpResults, gitResults = [], startTime) {
     const taskEnvInfo = Hermes.getEnvInfo(Hades).catch(() => ({}));
+    const taskProxyPorts = Nyx.scan(this._setup?.agentGates, Hades).catch(() => []);
     
     let sortedNodes = [];
     if (gitResults && gitResults.length > 0) {
@@ -8476,6 +8464,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     try {
         const envInfo = await taskEnvInfo;
+        const proxyPorts = await taskProxyPorts;
         const bestMirror = httpResults.find(r => r.name !== 'GitHub' && Number.isFinite(r.speed));
         const mirrorSpeed = bestMirror ? bestMirror.speed : Infinity;
         const senseChain = await Proteus.sense(envInfo, mirrorSpeed, Hades);
@@ -8551,7 +8540,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         let clientGeo = geoParts.join(' / ') || "未知地区";
         if (isp) clientGeo += ` [${isp}]`;
         
-        const { runMode, runModeMsg } = await this._ResolveRunMode(envInfo, mirrorSpeed, senseChain, Hades);
+        const { runModeMsg } = await this._ResolveRunMode(envInfo, mirrorSpeed, senseChain, Hades);
 
         const tplResult = await Hermes.getTemplate('speedtest.html', Hades);
         if (!tplResult.success) throw new Error("模板加载失败");
@@ -8563,12 +8552,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                  gitData = gitResults.find(g => g.name === s.name)?.gitResult;
                  isGitOk = gitData?.success;
             }
-            
+
             const isHttpOk = Number.isFinite(s.speed);
-            
+            const isGitDurOk = gitData && Number.isFinite(gitData.duration);
+
             let statusText = "超时";
             if (isHttpOk) statusText = `H:${s.speed}ms`;
-            if (gitData) {
+            if (isGitDurOk) {
                  statusText += ` / G:${gitData.duration}ms`;
             }
 
@@ -8580,9 +8570,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 latencyColorClass: !isHttpOk ? 'latency-timeout' : (s.speed > 2000 ? 'latency-yellow' : 'latency-green'),
                 barColorClass: !isHttpOk ? 'bar-red' : (s.speed > 2000 ? 'bar-yellow' : 'bar-green'),
                 statusClass: (isHttpOk || isGitOk) ? 'status-ok' : 'status-timeout',
-                isBest: sortedNodes[0]?.name === s.name
+                isBest: sortedNodes[0]?.name === s.name,
+                isFailed: !isHttpOk && !isGitOk
             };
         });
+
+        const aliveCount = p1Stats.length;
+        const deadCount = p1Stats.filter(s => s.isFailed).length;
         
         const p2Stats = [
              { name: 'Baidu', val: vector.cnLink, rtt: baiduMs, icon: 'https://api.iconify.design/simple-icons:baidu.svg?color=%23ffffff' },
@@ -8601,17 +8595,25 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
              };
         });
 
+        const failRate = aliveCount > 0 ? ((deadCount / aliveCount) * 100).toFixed(1) : '0.0';
+
+        const bestPorts = proxyPorts.slice(0, 4).map(p => `${p.port}(${p.score})`);
+
         const ViewProps = {
              speeds: { priority1: p1Stats, priority2: p2Stats },
              best1Display: sortedNodes[0] ? `${sortedNodes[0].name} (综合评分最优)` : "无可用源",
              duration: ((Date.now() - startTime) / 1000).toFixed(1),
-             runMode, runModeMsg, 
+             runModeMsg,
              nativeV4, nativeV6,
              browserV4, browserV6,
-             v4Lat: envInfo?.v4Lat || 0, 
-             v6Lat: envInfo?.v6Lat || 0, 
+             v4Lat: envInfo?.v4Lat || 0,
+             v6Lat: envInfo?.v6Lat || 0,
              clientGeo,
-             trafficFormatted, ioChunks
+             trafficFormatted, ioChunks,
+             aliveCount,
+             deadCount,
+             failRate,
+             bestPorts
         };
 
         const imgBuffer = await Morpheus.shot("US-SpeedTest", {  
@@ -8845,11 +8847,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const UpdateRenderFlag = (!isScheduled && e) || notifyStatus;
 
     if (UpdateRenderFlag) {
-      imgBuffer = await Morpheus.shot("Update", { 
-        tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "html", "sync", "update.html"), 
-        data: ViewProps, 
+      imgBuffer = await Morpheus.shot("Update", {
+        tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "html", "sync", "update.html"),
+        data: ViewProps,
         logger: Hades,
-        pageBoundingRect: { selector: ".wrapper" }
+        pageBoundingRect: { selector: ".capture-frame" }
       });
     }
 

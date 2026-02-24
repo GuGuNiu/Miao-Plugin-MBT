@@ -4184,23 +4184,6 @@
   {
     "storagebox": "Miao-Plugin-MBT",
     "storagebox_type": "sr-character",
-    "gid": "7520801935",
-    "characterName": "白厄",
-    "path": "sr-character/白厄/白厄Gu1.webp",
-    "attributes": {
-      "filename": "白厄Gu1.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "5b823b4b1fc81749da8878a3573a9564",
-      "rated": "none",
-      "other": [],
-      "phash": "4d4d4d4bae359b3e"
-    },
-    "timestamp": "2025-05-28T03:57:25.810Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "sr-character",
     "gid": "5410438649",
     "characterName": "风堇",
     "path": "sr-character/风堇/风堇Gu1.webp",
@@ -4235,23 +4218,6 @@
   {
     "storagebox": "Miao-Plugin-MBT",
     "storagebox_type": "sr-character",
-    "gid": "5287934566",
-    "characterName": "风堇",
-    "path": "sr-character/风堇/风堇Gu11.webp",
-    "attributes": {
-      "filename": "风堇Gu11.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "a6560ed89b3cbfdfbe035e8e42f34520",
-      "rated": "none",
-      "other": [],
-      "phash": "4dcd4d4dcdcacd4d"
-    },
-    "timestamp": "2025-05-26T04:06:35.653Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "sr-character",
     "gid": "5102689812",
     "characterName": "风堇",
     "path": "sr-character/风堇/风堇Gu12.webp",
@@ -4271,9 +4237,9 @@
     "storagebox_type": "sr-character",
     "gid": "4019532615",
     "characterName": "风堇",
-    "path": "sr-character/风堇/风堇Gu13.webp",
+    "path": "sr-character/风堇/风堇Gu11.webp",
     "attributes": {
-      "filename": "风堇Gu13.webp",
+      "filename": "风堇Gu11.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "c2e31e519a666b4127660029b82cf8d3",
@@ -6504,7 +6470,8 @@
       ],
       "rated": "r18",
       "other": [],
-      "phash": "2dadadada6ae2425"
+      "phash": "2dadadada6ae2425",
+      "abnormal": false
     },
     "timestamp": "2025-12-01T11:36:33.192Z"
   },
@@ -7018,30 +6985,6 @@
       "phash": "22f4a5b5edbc5a5d"
     },
     "timestamp": "2025-12-01T11:36:33.196Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "7419942707",
-    "characterName": "艾尔海森",
-    "path": "gs-character/艾尔海森/艾尔海森Gu1.webp",
-    "attributes": {
-      "filename": "艾尔海森Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "f8a4d3593f2179d970195dfe2744d29b",
-      "secTags": [
-        "反差",
-        "男娘",
-        "腹肌",
-        "肚脐",
-        "露肩"
-      ],
-      "rated": "p18",
-      "other": [],
-      "phash": "75f5bda5f565b5a5"
-    },
-    "timestamp": "2025-05-19T09:49:03.920Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -7948,23 +7891,6 @@
       "rated": "none",
       "other": [],
       "phash": "ad3db5b5b5a5a51d"
-    },
-    "timestamp": "2025-05-03T10:18:29.751Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "7353133939",
-    "characterName": "白术",
-    "path": "gs-character/白术/白术Gu4.webp",
-    "attributes": {
-      "filename": "白术Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "237767860adaaffd0e6d74a47a457525",
-      "rated": "none",
-      "other": [],
-      "phash": "656d6a6a6a6e6e6d"
     },
     "timestamp": "2025-05-03T10:18:29.751Z"
   },
@@ -16757,40 +16683,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-3",
     "storagebox_type": "sr-character",
-    "gid": "5235260714",
-    "characterName": "大黑塔",
-    "path": "sr-character/大黑塔/大黑塔Gu2.webp",
-    "attributes": {
-      "filename": "大黑塔Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "a0fcdb75251ba20a302fd3cb9d321516",
-      "rated": "none",
-      "other": [],
-      "phash": "38324e292e1a1a3a"
-    },
-    "timestamp": "2025-06-09T01:52:35.401Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "8888780160",
-    "characterName": "大黑塔",
-    "path": "sr-character/大黑塔/大黑塔Gu3.webp",
-    "attributes": {
-      "filename": "大黑塔Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "c78c249684c8ba1a2cd316b187d0d226",
-      "rated": "none",
-      "other": [],
-      "phash": "45ca4545c5c2c24d"
-    },
-    "timestamp": "2025-06-09T01:52:35.402Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
     "gid": "4102781040",
     "characterName": "大黑塔",
     "path": "sr-character/大黑塔/大黑塔Gu4.webp",
@@ -17554,57 +17446,6 @@
       "phash": "58cd4d4dddddd54d"
     },
     "timestamp": "2025-05-28T03:57:14.057Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "8572500454",
-    "characterName": "虎克",
-    "path": "sr-character/虎克/虎克Gu1.webp",
-    "attributes": {
-      "filename": "虎克Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "89fbc2341734d57143134b57ffae4a0a",
-      "rated": "none",
-      "other": [],
-      "phash": "cd4eccccdeeeee4e"
-    },
-    "timestamp": "2025-06-09T01:52:35.403Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "4680046223",
-    "characterName": "虎克",
-    "path": "sr-character/虎克/虎克Gu2.webp",
-    "attributes": {
-      "filename": "虎克Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "7922aa53d209cfd5d6a38871d9a5620b",
-      "rated": "none",
-      "other": [],
-      "phash": "b8adadadadbdb82a"
-    },
-    "timestamp": "2025-06-13T03:21:12.182Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "8272832644",
-    "characterName": "虎克",
-    "path": "sr-character/虎克/虎克Gu3.webp",
-    "attributes": {
-      "filename": "虎克Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "d868f6afa0033baa3c656fb657b3fcea",
-      "rated": "none",
-      "other": [],
-      "phash": "ed6decececdeee14"
-    },
-    "timestamp": "2025-06-09T01:52:35.404Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-3",
@@ -24720,25 +24561,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "6018076407",
-    "characterName": "芭芭拉",
-    "path": "gs-character/芭芭拉/芭芭拉Gu7.webp",
-    "attributes": {
-      "filename": "芭芭拉Gu7.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "f802aa2cab84b4fcdce0f82f5e003c0d",
-      "rated": "none",
-      "other": [
-        "LLMCanvas"
-      ],
-      "phash": "656d656d6d6d6d6d"
-    },
-    "timestamp": "2025-12-01T11:36:33.204Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "1333679586",
     "characterName": "芭芭拉",
     "path": "gs-character/芭芭拉/芭芭拉Gu8.webp",
@@ -25438,23 +25260,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "8441412884",
-    "characterName": "菲谢尔",
-    "path": "gs-character/菲谢尔/菲谢尔Gu13.webp",
-    "attributes": {
-      "filename": "菲谢尔Gu13.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "3bcdf1d507eb73573cd4732310ef6023",
-      "rated": "none",
-      "other": [],
-      "phash": "35a5adadadaa2525"
-    },
-    "timestamp": "2025-12-01T11:36:33.212Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "1074223947",
     "characterName": "菲谢尔",
     "path": "gs-character/菲谢尔/菲谢尔Gu14.webp",
@@ -25946,40 +25751,6 @@
       "rated": "none",
       "other": [],
       "phash": "6266eeed6dfa2624"
-    },
-    "timestamp": "2025-12-01T11:36:33.216Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6265358046",
-    "characterName": "久岐忍",
-    "path": "gs-character/久岐忍/久岐忍Gu1.webp",
-    "attributes": {
-      "filename": "久岐忍Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "36f6f31edfdb2f9e79608555c8212e30",
-      "rated": "none",
-      "other": [],
-      "phash": "6d4c6c6d6d6d6c6c"
-    },
-    "timestamp": "2025-12-01T11:36:33.216Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "8277003109",
-    "characterName": "久岐忍",
-    "path": "gs-character/久岐忍/久岐忍Gu2.webp",
-    "attributes": {
-      "filename": "久岐忍Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "8a653579d05ed7edd5b9e76b17b36d24",
-      "rated": "none",
-      "other": [],
-      "phash": "5d6d6d2a64242d6d"
     },
     "timestamp": "2025-12-01T11:36:33.216Z"
   },

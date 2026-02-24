@@ -11,7 +11,7 @@
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}html/fonts/Orbitron-Bold.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}fonts/Orbitron-Bold.woff2') format('woff2');
         }
 
         @font-face {
@@ -19,7 +19,7 @@
             font-style: normal;
             font-weight: 500;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}html/fonts/Orbitron-Medium.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}fonts/Orbitron-Medium.woff2') format('woff2');
         }
 
         @font-face {
@@ -27,7 +27,7 @@
             font-style: normal;
             font-weight: 500;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}html/fonts/Rajdhani-Medium.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}fonts/Rajdhani-Medium.woff2') format('woff2');
         }
 
         @font-face {
@@ -35,14 +35,14 @@
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}html/fonts/NotoSansSC-Regular.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}fonts/NotoSansSC-Regular.woff2') format('woff2');
         }
 
         @font-face {
             font-family: 'AaJiJiaHei';
             font-style: normal;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}html/fonts/AaJiJiaHei-2.woff2') format('woff2');
+            src: url('{{Cow_Res_Path}}fonts/AaJiJiaHei-2.woff2') format('woff2');
         }
 
         :root {
@@ -94,6 +94,12 @@
             width: 760px;
             margin: 0 auto;
             position: relative;
+        }
+
+        .capture-frame {
+            position: relative;
+            padding: 10px;
+            display: inline-block;
         }
 
         .container {
@@ -719,17 +725,65 @@
         }
 
         .footer {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 14px;
-            color: var(--text-secondary);
-            padding-top: 18px;
-            letter-spacing: 0.5px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 500;
-            text-shadow: 0 0 1px rgba(90, 114, 138, 0.1);
+            margin-top: 20px;
+            padding: 20px 0;
             position: relative;
             z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .footer-pill {
+            display: flex;
+            align-items: center;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .pill-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(233, 236, 239, 0.5);
+            color: var(--text-secondary);
+            padding: 0 8px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--container-border);
+        }
+
+        .pill-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 0 8px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-copyright {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.25px;
+            font-weight: 500;
+            margin-top: 5px;
         }
 
         .commit-prefix {
@@ -851,16 +905,17 @@
 </head>
 
 <body style="{{RenderMatrix}}">
-    <div class="wrapper">
-        <div class="glow-border">
-            <div class="glow-clip-inner"></div>
-        </div>
-        <div class="trapezoid-deco top-left"></div>
-        <div class="trapezoid-deco top-right"></div>
-        <div class="trapezoid-deco bottom-left"></div>
-        <div class="trapezoid-deco bottom-right"></div>
-        <div class="container-shadow-wrapper">
-            <div class="container">
+    <div class="capture-frame">
+        <div class="wrapper">
+            <div class="glow-border">
+                <div class="glow-clip-inner"></div>
+            </div>
+            <div class="trapezoid-deco top-left"></div>
+            <div class="trapezoid-deco top-right"></div>
+            <div class="trapezoid-deco bottom-left"></div>
+            <div class="trapezoid-deco bottom-right"></div>
+            <div class="container-shadow-wrapper">
+                <div class="container">
                 <header class="header">
                     <h1 class="title">咕咕牛图库更新报告 <span>/UPDATEREPORT/</span></h1>
                     <div class="report-time">{{ reportTime }}</div>
@@ -1030,9 +1085,26 @@
                     {{ summaryText }}
                     <span class="duration">[耗时: {{ duration }} s]</span>
                 </footer>
-                <div class="footer">Miao-Plugin-MBT v{{ Version }}</div>
+                <footer class="footer">
+                    <div class="footer-content">
+                        <div class="footer-pill">
+                            <span class="pill-label">运行版本</span>
+                            <span class="pill-val">v{{ Version }}</span>
+                        </div>
+                        <div class="footer-pill">
+                            <span class="pill-label">框架</span>
+                            <span class="pill-val">Yunzai</span>
+                        </div>
+                        <div class="footer-pill">
+                            <span class="pill-label">架构</span>
+                            <span class="pill-val">v3.1</span>
+                        </div>
+                    </div>
+                    <div class="footer-copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
+                </footer>
             </div>
         </div>
+    </div>
     </div>
 </body>
 
