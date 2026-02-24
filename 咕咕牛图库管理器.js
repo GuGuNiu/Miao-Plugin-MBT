@@ -541,6 +541,8 @@ class Hermes {
     static #SENSE_TTL = 15000;
     static #CACHE_PATH = path.join(process.cwd(), 'temp', 'CowCoo', 'NetWork', 'ipconfig.json');
     static #IP_CACHE_TTL = 600 * 1000;
+    static #Default_Max_Body_Bytes = 1024 * 1024;
+    static #Default_Max_Handshake_Bytes = 64 * 1024;
 
     static get Sources() {
         return HermesMatrix.Sources;
@@ -1072,9 +1074,70 @@ class Hermes {
         'core_repo_download.html': { strategy: 'NET_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/core_repo_download.html' }
     };
 
+    static #Build_Limit_Error(code, message) {
+        const error_item = new Error(message);
+        error_item.code = code;
+        return error_item;
+    }
+
+    static #Resolve_Byte_Limit(value, fallback) {
+        const numeric_value = Number(value);
+        if (Number.isFinite(numeric_value) && numeric_value > 0) return Math.floor(numeric_value);
+        return fallback;
+    }
+
+    static #Collect_Body_Limit(stream, max_body_bytes) {
+        const body_limit = this.#Resolve_Byte_Limit(max_body_bytes, this.#Default_Max_Body_Bytes);
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            let total_bytes = 0;
+            let settled = false;
+
+            const cleanup = () => {
+                stream.off('data', on_data);
+                stream.off('end', on_end);
+                stream.off('error', on_error);
+            };
+
+            const fail = (err) => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                reject(err);
+            };
+
+            const on_error = (err) => fail(err);
+            const on_data = (chunk) => {
+                total_bytes += chunk.length;
+                if (total_bytes > body_limit) {
+                    const limit_error = this.#Build_Limit_Error('E_HTTP_BODY_LIMIT', `HTTP响应体超限(${total_bytes}/${body_limit})`);
+                    if (typeof stream.destroy === 'function') stream.destroy(limit_error);
+                    return fail(limit_error);
+                }
+                chunks.push(chunk);
+            };
+            const on_end = () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                try {
+                    resolve(Buffer.concat(chunks).toString('utf-8'));
+                } catch (err) {
+                    reject(err);
+                }
+            };
+
+            stream.on('data', on_data);
+            stream.on('end', on_end);
+            stream.on('error', on_error);
+        });
+    }
+
     static async request(url, options = {}, redirects = 0) {
         if (redirects > 3) return { success: false, error: new Error('重定向次数过多') };
         const { timeout = 10000, method = 'GET', headers = {}, signal, skipUAPool = false, family = 0, skipSense = false, proxy = null, forceProxy = false } = options;
+        const max_body_bytes = this.#Resolve_Byte_Limit(options.max_body_bytes ?? options.maxBodyBytes, this.#Default_Max_Body_Bytes);
+        const max_handshake_bytes = this.#Resolve_Byte_Limit(options.max_handshake_bytes ?? options.maxHandshakeBytes, this.#Default_Max_Handshake_Bytes);
         
         const isWhiteListed = url.includes('gitee.com');
         const effSkipSense = skipSense || (isWhiteListed && !forceProxy);
@@ -1148,7 +1211,13 @@ class Hermes {
         if (ua) baseHeaders['User-Agent'] = ua;
 
         if (useProxy) {
-            return this.#proxyRequest(url, { method, timeout, signal, headers: baseHeaders, family: finalFamily, ciphers: shuffledCiphers }, { host: proxyHost, port: proxyPort, scheme: proxyScheme }, options, redirects);
+            return this.#proxyRequest(
+                url,
+                { method, timeout, signal, headers: baseHeaders, family: finalFamily, ciphers: shuffledCiphers, max_body_bytes, max_handshake_bytes },
+                { host: proxyHost, port: proxyPort, scheme: proxyScheme },
+                { ...options, max_body_bytes, max_handshake_bytes, maxBodyBytes: max_body_bytes, maxHandshakeBytes: max_handshake_bytes },
+                redirects
+            );
         }
 
         return new Promise((resolve) => {
@@ -1158,9 +1227,9 @@ class Hermes {
                     if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
                     return resolve(this.request(nextUrl, options, redirects + 1));
                 }
-                const chunks = [];
-                res.on('data', chunk => chunks.push(chunk));
-                res.on('end', () => resolve({ success: true, status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') }));
+                this.#Collect_Body_Limit(res, max_body_bytes)
+                    .then(body => resolve({ success: true, status: res.statusCode, body }))
+                    .catch(err => resolve({ success: false, status: res.statusCode || 0, body: null, error: err }));
             });
             const fail = (err) => { if (!req.destroyed) req.destroy(); resolve({ success: false, status: 0, body: null, error: err }); };
             req.on('error', (err) => { if (err.name !== 'AbortError') fail(err); });
@@ -1207,9 +1276,9 @@ class Hermes {
                     if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
                     return resolve(this.request(nextUrl, options, redirects + 1));
                 }
-                const chunks = [];
-                res.on('data', chunk => chunks.push(chunk));
-                res.on('end', () => resolve({ success: true, status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') }));
+                this.#Collect_Body_Limit(res, opts.max_body_bytes)
+                    .then(body => resolve({ success: true, status: res.statusCode, body }))
+                    .catch(err => resolve({ success: false, status: res.statusCode || 0, body: null, error: err }));
             });
             req.on('error', err => resolve({ success: false, status: 0, body: null, error: err }));
             req.on('timeout', () => resolve({ success: false, status: 0, body: null, error: new Error('请求超时') }));
@@ -1257,9 +1326,9 @@ class Hermes {
                         if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
                         return resolve(this.request(nextUrl, options, redirects + 1));
                     }
-                    const chunks = [];
-                    res.on('data', d => chunks.push(d));
-                    res.on('end', () => resolve({ success: true, status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') }));
+                    this.#Collect_Body_Limit(res, opts.max_body_bytes)
+                        .then(body => resolve({ success: true, status: res.statusCode, body }))
+                        .catch(err => onFail(err));
                 });
                 req.on('error', onFail);
                 req.on('timeout', () => onFail(new Error('请求超时')));
@@ -1273,10 +1342,11 @@ class Hermes {
         });
     }
 
-    static #readExact(socket, size, timeout, signal) {
+    static #readExact(socket, size, timeout, signal, max_handshake_bytes) {
         return new Promise((resolve, reject) => {
             let buffer = Buffer.alloc(0);
             let timer = null;
+            const max_bytes = this.#Resolve_Byte_Limit(max_handshake_bytes, this.#Default_Max_Handshake_Bytes);
             const cleanup = () => {
                 if (timer) clearTimeout(timer);
                 socket.off('data', onData);
@@ -1297,7 +1367,16 @@ class Hermes {
                 reject(new Error('连接已关闭'));
             };
             const onData = (chunk) => {
-                buffer = Buffer.concat([buffer, chunk]);
+                if (buffer.length + chunk.length > max_bytes) {
+                    cleanup();
+                    return reject(this.#Build_Limit_Error('E_SOCKS_HANDSHAKE_LIMIT', `SOCKS握手数据超限(${buffer.length + chunk.length}/${max_bytes})`));
+                }
+                try {
+                    buffer = Buffer.concat([buffer, chunk]);
+                } catch (err) {
+                    cleanup();
+                    return reject(this.#Build_Limit_Error('E_SOCKS_BUFFER_CONCAT', err?.message || 'SOCKS握手缓冲拼接失败'));
+                }
                 if (buffer.length >= size) {
                     const out = buffer.slice(0, size);
                     const rest = buffer.slice(size);
@@ -1306,6 +1385,9 @@ class Hermes {
                     resolve(out);
                 }
             };
+            if (size > max_bytes) {
+                return reject(this.#Build_Limit_Error('E_SOCKS_HANDSHAKE_LIMIT', `SOCKS读取长度超限(${size}/${max_bytes})`));
+            }
             if (timeout) timer = setTimeout(() => onError(new Error('请求超时')), timeout);
             if (signal) signal.addEventListener('abort', onAbort, { once: true });
             socket.on('data', onData);
@@ -1314,12 +1396,12 @@ class Hermes {
         });
     }
 
-    static async #socksConnect(targetHost, targetPort, proxy, timeout, signal) {
+    static async #socksConnect(targetHost, targetPort, proxy, timeout, signal, max_handshake_bytes) {
         return new Promise((resolve, reject) => {
             const socket = net.connect({ host: proxy.host, port: proxy.port }, async () => {
                 try {
                     socket.write(Buffer.from([0x05, 0x01, 0x00]));
-                    const greet = await this.#readExact(socket, 2, timeout, signal);
+                    const greet = await this.#readExact(socket, 2, timeout, signal, max_handshake_bytes);
                     if (greet[1] !== 0x00) throw new Error('SOCKS 认证失败');
                     const addrType = net.isIPv4(targetHost) ? 0x01 : 0x03;
                     let addrBuf;
@@ -1331,14 +1413,14 @@ class Hermes {
                     const portBuf = Buffer.from([(targetPort >> 8) & 0xff, targetPort & 0xff]);
                     const req = Buffer.concat([Buffer.from([0x05, 0x01, 0x00, addrType]), addrBuf, portBuf]);
                     socket.write(req);
-                    const head = await this.#readExact(socket, 4, timeout, signal);
+                    const head = await this.#readExact(socket, 4, timeout, signal, max_handshake_bytes);
                     if (head[1] !== 0x00) throw new Error('SOCKS 连接失败');
                     const repType = head[3];
-                    if (repType === 0x01) await this.#readExact(socket, 6, timeout, signal);
-                    else if (repType === 0x04) await this.#readExact(socket, 18, timeout, signal);
+                    if (repType === 0x01) await this.#readExact(socket, 6, timeout, signal, max_handshake_bytes);
+                    else if (repType === 0x04) await this.#readExact(socket, 18, timeout, signal, max_handshake_bytes);
                     else if (repType === 0x03) {
-                        const lenBuf = await this.#readExact(socket, 1, timeout, signal);
-                        await this.#readExact(socket, lenBuf[0] + 2, timeout, signal);
+                        const lenBuf = await this.#readExact(socket, 1, timeout, signal, max_handshake_bytes);
+                        await this.#readExact(socket, lenBuf[0] + 2, timeout, signal, max_handshake_bytes);
                     }
                     resolve(socket);
                 } catch (e) {
@@ -1355,7 +1437,7 @@ class Hermes {
             try {
                 const target = new URL(url);
                 const port = target.port ? Number(target.port) : 80;
-                const socket = await this.#socksConnect(target.hostname, port, proxy, opts.timeout, opts.signal);
+                const socket = await this.#socksConnect(target.hostname, port, proxy, opts.timeout, opts.signal, opts.max_handshake_bytes);
                 const req = http.request({
                     host: target.hostname,
                     port,
@@ -1371,9 +1453,9 @@ class Hermes {
                         if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
                         return resolve(this.request(nextUrl, options, redirects + 1));
                     }
-                    const chunks = [];
-                    res.on('data', d => chunks.push(d));
-                    res.on('end', () => resolve({ success: true, status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') }));
+                    this.#Collect_Body_Limit(res, opts.max_body_bytes)
+                        .then(body => resolve({ success: true, status: res.statusCode, body }))
+                        .catch(err => resolve({ success: false, status: res.statusCode || 0, body: null, error: err }));
                 });
                 req.on('error', err => resolve({ success: false, status: 0, body: null, error: err }));
                 req.on('timeout', () => resolve({ success: false, status: 0, body: null, error: new Error('请求超时') }));
@@ -1390,7 +1472,7 @@ class Hermes {
             try {
                 const target = new URL(url);
                 const port = target.port ? Number(target.port) : 443;
-                const socket = await this.#socksConnect(target.hostname, port, proxy, opts.timeout, opts.signal);
+                const socket = await this.#socksConnect(target.hostname, port, proxy, opts.timeout, opts.signal, opts.max_handshake_bytes);
                 const tlsSocket = tls.connect({ socket, servername: target.hostname, minVersion: 'TLSv1.2', ciphers: opts.ciphers });
                 tlsSocket.on('error', (err) => resolve({ success: false, status: 0, body: null, error: err }));
                 const req = https.request({
@@ -1408,9 +1490,9 @@ class Hermes {
                         if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
                         return resolve(this.request(nextUrl, options, redirects + 1));
                     }
-                    const chunks = [];
-                    res.on('data', d => chunks.push(d));
-                    res.on('end', () => resolve({ success: true, status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8') }));
+                    this.#Collect_Body_Limit(res, opts.max_body_bytes)
+                        .then(body => resolve({ success: true, status: res.statusCode, body }))
+                        .catch(err => resolve({ success: false, status: res.statusCode || 0, body: null, error: err }));
                 });
                 req.on('error', err => resolve({ success: false, status: 0, body: null, error: err }));
                 req.on('timeout', () => resolve({ success: false, status: 0, body: null, error: new Error('请求超时') }));
@@ -2922,7 +3004,9 @@ const DFC = {
   ProxyRepoFile: "README.md",
   ProxyRepoTimeout: 5000,
   GitTimeout: 900000,
-  PullTimeout: 120000,
+  PullTimeout: 300000,
+  PullTimeoutCore: 600000,
+  PullTimeoutAss: 300000,
   Depth: 1,
   CronUpdate: "0 */12 * * *",
   Repo_Ops: true,  PFL_Ops: PFL.NONE, RenderScale: 300,
@@ -3017,6 +3101,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
   }
 
   const isClone = command === "git" && args.includes("clone");
+  const isGitTransfer = command === "git" && args.some(arg => ["clone", "pull", "fetch"].includes(String(arg).toLowerCase()));
   if (isClone && !args.some(arg => arg === '--verbose' || arg === '-v')) {
     const cloneIndex = args.indexOf("clone");
     if (cloneIndex !== -1) args.splice(cloneIndex + 1, 0, "--verbose");
@@ -3128,6 +3213,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
         const err = new MetisError(reason || "Process Terminated", code || "SIGTERM");
         err.stdout = stdout; err.stderr = PoseidonSpear.sanitize(stderr); err.rawStderr = stderr;
         err.metrics = _finalizeMetrics();
+        if (proc) proc._killError = err;
 
         Fuse = setTimeout(async () => {
             if (currentState !== STATE.CLOSED) {
@@ -3202,7 +3288,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
             return;
         }
 
-        if (isClone && (now - lastUpdate > constraints.zombieThreshold)) {
+        if (isGitTransfer && (now - lastUpdate > constraints.zombieThreshold)) {
             if (telemetry.instant_speed > constraints.lowSpeedLimit) {
                 lastUpdate = now; 
             } else {
@@ -3211,7 +3297,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
             }
         }
 
-        if (isClone && lastPercent > 0 && !options.disableTurtleCheck) {
+        if (isGitTransfer && (lastPercent > 0 || telemetry.git_objects > 0) && !options.disableTurtleCheck) {
             if (now - lastCheckTime >= constraints.lowSpeedCheckInterval) {
                 lastCheckTime = now;
 
@@ -3284,33 +3370,29 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
                     proc._truncated = true;
                  }
             }
-            if (stdout.length < Constraints.MAX_BUFFER) stdout += line + '\n';
         } else {
             if (stderr.length < Constraints.MAX_BUFFER) stderr += line + '\n';
             
             if (line.includes('Cloning into')) telemetry.connection_state = 'HANDSHAKING';
-            if (onProgress && isClone) {
-                const progressMatch = line.match(/(Receiving|Resolving|Compressing|Counting) objects:\s*(\d+)%/i);
-                if (progressMatch && progressMatch[1] && progressMatch[2]) {
-                    const phase = progressMatch[1].toLowerCase();
-                    let percent = parseInt(progressMatch[2], 10);
-
-                    const objectsMatch = line.match(/\((\d+)\/(\d+)\)/);
-                    if (objectsMatch && objectsMatch[2]) telemetry.git_objects = parseInt(objectsMatch[2], 10);
-
-                    let isValidProgress = false;
-                    if (phase.includes('receiving')) isValidProgress = true;
-                    else if (phase.includes('resolving')) { isValidProgress = true; percent = Math.max(percent, 95); }
-                    else { percent = 1; isValidProgress = true; }
-
-                    if (isValidProgress) {
-                        lastPercent = percent;
-                        lastUpdate = Date.now(); 
-                        telemetry.connection_state = 'TRANSFERRING';
-                        if (timer) { clearTimeout(timer); timer = setTimeout(() => { killProcess('ETIMEDOUT', `命令执行超时 (${timeout}ms)`); }, timeout); }
-                        onProgress(percent);
-                    }
+            const objectsMatch = line.match(/\((\d+)\/(\d+)\)/);
+            if (objectsMatch && objectsMatch[1] && objectsMatch[2]) {
+              const done = parseInt(objectsMatch[1], 10);
+              const total = parseInt(objectsMatch[2], 10);
+              if (Number.isFinite(total) && total > 0) {
+                telemetry.git_objects = total;
+                if (Number.isFinite(done) && done >= 0) {
+                  const progress = Math.floor((done / total) * 100);
+                  if (progress > lastPercent) lastPercent = progress;
                 }
+              }
+            }
+            if (line.includes('objects:') || line.includes('Unpacking')) {
+              lastUpdate = Date.now();
+              telemetry.connection_state = 'TRANSFERRING';
+              if (timer) {
+                clearTimeout(timer);
+                timer = setTimeout(() => { killProcess('ETIMEDOUT', `命令执行超时 (${timeout}ms)`); }, timeout);
+              }
             }
         }
         if (externalCallback) try { externalCallback(line); } catch (e) {}
@@ -3792,7 +3874,7 @@ class Morpheus {
             navOpts = { waitUntil: "networkidle0", timeout: 30000 },
             pageBoundingRect,
             width,
-            // padding = 20,
+            padding = 0, /*20*/
             transparentBackground = false
         } = options;
 
@@ -7243,283 +7325,246 @@ class MiaoPluginMBT extends plugin {
       }
   }
 
-  static async UpstreamSyncRepo(e, RepoNum, localPath, RepoName, RepoUrl, branch, isScheduled, logger) {
+  static async UpstreamSyncRepo(e, RepoNum, localPath, RepoName, RepoUrl, branch, isScheduled, logger, senseChain) {
     return await MiaoPluginMBT.GitMutex.run(async () => {
       const Hades = HadesEntry({}, logger || getCore());
       const state = {
-        success: false,
-        hasChanges: false,
-        error: null,
-        wasHardReset: false,
-        autoSwitchedNode: null,
-        newCommitsCount: 0,
-        diffStat: null,
-        MBTCoreChange: false,
-        log: null
+        success: false, hasChanges: false, error: null, wasHardReset: false,
+        autoSwitchedNode: null, newCommitsCount: 0, diffStat: null, MBTCoreChange: false, log: null
       };
 
       const Network_Err_KeyWords = [
         "connection timed out", "connection was reset", "could not resolve host",
-        "unable to access", "handshake failed", "error: 502", "error: 522", 
-        "error: 504", "etimedout", "gnutls_handshake", "rpc failed", 
-        "unable to update url base from redirection", "recv failure", "error: 429"
+        "unable to access", "handshake failed", "error: 502", "error: 522",
+        "error: 504", "etimedout", "gnutls_handshake", "rpc failed",
+        "unable to update url base from redirection", "recv failure", "error: 429",
+        "credential url cannot be parsed", "url cannot be parsed",
+        "command timed out", "command timeout", "命令执行超时"
       ];
+      const timeoutErrCodes = new Set(["ETIMEDOUT", "ESLOWNET"]);
+      const collectGitErrText = (err) => (`${err?.rawStderr || ""}\n${err?.stderr || ""}\n${err?.message || ""}`).toLowerCase();
 
-      const executeSyncLogic = async (isRetry = false) => {
-        const result = { 
-          success: false, hasChanges: false, error: null, 
-          wasHardReset: false, newCommitsCount: 0, diffStat: null, MBTCoreChange: false 
-        };
+      const cfg = MiaoPluginMBT.MBTConfig || {};
+      const basePullTimeout = Math.max(
+        Number(cfg.PullTimeout ?? DFC.PullTimeout) || 0,
+        RepoNum === 1 ? (Number(cfg.PullTimeoutCore ?? DFC.PullTimeoutCore) || 480000) : (Number(cfg.PullTimeoutAss ?? DFC.PullTimeoutAss) || 240000)
+      );
+
+      const parseGitHubRepoPath = (raw) => {
+        const hit = String(raw || "").trim().match(/github\.com\/([^/\s]+\/[^/\s]+?)(?:\.git)?(?:[/?#].*)?$/i);
+        return hit?.[1]?.replace(/\.git$/i, "") || "";
+      };
+
+      const mergePipeOpts = (base_opts = {}, override_opts = {}) => {
+        const merged = { ...base_opts, ...override_opts };
+        if (base_opts.env || override_opts.env) merged.env = { ...(base_opts.env || {}), ...(override_opts.env || {}) };
+        if (base_opts.constraints || override_opts.constraints) merged.constraints = { ...(base_opts.constraints || {}), ...(override_opts.constraints || {}) };
+        merged.gitConfigs = [...new Set([...(base_opts.gitConfigs || []), ...(override_opts.gitConfigs || [])])];
+        return merged;
+      };
+
+      const mode = senseChain?.mode;
+      const execCtx = senseChain?.executionContext || {};
+      const vector = senseChain?.vector || {};
+      const smartConfigs = [];
+
+      if (execCtx.isAirlock || vector.udpReach === false) smartConfigs.push("http.version=HTTP/1.1");
+      if (mode === Proteus.State.V6_TURBO) smartConfigs.push("core.ipv6=true");
+      if (execCtx.isAirlock) smartConfigs.push("http.proxy=", "https.proxy=", "core.gitProxy=");
+
+      const initial_pipe_opts = {
+        inheritEnv: execCtx.inheritEnv, env: execCtx.gitEnv, gitConfigs: smartConfigs,
+        airlock: !!execCtx.isAirlock, preferV6: mode === Proteus.State.V6_TURBO,
+        constraints: { zombieThreshold: 60 * 1000, lowSpeedLimit: 10240, lowSpeedStrikes: 3 }
+      };
+
+      const getModePullTimeout = (m) => {
+        if (m === Proteus.State.NATIVE || m === Proteus.State.V6_TURBO) return Math.max(90000, Math.min(basePullTimeout, RepoNum === 1 ? 240000 : 180000));
+        if (m === Proteus.State.USER_AGENT || m === Proteus.State.IDLE_AGENT) return Math.max(120000, Math.min(basePullTimeout, RepoNum === 1 ? 300000 : 210000));
+        return basePullTimeout;
+      };
+
+      const executeSyncLogic = async (pipe_opts = {}, pull_timeout = basePullTimeout) => {
+        const result = { success: false, hasChanges: false, error: null, wasHardReset: false, newCommitsCount: 0, diffStat: null, MBTCoreChange: false };
+        const run_opts = { cwd: localPath, ...pipe_opts };
 
         try {
-          const oldCommit = (await MBTPipeControl("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000).catch(() => ({ stdout: "" }))).stdout.trim();
-          let pullErr = null;
+          const oldCommit = (await MBTPipeControl("git", ["rev-parse", "HEAD"], run_opts, 5000).catch(() => ({ stdout: "" }))).stdout.trim();
           try {
-            await MBTPipeControl("git", ["pull", "origin", branch, "--ff-only", "--progress"], { cwd: localPath }, DFC.PullTimeout);
+            await MBTPipeControl("git", ["pull", "origin", branch, "--ff-only", "--progress"], run_opts, pull_timeout);
             result.success = true;
           } catch (err) {
-            pullErr = err;
             const stderr = (err.rawStderr || err.stderr || "").toLowerCase();
-            const isConflict = ["not possible to fast-forward", "diverging branches", "unrelated histories", "needs merge", "commit your changes or stash them", "your local changes to the following files would be overwritten by merge"].some(k => stderr.includes(k));
-            
+            const isConflict = [
+              "not possible to fast-forward", "diverging branches", "unrelated histories", "needs merge",
+              "commit your changes or stash them", "your local changes to the following files would be overwritten",
+              "untracked working tree files would be removed", "please move or remove them before you merge"
+            ].some(k => stderr.includes(k));
+
             if (err.code !== 0 && isConflict) {
               try {
               Hades.W(`${RepoName} 检测到冲突正在执行强制重置...`);
-                await MBTPipeControl("git", ["fetch", "origin"], { cwd: localPath }, DFC.PullTimeout);
-                await MBTPipeControl("git", ["reset", "--hard", `origin/${branch}`], { cwd: localPath });
+                await MBTPipeControl("git", ["fetch", "origin"], run_opts, pull_timeout);
+                await MBTPipeControl("git", ["reset", "--hard", `origin/${branch}`], run_opts);
                 result.success = true;
                 result.wasHardReset = true;
-              } catch (resetErr) {
-                result.error = resetErr; 
-              }
+              } catch (resetErr) { result.error = resetErr; }
             } else {
-              result.error = err; 
+              result.error = err;
             }
           }
 
           if (result.success) {
-            const newCommit = (await MBTPipeControl("git", ["rev-parse", "HEAD"], { cwd: localPath }, 5000).catch(() => ({ stdout: "" }))).stdout.trim();
-
+            const newCommit = (await MBTPipeControl("git", ["rev-parse", "HEAD"], run_opts, 5000).catch(() => ({ stdout: "" }))).stdout.trim();
             if ((oldCommit && newCommit && oldCommit !== newCommit) || result.wasHardReset) {
               result.hasChanges = true;
-
               if (oldCommit && newCommit) {
                 try {
-                  const diffOut = (await MBTPipeControl("git", ["diff", "--shortstat", oldCommit, newCommit], { cwd: localPath }, 5000)).stdout.trim();
-                  const ins = diffOut.match(/(\d+)\s+insertion/);
-                  const del = diffOut.match(/(\d+)\s+deletion/);
-                  result.diffStat = { insertions: ins ? parseInt(ins[1]) : 0, deletions: del ? parseInt(del[1]) : 0 };
+                  const diffOut = (await MBTPipeControl("git", ["diff", "--shortstat", oldCommit, newCommit], run_opts, 5000)).stdout.trim();
+                  result.diffStat = { insertions: parseInt((diffOut.match(/(\d+)\s+insertion/) || [0,0])[1]), deletions: parseInt((diffOut.match(/(\d+)\s+deletion/) || [0,0])[1]) };
+                  result.newCommitsCount = parseInt((await MBTPipeControl("git", ["rev-list", "--count", `${oldCommit}..${newCommit}`], run_opts, 5000)).stdout.trim()) || 1;
+                  if (RepoNum === 1) result.MBTCoreChange = (await MBTPipeControl("git", ["diff", "--name-only", oldCommit, newCommit], run_opts, 5000)).stdout.trim().includes("咕咕牛图库管理器.js");
                 } catch {}
-
-                try {
-                  const countOut = (await MBTPipeControl("git", ["rev-list", "--count", `${oldCommit}..${newCommit}`], { cwd: localPath }, 5000)).stdout.trim();
-                  result.newCommitsCount = parseInt(countOut) || 1;
-                } catch { result.newCommitsCount = 1; }
-
-                if (RepoNum === 1) {
-                  try {
-                    const filesOut = (await MBTPipeControl("git", ["diff", "--name-only", oldCommit, newCommit], { cwd: localPath }, 5000)).stdout.trim();
-                    if (filesOut.split('\n').includes("咕咕牛图库管理器.js")) result.MBTCoreChange = true;
-                  } catch {}
-                }
-              } else {
-                result.newCommitsCount = 1;
-              }
+              } else result.newCommitsCount = 1;
             }
           }
-        } catch (fatalErr) {
-          result.error = fatalErr;
-        }
+        } catch (fatalErr) { result.error = fatalErr; }
         return result;
       };
 
-      let syncResult = await executeSyncLogic();
-      const isNetErr = syncResult.error && Network_Err_KeyWords.some(k => 
-        ((syncResult.error.stderr || "") + (syncResult.error.message || "")).toLowerCase().includes(k)
-      );
 
-      if (!syncResult.success && isNetErr) {
-        const currentRemote = (await MBTPipeControl("git", ["remote", "get-url", "origin"], { cwd: localPath }).catch(() => ({ stdout: "未知" }))).stdout.trim();
-        Hades.W(`${RepoName} 同步失败 (网络波动) [当前源: ${currentRemote}]，启动自动切源流程...`);
-        const proxies = await MiaoPluginMBT.TestCaVoice(logger);
-        const survivors = proxies.filter(r => r.speed !== Infinity);
-        
-        if (survivors.length > 0) {
-          const gitTests = await Promise.all(survivors.map(n => 
-            MiaoPluginMBT.TestGitVoice(n.ClonePrefix, n.name, logger).then(res => ({ name: n.name, gitResult: res }))
-          ));
-          
-          const bestNodes = await MiaoPluginMBT.AdaptiveSpeed(proxies, gitTests, logger);
-          
-          if (!bestNodes.some(n => n.name === 'GitHub')) {
-              const githubNode = proxies.find(n => n.name === 'GitHub');
-              if (githubNode) {
-                  bestNodes.push(githubNode);
+      Hades.D(`[Phase 1] ${RepoName} | 模式=${Proteus._describe(mode)}`);
+      let syncResult = await executeSyncLogic(initial_pipe_opts, getModePullTimeout(mode));
+
+      if (!syncResult.success) {
+        const syncErrText = collectGitErrText(syncResult.error);
+        const isNetErr = !!syncResult.error && (timeoutErrCodes.has(String(syncResult.error.code).toUpperCase()) || Network_Err_KeyWords.some(k => syncErrText.includes(k)));
+
+
+        if (isNetErr) {
+          const currentRemote = (await MBTPipeControl("git", ["remote", "get-url", "origin"], { cwd: localPath }).catch(() => ({ stdout: "未知" }))).stdout.trim() || "未知";
+          Hades.W(`[Phase 2] ${RepoName} 网络波动 [当前源: ${currentRemote}] 正在启动镜像路由...`);
+
+          let repo_path = parseGitHubRepoPath(RepoUrl) || parseGitHubRepoPath(currentRemote);
+          const github_url = repo_path ? `https://github.com/${repo_path}.git` : "";
+          const rollback_remote = github_url || currentRemote;
+
+          const rollback_origin = async (reason) => {
+            if (rollback_remote && rollback_remote !== "未知") {
+              await MBTPipeControl("git", ["remote", "set-url", "origin", rollback_remote], { cwd: localPath }).catch(()=>{});
+              Hades.D(`[Rollback] ${RepoName} 已回滚 origin (${reason})`);
+            }
+          };
+
+          try {
+            const probe_rows = await MiaoPluginMBT.TestCaVoice(Hades);
+            const survivors = probe_rows.filter(r => r.speed !== Infinity);
+
+            if (survivors.length > 0) {
+              const git_jobs = survivors.map(row => MiaoPluginMBT.TestGitVoice(row.ClonePrefix, row.name, Hades).then(res => ({ name: row.name, gitResult: res })).catch(err => ({ name: row.name, gitResult: { success: false, error: err } })));
+              const git_rows = await Promise.all(git_jobs);
+              const best_nodes = await MiaoPluginMBT.AdaptiveSpeed(probe_rows, git_rows, Hades);
+              if (!best_nodes.some(n => n.name === 'GitHub')) best_nodes.push(probe_rows.find(n => n.name === 'GitHub') || {name: 'GitHub'});
+
+              for (const winner of best_nodes) {
+                if (!repo_path || !winner.name) continue;
+                const newUrl = winner.name === "GitHub" ? github_url : `${winner.ClonePrefix.replace(/\/$/, "")}/github.com/${repo_path}.git`;
+
+                try {
+                  await MBTPipeControl("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath, ...initial_pipe_opts });
+                  const lsResult = await MBTPipeControl("git", ["ls-remote", "--heads", "origin", branch], { cwd: localPath, ...initial_pipe_opts }, 6000).catch(() => ({ stdout: "" }));
+                  if (!lsResult.stdout.trim()) { await rollback_origin(`${winner.name}-head-empty`); continue; }
+                  syncResult = await executeSyncLogic(initial_pipe_opts, basePullTimeout);
+                  if (syncResult.success) {
+                    state.autoSwitchedNode = winner.name;
+                    break; 
+                  }
+                  await rollback_origin(`${winner.name}-sync-fail`);
+                } catch (e) { await rollback_origin(`${winner.name}-error`); }
               }
+            }
+          } catch (e) { Hades.E(`[Phase 2] 路由探测异常:`, e); }
+
+          if (!syncResult.success && github_url) {
+            Hades.W(`[Phase 3] ${RepoName} GitHub 竞速组模式唤起...`);
+            const stage_rows = [
+              { name: "Stage-1(直连)", opts: { inheritEnv: false } },
+              { name: "Stage-2(H1+剥离)", opts: { inheritEnv: false, gitConfigs: ["http.version=HTTP/1.1", "http.proxy=", "https.proxy=", "core.gitProxy="] } }
+            ];
+
+            for (const stage of stage_rows) {
+              try {
+                const stage_opts = mergePipeOpts(initial_pipe_opts, stage.opts);
+                await MBTPipeControl("git", ["remote", "set-url", "origin", github_url], { cwd: localPath, ...stage_opts });
+                syncResult = await executeSyncLogic(stage_opts, 25000);
+                if (syncResult.success) {
+                  state.autoSwitchedNode = "GitHub";
+                  break;
+                }
+                await rollback_origin(`${stage.name}-fail`);
+              } catch (e) { await rollback_origin(`${stage.name}-error`); }
+            }
           }
-
-          if (bestNodes.length === 0) {
-              Hades.W(`${RepoName} 测速后无可用节点，本次放弃切源。`);
-          }
-
-          for (const winner of bestNodes) {
-             const repoPathMatch = RepoUrl.match(/github\.com\/([^/]+\/[^/]+)/i);
-             const urp = repoPathMatch?.[1]?.replace(/\.git$/, "");
-            
-             if (urp) {
-               let newUrl = winner.name === "GitHub" 
-                 ? `https://github.com/${urp}.git`
-                 : `${winner.ClonePrefix.replace(/\/$/, "")}/github.com/${urp}.git`;
-
-               try {
-                 await MBTPipeControl("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath });
-                 
-                 try {
-                     const lsResult = await MBTPipeControl("git", ["ls-remote", "--heads", "origin", branch], { cwd: localPath }, 5000);
-                     if (!lsResult.stdout || !lsResult.stdout.trim()) {
-                         continue;
-                     }
-                 } catch (lsErr) {
-                     continue;
-                 }
-
-                 Hades.D(`${RepoName} 远程源已切换至: ${winner.name}`);
-                 state.autoSwitchedNode = winner.name;
-                
-                 syncResult = await executeSyncLogic(true);
-                 if (syncResult.success) {
-                     break;
-                 }
-               } catch (switchErr) {
-                 Hades.E(`${RepoName} 切源/验证过程失败:`, switchErr);
-               }
-             }
-          }
+        } else {
+           Hades.E(`[Phase 1] ${RepoName} 发生非网络致命错误。`);
         }
       }
 
       Object.assign(state, syncResult);
-      const logCount = (RepoNum === 1) ? 5 : 3;
-      const logFormat = "%cd [%h]%n%s%n%b"; 
-      let rawLog = "";
-      
+      if (e && !isScheduled && !syncResult.success) Promise.resolve(e.reply(`咕咕牛图库的 ${RepoName} 同步失败，请查看失败详情。`)).catch(() => {});
+
       try {
-        rawLog = (await MBTPipeControl("git", ["log", `-n ${logCount}`, `--date=${DFC.logDateFormat}`, `--pretty=format:${logFormat}`], { cwd: localPath }, 5000)).stdout;
-      } catch { rawLog = ""; }
-
-      if (rawLog) {
-        const entries = rawLog.split(/(?=\d{2}-\d{2}\s\d{2}:\d{2}\s+\[)/).filter(s => s.trim());
-        const BtnFaceUrl = `file://${MiaoPluginMBT.Paths.OpsPath}/img/icon/null-btn.png`.replace(/\\/g, "/");
-
-        state.log = await Promise.all(entries.map(async (entry) => {
-          const lines = entry.trim().split('\n');
-          const header = lines.shift() || "";
-          const subject = lines.shift() || "";
-          const body = lines.join('\n').trim();
-
-          const commit = {
-            hash: (header.match(/\[([a-f0-9]+)\]/) || [])[1] || 'N/A',
-            date: (header.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})/) || [])[1] ? `[${RegExp.$1}]` : '',
-            commitTitle: subject.trim(),
-            descriptionBodyHtml: '',
-            isDescription: true,
-            displayParts: [],
-            commitScopeClass: 'scope-default'
-          };
-
-          const commitPrefixMap = {
-            '修复': 'fix', '新增': 'feat', '文档': 'docs', '样式': 'style',
-            '重构': 'refactor', '性能': 'perf', '测试': 'test', '构建': 'build',
-            '部署': 'deploy', '回滚': 'revert', '杂项': 'chore', '持续集成': 'ci'
-          };
-          const ccMatch = subject.match(/^([a-zA-Z\u4e00-\u9fa5]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/);
-          if (ccMatch) {
-            const rawPrefix = ccMatch[1].toLowerCase();
-            commit.commitPrefix = commitPrefixMap[rawPrefix] || rawPrefix;
-            commit.commitScope = ccMatch[2] || ccMatch[3];
-            commit.commitTitle = ccMatch[4].trim();
-            
-            if (commit.commitScope) {
-              const scopeLower = commit.commitScope.toLowerCase();
-              if (scopeLower.includes('web')) commit.commitScopeClass = 'scope-web';
-              else if (scopeLower.includes('core')) commit.commitScopeClass = 'scope-core';
+        const rawLog = (await MBTPipeControl("git", ["log", `-n ${RepoNum === 1 ? 5 : 3}`, `--date=${DFC.logDateFormat}`, `--pretty=format:%cd [%h]%n%s%n%b`], { cwd: localPath }, 5000)).stdout;
+        if (rawLog) {
+          const entries = rawLog.split(/(?=\d{2}-\d{2}\s\d{2}:\d{2}\s+\[)/).filter(s => s.trim());
+          const BtnFaceUrl = `file://${MiaoPluginMBT.Paths.OpsPath}/img/icon/null-btn.png`.replace(/\\/g, "/");
+          state.log = await Promise.all(entries.map(async (entry) => {
+            const lines = entry.trim().split('\n');
+            const header = lines.shift() || ""; const subject = lines.shift() || ""; const body = lines.join('\n').trim();
+            const commit = { hash: (header.match(/\[([a-f0-9]+)\]/) || [])[1] || 'N/A', date: (header.match(/^(\d{2}-\d{2}\s\d{2}:\d{2})/) || [])[1] ? `[${RegExp.$1}]` : '', commitTitle: subject.trim(), descriptionBodyHtml: '', isDescription: true, displayParts: [], commitScopeClass: 'scope-default' };
+            const ccMatch = subject.match(/^([a-zA-Z\u4e00-\u9fa5]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/);
+            if (ccMatch) {
+              const rawPrefix = ccMatch[1].toLowerCase();
+              commit.commitPrefix = { '修复': 'fix', '新增': 'feat', '文档': 'docs', '样式': 'style', '重构': 'refactor', '性能': 'perf', '测试': 'test', '构建': 'build', '部署': 'deploy', '回滚': 'revert', '杂项': 'chore', '持续集成': 'ci' }[rawPrefix] || rawPrefix;
+              commit.commitScope = ccMatch[2] || ccMatch[3]; commit.commitTitle = ccMatch[4].trim();
+              if (commit.commitScope) commit.commitScopeClass = commit.commitScope.toLowerCase().includes('web') ? 'scope-web' : (commit.commitScope.toLowerCase().includes('core') ? 'scope-core' : 'scope-default');
             }
-          }
-
-          if (body) {
-            let html = body
-              .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            const bodyLines = html.split('\n');
-            let inList = false;
-            html = bodyLines.map(line => {
-              line = line.trim();
-              if (line.startsWith('###')) return `<h3>${line.replace(/###\s*/, '')}</h3>`;
-              if (line.startsWith('- ')) {
-                const item = `<li>${line.replace(/-\s*/, '')}</li>`;
-                if (!inList) { inList = true; return `<ul>${item}`; }
-                return item;
-              }
-              if (inList) { inList = false; return `</ul><p>${line}</p>`; }
-              return line ? `<p>${line}</p>` : '';
-            }).join('');
-            if (inList) html += '</ul>';
-            commit.descriptionBodyHtml = html;
-          }
-
-          const gamePrefixes = [
-            { pattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, key: "gs" },
-            { pattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, key: "sr" },
-            { pattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, key: "zzz" },
-            { pattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, key: "waves" }
-          ];
-
-          for (const gp of gamePrefixes) {
-            if (gp.pattern.test(commit.commitTitle)) {
-              commit.isDescription = false;
-              const names = commit.commitTitle.replace(gp.pattern, '').split(/[/、，,]/).map(n => n.trim()).filter(Boolean);
-              
-              for (const rawName of names) {
-                let displayName = rawName;
-                const aliasRes = await Tianshu.NormalizeName(rawName, { gameKey: gp.key });
-                if (aliasRes.exists) displayName = aliasRes.mainName;
-                
-                let faceUrl = BtnFaceUrl;
-                if (gp.key === 'gs' || gp.key === 'sr') {
-                  faceUrl = await Tianshu.ResolveFace(gp.key, displayName) || BtnFaceUrl;
-                } else if (gp.key === 'zzz') {
-                  try {
-                    const zzzFiles = await Ananke.readDir(MiaoPluginMBT.Paths.Target.ZZZ_DataDir);
-                    for (const f of zzzFiles) {
-                      if (!f.name.endsWith('.json')) continue;
-                      const d = JSON.parse(await Ananke.readFile(path.join(MiaoPluginMBT.Paths.Target.ZZZ_DataDir, f.name), 'utf-8') || '{}');
-                      if (d.Name === displayName || d.CodeName === displayName) {
-                        const iconId = d.Icon?.match(/\d+$/)?.[0];
-                        if (iconId) faceUrl = `file://${path.join(MiaoPluginMBT.Paths.Target.ZZZ_FaceDir, `IconRoleCircle${iconId}.png`).replace(/\\/g, "/")}`;
-                        break;
-                      }
-                    }
-                  } catch {}
-                } else if (gp.key === 'waves') {
-                  const roleData = MiaoPluginMBT._wavesRoleDataMap?.get(displayName);
-                  if (roleData?.icon) faceUrl = roleData.icon;
+            if (body) {
+              let html = body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code>$1</code>');
+              let inList = false;
+              html = html.split('\n').map(line => {
+                line = line.trim();
+                if (line.startsWith('###')) return `<h3>${line.replace(/###\s*/, '')}</h3>`;
+                if (line.startsWith('- ')) { const item = `<li>${line.replace(/-\s*/, '')}</li>`; if (!inList) { inList = true; return `<ul>${item}`; } return item; }
+                if (inList) { inList = false; return `</ul><p>${line}</p>`; }
+                return line ? `<p>${line}</p>` : '';
+              }).join('');
+              if (inList) html += '</ul>';
+              commit.descriptionBodyHtml = html;
+            }
+            const gamePrefixes = [{ pattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, key: "gs" }, { pattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, key: "sr" }, { pattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, key: "zzz" }, { pattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, key: "waves" }];
+            for (const gp of gamePrefixes) {
+              if (gp.pattern.test(commit.commitTitle)) {
+                commit.isDescription = false;
+                const names = commit.commitTitle.replace(gp.pattern, '').split(/[/、，,]/).map(n => n.trim()).filter(Boolean);
+                for (const rawName of names) {
+                  let displayName = rawName;
+                  const aliasRes = await Tianshu.NormalizeName(rawName, { gameKey: gp.key });
+                  if (aliasRes.exists) displayName = aliasRes.mainName;
+                  let faceUrl = BtnFaceUrl;
+                  if (gp.key === 'gs' || gp.key === 'sr') faceUrl = await Tianshu.ResolveFace(gp.key, displayName) || BtnFaceUrl;
+                  else if (gp.key === 'zzz') { try { const zzzFiles = await Ananke.readDir(MiaoPluginMBT.Paths.Target.ZZZ_DataDir); for (const f of zzzFiles) { if (!f.name.endsWith('.json')) continue; const d = JSON.parse(await Ananke.readFile(path.join(MiaoPluginMBT.Paths.Target.ZZZ_DataDir, f.name), 'utf-8') || '{}'); if (d.Name === displayName || d.CodeName === displayName) { const iconId = d.Icon?.match(/\d+$/)?.[0]; if (iconId) faceUrl = `file://${path.join(MiaoPluginMBT.Paths.Target.ZZZ_FaceDir, `IconRoleCircle${iconId}.png`).replace(/\\/g, "/")}`; break; } } } catch {} }
+                  else if (gp.key === 'waves') faceUrl = MiaoPluginMBT._wavesRoleDataMap?.get(displayName)?.icon || BtnFaceUrl;
+                  commit.displayParts.push({ type: 'character', name: displayName, game: gp.key, imageUrl: faceUrl });
                 }
-
-                commit.displayParts.push({ type: 'character', name: displayName, game: gp.key, imageUrl: faceUrl });
+                break;
               }
-              break; 
             }
-          }
-
-          return commit;
-        }));
-      } else {
-        state.log = [{
-          isDescription: true, commitTitle: "无有效提交记录或获取失败",
-          hash: 'N/A', date: '', commitPrefix: null, descriptionBodyHtml: ''
-        }];
+            return commit;
+          }));
+        } else throw new Error("Empty log");
+      } catch {
+        state.log = [{ isDescription: true, commitTitle: "无有效提交记录或获取失败", hash: 'N/A', date: '', commitPrefix: null, descriptionBodyHtml: '' }];
       }
 
       return state;
@@ -7724,15 +7769,30 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         }
 
         if (testUrl) {
-          const latResult = await Hermes.ProbeSpeed(testUrl, timeoutDuration);
-          if (latResult.success) {
-            result.speed = latResult.data;
+          try {
+            const latResult = await Hermes.ProbeSpeed(testUrl, timeoutDuration);
+            if (latResult.success) {
+              result.speed = latResult.data;
+            }
+          } catch (err) {
+            result.speed = Infinity;
           }
         }
         return result;
       });
 
-      harvest = await Promise.all(promises);
+      const settled_rows = await Promise.allSettled(promises);
+      harvest = settled_rows.map((item, index) => {
+        if (item.status === 'fulfilled') return item.value;
+        const proxy = DFC.F2Pool[index] || {};
+        return {
+          name: proxy.name || `Node-${index}`,
+          priority: proxy.priority || 999,
+          ClonePrefix: proxy.ClonePrefix,
+          TestUrlPrefix: proxy.TestUrlPrefix,
+          speed: Infinity
+        };
+      });
 
       const validNodes = harvest.filter(r => r.speed !== Infinity);
       if (validNodes.length > 0) {
@@ -8559,6 +8619,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async Reconcile(e, isScheduled = false) {
     if (!isScheduled && !(await this.CheckInit(e))) return false;
+    if (!isScheduled && e && !(await MiaoPluginMBT.OpsGate(e, 'Reconcile'))) return true;
     const coreLogger = this.logger || getCore();
     const Hades = HadesEntry({}, coreLogger);
 
@@ -8592,19 +8653,28 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const startTime = Date.now();
     if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
 
+    let globalSenseChain = null;
+    try {
+        const envData = await Hermes.getEnvInfo(Hades);
+        globalSenseChain = await Proteus.sense(envData, Infinity, Hades);
+        Hades.D(`全局网络态势已锁定: 模式=${Proteus._describe(globalSenseChain.mode)}`);
+    } catch (err) {
+        Hades.W(`全局网络态势感知失败，将使用降级配置: ${err.message}`);
+    }
+
     const reportResults = [];
     let allSuccess = true;
     let HasAnyChanges = false;
     const errorList = [];
 
-    const deployRepoResult = async (repoNum, localPath, repoDisplayName, MBTKey, DefKey, targetBranch, isCore = false) => {
+    const deployRepoResult = async (repoNum, localPath, repoDisplayName, MBTKey, DefKey, targetBranch, isCore = false, senseChain) => {
       if (repoNum === 4) {
         await Nomos.ModuleOps(localPath, "zzz", "check");
         await Nomos.ModuleOps(localPath, "waves", "check");
       }
 
       const targetUrl = MiaoPluginMBT.MBTConfig?.[MBTKey] || DFC[DefKey || MBTKey];
-      const result = await MiaoPluginMBT.UpstreamSyncRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, targetUrl, targetBranch, isScheduled, Hades);
+      const result = await MiaoPluginMBT.UpstreamSyncRepo(isCore ? e : null, repoNum, localPath, repoDisplayName, targetUrl, targetBranch, isScheduled, Hades, senseChain);
       allSuccess &&= result.success;
       HasAnyChanges ||= result.hasChanges;
 
@@ -8668,30 +8738,30 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const activeRepos = Nomos.ActiveScope(MiaoPluginMBT.MBTConfig, nomosContext);
     const activeRepoIds = new Set(activeRepos.map(r => r.id));
 
-    reportResults.push(await deployRepoResult(1, MiaoPluginMBT.Paths.MountRepoPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true));
+    reportResults.push(await deployRepoResult(1, MiaoPluginMBT.Paths.MountRepoPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true, globalSenseChain));
 
     const repo1Result = reportResults.find(r => r.name === "一号仓库");
     if (repo1Result && repo1Result.success) {
       JavaScriptSyncStatus = await MiaoPluginMBT.SSF();
     }
-    
+
     if (activeRepoIds.has(2)) {
-      const repo2Status = Repo2Exists 
-        ? await deployRepoResult(2, MiaoPluginMBT.Paths.MountRepoPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch)
+      const repo2Status = Repo2Exists
+        ? await deployRepoResult(2, MiaoPluginMBT.Paths.MountRepoPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch, false, globalSenseChain)
         : { name: "二号仓库", statusText: "未下载", statusClass: "status-skipped" };
       reportResults.push(repo2Status);
     }
 
     if (activeRepoIds.has(3)) {
-      const repo3Status = Repo3Exists 
-        ? await deployRepoResult(3, MiaoPluginMBT.Paths.MountRepoPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch)
+      const repo3Status = Repo3Exists
+        ? await deployRepoResult(3, MiaoPluginMBT.Paths.MountRepoPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch, false, globalSenseChain)
         : { name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" };
       reportResults.push(repo3Status);
     }
 
     if (activeRepoIds.has(4)) {
-      const repo4Status = Repo4Exists 
-        ? await deployRepoResult(4, MiaoPluginMBT.Paths.MountRepoPath4, "四号仓库", "Ass3_Github_URL", "Ass3_Github_URL", branch)
+      const repo4Status = Repo4Exists
+        ? await deployRepoResult(4, MiaoPluginMBT.Paths.MountRepoPath4, "四号仓库", "Ass3_Github_URL", "Ass3_Github_URL", branch, false, globalSenseChain)
         : { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" };
       reportResults.push(repo4Status);
     } else if (repo4State?.isConfigured) {
