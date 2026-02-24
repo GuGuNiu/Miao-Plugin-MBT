@@ -4971,7 +4971,6 @@ class Tianshu {
 
             for (let i = 0; i <= sLen; i++) dp[i][0] = i * W_BASE;
             for (let j = 0; j <= tLen; j++) dp[0][j] = j * W_BASE;
-
             for (let i = 1; i <= sLen; i++) {
                 for (let j = 1; j <= tLen; j++) {
                     const isHead = (i <= HEAD_THRESHOLD) || (j <= HEAD_THRESHOLD);
@@ -4989,9 +4988,25 @@ class Tianshu {
             }
 
             const maxCost = Math.max(sLen, tLen) * 1.2;
-            let score = Math.max(0, (1 - dp[sLen][tLen] / maxCost) * 100);
-            if (target.includes(source)) score += 15;
-            score -= Math.abs(sLen - tLen) * 3;
+            let score = Math.max(0, (1 - dp[sLen][tLen] / maxCost) * 100)           
+            let strongMatch = false;           
+            if (target.includes(source)) { score += 20; strongMatch = true; }
+            if (source.includes(target)) { score += 20; strongMatch = true; }
+            if (target.startsWith(source) || source.startsWith(target)) { score += 15; strongMatch = true; }
+            if (target.endsWith(source) || source.endsWith(target)) { score += 15; strongMatch = true; }
+            if (!target.includes(source) && !source.includes(target)) {
+                let sIdx = 0, tIdx = 0;
+                while (sIdx < sLen && tIdx < tLen) {
+                    if (source[sIdx] === target[tIdx]) sIdx++;
+                    tIdx++;
+                }
+                if (sIdx === sLen) { score += 35; strongMatch = true; }
+            }
+
+            let commonPrefix = 0;
+            while (commonPrefix < sLen && commonPrefix < tLen && source[commonPrefix] === target[commonPrefix]) commonPrefix++;
+            if (commonPrefix / Math.min(sLen, tLen) >= 0.66) score += 10;
+            if (!strongMatch) score -= Math.abs(sLen - tLen) * 3;
             return Math.min(100, score);
         };
 
