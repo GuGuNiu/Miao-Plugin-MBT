@@ -534,7 +534,7 @@ class Hermes {
     static #TTL_TPL = 259200;
     static #TTL_POOL = 1209600;
     static #UA_POOL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/UAPool.json";
-    static #BAIT_POOL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/Voice_Reps.json";
+    static #BAIT_POOL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/Voice_Repos.json";
     static #senseDepth = 0;
     static #senseCache = null;
     static #senseCacheTime = 0;
@@ -561,7 +561,7 @@ class Hermes {
             const data = JSON.parse(content);
             const updateTime = data?.meta?.updateTime || data?.updateTime;
             if (updateTime && Date.now() - new Date(updateTime).getTime() < 2 * 60 * 60 * 1000) {
-                if (Hades) Hades.D(`[网络管理] 从磁盘加载网络态势感知信息: ${this.#CACHE_PATH}`);
+                if (Hades) Hades.D(`从磁盘加载网络态势感知信息: ${this.#CACHE_PATH}`);
                 return data;
             }
         } catch (e) {
@@ -573,9 +573,9 @@ class Hermes {
         try {
             await this.#ensureDir(this.#CACHE_PATH);
             await fsPromises.writeFile(this.#CACHE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-            if (Hades) Hades.D(`[网络管理] 网络态势感知信息已保存到磁盘: ${this.#CACHE_PATH}`);
+            if (Hades) Hades.D(`网络态势感知信息已保存到磁盘: ${this.#CACHE_PATH}`);
         } catch (e) {
-            if (Hades) Hades.W(`[网络管理] 无法保存网络态势感知信息到磁盘: ${e.message}`);
+            if (Hades) Hades.W(`无法保存网络态势感知信息到磁盘: ${e.message}`);
         }
     }
 
@@ -903,7 +903,7 @@ class Hermes {
 
         const [v4, v6] = await Promise.all([race(4), race(6)]);
         
-        if (v6 !== Infinity) Hades.D(`[网络管理] IPv6 穿透成功: ${v6}ms`);
+        if (v6 !== Infinity) Hades.D(`IPv6 穿透成功: ${v6}ms`);
         
         return { v4, v6 };
     }
@@ -1069,7 +1069,7 @@ class Hermes {
     static #ROUTING = {
         'speedtest.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/speedtest.html', localSubPath: 'sync' },
         'help.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/help.html' },
-        'error_report.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/error_report.html' },
+        'error_report.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/error_report.html' },
         'download.html': { strategy: 'NET_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/download.html' },
         'core_repo_download.html': { strategy: 'NET_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/core_repo_download.html' }
     };
@@ -1531,7 +1531,7 @@ class Hermes {
     static async getBrowserEnvSnapshot(Hades = console) {
         let browser = null;
         try {
-            if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] 网络态势感知启动中...`);
+            if (Hades && typeof Hades.D === 'function') Hades.D(`网络态势感知启动中...`);
             
             const randomUA = await this.getRandomUA(Hades);
             const userAgent = randomUA || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
@@ -1580,15 +1580,15 @@ class Hermes {
                                     return { ip, country, src: src.url, data: json };
                                 }
                             } catch (e) {
-                                if (Hades) Hades.D(`[网络管理] JSON 解析失败 [${src.url}]: ${e.message}`);
+                                if (Hades) Hades.D(`JSON 解析失败 [${src.url}]: ${e.message}`);
                             }
                         } else if (Hades) {
                             const status = result?.status ?? 0;
                             const errMsg = result?.error ? ` ${result.error}` : '';
-                            Hades.D(`[网络管理] 探测接口返回异常 [${src.url}]: ${status}${errMsg}`);
+                            Hades.D(`探测接口返回异常 [${src.url}]: ${status}${errMsg}`);
                         }
                     } catch (e) {
-                        if (Hades) Hades.D(`[网络管理] 探测接口超时或失败 [${src.url}]: ${e.message}`);
+                        if (Hades) Hades.D(`探测接口超时或失败 [${src.url}]: ${e.message}`);
                     }
                 }
                 return null;
@@ -1607,18 +1607,18 @@ class Hermes {
             };
             const v4Log = formatPuppResult(v4, 4);
             const v6Log = formatPuppResult(v6, 6);
-            if (Hades && typeof Hades.D === 'function') Hades.D(`[网络管理] Pupp感知结果: v4=${v4Log}, v6=${v6Log}`);
+            if (Hades && typeof Hades.D === 'function') Hades.D(`Pupp感知结果: v4=${v4Log}, v6=${v6Log}`);
             return { v4, v6 };
 
         } catch (e) {
-            if (Hades && typeof Hades.W === 'function') Hades.W(`[网络管理] Pupp感知失败: ${e.message}`);
+            if (Hades && typeof Hades.W === 'function') Hades.W(`Pupp感知失败: ${e.message}`);
             return { v4: null, v6: null }; 
         } finally {
             if (browser) {
                 try {
                     await browser.close();
                 } catch (ce) {
-                    if (Hades) Hades.D(`[网络管理] 关闭浏览器失败: ${ce.message}`);
+                    if (Hades) Hades.D(`关闭浏览器失败: ${ce.message}`);
                 }
             }
         }
@@ -1679,12 +1679,12 @@ class Hermes {
             if (results && results.length > 0) {
                 const best = results[0];
                 if (Hades?.D) {
-                    Hades.D(`[网络管理] Nyx: ${best.protocol}://${best.host}:${best.port}`);
+                    Hades.D(`Nyx: ${best.protocol}://${best.host}:${best.port}`);
                 }
                 return best;
             }
         } catch (e) {
-            if (Hades?.D) Hades.D(`[网络管理] 扫描异常: ${e.message}`);
+            if (Hades?.D) Hades.D(`扫描异常: ${e.message}`);
         }
         return null;
     }
@@ -1776,23 +1776,23 @@ class Hermes {
             if (route.strategy === 'LOCAL_FIRST') {
                 try { content = await readLocal(); }
                 catch { 
-                    Hades.D(`[网络管理] 本地缺失在线获取: ${filename}`);
+                    Hades.D(`本地缺失在线获取: ${filename}`);
                     content = await fetchNet(); 
                 }
                 if (content === null) {
-                    Hades.D(`[网络管理] 本地为空在线获取: ${filename}`);
+                    Hades.D(`本地为空在线获取: ${filename}`);
                     content = await fetchNet();
                 }
             } else {
                 try { content = await fetchNet(); }
                 catch {
-                    Hades.D(`[网络管理] 网络失败降级本地: ${filename}`);
+                    Hades.D(`网络失败降级本地: ${filename}`);
                     content = await readLocal();
                 }
             }
             return { success: true, data: content };
         } catch (err) {
-            Hades.D(`[网络管理] 模板获取失败 [${filename}]: ${err.message}`);
+            Hades.D(`模板获取失败 [${filename}]: ${err.message}`);
             return { success: false, data: null, error: err };
         }
     }
@@ -1845,7 +1845,7 @@ class Hermes {
             return res.body;
         }
         
-        if (Hades) Hades.D(`[网络管理] 云端Prompt获取失败: ${res.error?.message || res.status}`);
+        if (Hades) Hades.D(`云端Prompt获取失败: ${res.error?.message || res.status}`);
         return null;
     }
 
@@ -1863,7 +1863,7 @@ class Hermes {
             return res.body;
         }
         
-        if (Hades) Hades.D(`[网络管理] 云端Worker获取失败: ${res.error?.message || res.status}`);
+        if (Hades) Hades.D(`云端Worker获取失败: ${res.error?.message || res.status}`);
         return null;
     }
 }
@@ -1895,7 +1895,7 @@ class HermesMatrix {
                         const data = JSON.parse(res.body);
                         const ip = data[src.field];
                         if (!ip) throw new Error('未找到IP字段');
-                        if (Hades) Hades.D(`[网络管理] API响应 [v${family}]: ${src.url}`);
+                        if (Hades) Hades.D(`API响应 [v${family}]: ${src.url}`);
                         return { ip, data, src };
                     } catch (e) { throw e; }
                 })
@@ -2062,7 +2062,8 @@ class Proteus {
             },
             mode: mode,
             desc: desc,
-            executionContext: executionContext
+            executionContext: executionContext,
+            nyxProxies: fingerprint.nyxProxies
         };
     }
 
@@ -2102,14 +2103,14 @@ class Proteus {
 
             if (Hades?.D) {
                 const status = proxyContext.verified ? '已验证' : '未验证(盲猜SOCKS5)';
-                Hades.D(`[网络管理] 锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [${status}]`);
+                Hades.D(`锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [${status}]`);
             }
         }
 
         const portActive = !!proxyContext;
         if (procActive || portActive) active = true;
 
-        return { active, envSet, procActive, portActive, proxyContext };
+        return { active, envSet, procActive, portActive, proxyContext, nyxProxies };
     }
 
     static async _dialBeacons() {
@@ -3783,7 +3784,7 @@ class Morpheus {
         if (await Ananke.mkdirs(this.RenderDir)) {
             this.#initDone = true;
         } else {
-            Hades.E(`[渲染器] 无法创建渲染目录`);
+            Hades.E(`渲染器无法创建渲染目录`);
         }
     }
 
@@ -3845,7 +3846,7 @@ class Morpheus {
             
             return this.#browserInstance;
         } catch (err) {
-            Hades.E("[渲染器] 致命错误：无法启动内置 Puppeteer", err);
+            Hades.E("渲染器致命错误：无法启动内置 Puppeteer", err);
             throw err;
         }
     }
@@ -3875,7 +3876,8 @@ class Morpheus {
             pageBoundingRect,
             width,
             padding = 0, /*20*/
-            transparentBackground = false
+            transparentBackground = false,
+            MorpheusSignal = false
         } = options;
 
         const defaultData = {
@@ -3900,7 +3902,7 @@ class Morpheus {
         try {
             await Ananke.mkdirs(targetDir);
         } catch (err) {
-            Hades.E(`[渲染器] 创建业务子目录失败: ${targetDir}`, err);
+            Hades.E(`渲染器创建业务子目录失败: ${targetDir}`, err);
             return null;
         }
 
@@ -3920,11 +3922,11 @@ class Morpheus {
                 const tplSource = await Ananke.readFile(tplFile, "utf-8");
                 renderHtml = template.render(tplSource, DataMaps);
             } else {
-                throw new Error("Morpheus: 缺少模板文件或HTML内容");
+                throw new Error("渲染器缺少模板文件或HTML内容");
             }
              await Ananke.writeText(htmlPath, renderHtml);
         } catch (err) {
-            Hades.E(`[渲染器] HTML 生成失败: ${err.message}`);
+            Hades.E(`渲染器 HTML 生成失败: ${err.message}`);
             return null;
         }
 
@@ -3933,16 +3935,36 @@ class Morpheus {
             const browser = await this.#getBrowser(Hades);
             page = await browser.newPage();
 
+            let signalPromise = null;
+            if (MorpheusSignal) {
+                const signalName = typeof MorpheusSignal === 'string' ? MorpheusSignal : 'CowCoo:Morpheus-Ready';
+                signalPromise = new Promise(resolve => {
+                    const handler = msg => {
+                        const text = msg.text();
+                        if (text && text.includes(signalName)) {
+                            page.off('console', handler);
+                            resolve(true);
+                        }
+                    };
+                    page.on('console', handler);
+                });
+            }
+
            if (width) {
                 await page.setViewport({ width: width, height: 1000, deviceScaleFactor: 1 });
             }
 
             await page.goto(`file://${htmlPath}`, { ...navOpts, waitUntil: 'load' });
 
-            await page.waitForFunction(() => {
-                const images = Array.from(document.images);
-                return images.every(img => img.complete);
-            }, { timeout: 15000 }).catch(() => {});
+            if (MorpheusSignal && signalPromise) {
+                const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(false), 60000));
+                await Promise.race([signalPromise, timeoutPromise]);
+            } else {
+                await page.waitForFunction(() => {
+                    const images = Array.from(document.images);
+                    return images.every(img => img.complete);
+                }, { timeout: 15000 }).catch(() => {});
+            }
 
             if (transparentBackground) {
                 await page.evaluate(() => {
@@ -3991,7 +4013,7 @@ class Morpheus {
             return imgBuffer;
 
         } catch (err) {
-            Hades.E(`[渲染器] 截图失败 [${businessName}]:`, err);
+            Hades.E(`渲染器截图失败 [${businessName}]:`, err);
             return null;
         } finally {
             if (page) {
@@ -4038,9 +4060,9 @@ class Morpheus {
 
         try {
             await cleanDir(this.RenderDir);
-            if (cleaned > 0) Hades.D(`[渲染器] 清理了 ${cleaned} 个过期渲染文件。`);
+            if (cleaned > 0) Hades.D(`渲染器清理了 ${cleaned} 个过期渲染文件。`);
         } catch (err) { 
-            Hades.E(`[渲染器] Housekeeping 失败:`, err); 
+            Hades.E(`渲染器 Housekeeping 失败:`, err); 
         }
     }
 
@@ -4135,13 +4157,13 @@ class MBTMath {
 
 class Ananke {
     static #locks = {
-        config: new Metis('AnankeConfig', getCore()),
-        banList: new Metis('AnankeBanList', getCore())
+        config: new Metis('AOPS', getCore()),
+        banList: new Metis('ABLT', getCore())
     };
 
     static reset() {
-        if (this.#locks.config) this.#locks.config.emergencyReset('Hot Reload');
-        if (this.#locks.banList) this.#locks.banList.emergencyReset('Hot Reload');
+        if (this.#locks.config) this.#locks.config.emergencyReset('热重载');
+        if (this.#locks.banList) this.#locks.banList.emergencyReset('热重载');
     }
 
     static async parallel(items, fn, concurrency = 10) {
@@ -4172,7 +4194,7 @@ class Ananke {
         } catch (err) {
             if (err.code !== 'ENOENT') {
                 const Hades = HadesEntry();
-                Hades.D(`[文件管理] 删除失败: ${targetPath} (${err.code})`);
+                Hades.D(`删除失败: ${targetPath} (${err.code})`);
             }
             return false;
         }
@@ -4209,7 +4231,7 @@ class Ananke {
             if (error.code === 'ENOENT') return false;
             const Hades = HadesEntry();
             if (!['EEXIST', 'EACCES', 'EPERM'].includes(error.code)) {
-                Hades.D(`[文件管理] 树复制失败 ${source} -> ${dest}:`, error.message);
+                Hades.D(`树复制失败 ${source} -> ${dest}:`, error.message);
             }
             return false;
         }
@@ -4318,7 +4340,7 @@ class Ananke {
             return false;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.D(`[文件管理] 同步文件失败 ${src} -> ${dest}: ${err.message}`);
+            Hades.D(`同步文件失败 ${src} -> ${dest}: ${err.message}`);
             return false;
         }
     }
@@ -4330,7 +4352,7 @@ class Ananke {
             return true;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.E(`[文件管理] 写入文件失败 ${filePath}:`, err);
+            Hades.E(`写入文件失败 ${filePath}:`, err);
             return false;
         }
     }
@@ -4350,7 +4372,7 @@ class Ananke {
             return true;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.E(`[文件管理] 重命名失败 ${oldPath} -> ${newPath}:`, err);
+            Hades.E(`重命名失败 ${oldPath} -> ${newPath}:`, err);
             throw err;
         }
     }
@@ -4389,7 +4411,7 @@ class Ananke {
     static async loadingConfig(configPath, defaultConfig, logger = console) {
         const Hades = HadesEntry({}, logger || getCore());
         if (typeof configPath !== 'string') {
-            Hades.D(`[文件管理] loadingConfig 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
+            Hades.D(`loadingConfig 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
             return { ...defaultConfig };
         }
 
@@ -4403,15 +4425,15 @@ class Ananke {
                 throw new Error("无效的YAML内容");
             } catch (error) {
                 if (error.code === 'ENOENT') {
-                    Hades.D(`[文件管理] 配置文件 ${path.basename(configPath)} 不存在，正在初始化默认配置...`);
+                    Hades.D(`配置文件 ${path.basename(configPath)} 不存在，正在初始化默认配置...`);
                     try {
                         await Ananke.#PersistCfg(configPath, defaultConfig);
-                        Hades.D(`[文件管理] 默认配置已写入: ${configPath}`);
+                        Hades.D(`默认配置已写入: ${configPath}`);
                     } catch (writeErr) {
-                        Hades.E(`[文件管理] 初始化配置文件失败: ${writeErr.message}`);
+                        Hades.E(`初始化配置文件失败: ${writeErr.message}`);
                     }
                 } else {
-                    Hades.D(`[文件管理] 配置文件读取失败，使用内存默认值: ${error.message}`);
+                    Hades.D(`配置文件读取失败，使用内存默认值: ${error.message}`);
                 }
                 return { ...defaultConfig };
             }
@@ -4425,7 +4447,7 @@ class Ananke {
                 await Ananke.#PersistCfg(configPath, data);
                 return true;
             } catch (error) {
-                Hades.D(`[文件管理] 配置文件写入失败:`, error);
+                Hades.D(`配置文件写入失败:`, error);
                 return false;
             }
         });
@@ -4441,7 +4463,7 @@ class Ananke {
                 await fsPromises.writeFile(listPath, jsonStr, "utf8");
                 return true;
             } catch (error) {
-                Hades.E(`[文件管理] 封禁列表写入失败:`, error);
+                Hades.E(`封禁列表写入失败:`, error);
                 return false;
             }
         });
@@ -4475,7 +4497,7 @@ class Ananke {
                 }
             }
         } catch (err) {
-            if (err.code !== 'ENOENT') Hades.D(`[文件管理] 清理目录异常 ${targetDir}: ${err.message}`);
+            if (err.code !== 'ENOENT') Hades.D(`清理目录异常 ${targetDir}: ${err.message}`);
         }
     }
 
@@ -4487,7 +4509,7 @@ class Ananke {
             const result = await worker.run('SYNC_BATCH', tasks);
             return result;
         } catch (err) {
-            Hades.D(`[文件管理] Worker 同步任务失败:`, err);
+            Hades.D(`Worker 同步任务失败:`, err);
             return { success: 0, fail: tasks.length, error: err };
         } finally {
             worker.terminate();
@@ -4509,7 +4531,7 @@ class Ananke {
         } catch (err) {
             if (err.code === 'ENOENT') return [];
             const Hades = HadesEntry();
-            Hades.W(`[文件管理] 读取目录失败 ${targetPath}: ${err.message}`);
+            Hades.W(`读取目录失败 ${targetPath}: ${err.message}`);
             return [];
         }
     }
@@ -4520,7 +4542,7 @@ class Ananke {
             return true;
         } catch (err) {
             const Hades = HadesEntry();
-            Hades.E(`[文件管理] 复制文件失败 ${src} -> ${dest}:`, err);
+            Hades.E(`复制文件失败 ${src} -> ${dest}:`, err);
             return false;
         }
     }
@@ -4902,7 +4924,7 @@ class Nomos {
                 sortOrders: ['fire', 'ice', 'wind', 'elec', 'phy', 'quantum', 'imaginary'],
                 elemMap: { fire: '火', ice: '冰', wind: '风', elec: '雷', phy: '物理', quantum: '量子', imaginary: '虚数' }
             },
-            zzz: {
+            zzz: { 
                 name: "绝区零",
                 key: "zzz",
                 dirName: "zzz-character",
@@ -5637,7 +5659,7 @@ class DocHub {
 
         const errCode = err?.code || 'UNKNOWN';
         if (!ErrDoc.shouldReport(opName, errCode)) {
-            Hades.D(`[DocHub] 拦截重复报告: [${opName}] ${err?.message}`);
+            Hades.D(`拦截重复报告: [${opName}] ${err?.message}`);
             return;
         }
 
@@ -5648,7 +5670,7 @@ class DocHub {
         try {
             aiSolution = await this._consultOracle(opName, err, diagnosis.contextInfo, Hades);
         } catch (aiErr) {
-            Hades.D(`[DocHub] AI服务不可用: ${aiErr.message}`);
+            Hades.D(`  AI服务不可用: ${aiErr.message}`);
             aiSolution = "云露分析服务暂时不可用。";
         }
 
@@ -5685,11 +5707,11 @@ class DocHub {
                     });
                 }
             } catch (renderErr) {
-                Hades.E(`[DocHub] 报告渲染失败:`, renderErr);
+                Hades.E(`报告渲染失败:`, renderErr);
                 imgBuffer = null;
             }
         } else {
-            Hades.D(`[DocHub] 系统高负载`);
+            Hades.D(`系统高负载`);
         }
 
         try {
@@ -5703,7 +5725,7 @@ class DocHub {
                 await e.reply(msg);
             }
         } catch (sendErr) {
-            Hades.E(`[DocHub] 报告发送失败:`, sendErr);
+            Hades.E(`报告发送失败:`, sendErr);
         }
     }
 
@@ -5816,7 +5838,7 @@ class DocHub {
                 if (!response.ok) {
                     const errorBody = await response.text();
                     if (response.status === 429 || response.status >= 500 || response.status === 408) {
-                        Hades.D(`[DocHub] API重试 (${response.status})... ${retryCount + 1}/${maxRetries}`);
+                        Hades.D(`  API重试 (${response.status})... ${retryCount + 1}/${maxRetries}`);
                         retryCount++;
                         await new Promise(resolve => setTimeout(resolve, 500 + retryCount * 500));
                         continue;
@@ -5851,7 +5873,7 @@ class DocHub {
 
             } catch (aiError) {
                 if (aiError.name === 'AbortError' || aiError.message.includes('network') || aiError.message.includes('fetch')) {
-                    Hades.D(`[DocHub] 网络异常重试... ${retryCount + 1}/${maxRetries}`);
+                    Hades.D(`  网络异常重试... ${retryCount + 1}/${maxRetries}`);
                     retryCount++;
                     await new Promise(resolve => setTimeout(resolve, 500 + retryCount * 500));
                 } else {
@@ -5913,7 +5935,7 @@ class MBTCF {
             });
 
         } catch (err) {
-            Hades.E(`[MBTCF] 初始化崩溃: ${err.message}`);
+            Hades.E(`初始化崩溃: ${err.message}`);
             this.#BanMap.clear();
             this.#MD5BanSet.clear();
             this.#secTags = [];
@@ -6017,7 +6039,7 @@ class MBTCF {
         } catch (err) {
             this.#BanMap.delete(p);
             if (md5) this.#MD5BanSet.delete(md5);
-            Hades.E(`[MBTCF] 持久化失败，已回滚: ${err.message}`);
+            Hades.E(`持久化失败，已回滚: ${err.message}`);
             throw new Error("保存封禁配置失败，操作已撤销");
         }
     }
@@ -6039,7 +6061,7 @@ class MBTCF {
         } catch (err) {
             this.#BanMap.set(p, record);
             if (record.md5) this.#MD5BanSet.add(record.md5);
-            Hades.E(`[MBTCF] 持久化失败，已回滚: ${err.message}`);
+            Hades.E(`持久化失败，已回滚: ${err.message}`);
             throw new Error("保存封禁配置失败，操作已撤销");
         }
     }
@@ -6359,6 +6381,7 @@ class MiaoPluginMBT extends plugin {
       const Hades = HadesEntry();
 
       if (!MiaoPluginMBT._AliasData) MiaoPluginMBT._AliasData = { combined: {} };
+      if (!MiaoPluginMBT._AliasVerCache) MiaoPluginMBT._AliasVerCache = {};
 
       try {
         let GSAlias = {};
@@ -6366,14 +6389,32 @@ class MiaoPluginMBT extends plugin {
 
         try {
           const GSAliasPath = path.join(MiaoPluginMBT.Paths.Target.Miao_GSAliasDir, 'alias.js');
-          const GSModule = await import(`file://${GSAliasPath}?t=${Date.now()}`);
-          GSAlias = GSModule.alias || {};
+          const gsStats = await Ananke.stat(GSAliasPath);
+          const gsVersion = gsStats ? gsStats.mtimeMs : Date.now();
+          const gsCacheKey = `${GSAliasPath}@${gsVersion}`;
+          if (MiaoPluginMBT._AliasVerCache.gsKey !== gsCacheKey) {
+            const GSModule = await import(`file://${GSAliasPath}?v=${gsVersion}`);
+            GSAlias = GSModule.alias || {};
+            MiaoPluginMBT._AliasVerCache.gsKey = gsCacheKey;
+            MiaoPluginMBT._AliasVerCache.gsData = GSAlias;
+          } else {
+            GSAlias = MiaoPluginMBT._AliasVerCache.gsData;
+          }
         } catch (e) {  }
 
         try {
           const SRAliasPath = path.join(MiaoPluginMBT.Paths.Target.Miao_SRAliasDir, 'alias.js');
-          const SRModule = await import(`file://${SRAliasPath}?t=${Date.now()}`);
-          SRAlias = SRModule.alias || {};
+          const srStats = await Ananke.stat(SRAliasPath);
+          const srVersion = srStats ? srStats.mtimeMs : Date.now();
+          const srCacheKey = `${SRAliasPath}@${srVersion}`;
+          if (MiaoPluginMBT._AliasVerCache.srKey !== srCacheKey) {
+            const SRModule = await import(`file://${SRAliasPath}?v=${srVersion}`);
+            SRAlias = SRModule.alias || {};
+            MiaoPluginMBT._AliasVerCache.srKey = srCacheKey;
+            MiaoPluginMBT._AliasVerCache.srData = SRAlias;
+          } else {
+            SRAlias = MiaoPluginMBT._AliasVerCache.srData;
+          }
         } catch (e) {  }
 
         MiaoPluginMBT._AliasData.GSAlias = GSAlias;
@@ -6450,7 +6491,7 @@ class MiaoPluginMBT extends plugin {
       {
         name: `${DFC.logPrefix}定时更新`,
         cron: DFC.CronUpdate,
-        fnc: QuantumFlux(() => this.RunUpdateTask()),
+        fnc: QuantumFlux(() => this.ReconcileTask()),
         log: true,
       },
       {
@@ -6618,9 +6659,9 @@ class MiaoPluginMBT extends plugin {
       Morpheus.reset().catch(() => {});
   }
 
-  static async _teardown(isReload = false, logger = console) {
+  static async _teardown(isReload = false, logger) {
       if (MiaoPluginMBT.MBTProcc) {
-          await MiaoPluginMBT.MBTProcc.killAll('SIGTERM', isReload ? 'Hot Reload' : 'Shutdown');
+          await MiaoPluginMBT.MBTProcc.killAll('SIGTERM', isReload ? '热重载' : 'Shutdown');
       }
 
       if (Morpheus.closeBrowser) {
@@ -7629,12 +7670,12 @@ class MiaoPluginMBT extends plugin {
             : `${cleanPrefix}/github.com/${targetRepo}.git`;
 
         if (attempt > 1) {
-            Hades.D(`[Git测速重试 ${attempt}/${MAX_RETRIES}] 节点: ${nodeName} | 切换靶标: ${targetRepo}`);
+            //Hades.D(`[Git测速重试 ${attempt}/${MAX_RETRIES}] 节点: ${nodeName} | 切换靶标: ${targetRepo}`);
         }
 
         const startTime = Date.now();
 
-        const result = await MBTPipeControl("git", ["ls-remote", "--heads", actualUrl], {}, TIMEOUT)
+        const result = await MBTPipeControl("git", ["ls-remote", "--heads", actualUrl], { airlock: true }, TIMEOUT)
             .then((res) => ({ 
                 success: true, 
                 duration: Date.now() - startTime,
@@ -7949,9 +7990,10 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     } catch {}
   }
 
-  async RunUpdateTask() {
+  async ReconcileTask() {
     if (!this.logger) this.logger = HadesEntry({}, getCore());
-    if (!MiaoPluginMBT.BootStrap) {
+    const insLockExists = await Ananke.Audit(MiaoPluginMBT.Paths.ProvisionPath);
+    if (!insLockExists) {
       this.logger.debug(`图库未下载，跳过本次任务。`);
       return;
     }
@@ -7969,8 +8011,21 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
   }
 
+  static async acquireGlobalSenseChain(logger = getCore()) {
+    const Hades = HadesEntry({}, logger);
+    let globalSenseChain = null;
+    try {
+        const envData = await Hermes.getEnvInfo(Hades);
+        globalSenseChain = await Proteus.sense(envData, Infinity, Hades);
+        Hades.D(`全局网络态势已锁定: 模式=${Proteus._describe(globalSenseChain.mode)}`);
+    } catch (err) {
+        Hades.W(`全局网络态势感知失败，将使用降级配置: ${err.message}`);
+    }
+    return globalSenseChain;
+  }
+
   async CronSweep() {
-    this.logger.debug(`[CronSweep] 开始执行系统维护任务...`);
+    this.logger.debug(`咕咕牛准备开始执行系统维护任务...`);
 
     const LockStatus = [
         { lock: MiaoPluginMBT.MetaMutex, name: 'MetaMutex', maxAge: 60000 },
@@ -7982,8 +8037,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     for (const { lock, name, maxAge } of LockStatus) {
         const stats = lock.getStats();
         if (stats.locked && stats.uptime > maxAge) {
-            this.logger.warn(`[CronSweep] 检测到僵死锁 [${name}] (持有者: ${stats.holder}, 时长: ${stats.uptime}ms)，强制重置。`);
-            lock.emergencyReset('CronSweep 清理僵死锁');
+            this.logger.warn(`检测到僵死锁 [${name}] (持有者: ${stats.holder}, 时长: ${stats.uptime}ms)，强制重置。`);
+            lock.emergencyReset('CronSweep清理僵死锁');
         }
     }
 
@@ -7996,7 +8051,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                     .filter(e => e.isDirectory() && (e.name.toLowerCase().includes("guguniu") || e.name.includes("render-")))
                     .map(e => path.join(MiaoPluginMBT.Paths.TempHtmlPath, e.name));
                 await Promise.all(targets.map(p => Ananke.obliterate(p)));
-            } catch (e) { if (e.code !== 'ENOENT') this.logger.warn(`[CronSweep] HTML清理异常: ${e.message}`); }
+            } catch (e) { if (e.code !== 'ENOENT') this.logger.warn(`HTML清理异常: ${e.message}`); }
         })(),
         Morpheus.housekeeping(this.logger),
         (async () => {
@@ -8005,7 +8060,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 const stats = await Ananke.stat(lockFile);
                 if (stats && Date.now() - stats.mtimeMs > 3600000) {
                     await Ananke.obliterate(lockFile);
-                    this.logger.debug(`[CronSweep] 清理过期的安装锁文件。`);
+                    this.logger.debug(`清理过期的安装锁文件。`);
                 }
             } catch {}
         })()
@@ -8020,7 +8075,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     ];
     await Promise.all(ensureDirs.map(p => Ananke.mkdirs(p).catch(() => {})));
 
-    this.logger.debug(`[CronSweep] 系统维护完成。`);
+    this.logger.debug(`咕咕牛系统维护完成。`);
   }
 
   async CheckInit(e) {
@@ -8152,6 +8207,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
       if (redisKey) { await redis.set(redisKey, '1', { EX: cooldownDuration }); }
 
+      const globalSenseChain = await MiaoPluginMBT.acquireGlobalSenseChain(Hades);
+
       const deployRepo = async (repoTask) => {
           const repoNum = repoTask.repo;
           const meta = Nomos.MetaNum(repoNum);
@@ -8163,10 +8220,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
           const branch = MiaoPluginMBT.MBTConfig.RepoBranch || "main";
           const runtimeContext = new RuntimeCtx();
-          const envData = await Hermes.getEnvInfo(Hades);
-          const bestMirror = TheGrid.find(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
-          const mirrorSpeed = bestMirror ? (bestMirror.time || Infinity) : Infinity;
-          const senseChain = await Proteus.sense(envData, mirrorSpeed, Hades);
+          let senseChain = globalSenseChain;
+          if (!senseChain) {
+              const envData = await Hermes.getEnvInfo(Hades);
+              const bestMirror = TheGrid.find(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
+              const mirrorSpeed = bestMirror ? (bestMirror.time || Infinity) : Infinity;
+              senseChain = await Proteus.sense(envData, mirrorSpeed, Hades);
+          }
           runtimeContext.vectors = senseChain.vector;
           runtimeContext.decision = senseChain;
 
@@ -8453,8 +8513,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async _VoiceCore(e, Hades, httpResults, gitResults = [], startTime) {
     const taskEnvInfo = Hermes.getEnvInfo(Hades).catch(() => ({}));
-    const taskProxyPorts = Nyx.scan(this._setup?.agentGates, Hades).catch(() => []);
-    
+
     let sortedNodes = [];
     if (gitResults && gitResults.length > 0) {
         sortedNodes = await MiaoPluginMBT.AdaptiveSpeed(httpResults, gitResults, Hades);
@@ -8464,7 +8523,6 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     try {
         const envInfo = await taskEnvInfo;
-        const proxyPorts = await taskProxyPorts;
         const bestMirror = httpResults.find(r => r.name !== 'GitHub' && Number.isFinite(r.speed));
         const mirrorSpeed = bestMirror ? bestMirror.speed : Infinity;
         const senseChain = await Proteus.sense(envInfo, mirrorSpeed, Hades);
@@ -8513,17 +8571,28 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             return ip;
         };
 
+        const extractCC = (src) => {
+            return src?.countryCode || src?.country_code || src?.country || src?.geoData?.countryCode || src?.geoData?.country_code || src?.geoData?.country || src?.data?.country_code || src?.data?.country || '';
+        };
+
         const network = envInfo.network || {};
         const inference = envInfo.inference || envInfo;
 
-        const nativeV4Raw = network.native?.v4Ip || inference.v4Ip || "192.168.1.10";
-        const nativeV6Raw = network.native?.v6Ip || inference.v6Ip || "2001:0000:0000:0000:0000:0000:0000:7334";
+        let nativeV4Raw = network.native?.v4Ip || inference.v4Ip || "N/A";
+        const nativeV4CC = extractCC(network.native || inference);
         const nativeV4 = maskIp(nativeV4Raw);
+
+        const nativeV6Raw = network.native?.v6Ip || inference.v6Ip || "N/A";
         const nativeV6 = maskIp(nativeV6Raw);
 
-        const browserV4Raw = network.browser?.v4?.ip || "N/A";
-        const browserV6Raw = network.browser?.v6?.ip || "N/A";
+        let browserV4Raw = network.browser?.v4?.ip || "N/A";
+        let browserV4CC = extractCC(network.browser?.v4);
+        if (!browserV4CC && browserV4Raw !== "N/A" && browserV4Raw === (network.native?.v4Ip || inference.v4Ip)) {
+            browserV4CC = extractCC(network.native || inference);
+        }
         const browserV4 = maskIp(browserV4Raw);
+
+        const browserV6Raw = network.browser?.v6?.ip || "N/A";
         const browserV6 = maskIp(browserV6Raw);
 
         const geoSource = network.browser?.v4 || network.native || inference;
@@ -8597,6 +8666,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
         const failRate = aliveCount > 0 ? ((deadCount / aliveCount) * 100).toFixed(1) : '0.0';
 
+        const proxyPorts = senseChain.nyxProxies || [];
         const bestPorts = proxyPorts.slice(0, 4).map(p => `${p.port}(${p.score})`);
 
         const ViewProps = {
@@ -8605,7 +8675,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
              duration: ((Date.now() - startTime) / 1000).toFixed(1),
              runModeMsg,
              nativeV4, nativeV6,
+             nativeV4CC,
              browserV4, browserV6,
+             browserV4CC,
              v4Lat: envInfo?.v4Lat || 0,
              v6Lat: envInfo?.v6Lat || 0,
              clientGeo,
@@ -8670,14 +8742,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const startTime = Date.now();
     if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
 
-    let globalSenseChain = null;
-    try {
-        const envData = await Hermes.getEnvInfo(Hades);
-        globalSenseChain = await Proteus.sense(envData, Infinity, Hades);
-        Hades.D(`全局网络态势已锁定: 模式=${Proteus._describe(globalSenseChain.mode)}`);
-    } catch (err) {
-        Hades.W(`全局网络态势感知失败，将使用降级配置: ${err.message}`);
-    }
+    const globalSenseChain = await MiaoPluginMBT.acquireGlobalSenseChain(Hades);
 
     const reportResults = [];
     let allSuccess = true;
@@ -8851,7 +8916,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "html", "sync", "update.html"),
         data: ViewProps,
         logger: Hades,
-        pageBoundingRect: { selector: ".capture-frame" }
+        pageBoundingRect: { selector: ".capture-frame" },
+        MorpheusSignal: true
       });
     }
 
@@ -8949,9 +9015,14 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 return name.includes("guguniu") || name.includes("render-") || name.includes("cowcoo") || name.includes("guguniu-gallery") || name.includes("gutools") || name.includes("cooweb");
             })
             .map(e => path.join(MiaoPluginMBT.Paths.TempHtmlPath, e.name));
-        
+
         await Promise.all(targets.map(p => Ananke.obliterate(p)));
         return { count: targets.length };
+    };
+
+    const cleanTempCowCoo = async () => {
+        await Ananke.obliterate(MiaoPluginMBT.Paths.TempNiuPath);
+        return { count: 1 };
     };
 
     const startTime = Date.now();
@@ -8974,7 +9045,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const tasks = [
         ...obliteratePaths.map(p => ({ type: "Delete", displayPath: path.basename(p), action: () => Ananke.obliterate(p, 3, 500) })),
         ...purgePaths.map(p => ({ type: "Purge", displayPath: path.basename(p), action: () => Ananke.purge(p, Hades) })),
-        { type: "Temp", displayPath: "html_cache", action: cleanTempHtml }
+        { type: "Temp", displayPath: "html_cache", action: cleanTempHtml },
+        { type: "Temp", displayPath: "CowCoo", action: cleanTempCowCoo }
     ];
 
     const results = await Promise.all(tasks.map(runTask));
@@ -9234,7 +9306,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "html", "tools", "status.html"),
           data: ViewProps,
           logger: Hades,
-          pageBoundingRect: { selector: ".container" }
+          pageBoundingRect: { selector: ".container" },
+          MorpheusSignal: true
       });
 
         if (imgBuffer) {
@@ -9438,7 +9511,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "html", "tools", "galleryrmap.html"),
             data: ViewProps,
             width: renderWidth,
-            logger: Hades    
+            logger: Hades,
+            MorpheusSignal: true
         });
     } catch (err) {
         Hades.E(`地图渲染失败 [${gameKey}]:`, err);
@@ -10289,7 +10363,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 class SleeperAgent extends plugin {
     constructor() {
       super({
-        name: '『咕咕牛🐂』原图管理 ',
+        name: '『咕咕牛🐂』原图管理器',
         event: 'message',
         priority: -100,
         rule: [

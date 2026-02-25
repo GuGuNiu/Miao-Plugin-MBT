@@ -392,7 +392,7 @@
 
         .mode-diagnostic-col {
             display: flex;
-            gap: 12px;
+            gap: 11px;
             align-items: center;
             flex-shrink: 0;
         }
@@ -1136,7 +1136,7 @@
                     {{ if nativeV4 && nativeV4 != 'N/A' }}
                     <div class="mode-detail-row">
                         <div class="mode-detail-item">
-                            <span class="ip-label">Nat-v4</span> {{ nativeV4 }}
+                            <span class="ip-label">Nat-v4</span> {{ nativeV4 }}{{ if nativeV4CC }}<span style="color: var(--header-underline-color);">:{{ nativeV4CC }}</span>{{ /if }}
                         </div>
                         {{ if nativeV6 && nativeV6 != 'N/A' }}
                         <div class="mode-detail-item">
@@ -1146,17 +1146,17 @@
                     </div>
                     {{ /if }}
 
-                    {{ if (browserV4 && browserV4 != 'N/A') || (clientGeo && clientGeo != '未知地区') }}
+                    {{ if (browserV4 && browserV4 != 'N/A') || (browserV6 && browserV6 != 'N/A') }}
                     <div class="mode-detail-row" style="border-top: none; margin-top: 2px; padding-top: 2px;">
                         {{ if browserV4 && browserV4 != 'N/A' }}
                         <div class="mode-detail-item">
-                            <span class="ip-label" style="border-color: #e6c35c; color: #e6c35c;">Bro-v4</span> {{ browserV4 }}{{ if clientGeo && clientGeo != '未知地区' }}<span style="color: #e6c35c; margin-left: 4px;">:{{ clientGeo }}</span>{{ /if }}
+                            <span class="ip-label" style="border-color: #e6c35c; color: #e6c35c;">Bro-v4</span> {{ browserV4 }}{{ if browserV4CC }}<span style="color: #e6c35c;">:{{ browserV4CC }}</span>{{ /if }}
                         </div>
+                        {{ /if }}
                         {{ if browserV6 && browserV6 != 'N/A' }}
                         <div class="mode-detail-item">
                             <span class="ip-label" style="border-color: #e6c35c; color: #e6c35c;">Bro-v6</span> {{ browserV6 }}
                         </div>
-                        {{ /if }}
                         {{ /if }}
                     </div>
                     {{ /if }}

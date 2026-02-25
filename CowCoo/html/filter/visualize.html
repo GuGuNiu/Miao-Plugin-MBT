@@ -520,37 +520,17 @@
     </div>
     <script>
         window.addEventListener('load', function() {
-            const images = document.querySelectorAll('img');
-            let loadedCount = 0;
-            const totalImages = images.length;
-            
-            if (totalImages === 0) {
-              console.log('Yunara:Render-Ready');
-              return;
-            }
-            
-            images.forEach(img => {
-              if (img.complete) {
-                loadedCount++;
-                checkAllLoaded();
-              } else {
-                img.addEventListener('load', () => {
-                  loadedCount++;
-                  checkAllLoaded();
+            const images = Array.from(document.images);
+            Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.addEventListener('load', resolve);
+                    img.addEventListener('error', resolve);
                 });
-                img.addEventListener('error', () => {
-                  loadedCount++;
-                  checkAllLoaded();
-                });
-              }
+            })).then(() => {
+                console.log('CowCoo:Morpheus-Ready');
             });
-            
-            function checkAllLoaded() {
-              if (loadedCount === totalImages) {
-                console.log('Yunara:Render-Ready');
-              }
-            }
-          });
+        });
     </script>
 </body>
 

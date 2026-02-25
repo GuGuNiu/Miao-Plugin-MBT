@@ -362,6 +362,20 @@
     </div>
     <div class="footer">Miao-Plugin-MBT v{{ Version }}</div>
   </div>
+  <script>
+    window.addEventListener('load', function() {
+      const images = Array.from(document.images);
+      Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.addEventListener('load', resolve);
+          img.addEventListener('error', resolve);
+        });
+      })).then(() => {
+          console.log('CowCoo:Morpheus-Ready');
+      });
+    });
+  </script>
 </body>
 
 </html>
