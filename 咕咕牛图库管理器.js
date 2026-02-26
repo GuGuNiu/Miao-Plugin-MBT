@@ -6964,6 +6964,16 @@ class MiaoPluginMBT extends plugin {
       let inheritEnv = false;
       let extraEnv = null;
       let retryWithAirlock = false;
+      const sysProxyEnv = {
+          HTTP_PROXY: process.env.HTTP_PROXY,
+          HTTPS_PROXY: process.env.HTTPS_PROXY,
+          ALL_PROXY: process.env.ALL_PROXY,
+          http_proxy: process.env.http_proxy,
+          https_proxy: process.env.https_proxy,
+          all_proxy: process.env.all_proxy,
+          NO_PROXY: process.env.NO_PROXY,
+          no_proxy: process.env.no_proxy
+      };
 
       try {
           const healthyCount = sortedNodes.filter(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name)).length;
