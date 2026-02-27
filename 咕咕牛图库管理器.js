@@ -3884,7 +3884,8 @@ class Morpheus {
             Version: Version,
             RenderMatrix: MiaoPluginMBT.RenderMatrix(),
             Cow_Res_Path: `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/'),
-            sysTimestamp: Morpheus.#nowStr()
+            sysTimestamp: Morpheus.#nowStr(),
+            headerImg: await Morpheus.pickHeader()
         };
 
         const DataMaps = { ...defaultData, ...data };
@@ -9277,7 +9278,6 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
       const ViewProps = {
         stats: statsData,
-        headerImg: await Morpheus.pickHeader(),
         config: {
           pflLevel: MiaoPluginMBT.MBTConfig.PFL_Ops ?? DFC.PFL_Ops,
           pflDesc: PFL.getDescription(MiaoPluginMBT.MBTConfig.PFL_Ops ?? DFC.PFL_Ops),
@@ -10134,7 +10134,6 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     try {
         const ViewProps = {
-            headerImg: await Morpheus.pickHeader(),
             tuKuStatus: mapToggle('Repo_Ops', DFC.Repo_Ops, "已启用", "已禁用"),
             pflStatus: (() => {
                 const level = config.PFL_Ops ?? DFC.PFL_Ops;
