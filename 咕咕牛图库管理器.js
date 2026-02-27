@@ -5497,9 +5497,9 @@ class Presenter {
     static async RenderDashboard(e, stats) {
         const Hades = HadesEntry({}, e?.logger || getCore());
         const ViewProps = {
-            GameData: stats,
-            Tags: Object.keys(Valid_Tags).sort(),
-            SecTags: MiaoPluginMBT._SecTagsCache,
+            gameData: stats,
+            tags: Object.keys(Valid_Tags).sort(),
+            secTags: MiaoPluginMBT._SecTagsCache,
         };
 
         const imgBuffer = await Morpheus.shot("Search", {
