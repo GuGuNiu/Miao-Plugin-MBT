@@ -8207,7 +8207,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       let capturedModeMsg = "未执行下载任务";
 
       try {
-          const sortedNodes = await this._VoiceCore(e, Hades, HttpResultMap, [], startTime);
+          const sortedNodes = await this._VoiceCore(e, Hades, HttpResultMap, [], startTime, 'Provision');
           validNodes = sortedNodes;
           await e.reply("测速结果仅供参考，实际下载将根据[CRS动态决策]选择最佳方式", true);
       } catch (err) {
@@ -8521,7 +8521,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     return true;
   }
 
-  async _VoiceCore(e, Hades, httpResults, gitResults = [], startTime) {
+  async _VoiceCore(e, Hades, httpResults, gitResults = [], startTime, source = 'Stdin') {
     const taskEnvInfo = Hermes.getEnvInfo(Hades).catch(() => ({}));
 
     let sortedNodes = [];
@@ -8698,7 +8698,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
              bestPorts
         };
 
-        const imgBuffer = await Morpheus.shot("US-SpeedTest", {  
+        const shotName = source === 'Provision' ? "DL-SpeedTest" : "US-SpeedTest";
+        const imgBuffer = await Morpheus.shot(shotName, {  
              htmlContent: tplResult.data, 
              data: ViewProps, 
              logger: Hades, 
