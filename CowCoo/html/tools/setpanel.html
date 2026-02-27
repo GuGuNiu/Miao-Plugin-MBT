@@ -122,7 +122,6 @@
       font-family: 'Noto Sans SC', sans-serif;
       background-color: var(--bg-color);
       color: var(--text-primary);
-      padding: 10px;
       font-size: 14px;
       line-height: 1.6;
       width: 560px;
@@ -132,7 +131,6 @@
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      margin: 20px auto;
     }
 
     .container-shadow-wrapper {
@@ -159,7 +157,6 @@
       border: 1px solid var(--container-border);
       width: 540px;
       margin: 0 auto;
-      border-radius: 12px;
       box-shadow: 0 4px 20px var(--soft-shadow);
       padding: 0;
       box-sizing: border-box;
@@ -300,13 +297,6 @@
       padding-left: 0;
       letter-spacing: 0.5px;
       width: 100%;
-    }
-
-    .title-more {
-      font-size: 14px;
-      color: var(--text-muted);
-      font-family: 'Orbitron', sans-serif;
-      margin-right: 5px;
     }
 
     .section-badge-title {
@@ -580,6 +570,276 @@
       --item-color: #26a69a;
     }
 
+    .sr18-card {
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      position: relative;
+      background: rgba(148, 163, 184, 0.1);
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-left: 20px;
+    }
+
+    .sr18-card.active {
+      background: #fbf8ff;
+      border-color: #e9d1ff;
+      box-shadow: 0 4px 12px rgba(200, 100, 255, 0.2), 0 0 10px rgba(217, 76, 255, 0.5);
+    }
+
+    .sr18-text-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      z-index: 2;
+      margin-top: 5px;
+      width: 100%;
+      padding-right: 20px;
+      box-sizing: border-box;
+    }
+
+    .sr18-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .sr18-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .sr18-command {
+      font-family: 'Consolas', 'Menlo', 'monospace';
+      font-size: 10px;
+      color: #94a3b8;
+      opacity: 0.7;
+      transform: skewX(-8deg);
+    }
+
+    .sr18-card.active .sr18-command {
+      color: #a270c4;
+      opacity: 1;
+    }
+
+    .breasts-icon {
+      display: flex;
+      gap: 4px;
+      transform: skewX(-8deg);
+    }
+
+    .breast {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #94a3b8;
+      border-radius: 50%;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .breast::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px;
+      height: 4px;
+      background-color: #94a3b8;
+      border-radius: 50%;
+    }
+
+    .sr18-card.active .breast {
+      border-color: #4f0073;
+      box-shadow: 0 0 4px #ff00ff;
+    }
+
+    .sr18-card.active .breast::after {
+      background-color: #4f0073;
+      box-shadow: 0 0 2px #ff00ff;
+    }
+
+    .sr18-main-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      transform: skewX(-8deg);
+      position: relative;
+      line-height: 1.2;
+    }
+
+    .sr18-card.active .sr18-main-text {
+      color: #4f0073;
+      text-shadow: 0 0 4px #ff00ff, 1px 1px 1px rgba(0,0,0,0.3);
+    }
+
+    .sr18-main-text::before,
+    .sr18-main-text::after {
+      content: 'SR18+';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(148, 163, 184, 0.1);
+      overflow: hidden;
+      opacity: 0.3;
+    }
+
+    .sr18-main-text::before {
+      left: 2px;
+      text-shadow: -2px 0 #64748b;
+      clip-path: inset(20% 0 55% 0);
+    }
+
+    .sr18-main-text::after {
+      left: -2px;
+      text-shadow: 2px 0 #475569;
+      clip-path: inset(60% 0 15% 0);
+    }
+
+    .sr18-card.active .sr18-main-text::before,
+    .sr18-card.active .sr18-main-text::after {
+      background: #fbf8ff;
+      opacity: 1;
+    }
+
+    .sr18-card.active .sr18-main-text::before {
+      text-shadow: -2px 0 #00ffff;
+      animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+    }
+
+    .sr18-card.active .sr18-main-text::after {
+      text-shadow: 2px 0 #ff00ff;
+      animation: glitch-anim-2 3s infinite linear alternate-reverse;
+    }
+
+    .sr18-sub-text {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
+
+    .sr18-card.active .sr18-sub-text {
+      color: #a270c4;
+    }
+
+    .sr18-description {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 8px;
+      padding-left: 2px;
+      line-height: 1.4;
+    }
+
+    .sr18-card.active .sr18-description {
+      color: #a270c4;
+    }
+
+    .sr18-corner-deco {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 15px;
+      height: 15px;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .sr18-card.active .sr18-corner-deco {
+      opacity: 1;
+    }
+
+    .sr18-corner-deco::before, .sr18-corner-deco::after {
+      content: '';
+      position: absolute;
+      background-color: #cbd5e1;
+    }
+
+    .sr18-card.active .sr18-corner-deco::before,
+    .sr18-card.active .sr18-corner-deco::after {
+      background-color: #d94cff;
+      box-shadow: 0 0 5px #d94cff;
+    }
+
+    .sr18-corner-deco::before { top: 0; left: 0; width: 100%; height: 2px; }
+    .sr18-corner-deco::after { top: 0; left: 0; width: 2px; height: 100%; }
+
+    .sr18-heel-deco {
+      position: absolute;
+      bottom: 12px;
+      right: 60px;
+      width: 24px;
+      height: 24px;
+      fill: #cbd5e1;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .sr18-card.active .sr18-heel-deco {
+      opacity: 1;
+      fill: #d94cff;
+      filter: drop-shadow(0 0 5px rgba(217, 76, 255, 0.7));
+    }
+
+    .sr18-wine-glass {
+      display: inline-block;
+      position: relative;
+      width: 28px;
+      height: 28px;
+    }
+
+    .sr18-wine-glass svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: #cbd5e1;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.5;
+    }
+
+    .sr18-card.active .sr18-wine-glass svg {
+      stroke: #d94cff;
+      opacity: 1;
+      filter: drop-shadow(0 0 4px #d94cff);
+    }
+
+    .sr18-status {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    @keyframes glitch-anim-1 {
+      0% { clip-path: inset(45% 0 50% 0); }
+      25% { clip-path: inset(15% 0 70% 0); }
+      50% { clip-path: inset(80% 0 5% 0); }
+      75% { clip-path: inset(30% 0 40% 0); }
+      100% { clip-path: inset(60% 0 35% 0); }
+    }
+
+    @keyframes glitch-anim-2 {
+      0% { clip-path: inset(85% 0 10% 0); }
+      20% { clip-path: inset(5% 0 90% 0); }
+      40% { clip-path: inset(40% 0 30% 0); }
+      60% { clip-path: inset(70% 0 20% 0); }
+      80% { clip-path: inset(25% 0 55% 0); }
+      100% { clip-path: inset(50% 0 45% 0); }
+    }
+
     .item-left {
       display: flex;
       flex-direction: column;
@@ -800,7 +1060,6 @@
             <span class="section-badge-title">
               <span class="icon"></span>主要设置
             </span>
-            <span class="title-more">Primary Settings</span>
           </h2>
           <div class="setting-row-group">
             <div class="setting-item item-tuku">
@@ -819,6 +1078,35 @@
               </div>
               <span class="value status-bottom-main {{ pflStatus.class }}">{{ pflStatus.level }}</span>
             </div>
+            <div class="setting-item sr18-card {{ sr18Status.class }}">
+              <div class="sr18-corner-deco"></div>
+              <div class="sr18-text-group">
+                <div class="sr18-main-row">
+                  <div class="sr18-title-group">
+                    <span class="sr18-main-text">SR18+</span>
+                    <span class="sr18-command">#咕咕牛设置SR18开启/关闭</span>
+                  </div>
+                  <div class="breasts-icon">
+                    <div class="breast"></div>
+                    <div class="breast"></div>
+                  </div>
+                </div>
+                <span class="sr18-sub-text">S-RARE :: RESTRICTED CONTENT</span>
+              </div>
+              <div class="sr18-description">高尺度的性趣味玩法图片 & 限制级22+，需要做好心理准备</div>
+              <svg class="sr18-heel-deco" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.33,15.25l-3.61-3.61a1.49,1.49,0,0,0-2.1,0L11.78,13.5a.49.49,0,0,1-.69,0L5.33,7.74a1.49,1.49,0,0,0-2.1,0L2.4,8.57a1.49,1.49,0,0,0,0,2.1l5.76,5.76a.49.49,0,0,1,0,.69L4.22,21.06a1.49,1.49,0,0,0,0,2.1l.83.83a1.49,1.49,0,0,0,2.1,0l3.94-3.94a.49.49,0,0,1,.69,0l1.84,1.84a1.49,1.49,0,0,0,2.1,0l3.61-3.61A1.49,1.49,0,0,0,19.33,15.25Z"/>
+              </svg>
+              <div class="sr18-status">
+                <div class="sr18-wine-glass">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6c0 4.97-3.13 9-7 9s-7-4.03-7-9V5h14v1z" />
+                    <path d="M12 15v6" />
+                    <path d="M8 21h8" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -827,7 +1115,6 @@
             <span class="section-badge-title">
               <span class="icon"></span>附加选项
             </span>
-            <span class="title-more">View More</span>
           </h2>
           <div class="feature-toggle-group">
             <div class="setting-item item-ai {{ aiStatus.class }}">
@@ -872,19 +1159,15 @@
             <span class="pill-val">v{{ Version }}</span>
           </div>
           <div class="footer-pill">
-            <span class="pill-label">机器人框架</span>
+            <span class="pill-label">框架</span>
             <span class="pill-val">Yunzai</span>
           </div>
           <div class="footer-pill">
-            <span class="pill-label">UI界面</span>
-            <span class="pill-val">v3.0</span>
-          </div>
-          <div class="footer-pill">
-            <span class="pill-label">插件架构</span>
+            <span class="pill-label">架构</span>
             <span class="pill-val">v3.1</span>
           </div>
         </div>
-        <div class="footer-copyright">Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
+        <div class="footer-copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
       </footer>
     </div>
   </div>
