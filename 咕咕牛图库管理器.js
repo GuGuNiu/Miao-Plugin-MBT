@@ -10148,6 +10148,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             easterEggStatus: mapToggle('EasterEgg', true),
             layoutStatus: mapToggle('layout', true),
             MihoyoSplashStatus: mapToggle('MihoyoSplash', false),
+            sr18Status: mapToggle('SR18', false),
             RenderScale: {
                 value: config.RenderScale ?? DFC.RenderScale
             },
