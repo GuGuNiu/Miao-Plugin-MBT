@@ -9037,6 +9037,20 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         return { count: 1 };
     };
 
+    const cleanKeysword = async () => {
+        if (typeof redis === 'undefined') return { count: 0 };
+        try {
+            const keys = await redis.keys('CowCoo:*');
+            if (keys && keys.length > 0) {
+                await redis.del(...keys);
+                return { count: keys.length };
+            }
+            return { count: 0 };
+        } catch (err) {
+            throw err;
+        }
+    };
+
     const startTime = Date.now();
     
     const runTask = async ({ type, displayPath, action }) => {
@@ -9058,7 +9072,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         ...obliteratePaths.map(p => ({ type: "Delete", displayPath: path.basename(p), action: () => Ananke.obliterate(p, 3, 500) })),
         ...purgePaths.map(p => ({ type: "Purge", displayPath: path.basename(p), action: () => Ananke.purge(p, Hades) })),
         { type: "Temp", displayPath: "html_cache", action: cleanTempHtml },
-        { type: "Temp", displayPath: "CowCoo", action: cleanTempCowCoo }
+        { type: "Temp", displayPath: "CowCoo", action: cleanTempCowCoo },
+        { type: "Keyword", displayPath: "CowCoo_keys", action: cleanKeysword }
     ];
 
     const results = await Promise.all(tasks.map(runTask));
