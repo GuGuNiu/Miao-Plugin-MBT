@@ -2710,22 +2710,23 @@ class MBTQuoCRS {
 
     _accPend() {
         if (this.pendingTimers.size === 0) return;
+        
         const [oldTimerId, data] = this.pendingTimers.entries().next().value;
         this.pendingTimers.delete(oldTimerId);
-        clearTimeout(oldTimerId);
+        clearTimeout(oldTimerId); 
         
         this.logger.debug(`${this.uiRid} | [Quo] 前序任务失败触发调度: ${data.id}`);
         
-        const newTimerId = setTimeout(() => {
-            if (this.pendingTimers.has(newTimerId) || !this.pendingTimers) return; 
-             this._activate(data.id, data.factory, data.BPP);
-        }, MBTMath.Range(100, 300));
-
+        if (this.closed) return; 
+        
         const delay = MBTMath.Range(100, 300);
         const rescheduleId = setTimeout(() => {
-            this.pendingTimers.delete(rescheduleId); 
-            this._activate(data.id, data.factory, data.BPP);
+            this.pendingTimers.delete(rescheduleId);
+            if (!this.closed) {
+                this._activate(data.id, data.factory, data.BPP);
+            }
         }, delay);
+    
         this.pendingTimers.set(rescheduleId, data);
     }
 
