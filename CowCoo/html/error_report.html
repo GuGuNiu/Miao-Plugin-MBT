@@ -38,9 +38,7 @@
 			font-family: 'Noto Sans SC', sans-serif;
 			background-color: var(--bg-color);
 			color: var(--text-primary);
-			padding: 25px;
 			max-width: 850px;
-			margin: 25px auto;
 			font-size: 16px;
 			line-height: 1.7;
 		}
@@ -49,7 +47,6 @@
 			background-color: var(--container-bg);
 			border: 2px solid var(--text-highlight);
 			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 0 0 20px 3px rgba(220, 53, 69, 0.2);
-			border-radius: 12px;
 			overflow: hidden;
 		}
 
@@ -265,6 +262,125 @@
 			word-break: break-all;
 		}
 
+		.repo-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 8px;
+		}
+
+		.repo-badge {
+			background: linear-gradient(135deg, var(--text-highlight), #c0392b);
+			color: #fff;
+			font-family: 'Orbitron', sans-serif;
+			font-size: 11px;
+			font-weight: 700;
+			padding: 4px 10px;
+			border-radius: 4px;
+			letter-spacing: 0.5px;
+			text-transform: uppercase;
+		}
+
+		.repo-sha {
+			font-family: 'Rajdhani', sans-serif;
+			font-size: 16px;
+			font-weight: 600;
+			color: var(--text-primary);
+			font-family: 'Consolas', monospace;
+		}
+
+		.repo-indicators {
+			display: flex;
+			gap: 8px;
+			margin-top: 12px;
+			justify-content: flex-start;
+		}
+
+		.repo-indicator {
+			width: 28px;
+			height: 28px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border: 2px solid var(--text-highlight);
+			border-radius: 4px;
+			font-family: 'Rajdhani', sans-serif;
+			font-size: 12px;
+			font-weight: 700;
+			color: var(--text-highlight);
+			background-color: transparent;
+		}
+
+		.repo-indicator.inactive {
+			border-color: #adb5bd;
+			color: #adb5bd;
+			background-color: rgba(173, 181, 189, 0.1);
+		}
+
+		.core-info {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+
+		.core-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 4px 0;
+			border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+		}
+
+		.core-row:last-child {
+			border-bottom: none;
+		}
+
+		.core-label {
+			font-size: 12px;
+			color: var(--text-secondary);
+			font-weight: 500;
+		}
+
+		.core-value {
+			font-family: 'Rajdhani', sans-serif;
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--text-primary);
+			text-align: right;
+		}
+
+		.env-info {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+
+		.env-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 4px 0;
+			border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+		}
+
+		.env-row:last-child {
+			border-bottom: none;
+		}
+
+		.env-label {
+			font-size: 12px;
+			color: var(--text-secondary);
+			font-weight: 500;
+		}
+
+		.env-value {
+			font-family: 'Rajdhani', sans-serif;
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--text-primary);
+			text-align: right;
+		}
+
 		.sync-details {
 			margin-top: 15px;
 			padding-top: 15px;
@@ -327,17 +443,51 @@
 				<h2>环境快照</h2>
 				<div class="snapshot-grid">
 					<div class="snapshot-item">
-						<span class="label">🥫 仓库</span>
-						<span class="value">{{snapshot.git.branch}} @ {{snapshot.git.sha}}</span>
+						<span class="label">🥫 仓库Nomos</span>
+						<div class="repo-header">
+							<span class="repo-badge">主资产</span>
+							<span class="repo-sha">{{snapshot.git.sha}}</span>
+						</div>
+						<div class="repo-indicators">
+							{{each snapshot.repos}}
+							<div class="repo-indicator {{if !$value.active}}inactive{{/if}}">{{$value.num}}</div>
+							{{/each}}
+						</div>
 					</div>
 					<div class="snapshot-item">
-						<span class="label">🍎 核心</span>
-						<span class="value">{{snapshot.file.size}}<br>{{snapshot.file.mtime}}</span>
+					<span class="label">🍎 主插件INFO</span>
+					<div class="core-info">
+						<div class="core-row">
+							<span class="core-label">版本</span>
+							<span class="core-value">{{snapshot.core.version}}</span>
+						</div>
+						<div class="core-row">
+							<span class="core-label">体积</span>
+							<span class="core-value">{{snapshot.core.size}}</span>
+						</div>
+						<div class="core-row">
+							<span class="core-label">修改</span>
+							<span class="core-value">{{snapshot.core.mtime}}</span>
+						</div>
 					</div>
+				</div>
 					<div class="snapshot-item">
-						<span class="label">🥝 运行环境</span>
-						<span class="value">{{snapshot.system.yunzai}}<br>Node.js {{snapshot.system.node}}<br>{{snapshot.system.platform}}</span>
+					<span class="label">🥝 运行环境Msg</span>
+					<div class="env-info">
+						<div class="env-row">
+							<span class="env-label">框架</span>
+							<span class="env-value">{{snapshot.system.yzVer}}</span>
+						</div>
+						<div class="env-row">
+							<span class="env-label">Node</span>
+							<span class="env-value">{{snapshot.system.nodever}}</span>
+						</div>
+						<div class="env-row">
+							<span class="env-label">平台</span>
+							<span class="env-value">{{snapshot.system.platform}}</span>
+						</div>
 					</div>
+				</div>
 				</div>
 			</div>
 			{{/if}}
