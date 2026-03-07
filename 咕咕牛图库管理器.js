@@ -3266,7 +3266,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
 
     let proc;
     try {
-      const spawnOptions = { stdio: "pipe", ...options, env: runEnv, shell: false, detached: true, windowsHide: true };
+      const spawnOptions = { stdio: "pipe", ...options, env: runEnv, shell: false, detached: process.platform === 'win32', windowsHide: true };
       currentState = STATE.RUNNING;
       proc = spawn(command, args, spawnOptions);
       if (MBTProcc?.register) MBTProcc.register(proc);
@@ -3922,8 +3922,10 @@ class Morpheus {
                 '--disable-setuid-sandbox',
                 '--no-first-run',
                 '--no-sandbox',
-                '--no-zygote'
-            ]
+                '--no-zygote',
+                '--disable-features=site-per-process'
+            ],
+            userDataDir: path.join(MiaoPluginMBT.Paths.TempNiuPath, 'chromium-profile')
         };
 
         try {
@@ -5873,14 +5875,15 @@ class DocHub {
             Hades.D(`系统高负载`);
         }
 
+        let msg = `[${opName}] 失败!\n`;
+        msg += `错误: ${err?.message}\n`;
+        msg += `建议: \n${diagnosis.suggestions}\n`;
+        msg += `\n云露分析: ${aiSolution.replace(/<br>/g, '\n').substring(0, 1000)}`;
+
         try {
             if (imgBuffer) {
-                await MiaoPluginMBT.ReplyImg(e, imgBuffer, `[${opName}] 图片发送失败已文本通知。`, Hades);
+                await MiaoPluginMBT.ReplyImg(e, imgBuffer, msg, Hades);
             } else {
-                let msg = `[${opName}] 失败!\n`;
-                msg += `错误: ${err?.message}\n`;
-                msg += `建议: \n${diagnosis.suggestions}\n`;
-                msg += `\n云露分析: ${aiSolution.replace(/<br>/g, '\n').substring(0, 1000)}`;
                 await e.reply(msg);
             }
         } catch (sendErr) {
@@ -6366,10 +6369,34 @@ class MiaoPluginMBT extends plugin {
     return token;
   }
 
+  static _detectDockerEnv() {
+    if (fs.existsSync('/.dockerenv')) {
+      return true;
+    }
+    try {
+      const content = fs.readFileSync('/proc/1/cgroup', 'utf8');
+      return content.includes('docker');
+    } catch {
+      return false;
+    }
+  }
+
+  static _saveTempImg(buffer) {
+    const tempDir = path.join(process.cwd(), 'temp', 'CowCoo', 'sending');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    const filename = `${crypto.randomUUID()}.png`;
+    const filePath = path.join(tempDir, filename);
+    fs.writeFileSync(filePath, buffer);
+    return filePath;
+  }
+
   static ToImgSeg(input) {
     if (!input) return null;
     if (Buffer.isBuffer(input)) {
-      return segment.image(`base64://${input.toString('base64')}`);
+      const filePath = this._saveTempImg(input);
+      return segment.image(filePath);
     }
     if (typeof input === 'string') {
       return segment.image(input);
@@ -6379,10 +6406,27 @@ class MiaoPluginMBT extends plugin {
 
   static async ReplyImg(e, input, fallbackText = '', logger = null) {
     const Hades = HadesEntry({}, logger || getCore());
+    let imgSeg = null;
     try {
-      const imgSeg = this.ToImgSeg(input);
+      imgSeg = this.ToImgSeg(input);
       if (!imgSeg) return false;
       await e.reply(imgSeg);
+      
+      if (imgSeg.file && typeof imgSeg.file === 'string') {
+        const tempDir = path.join(process.cwd(), 'temp', 'CowCoo', 'sending');
+        const resolvedFile = path.resolve(imgSeg.file);
+        const resolvedTempDir = path.resolve(tempDir);
+        
+        if (resolvedFile.startsWith(resolvedTempDir)) {
+             setTimeout(() => {
+                 fs.unlink(resolvedFile, (err) => {
+                     if (err && err.code !== 'ENOENT') {
+                        Hades.D(`临时图片清理失败: ${err.message}`);
+                     }
+                 });
+             }, 60000); 
+        }
+      }
       return true;
     } catch (sendErr) {
       Hades.W(`图片发送失败，转为文本回执: ${sendErr?.code || sendErr?.message || 'SEND_FAIL'}`);
@@ -8035,6 +8079,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           priority: proxy.priority || 999,
           ClonePrefix: proxy.ClonePrefix,
           TestUrlPrefix: proxy.TestUrlPrefix,
+          protocol: 'HTTP',
           speed: Infinity
         };
 
@@ -8067,6 +8112,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           priority: proxy.priority || 999,
           ClonePrefix: proxy.ClonePrefix,
           TestUrlPrefix: proxy.TestUrlPrefix,
+          protocol: 'HTTP',
           speed: Infinity
         };
       });
