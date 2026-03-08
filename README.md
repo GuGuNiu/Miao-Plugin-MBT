@@ -1,10 +1,14 @@
-<p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
-    <img src="https://free.boltp.com/2026/02/10/698b49e189be8.webp" width="100%" alt="https://github.com/GuGuNiu/Miao-Plugin-MBT"/>
-  </a>
-</p> 
+# Miao-Plugin-MBT & 🐂
 
-图库是 Yunzai 框架下的插件角色面板图资源补充，涵盖**原神&星铁&绝区零&鸣潮**的面板图资源，现已创建六仓进行分流，自 **2023年10月** 创建以来，持续围绕安全、方便进行迭代优化，逐步构建面向多插件的 **体系化的面板图库**，提升整体使用体验与管理效率。<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
+<img 
+  decoding="async"
+  align="right"
+  src="https://files.seeusercontent.com/2026/03/08/W1eo/_Image_i6j1rji6j1rji6j1.png"
+  width="35%"
+  alt="image"
+  title="image">
+  
+这个图库是 Yunzai 框架下的插件角色面板图资源补充，涵盖了**原神&星铁&绝区零&鸣潮**的面板图资源，创建于**2023年10月**，希望能提供更优质的面板图资源<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
   <button style="
     padding: 10px 20px;
     font-size: 16px;
@@ -22,7 +26,6 @@
   </button>
 </a>
 
----
 
 #### 适配的游戏插件
 
@@ -32,22 +35,13 @@
 | 绝区零 | ZZZ-Plugin |
 | 鸣潮 | Waves-Plugin（0卡苏打水版） |
 
-#### 资源的制作与管理
-
 面板图采用 `Nano-Banana-Pro`、`ComfyUI` 等工具进行二次调色与扩图处理，在质量优先的前提下持续优化视觉呈现。图库会定期替换不符合当前审美标准的旧图，避免无序扩张，避免出现超大体积图片，在保证图片画质与体积的前提下，提供最优的使用体验。 
 
-管理器采用基于 **Symbol 索引的全局事件总线架构**，内置独立的生命周期总线，支持无需经过 Yunzai 框架的 HMR 热重载。资源管理模块具备完善的智能清理机制，涵盖渲染临时文件、Git 临时资源及历史旧版本资源的统一管理与归档整理。
-
+管理器内置独立的生命周期总线，支持无需经过 Yunzai 框架的 HMR 热重载与自动热更新本体。
 #### 管理器当期版本
 
 > [!TIP]
 > ©️ v5.2.0 正式版
-
-| 核心模块 | 实现 | 架构职责 |
-| :--- | :--- | :--- |
-| **SignalTrap** | `EventEmitter` + `Symbol` | **全局事件总线** |
-| **ProcPool** | `EventListener` | **进程生命周期管理** |
-
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -73,17 +67,6 @@
 
 > [!TIP]  
 > [二级标签] 作为可选参数用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级，使用 #咕咕牛查看 指令查询二级标签信息
-
-<details>
-<summary>📌 更多标签说明</summary>
-
-- **P18**：轻微暗示，未暴露关键部位
-- **R18**：暴露明显，尺度较大
-- **AI图**：由 AI 画图大模型生成
-- **彩蛋图**：咕咕牛内置逻辑，与各个插件无关
-- **横屏图**：横向全屏的面板图 [如果你使用了自己改的背景图那么建议还是关闭横屏图不然会非常的突兀]
-
-</details>
 
 ---
 
@@ -115,14 +98,6 @@
 </details>
 
 ---
-
-## 图库界面展示
-
-<p align="center">
-  <i>咕咕牛图库管理器全新 UX/UI 2.0 界面预览</i>
-  <br><br>
-  <img src="https://s2.loli.net/2025/07/01/Lt7Aw6gSGv4ZeCD.webp" width="100%">
-</p>
 
 <p align="center">
   <img src="./gs-character/哥伦比娅/哥伦比娅Gu11.webp" width="100%">
@@ -171,172 +146,6 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
   </tr>
 
 </table>
-
-## 🍵 开发资料 & 杂谈
-
-<details> <summary> 🫳 1.  并发调度研究 </summary> 
-
-```mermaid
-graph LR
-
-subgraph Orchestrator ["Orchestrator"]
-    O_Start([开始下载])
-    O_EnvCheck{环境探测}
-    O_NodeSelect[筛选可用节点]
-    O_InitCRS[初始化 MBTQuoCRS]
-    O_TaskFactory[创建任务工厂]
-
-    O_Start --> O_EnvCheck
-    O_EnvCheck -->|CN / Global| O_NodeSelect
-    O_NodeSelect --> O_InitCRS
-    O_InitCRS --> O_TaskFactory
-end
-
-subgraph Scheduler ["MBTQuoCRS"]
-    S_AddTask[addTask 挂载任务]
-    S_Monitor{心跳监控循环}
-    S_Compare[比较 Leader 与 Task]
-    S_Kill[中止任务]
-    S_Success[任务成功]
-    S_Fail[全部失败]
-
-    S_AddTask --> S_Monitor
-    S_Monitor -->|进度更新| S_Compare
-    S_Compare -->|落后或假死| S_Kill
-    S_Compare -->|正常| S_Monitor
-    S_Monitor -->|至少一个成功| S_Success
-    S_Monitor -->|全部失败| S_Fail
-end
-
-subgraph Executor ["MBTPipeControl"]
-    E_Spawn[spawn git clone]
-    E_ProcPool[注册进程池]
-    E_Parse[解析 stderr 进度]
-    E_Error[执行错误]
-
-    S_AddTask -->|激活| E_Spawn
-    E_Spawn --> E_ProcPool
-    E_Spawn --> E_Parse
-    E_Spawn -->|Error| E_Error
-end
-
-subgraph Analyzer ["PoseidonSpear"]
-    A_Analyze{错误分析}
-    A_Downgrade[触发 H1 降级]
-    A_Break[节点熔断]
-    A_Retry[允许重试]
-
-    E_Error --> A_Analyze
-    A_Analyze -->|H2 协议错误| A_Downgrade
-    A_Analyze -->|IP 封禁| A_Break
-    A_Analyze -->|网络波动| A_Retry
-    A_Downgrade -->|动态添加任务| S_AddTask
-    A_Retry --> S_AddTask
-end
-
-O_TaskFactory --> S_AddTask
-E_Parse -->|回调进度| S_Monitor
-S_Kill -->|AbortSignal| E_Spawn
-S_Success --> F_FileOps[文件移动与校验]
-F_FileOps --> F_End([结束])
-
-```
-
-### 主架构联动性
-
-#### 1. Quo -> Pipe -> Pool (清理链)
-- `CRS` 决定淘汰 -> `controller.abort()`。
-- `MBTPipeControl` 捕获 `abort` -> 发送 `SIGTERM` 给子进程。
-- 子进程退出 -> 触发 `exit` 事件。
-- `MBTQuoCRS` 监听到 `exit` -> 从 `pool` 中移除引用。
-- **闭环完成**。
-
-#### 2. Smart -> Quo (调度链)
-- `SmartTaskHeavy` 使用 `delayAcc` -> `CRS` 收到 `delay` -> `setTimeout` -> 挂载任务。
-- **并发风暴解决**：`节点A` 先跑 6秒，建立连接后，`节点B` 再启动。
-
-#### 3. Smart -> Quo (补员链)
-- `SmartTaskHeavy` 的 `setInterval` 监控 `CRS.getStatus()`。
-- 发现 `activeCount < 2` -> 从 `reserveNodes` 取出新节点 -> `CRS.addTask`。
-- **饥饿问题解决**：即使开局两个节点挂了一个，替补队员会立即上场，保持场上始终有竞争压力。
-  
-</details>
-
-<details>
-<summary> 🫳 2. CRS / Pipe 采样模型 </summary>
-
-### 动态权重评估模型
-
-- **CRS 周期**：2000 ms  
-- **Pipe 脉冲**：5000 ms  
-
-**风险说明：**
-
-在 `T = 4.9 s` 时，CRS 读取的是 `T = 0 s` 的遥测数据（已过期 4.9 s）。  
-如果网络在 `T = 1 s` 时断开，CRS 仍会误判连接健康并维持任务，额外浪费约 3 s 的时间窗口。
-
----
-
-### 修正算法
-
-在计算动态权重时，引入 **时间衰减因子**，用于抑制过期遥测数据对决策的影响。
-
-#### 权重公式
-
-```text
-Score = (W_p × P) + (W_t × T_norm × F_decay)
-````
-
-**参数说明：**
-
-* `P`：业务进度（0–100）
-
-* `T_norm`：归一化吞吐量
-
-  ```text
-  T_norm = min(Speed / 5MB/s, 1.0) × 100
-  ```
-
-* `F_decay`：新鲜度衰减因子（基于遥测时间戳）
-
-  * `now - last_tick < 3000 ms` → `F_decay = 1.0`
-  * `now - last_tick > 5000 ms` → `F_decay = 0.0`
-    （数据视为过期，等效为 0 流量）
-
-</details>
-
-<details> <summary> 🫳 3.  状态流转图谱 </summary> 
-  <img src="https://files.seeusercontent.com/2026/02/23/B8ga/af0334d6-dff5-46ea-a692-58efb367.png" alt="af0334d6-dff5-46ea-a692-58efb3675bad.png" title="af0334d6-dff5-46ea-a692-58efb3675bad.png">
-</details>
-
-## 收纳柜
-
-<details> <summary> 🌏 CowCoo Web控制台 </summary>
-
-<br>
-  
--   **Q: 启动机器人或更新后，依赖安装失败的报错怎么办？**
-    -   **A:** 因为 Web 控制台 GuTools 的依赖未能自动安装，通常PNPM异常导致，你可以在GuTools下打开终端运行`pnpm install` 尝试解决
-
-  
-<br>
-通过 #咕咕牛登录 获取控制台的入口地址，更精细化、可视化的操作，当你在群聊内发送登录公网IP会主动被隐藏。但是WEB端本质上是方便我自己编辑索引数据没什么好用的。
-
->需要你的服务器打开端口：31540
-
-<img src="https://s2.loli.net/2025/07/30/QTu1pjy3VsaroPb.png" width="100%" alt="web-1"/>
-<img src="https://s2.loli.net/2025/07/30/D6lbzwFsqVgi3UR.png" width="100%" alt="web-1"/>
-<img src="https://s2.loli.net/2025/08/16/drqgF1uBpVA3hXv.png" width="100%" alt="web-1"/>
-
-</details>
-
-<p align="center">
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Miao--Yunzai-v3-blue.svg" alt="Miao-Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT"><img src="https://img.shields.io/badge/Trss--Yunzai-v3-green.svg" alt="Trss-Yunzai"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/stargazers"><img src="https://img.shields.io/github/stars/GuGuNiu/Miao-Plugin-MBT?style=social" alt="Stars"></a>
-  <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT/issues"><img src="https://img.shields.io/github/issues/GuGuNiu/Miao-Plugin-MBT?color=red" alt="Issues"></a>
-</p>
-
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
