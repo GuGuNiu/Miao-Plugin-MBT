@@ -4513,7 +4513,7 @@ class Ananke {
     }
 
     static #FilterCfg(data) {
-        const allowedKeys = ['Repo_Ops', 'PFL_Ops', 'RenderScale', 'Ai', 'EasterEgg', 'layout'];
+        const allowedKeys = ['Repo_Ops', 'PFL_Ops', 'RenderScale', 'Ai', 'EasterEgg', 'layout', 'SR18_Ops'];
         const filtered = {};
         for (const key of allowedKeys) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -6391,7 +6391,7 @@ class MiaoPluginMBT extends plugin {
   }
 
   static _saveTempImg(buffer) {
-    const tempDir = path.join(process.cwd(), 'temp', 'CowCoo', 'sending');
+    const tempDir = path.join(this.Paths.TempNiuPath, 'sending');
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
@@ -6422,7 +6422,7 @@ class MiaoPluginMBT extends plugin {
       await e.reply(imgSeg);
 
       if (imgSeg.file && typeof imgSeg.file === 'string') {
-        const tempDir = path.join(process.cwd(), 'temp', 'CowCoo', 'sending');
+        const tempDir = path.join(this.Paths.TempNiuPath, 'sending');
         const resolvedFile = path.resolve(imgSeg.file);
         const resolvedTempDir = path.resolve(tempDir);
 
