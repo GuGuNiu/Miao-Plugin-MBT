@@ -4673,10 +4673,6 @@ class Ananke {
         }
     }
 
-    static ReadSync(targetPath) {
-        return fs.readFileSync(targetPath);
-    }
-
     static async HydrateJson(filePath, defaultVal = {}) {
       try {
           const content = await fsPromises.readFile(filePath, 'utf-8');
@@ -8215,6 +8211,20 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   static async SendMasterMsg(msg, e = null, delay = 0) {
     async function MasterAc() {
+      if (typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady && typeof Bot.ready !== 'function')) {
+        let retries = 0;
+        const maxRetries = 15;
+        while ((typeof Bot === "undefined" || (typeof Bot.isReady === 'boolean' && !Bot.isReady)) && retries < maxRetries) {
+          if (typeof Bot !== "undefined" && ((typeof Bot.isReady === 'boolean' && Bot.isReady) || (Bot.master && Bot.master.length > 0))) break;
+          await common.sleep(300 + retries * 20);
+          retries++;
+        }
+      } else if (typeof Bot !== "undefined" && typeof Bot.ready === 'function') {
+        try {
+          await Bot.ready();
+        } catch {}
+      }
+
       if (typeof Bot === "undefined") return [];
 
       let MastersRaw = [];
@@ -8231,7 +8241,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       if (MastersRaw.length === 0) {
         try {
           const configPath = path.join(MiaoPluginMBT.Paths.YzPath, 'config', 'config', 'other.yaml');
-          const configData = fs.existsSync(configPath) ? (yaml.load?.(fs.ReadSync(configPath, 'utf8')) ?? null) : null;
+          const configData = fs.existsSync(configPath) ? (yaml.load?.(fs.readFileSync(configPath, 'utf8')) ?? null) : null;
 
           if (configData) {
             const confMasterQQ = configData.masterQQ;
@@ -8260,6 +8270,17 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         .filter(id => /^[1-9][0-9]{4,14}$/.test(id));
     }
 
+    if (typeof Bot !== "undefined" && typeof Bot.sendMasterMsg === 'function') {
+      if (delay > 0) {
+        await common.sleep(delay);
+      }
+      try {
+        const targetBots = e?.self_id ? [String(e.self_id)] : undefined;
+        await Bot.sendMasterMsg(msg, targetBots, 0);
+        return;
+      } catch {}
+    }
+
     const MasterQQList = await MasterAc();
 
     if (!MasterQQList?.length || typeof Bot === "undefined" || typeof Bot.pickUser !== 'function') {
@@ -8270,8 +8291,18 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       await common.sleep(delay);
     }
 
+    const selfIds = new Set();
+    if (e?.self_id) selfIds.add(String(e.self_id));
+    if (Bot?.uin && typeof Bot.uin[Symbol.iterator] === 'function') {
+      for (const u of Bot.uin) selfIds.add(String(u));
+    } else if (Bot?.uin) {
+      selfIds.add(String(Bot.uin));
+    }
+    const AreMaster = MasterQQList.find(id => !selfIds.has(String(id)));
+    if (!AreMaster) return;
+
     try {
-      await Bot.pickUser(MasterQQList[0])?.sendMsg?.(msg);
+      await Bot.pickUser(AreMaster)?.sendMsg?.(msg);
     } catch {}
   }
 
@@ -9242,7 +9273,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     };
 
     let imgBuffer = null;
-    const notifyStatus = isScheduled && (ViewProps.HasAnyChanges || !ViewProps.allSuccess);
+    const notifyStatus = isScheduled && ViewProps.HasAnyChanges;
     const UpdateRenderFlag = (!isScheduled && e) || notifyStatus;
 
     if (UpdateRenderFlag) {
