@@ -349,12 +349,27 @@ class Nyx {
     static async _evaluateCandidate(candidate) {
         let protocol = null;
         let verified = false;
+        let tunVerified = false;
 
-        if (await this._sniffSocks5(candidate.port)) {
+        const s5Handshake = await this._sniffSocks5(candidate.port);
+
+        if (s5Handshake === 'handshake' || s5Handshake === true) {
             protocol = 'socks5';
-            verified = true;
-        }
-        else if (await this._sniffHttp(candidate.port)) {
+            tunVerified = await this._probeS5Tun(candidate.port);
+            verified = tunVerified;
+
+            if (!tunVerified) {
+                return candidate.score >= 60 ? {
+                    host: '127.0.0.1',
+                    port: candidate.port,
+                    protocol: 'socks5_idle',
+                    source: 'handshake_only',
+                    verified: false,
+                    tunVerified: false,
+                    score: candidate.score
+                } : null;
+            }
+        } else if (await this._sniffHttp(candidate.port)) {
             protocol = 'http';
             verified = true;
         }
@@ -363,9 +378,10 @@ class Nyx {
             return {
                 host: '127.0.0.1',
                 port: candidate.port,
-                protocol: protocol,
+                protocol,
                 source: Array.from(candidate.sources).join('+'),
                 verified: true,
+                tunVerified: true,
                 score: candidate.score
             };
         } else if (candidate.score >= 60) {
@@ -375,6 +391,7 @@ class Nyx {
                 protocol: 'unknown',
                 source: 'os_process_unverified',
                 verified: false,
+                tunVerified: false,
                 score: candidate.score
             };
         }
@@ -392,11 +409,55 @@ class Nyx {
             socket.on('connect', () => socket.write(Buffer.from([0x05, 0x01, 0x00])));
             socket.on('data', (data) => {
                 if (data.length >= 2 && data[0] === 0x05 && [0x00, 0x02, 0xFF].includes(data[1])) {
-                    finish(true);
+                    finish('handshake');
                 } else {
                     finish(false);
                 }
             });
+            socket.on('error', () => finish(false));
+            socket.on('timeout', () => finish(false));
+            socket.connect(port, '127.0.0.1');
+        });
+    }
+
+    static _probeS5Tun(port, probeHost = '1.1.1.1', probePort = 80, timeout = 3000) {
+        return new Promise(resolve => {
+            const socket = new net.Socket();
+            socket.setTimeout(timeout);
+            let step = 0;
+            let resolved = false;
+            const finish = (res) => {
+                if (!resolved) { resolved = true; socket.destroy(); resolve(res); }
+            };
+
+            const hostBuf = Buffer.from(probeHost);
+            socket.on('connect', () => {
+                socket.write(Buffer.from([0x05, 0x01, 0x00]));
+            });
+
+            socket.on('data', (data) => {
+                if (step === 0) {
+                    if (data[0] === 0x05 && data[1] === 0x00) {
+                        step = 1;
+                        const ipParts = probeHost.split('.').map(Number);
+                        const connectReq = Buffer.from([
+                            0x05, 0x01, 0x00, 0x01,
+                            ...ipParts,
+                            (probePort >> 8) & 0xFF, probePort & 0xFF
+                        ]);
+                        socket.write(connectReq);
+                    } else {
+                        finish(false);
+                    }
+                } else if (step === 1) {
+                    if (data[0] === 0x05 && data[1] === 0x00) {
+                        finish(true);
+                    } else {
+                        finish(false);
+                    }
+                }
+            });
+
             socket.on('error', () => finish(false));
             socket.on('timeout', () => finish(false));
             socket.connect(port, '127.0.0.1');
@@ -1673,6 +1734,14 @@ class Hermes {
 
         const diskCache = await this.#loadEnvFromDisk(Hades);
         if (diskCache && diskCache.inference && typeof diskCache.inference.nativeCN === 'boolean') {
+            const freshSysProxy = await this.getSystemProxy(Hades);
+            if (diskCache.network) {
+                diskCache.network.proxy = freshSysProxy;
+            }
+            if (!freshSysProxy && diskCache.network?.proxy) {
+                Hades.D(`磁盘缓存已过期，实时检测无代理`);
+                diskCache.network.proxy = null;
+            }
             this.#envCache = diskCache;
             this.#envCacheTime = Date.now();
             return diskCache;
@@ -2072,19 +2141,23 @@ class Proteus {
                 verified: false
             };
         } else if (nyxProxies && nyxProxies.length > 0) {
-            proxyContext = nyxProxies[0];
+            const trulyVerified = nyxProxies.find(p => p.tunVerified === true && p.protocol !== 'socks5_idle');
+            const handshakeOnly = nyxProxies.find(p => p.protocol === 'socks5_idle');
 
-            if (proxyContext.protocol === 'unknown') {
-                proxyContext.protocol = 'socks5';
+            if (trulyVerified) {
+                proxyContext = trulyVerified;
+                if (Hades?.D) Hades.D(`锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [已穿透验证]`);
+            } else if (handshakeOnly) {
+                if (Hades?.D) Hades.D(`[检测到代理软件端口 ${handshakeOnly.port} 但穿透验证失败（疑似直连模式）`);
+                proxyContext = null;
             }
 
-            if (Hades?.D) {
-                const status = proxyContext.verified ? '已验证' : '未验证(盲猜SOCKS5)';
-                Hades.D(`锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [${status}]`);
+            if (proxyContext && proxyContext.protocol === 'unknown') {
+                proxyContext.protocol = 'socks5';
             }
         }
 
-        const portActive = !!proxyContext;
+        const portActive = !!proxyContext && proxyContext.tunVerified === true;
         if (procActive || portActive) active = true;
 
         return { active, envSet, procActive, portActive, proxyContext, nyxProxies };
@@ -2220,9 +2293,17 @@ class ProteusMatrix {
             if (decision.mode) return;
             const v4Lat = ctx.race ? ctx.race.v4 : Infinity;
             const v4Ready = Number.isFinite(v4Lat);
-            if ((ctx.portActive || ctx.proxyContext) && (!v4Ready || v4Lat > 200)) {
+
+            const hasRealProxy = ctx.proxyContext && ctx.proxyContext.tunVerified === true;
+            const hasIdleProxy = ctx.portActive && !hasRealProxy;
+
+            if (hasIdleProxy) {
+                return;
+            }
+
+            if (hasRealProxy && (!v4Ready || v4Lat > 200)) {
                 decision.mode = Proteus.State.IDLE_AGENT;
-                decision.reason = 'idleAgent';
+                decision.reason = 'idleAgent_verified';
             }
         });
         this._bus.on('rule:overseasRegion', (ctx, decision) => {
@@ -7693,7 +7774,13 @@ class MiaoPluginMBT extends plugin {
 
       const mergePipeOpts = (base_opts = {}, override_opts = {}) => {
         const merged = { ...base_opts, ...override_opts };
-        if (base_opts.env || override_opts.env) merged.env = { ...(base_opts.env || {}), ...(override_opts.env || {}) };
+
+        if (override_opts.env === null) {
+          merged.env = null;
+        } else if (base_opts.env || override_opts.env) {
+          merged.env = { ...(base_opts.env || {}), ...(override_opts.env || {}) };
+        }
+
         if (base_opts.constraints || override_opts.constraints) merged.constraints = { ...(base_opts.constraints || {}), ...(override_opts.constraints || {}) };
         merged.gitConfigs = [...new Set([...(base_opts.gitConfigs || []), ...(override_opts.gitConfigs || [])])];
         return merged;
@@ -7792,40 +7879,73 @@ class MiaoPluginMBT extends plugin {
             }
           };
 
+          let orderNodes = [];
           try {
             const probe_rows = await MiaoPluginMBT.TestCaVoice(Hades);
-            const survivors = probe_rows.filter(r => r.speed !== Infinity);
+            const survivors = probe_rows.filter(r => r.speed !== Infinity && r.name !== 'GitHub');
 
             if (survivors.length > 0) {
-              const git_jobs = survivors.map(row => MiaoPluginMBT.TestGitVoice(row.ClonePrefix, row.name, Hades).then(res => ({ name: row.name, gitResult: res })).catch(err => ({ name: row.name, gitResult: { success: false, error: err } })));
+              const git_jobs = survivors.map(row =>
+                MiaoPluginMBT.TestGitVoice(row.ClonePrefix, row.name, Hades)
+                  .then(res => ({ name: row.name, gitResult: res }))
+                  .catch(err => ({ name: row.name, gitResult: { success: false, error: err } }))
+              );
               const git_rows = await Promise.all(git_jobs);
-              const best_nodes = await MiaoPluginMBT.AdaptiveSpeed(probe_rows, git_rows, Hades);
-              if (!best_nodes.some(n => n.name === 'GitHub')) best_nodes.push(probe_rows.find(n => n.name === 'GitHub') || {name: 'GitHub'});
-
-              for (const winner of best_nodes) {
-                if (!repo_path || !winner.name) continue;
-                const newUrl = winner.name === "GitHub" ? github_url : `${winner.ClonePrefix.replace(/\/$/, "")}/github.com/${repo_path}.git`;
-
-                try {
-                  await MBTPipeControl("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath, ...initial_pipe_opts });
-                  const lsResult = await MBTPipeControl("git", ["ls-remote", "--heads", "origin", branch], { cwd: localPath, ...initial_pipe_opts }, 6000).catch(() => ({ stdout: "" }));
-                  if (!lsResult.stdout.trim()) { await rollback_origin(`${winner.name}-head-empty`); continue; }
-                  syncResult = await executeSyncLogic(initial_pipe_opts, basePullTimeout);
-                  if (syncResult.success) {
-                    state.autoSwitchedNode = winner.name;
-                    break;
-                  }
-                  await rollback_origin(`${winner.name}-sync-fail`);
-                } catch (e) { await rollback_origin(`${winner.name}-error`); }
-              }
+              orderNodes = await MiaoPluginMBT.AdaptiveSpeed(probe_rows, git_rows, Hades);
+              orderNodes = orderNodes.filter(n => n.name !== 'GitHub');
+              Hades.D(`[Phase 2] HTTP 排序镜像节点: [${orderNodes.map(n => n.name).join(', ')}]`);
+            } else {
+              orderNodes = (DFC.F2Pool || [])
+                .filter(n => n.name !== 'GitHub' && n.ClonePrefix)
+                .sort((a, b) => (a.priority || 999) - (b.priority || 999));
             }
-          } catch (e) { Hades.E(`[Phase 2] 路由探测异常:`, e); }
+          } catch (e) {
+            Hades.E(`[Phase 2] 路由探测异常:`, e);
+            orderNodes = (DFC.F2Pool || [])
+              .filter(n => n.name !== 'GitHub' && n.ClonePrefix)
+              .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+          }
+
+          for (const winner of orderNodes) {
+            if (!repo_path || !winner.name || !winner.ClonePrefix) continue;
+            if (!PoseidonSpear.isLive(winner.name)) {
+              continue;
+            }
+
+            const newUrl = `${winner.ClonePrefix.replace(/\/$/, "")}/github.com/${repo_path}.git`;
+
+            try {
+              const cleanOpts = { ...initial_pipe_opts, env: null, inheritEnv: false };
+              await MBTPipeControl("git", ["remote", "set-url", "origin", newUrl], { cwd: localPath, ...cleanOpts });
+
+              const lsResult = await MBTPipeControl(
+                "git", ["ls-remote", "--heads", "origin", branch],
+                { cwd: localPath, ...cleanOpts }, 8000
+              ).catch(() => ({ stdout: "" }));
+
+              if (!lsResult.stdout.trim()) {
+                Hades.D(`[Phase 2] 节点 [${winner.name}] ls-remote 无输出，跳过`);
+                await rollback_origin(`${winner.name}-head-empty`);
+                continue;
+              }
+
+              syncResult = await executeSyncLogic(cleanOpts, basePullTimeout);
+              if (syncResult.success) {
+                state.autoSwitchedNode = winner.name;
+                Hades.D(`[Phase 2] 镜像节点 [${winner.name}] 同步成功`);
+                break;
+              }
+              await rollback_origin(`${winner.name}-sync-fail`);
+            } catch (e) {
+              await rollback_origin(`${winner.name}-error`);
+            }
+          }
 
           if (!syncResult.success && github_url) {
             Hades.W(`[Phase 3] ${RepoName} GitHub 竞速组模式唤起...`);
             const stage_rows = [
-              { name: "Stage-1(直连)", opts: { inheritEnv: false } },
-              { name: "Stage-2(H1+剥离)", opts: { inheritEnv: false, gitConfigs: ["http.version=HTTP/1.1", "http.proxy=", "https.proxy=", "core.gitProxy="] } }
+              { name: "Stage-1(直连)", opts: { inheritEnv: false, env: null } },
+              { name: "Stage-2(H1+剥离)", opts: { inheritEnv: false, env: null, gitConfigs: ["http.version=HTTP/1.1", "http.proxy=", "https.proxy=", "core.gitProxy="] } }
             ];
 
             for (const stage of stage_rows) {
