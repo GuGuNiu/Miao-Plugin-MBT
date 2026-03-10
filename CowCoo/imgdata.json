@@ -32424,5 +32424,90 @@
       "secTags": []
     },
     "timestamp": "2026-01-20 20:36:04"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "gid": "4867044117",
+    "characterName": "昔链",
+    "path": "sr-character/昔链/昔链Gu1.webp",
+    "attributes": {
+      "filename": "昔链Gu1.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "c777b8a6095edff3c19221ebcdb65fd6",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-10 19:09:18"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "gid": "5559661099",
+    "characterName": "火花",
+    "path": "sr-character/火花/火花Gu2.webp",
+    "attributes": {
+      "filename": "火花Gu2.webp",
+      "rated": "none",
+      "layout": "fullscreen",
+      "isBan": false,
+      "md5": "69fcc5e9f7e06167aea202bd7218ed66",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-10 19:10:38"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "gid": "4251457759",
+    "characterName": "火花",
+    "path": "sr-character/火花/火花Gu1.webp",
+    "attributes": {
+      "filename": "火花Gu1.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "6329429bb398e4a19ff4fb9579ab0e47",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-10 19:10:43"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "gid": "7646424627",
+    "characterName": "火花",
+    "path": "sr-character/火花/火花Gu3.webp",
+    "attributes": {
+      "filename": "火花Gu3.webp",
+      "rated": "p18",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "fcd54b0bd5f11734aa6420952d73eba6",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-10 19:10:48"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "gid": "2901819389",
+    "characterName": "刻律德菈",
+    "path": "sr-character/刻律德菈/刻律德菈Gu3.webp",
+    "attributes": {
+      "filename": "刻律德菈Gu3.webp",
+      "rated": "p18",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "29ca48c88373626b5f6b38590eec64dc",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-10 19:10:58"
   }
 ]
