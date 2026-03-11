@@ -31202,5 +31202,158 @@
       "secTags": []
     },
     "timestamp": "2026-03-10 19:10:58"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "gid": "4181149960",
+    "characterName": "火花",
+    "path": "sr-character/火花/火花Gu4.webp",
+    "attributes": {
+      "filename": "火花Gu4.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "8de72b0929cd104b8c59cecbb9a04f98",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:01:39"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "9448785318",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu14.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu14.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "7588e72a28176fa64632a94402fea916",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:01:51"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "9741175875",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu15.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu15.webp",
+      "rated": "none",
+      "layout": "fullscreen",
+      "isBan": false,
+      "md5": "28d9eca015a87986e3893678052d9a6e",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:01:56"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "3100648796",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu16.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu16.webp",
+      "rated": "none",
+      "layout": "fullscreen",
+      "isBan": false,
+      "md5": "8ab19824a5b262120aceb96b6a69eb86",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:02:01"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "9239592255",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu17.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu17.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "cbc250998ebda1f3cf0db26ff3b3e97f",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:02:04"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "6522761732",
+    "characterName": "兹白",
+    "path": "gs-character/兹白/兹白Gu1.webp",
+    "attributes": {
+      "filename": "兹白Gu1.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "36287d5d27fa62240d7d90b924f54765",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:02:07"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "6027265199",
+    "characterName": "兹白",
+    "path": "gs-character/兹白/兹白Gu2.webp",
+    "attributes": {
+      "filename": "兹白Gu2.webp",
+      "rated": "none",
+      "layout": "fullscreen",
+      "isBan": false,
+      "md5": "fe82b483597e6cf2612c0f6b3828734e",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:02:11"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "1810660679",
+    "characterName": "杜林",
+    "path": "gs-character/杜林/杜林Gu1.webp",
+    "attributes": {
+      "filename": "杜林Gu1.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "47371dd91e7249c8d103aedf70c6a6ec",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:02:24"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "waves-character",
+    "gid": "8712622323",
+    "characterName": "守岸人",
+    "path": "waves-character/守岸人/守岸人Gu6.webp",
+    "attributes": {
+      "filename": "守岸人Gu6.webp",
+      "rated": "p18",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "96f75b08c364f5105c5c0dfa14d0ed70",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-12 00:02:41"
   }
 ]
