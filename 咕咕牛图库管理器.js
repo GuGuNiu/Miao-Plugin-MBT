@@ -3989,6 +3989,29 @@ class Morpheus {
         return `${datePart} ${timePart}.${msPart}`;
     }
 
+    static #FindBrowserPath() {
+        if (os.platform() !== 'win32') return undefined;
+        
+        const suffixes = [
+            path.join('Microsoft', 'Edge', 'Application', 'msedge.exe'),
+            path.join('Google', 'Chrome', 'Application', 'chrome.exe'),
+        ];
+        
+        const prefixes = [
+            process.env.ProgramFiles,
+            process.env["ProgramFiles(x86)"],
+            process.env.LocalAppData,
+        ].filter(Boolean);
+
+        for (const prefix of prefixes) {
+            for (const suffix of suffixes) {
+                const candidate = path.join(prefix, suffix);
+                if (fs.existsSync(candidate)) return candidate;
+            }
+        }
+        return undefined;
+    }
+
     static async #getBrowser(logger = console) {
         const Hades = HadesEntry({}, logger || getCore());
         if (this.#browserInstance && this.#browserInstance.isConnected()) {
@@ -4008,6 +4031,15 @@ class Morpheus {
             ],
             userDataDir: path.join(MiaoPluginMBT.Paths.TempNiuPath, 'chromium-profile')
         };
+
+        const sysBrowser = this.#FindBrowserPath();
+        if (sysBrowser) {
+            launchOptions.executablePath = sysBrowser;
+            Hades.O(`渲染器已定位浏览器: ${sysBrowser}`);
+        } else {
+            Hades.D(`渲染器未找到任何浏览器`);
+            // launchOptions.headless = 'shell'; 
+        }
 
         try {
             this.#browserInstance = await PuppCow.launch(launchOptions);
