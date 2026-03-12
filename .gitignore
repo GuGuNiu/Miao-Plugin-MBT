@@ -9,3 +9,4 @@
 /CooWeb/node_modules
 *.backup
 /debug
+CowCoo/.cache/image-metadata.json
