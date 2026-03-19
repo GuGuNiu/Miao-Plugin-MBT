@@ -595,8 +595,8 @@ class Hermes {
     static #Hermes_Key = 'CowCoo:Hermes:';
     static #TTL_TPL = 259200;
     static #TTL_POOL = 1209600;
-    static #UA_POOL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/UAPool.json";
-    static #BAIT_POOL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/Voice_Repos.json";
+    static #UA_POOL = "https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/UAPool.json";
+    static #BAIT_POOL = "https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/Voice_Repos.json";
     static #senseDepth = 0;
     static #senseCache = null;
     static #senseCacheTime = 0;
@@ -1036,15 +1036,15 @@ class Hermes {
             }
         };
 
-        const [cn, global, biz, gitee, udp] = await Promise.all([
+        const [cn, global, biz, gitcode, udp] = await Promise.all([
             dial(beacons.BeaconCN || beacons.cn, 80),
             dial(beacons.BeaconGlobal || beacons.global, 443),
             dial(beacons.BeaconBiz || beacons.biz, 443),
-            dial(beacons.BeaconGitee || beacons.gitee, 443),
+            dial(beacons.BeaconGitcode || beacons.gitcode, 443),
             this.UdpPulse('8.8.8.8', 53)
         ]);
 
-        return { cn, global, biz, gitee, udp };
+        return { cn, global, biz, gitcode, udp };
     }
 
     static async #try(fn, fallback, Hades = null, tag = '') {
@@ -1129,11 +1129,11 @@ class Hermes {
     }
 
     static #ROUTING = {
-        'speedtest.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/speedtest.html', localSubPath: 'sync' },
-        'help.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/help.html' },
-        'error_report.html': { strategy: 'LOCAL_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/error_report.html' },
-        'download.html': { strategy: 'NET_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/download.html' },
-        'core_repo_download.html': { strategy: 'NET_FIRST', url: 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/html/sync/core_repo_download.html' }
+        'speedtest.html': { strategy: 'LOCAL_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/speedtest.html', localSubPath: 'sync' },
+        'help.html': { strategy: 'LOCAL_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/help.html' },
+        'error_report.html': { strategy: 'LOCAL_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/error_report.html' },
+        'download.html': { strategy: 'NET_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/download.html' },
+        'core_repo_download.html': { strategy: 'NET_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/core_repo_download.html' }
     };
 
     static #Build_Limit_Error(code, message) {
@@ -1201,7 +1201,7 @@ class Hermes {
         const max_body_bytes = this.#Resolve_Byte_Limit(options.max_body_bytes ?? options.maxBodyBytes, this.#Default_Max_Body_Bytes);
         const max_handshake_bytes = this.#Resolve_Byte_Limit(options.max_handshake_bytes ?? options.maxHandshakeBytes, this.#Default_Max_Handshake_Bytes);
 
-        const isWhiteListed = url.includes('gitee.com');
+        const isWhiteListed = url.includes('gitcode.com');
         const effSkipSense = skipSense || (isWhiteListed && !forceProxy);
 
         const isHttp = url.startsWith('http:');
@@ -1882,7 +1882,7 @@ class Hermes {
         const cached = await this.#getCache(cacheKey);
         if (cached) return cached;
 
-        const url = 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/prompt.json';
+        const url = 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/prompt.json';
         const res = await this.request(url, { timeout: 10000 });
 
         if (res.success && res.status === 200 && res.body) {
@@ -1900,7 +1900,7 @@ class Hermes {
         const cached = await this.#getCache(cacheKey);
         if (cached) return cached;
 
-        const url = 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/worker.js';
+        const url = 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/worker.js';
         const res = await this.request(url, { timeout: 10000 });
 
         if (res.success && res.status === 200 && res.body) {
@@ -1994,7 +1994,7 @@ class Proteus {
         BeaconCN: "baidu.com",
         BeaconGlobal: "google.com",
         BeaconBiz: "github.com",
-        BeaconGitee: "gitee.com",
+        BeaconGitcode: "gitcode.com",
         agentGates: [7890, 7891, 7892, 7893, 7894, 7895, 7896, 7897, 7898, 7899, 1080, 10808],
         thresholdV6: 800,
         thresholdV4: 400,
@@ -2005,7 +2005,7 @@ class Proteus {
         return [
             { name: "GitHub", url: `https://${this._setup.BeaconBiz}`, priority: 2 },
             { name: "Google", url: `https://${this._setup.BeaconGlobal}`, priority: 2 },
-            { name: "Gitee", url: `https://${this._setup.BeaconGitee}`, priority: 2 },
+            { name: "Gitcode", url: `https://${this._setup.BeaconGitcode}`, priority: 2 },
             { name: "Baidu", url: `https://${this._setup.BeaconCN}`, priority: 2 }
         ];
     }
@@ -2096,7 +2096,7 @@ class Proteus {
                 cnLink: linkState.cn,
                 globalLink: linkState.global,
                 bizLink: linkState.biz,
-                giteeLink: linkState.gitee,
+                gitcodeLink: linkState.gitcode,
                 udpReach: linkState.udp,
                 v6Link: v6State.v6Ip !== 'N/A',
                 v6Ip: v6State.v6Ip,
@@ -6459,7 +6459,7 @@ class MiaoPluginMBT extends plugin {
       await MBTCF.ApplyBans();
   }
 
-  static RANROM_URL = "https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/CA-MBT.json";
+  static RANROM_URL = "https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/CA-MBT.json";
   static _FatigueMap = new Map();
   static #TopoMap = new Map();
 
@@ -7502,13 +7502,13 @@ class MiaoPluginMBT extends plugin {
 
                       let finalEnv = extraEnv || sysProxyEnv || undefined;
 
-                      if (actualCloneUrl.includes('gitee.com')) {
+                      if (actualCloneUrl.includes('gitcode.com')) {
                           if (finalEnv && (finalEnv.HTTP_PROXY || finalEnv.HTTPS_PROXY)) {
                               finalEnv = { ...finalEnv };
                               delete finalEnv.HTTP_PROXY;
                               delete finalEnv.HTTPS_PROXY;
                               delete finalEnv.ALL_PROXY;
-                              finalEnv.NO_PROXY = 'gitee.com,localhost,127.0.0.1';
+                              finalEnv.NO_PROXY = 'gitcode.com,localhost,127.0.0.1';
                           }
                       }
 
@@ -9069,11 +9069,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             } catch { return Infinity; }
         };
 
-        const [baiduMs, googleMs, githubMs, giteeMs] = await Promise.all([
+        const [baiduMs, googleMs, githubMs, gitcodeMs] = await Promise.all([
             ping('www.baidu.com', 443),
             ping('www.google.com', 443),
             ping('github.com', 443),
-            ping('gitee.com', 443)
+            ping('gitcode.com', 443)
         ]);
 
         const maskIp = (ip) => {
@@ -9167,7 +9167,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
              { name: 'Baidu', val: vector.cnLink, rtt: baiduMs, icon: 'https://api.iconify.design/simple-icons:baidu.svg?color=%23ffffff' },
              { name: 'Google', val: vector.globalLink, rtt: googleMs, icon: 'https://api.iconify.design/logos:google-icon.svg' },
              { name: 'GitHub', val: vector.bizLink, rtt: githubMs, icon: 'https://api.iconify.design/simple-icons:github.svg?color=%23ffffff' },
-             { name: 'Gitee', val: true, rtt: giteeMs, icon: 'https://api.iconify.design/simple-icons:gitee.svg?color=%23C71D23' }
+             { name: 'Gitcode', val: true, rtt: gitcodeMs, icon: 'https://api.iconify.design/simple-icons:gitcode.svg?color=%23C71D23' }
         ].map((item, i) => {
              const isOk = item.rtt !== Infinity;
              return {
@@ -10589,7 +10589,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             headerImg: await Morpheus.pickHeaderSet(20),
             Cow_Res_Path: isInstalled
               ? `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/')
-              : 'https://gitee.com/GuGuNiu/Miao-Plugin-MBT/raw/master/'
+              : 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/'
         };
 
         const imgBuffer = await Morpheus.shot("Help", {
