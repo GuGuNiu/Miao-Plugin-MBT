@@ -8965,7 +8965,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
               await common.sleep(1500);
               await e.reply("建议配置[净化等级]否则风险自负。发送#咕咕牛设置净化等级1可过滤R18内容。", true);
           } else {
-              await e.reply(`『咕咕牛🐂』部分仓库下载失败，请检查上方日志或重试。${failDetailText}`);
+              await e.reply(`咕咕牛部分仓库下载失败，请检查上方日志或重试。${failDetailText}`);
           }
 
       } catch (err) {

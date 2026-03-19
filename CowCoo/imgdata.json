@@ -31355,5 +31355,56 @@
       "secTags": []
     },
     "timestamp": "2026-03-12 00:02:41"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "7983680677",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu18.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu18.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "2b03044592af7b75850963cd9fd5df83",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-20 00:20:19"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "3291949465",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu19.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu19.webp",
+      "rated": "none",
+      "layout": "fullscreen",
+      "isBan": false,
+      "md5": "14d0e14d69e87a1a08fe64253f200e8f",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-20 00:20:27"
+  },
+  {
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "gid": "4046258686",
+    "characterName": "哥伦比娅",
+    "path": "gs-character/哥伦比娅/哥伦比娅Gu20.webp",
+    "attributes": {
+      "filename": "哥伦比娅Gu20.webp",
+      "rated": "none",
+      "layout": "fullscreen",
+      "isBan": false,
+      "md5": "96d34f194e4bb1e590814e96672a52b6",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-03-20 00:20:34"
   }
 ]
