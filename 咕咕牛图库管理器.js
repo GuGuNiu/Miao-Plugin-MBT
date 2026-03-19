@@ -8882,7 +8882,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           6: "六号仓库 (SR18-SR)"
       };
 
-      const results = repoManifest.map(r => {
+      const HiddenRepos = [5, 6];
+      const results = repoManifest.filter(r => !HiddenRepos.includes(r.repo)).map(r => {
           const name = REPO_NAMES[r.repo] || `仓库 ${r.repo}`;
 
           if (r.status === 'skipped') {
