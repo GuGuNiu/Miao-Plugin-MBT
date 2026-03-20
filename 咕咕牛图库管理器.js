@@ -10556,6 +10556,38 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     return true;
   }
 
+  async HotFix(e) {
+    if (!e.isMaster) return e.reply(`这个操作只有我的主人才能用哦~`, true);
+    const Hades = HadesEntry({}, this.logger || getCore());
+
+    const Cow_Url = "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js";
+    const Get_SS5 = path.join(YzPath, "plugins", "example", "咕咕牛图库管理器.js");
+
+    await e.reply("『咕咕牛🐂』正在执行热修复...", true);
+
+    try {
+      const res = await Hermes.request(Cow_Url, { timeout: 30000 });
+      if (!res?.success || res.status !== 200 || !res.body) {
+        throw new Error(`下载失败: ${res?.status || "无响应"}`);
+      }
+
+      const newContent = res.body;
+      await fsPromises.writeFile(Get_SS5, newContent, "utf-8");
+
+      const newStats = await fsPromises.stat(Get_SS5);
+      const newSize = (newStats.size / 1024).toFixed(2);
+
+      Hades.O(`热修复完成，新版本已写入: ${newSize} KB`);
+      await e.reply(`『咕咕牛🐂』热修复完成！新版本已写入: ${newSize} KB`, true);
+
+      return true;
+    } catch (err) {
+      Hades.E(`热修复失败:`, err);
+      await e.reply(`『咕咕牛🐂』热修复失败: ${err.message}`, true);
+      return true;
+    }
+  }
+
   async Help(e) {
     const isInstalled = await MiaoPluginMBT.ICI();
     const logger = HadesEntry({}, this.logger || getCore());
@@ -11610,6 +11642,7 @@ class CommunityMBT extends plugin {
 const CowCoo_Rules = [
   { reg: /^#下载咕咕牛$/i, fnc: "Provision", permission: "master" },
   { reg: /^#更新咕咕牛$/i, fnc: "Reconcile", permission: "master" },
+  { reg: /^#修复咕咕牛$/i, fnc: "HotFix", permission: "master" },
   { reg: /^#重置咕咕牛$/i, fnc: "ManRepo", permission: "master" },
   { reg: /^#咕咕牛状态$/i, fnc: "CheckStatus" },
   { reg: /^#(?:(?:ban|咕咕牛封禁)列表|咕咕牛(?:封禁|解禁)\s*.+)$/i, fnc: "MuB", permission: "master" },
