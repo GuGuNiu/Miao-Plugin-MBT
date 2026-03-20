@@ -7405,15 +7405,6 @@ class MiaoPluginMBT extends plugin {
               name: "GitHub", priority: 0, ClonePrefix: "https://github.com/", protocol: 'HTTPS'
           };
 
-          let RacingQueue = [];
-          let useGitHubAsBackup = false;
-          const mirrorNodes = sortedNodes.filter(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
-          const validatedMirrors = mirrorNodes
-              .filter(n => (n.protocol === 'HTTP') && Number.isFinite(getNodeLatency(n)))
-              .sort((a, b) => getNodeLatency(a) - getNodeLatency(b));
-          const primaryMirrors = validatedMirrors.slice(0, 2);
-          const reserveMirrors = validatedMirrors.slice(2);
-
           const getNodeLatency = (node) => {
               if (!node) return Infinity;
               if (node.name === "GitHub") {
@@ -7423,6 +7414,15 @@ class MiaoPluginMBT extends plugin {
               const candidate = node.latency ?? node.time ?? node.speed;
               return Number.isFinite(candidate) ? candidate : Infinity;
           };
+
+          let RacingQueue = [];
+          let useGitHubAsBackup = false;
+          const mirrorNodes = sortedNodes.filter(n => n.name !== "GitHub" && PoseidonSpear.isLive(n.name));
+          const validatedMirrors = mirrorNodes
+              .filter(n => (n.protocol === 'HTTP') && Number.isFinite(getNodeLatency(n)))
+              .sort((a, b) => getNodeLatency(a) - getNodeLatency(b));
+          const primaryMirrors = validatedMirrors.slice(0, 2);
+          const reserveMirrors = validatedMirrors.slice(2);
 
           const getStartDelay = (node, index, riskMode) => {
               if (node.retryDelay) return node.retryDelay + MBTMath.Range(0, 500);
