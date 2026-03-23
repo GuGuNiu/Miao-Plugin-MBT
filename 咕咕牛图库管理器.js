@@ -6108,7 +6108,7 @@ class DocHub {
                 const repoStatuses = await Promise.all(repoStatusPromises);
                 const primaryRepo = repoStatuses.find(r => r.num === 1) || repoStatuses[0];
                 const activeRepoNums = new Set(repoStatuses.map(r => r.num));
-                const shortSha = primaryRepo?.sha ? primaryRepo.sha.substring(0, 20) : 'unknown';
+                const shortSha = primaryRepo?.sha ? primaryRepo.sha.substring(0, 25) : 'unknown';
 
                 let coreStats = { size: 'N/A', mtime: 'N/A' };
                 try {
@@ -6300,7 +6300,7 @@ class DocHub {
             model: "x1",
             messages: [{ role: "user", content: prompt }],
             stream: false,
-            max_tokens: 300,
+            max_tokens: 800,
             temperature: 0.4,
             top_p: 0.5,
             stop: ["你好，我是云露。", "云露：", "好的，", "好的。", "您好，我是云露。", "解决方案："],
