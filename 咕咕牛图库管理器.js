@@ -296,7 +296,7 @@ class Nyx {
         return { matched: false, pattern: null, score: 0, level: null };
     }
 
-    static async scan(agentGates = [], Hades = console) {
+    static async scan(agentGates = [], nativeIP = null, Hades = console) {
         const candidates = await this._buildDiscoveryPool(agentGates, Hades);
         if (candidates.size === 0) return [];
 
@@ -307,7 +307,7 @@ class Nyx {
             Hades.D(`[Nyx] 候选端口池: ${portsStr}`);
         }
 
-        const sniffPromises = Array.from(candidates.values()).map(candidate => this._evaluateCandidate(candidate));
+        const sniffPromises = Array.from(candidates.values()).map(candidate => this._evaluateCandidate(candidate, nativeIP, Hades));
         const results = (await Promise.all(sniffPromises)).filter(Boolean);
 
         results.sort((a, b) => {
@@ -346,10 +346,11 @@ class Nyx {
         return pool;
     }
 
-    static async _evaluateCandidate(candidate) {
+    static async _evaluateCandidate(candidate, nativeIP = null, Hades = console) {
         let protocol = null;
         let verified = false;
         let tunVerified = false;
+        let isDirectMode = false;
 
         const s5Handshake = await this._sniffSocks5(candidate.port);
 
@@ -358,7 +359,22 @@ class Nyx {
             tunVerified = await this._probeS5Tun(candidate.port);
             verified = tunVerified;
 
-            if (!tunVerified) {
+            if (tunVerified && nativeIP) {
+                const proxyCheck = await this._probeS5RealIP(candidate.port, nativeIP);
+                if (proxyCheck) {
+                    isDirectMode = proxyCheck.isDirect;
+                    if (isDirectMode) {
+                        if (Hades?.D) Hades.D(`[Nyx] 端口 ${candidate.port} 为直连模式`);
+                        tunVerified = false;
+                        verified = false;
+                        protocol = 'socks5_direct';
+                    } else {
+                        if (Hades?.D) Hades.D(`[Nyx] 端口 ${candidate.port} 代理有效`);
+                    }
+                }
+            }
+
+            if (!tunVerified && protocol !== 'socks5_direct') {
                 return candidate.score >= 60 ? {
                     host: '127.0.0.1',
                     port: candidate.port,
@@ -366,6 +382,19 @@ class Nyx {
                     source: 'handshake_only',
                     verified: false,
                     tunVerified: false,
+                    score: candidate.score
+                } : null;
+            }
+
+            if (protocol === 'socks5_direct') {
+                return candidate.score >= 60 ? {
+                    host: '127.0.0.1',
+                    port: candidate.port,
+                    protocol: 'socks5_direct',
+                    source: 'direct_mode_detected',
+                    verified: false,
+                    tunVerified: false,
+                    isDirectMode: true,
                     score: candidate.score
                 } : null;
             }
@@ -461,6 +490,117 @@ class Nyx {
             socket.on('error', () => finish(false));
             socket.on('timeout', () => finish(false));
             socket.connect(port, '127.0.0.1');
+        });
+    }
+
+    static async _probeS5RealIP(port, nativeIP, timeout = 5000) {
+        const ipCheckServices = [
+            { host: 'api.ipify.org', path: '/?format=json', field: 'ip' },
+            { host: 'ipapi.co', path: '/json/', field: 'ip' },
+            { host: 'free.freeipapi.com', path: '/api/json/', field: 'ipAddress' }
+        ];
+
+        for (const service of ipCheckServices) {
+            try {
+                const proxyIP = await this._getIPViaSocks5(port, service.host, service.path, timeout);
+                if (proxyIP) {
+                    const isDirect = proxyIP === nativeIP;
+                    return {
+                        proxyIP,
+                        nativeIP,
+                        isDirect,
+                        service: service.host
+                    };
+                }
+            } catch {}
+        }
+        return null;
+    }
+
+    static _getIPViaSocks5(proxyPort, targetHost, targetPath, timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const socket = new net.Socket();
+            socket.setTimeout(timeout);
+            let step = 0;
+            let resolved = false;
+            let responseBuffer = Buffer.alloc(0);
+
+            const finish = (res) => {
+                if (!resolved) {
+                    resolved = true;
+                    socket.destroy();
+                    resolve(res);
+                }
+            };
+
+            const fail = (err) => {
+                if (!resolved) {
+                    resolved = true;
+                    socket.destroy();
+                    reject(err);
+                }
+            };
+
+            socket.on('connect', () => {
+                socket.write(Buffer.from([0x05, 0x01, 0x00]));
+            });
+
+            socket.on('data', (data) => {
+                if (step === 0) {
+                    if (data[0] === 0x05 && data[1] === 0x00) {
+                        step = 1;
+                        const hostBuf = Buffer.from(targetHost);
+                        const connectReq = Buffer.concat([
+                            Buffer.from([0x05, 0x01, 0x00, 0x03, hostBuf.length]),
+                            hostBuf,
+                            Buffer.from([(443 >> 8) & 0xFF, 443 & 0xFF])
+                        ]);
+                        socket.write(connectReq);
+                    } else {
+                        fail(new Error('SOCKS5认证失败'));
+                    }
+                } else if (step === 1) {
+                    if (data[0] === 0x05 && data[1] === 0x00) {
+                        step = 2;
+                        const tlsSocket = tls.connect({
+                            socket: socket,
+                            servername: targetHost,
+                            rejectUnauthorized: false
+                        }, () => {
+                            tlsSocket.write(`GET ${targetPath} HTTP/1.1\r\nHost: ${targetHost}\r\nUser-Agent: CowCoo/1.0\r\nConnection: close\r\n\r\n`);
+                        });
+
+                        tlsSocket.on('data', (chunk) => {
+                            responseBuffer = Buffer.concat([responseBuffer, chunk]);
+                        });
+
+                        tlsSocket.on('end', () => {
+                            try {
+                                const response = responseBuffer.toString();
+                                const bodyMatch = response.match(/\r\n\r\n([\s\S]+)/);
+                                if (bodyMatch) {
+                                    const body = JSON.parse(bodyMatch[1]);
+                                    const ip = body.ip || body.ipAddress;
+                                    if (ip) finish(ip);
+                                    else fail(new Error('响应中未找到IP'));
+                                } else {
+                                    fail(new Error('HTTP响应格式无效'));
+                                }
+                            } catch (e) {
+                                fail(e);
+                            }
+                        });
+
+                        tlsSocket.on('error', fail);
+                    } else {
+                        fail(new Error('SOCKS5连接失败'));
+                    }
+                }
+            });
+
+            socket.on('error', fail);
+            socket.on('timeout', () => fail(new Error('连接超时')));
+            socket.connect(proxyPort, '127.0.0.1');
         });
     }
 
@@ -2032,8 +2172,10 @@ class Proteus {
             return !!(HTTP_PROXY || HTTPS_PROXY || ALL_PROXY || http_proxy || https_proxy || all_proxy);
         })();
 
+        const nativeIP = envData?.inference?.v4Ip || envData?.v4Ip || null;
+
         const [fingerprint, linkStateRaw, v6State, raceData] = await Promise.all([
-            this._scanLocal(envSet, envData?.network?.proxy, Hades),
+            this._scanLocal(envSet, envData?.network?.proxy, nativeIP, Hades),
             this._dialBeacons(),
             v6StatePromise,
             Hermes.dualStackRace(this._setup.BeaconBiz)
@@ -2113,7 +2255,7 @@ class Proteus {
         };
     }
 
-    static async _scanLocal(envSet = false, sysProxy = null, Hades = console) {
+    static async _scanLocal(envSet = false, sysProxy = null, nativeIP = null, Hades = console) {
         let active = false;
         envSet = !!envSet;
 
@@ -2126,7 +2268,7 @@ class Proteus {
 
         const [procActive, nyxProxies] = await Promise.all([
             scanProc(),
-            Nyx.scan(this._setup.agentGates, Hades)
+            Nyx.scan(this._setup.agentGates, nativeIP, Hades)
         ]);
 
         let proxyContext = null;
@@ -2141,12 +2283,16 @@ class Proteus {
                 verified: false
             };
         } else if (nyxProxies && nyxProxies.length > 0) {
-            const trulyVerified = nyxProxies.find(p => p.tunVerified === true && p.protocol !== 'socks5_idle');
+            const trulyVerified = nyxProxies.find(p => p.tunVerified === true && p.protocol !== 'socks5_idle' && p.protocol !== 'socks5_direct');
             const handshakeOnly = nyxProxies.find(p => p.protocol === 'socks5_idle');
+            const directMode = nyxProxies.find(p => p.protocol === 'socks5_direct');
 
             if (trulyVerified) {
                 proxyContext = trulyVerified;
                 if (Hades?.D) Hades.D(`锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [已穿透验证]`);
+            } else if (directMode) {
+                if (Hades?.D) Hades.D(`[Nyx] 端口 ${directMode.port} 为直连模式`);
+                proxyContext = null;
             } else if (handshakeOnly) {
                 if (Hades?.D) Hades.D(`[检测到代理软件端口 ${handshakeOnly.port} 但穿透验证失败（疑似直连模式）`);
                 proxyContext = null;
@@ -2264,9 +2410,19 @@ class ProteusMatrix {
             }
         });
         this._bus.on('rule:nativeCN', (ctx, decision) => {
-            if (!decision.mode && ctx.env?.inference?.nativeCN && !ctx.env.inference.browserCN) {
-                decision.mode = Proteus.State.USER_AGENT;
-                decision.reason = 'nativeCN';
+            if (decision.mode) return;
+            const nativeCN = ctx.env?.inference?.nativeCN;
+            const browserCN = ctx.env?.inference?.browserCN;
+            const hasValidProxy = ctx.proxyContext && ctx.proxyContext.tunVerified === true;
+
+            if (nativeCN) {
+                if (!browserCN && hasValidProxy) {
+                    decision.mode = Proteus.State.USER_AGENT;
+                    decision.reason = 'nativeCN_withProxy';
+                } else if (nativeCN && browserCN && !hasValidProxy) {
+                    decision.mode = Proteus.State.NATIVE;
+                    decision.reason = 'nativeCN_noValidProxy';
+                }
             }
         });
         this._bus.on('rule:overseasGlobal', (ctx, decision) => {
@@ -2296,12 +2452,16 @@ class ProteusMatrix {
 
             const hasRealProxy = ctx.proxyContext && ctx.proxyContext.tunVerified === true;
             const hasIdleProxy = ctx.portActive && !hasRealProxy;
+            const nativeCN = ctx.env?.inference?.nativeCN;
 
             if (hasIdleProxy) {
                 return;
             }
 
             if (hasRealProxy && (!v4Ready || v4Lat > 200)) {
+                if (nativeCN && ctx.env?.inference?.browserCN) {
+                    return;
+                }
                 decision.mode = Proteus.State.IDLE_AGENT;
                 decision.reason = 'idleAgent_verified';
             }
@@ -5029,10 +5189,19 @@ class Nomos {
     }
 
     static getHostEnv() {
+        let yzVer = 'Unknown';
+        try {
+            const pkgPath = path.join(process.cwd(), 'package.json');
+            if (fs.existsSync(pkgPath)) {
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                const name = pkg.name ? pkg.name.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('-') : 'Yunzai';
+                yzVer = `${name} ${pkg.version || ''}`.trim() || 'Unknown';
+            }
+        } catch (e) { }
         return {
             nodever: process.version,
             platform: os.platform(),
-            yzVer: 'Unknown'
+            yzVer
         };
     }
 
@@ -5898,10 +6067,17 @@ class Presenter {
 
 class DocHub {
     static async report(e, opName, err, ctx = "", logger = getCore()) {
+        if (!ctx && e) {
+            const parts = [];
+            if (e.raw_message || e.msg) parts.push(`触发命令: ${e.raw_message || e.msg}`);
+            if (e.user_id) parts.push(`发送者: ${e.user_id}`);
+            if (e.group_id) parts.push(`群组: ${e.group_id}`);
+            if (parts.length > 0) ctx = parts.join(" | ");
+        }
         const core = (logger && typeof logger.error === 'function') ? logger : getCore();
         const Hades = HadesEntry({}, core);
 
-        const errCode = err?.code || 'UNKNOWN';
+        const errCode = err?.code || '未知';
         if (!ErrDoc.shouldReport(opName, errCode)) {
             Hades.D(`拦截重复报告: [${opName}] ${err?.message}`);
             return;
@@ -5932,16 +6108,21 @@ class DocHub {
                 const repoStatuses = await Promise.all(repoStatusPromises);
                 const primaryRepo = repoStatuses.find(r => r.num === 1) || repoStatuses[0];
                 const activeRepoNums = new Set(repoStatuses.map(r => r.num));
-                const shortSha = primaryRepo?.sha ? primaryRepo.sha.substring(0, 7) : 'unknown';
+                const shortSha = primaryRepo?.sha ? primaryRepo.sha.substring(0, 20) : 'unknown';
 
                 let coreStats = { size: 'N/A', mtime: 'N/A' };
                 try {
                     const corePath = path.join(MiaoPluginMBT.Paths.Target.Example, '咕咕牛图库管理器.js');
-                    if (await Ananke.Audit(corePath)) {
+                    if (await Ananke.Audit(corePath, false)) {
                         const stats = await fsPromises.stat(corePath);
-                        const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+                        let sizeStr;
+                        if (stats.size < 1024 * 1024) {
+                            sizeStr = `${(stats.size / 1024).toFixed(2)} KB`;
+                        } else {
+                            sizeStr = `${(stats.size / 1024 / 1024).toFixed(2)} MB`;
+                        }
                         coreStats = {
-                            size: `${sizeMB} MB`,
+                            size: sizeStr,
                             mtime: stats.mtime.toLocaleString('zh-CN')
                         };
                     }
@@ -5960,16 +6141,20 @@ class DocHub {
                     core: {
                         version: Version,
                         size: coreStats.size,
-                        mtime: coreStats.mtime
+                        mtime: coreStats.mtime,
+                        active: activeRepoNums.has(1)
                     }
                 };
                 const tplResult = await Hermes.getTemplate('error_report.html', Hades);
 
                 if (tplResult.success) {
+                    const OpsName = (e?.msg?.startsWith('#') && !opName.startsWith('#')) ? `#${opName}` : opName;
                     const ViewProps = {
-                        operationName: opName,
+                        operationName: OpsName,
                         errMsg: err.message || "Unknown Error",
                         errCode: errCode,
+                        errorSource: this._extractErrSource(err),
+                        errType: this._extractErrType(err),
                         contextInfo: diagnosis.contextInfo,
                         suggestions: diagnosis.suggestions.split('\n'),
                         aiSolutionText: aiSolution,
@@ -5996,7 +6181,7 @@ class DocHub {
         let msg = `[${opName}] 失败!\n`;
         msg += `错误: ${err?.message}\n`;
         msg += `建议: \n${diagnosis.suggestions}\n`;
-        msg += `\n云露分析: ${aiSolution.replace(/<br>/g, '\n').substring(0, 1000)}`;
+        msg += `\n云露分析: ${aiSolution.substring(0, 1000)}`;
 
         try {
             if (imgBuffer) {
@@ -6066,6 +6251,31 @@ class DocHub {
         return report;
     }
 
+    static _extractErrSource(err) {
+        if (!err?.stack) return null;
+        const lines = err.stack.split('\n');
+        for (let line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('at ')) {
+                const match = trimmed.match(/:(\d+):\d+\)?$/);
+                if (match) return match[1];
+            }
+        }
+        return null;
+    }
+
+    static _extractErrType(err) {
+        if (!err) return null;
+        const msg = err.message || "";
+        const name = err.name || "";
+        if (name === 'ReferenceError' || msg.includes('is not defined')) return "未定义变量";
+        if (name === 'TypeError') return "类型错误";
+        if (name === 'SyntaxError') return "语法错误";
+        if (msg.includes('timeout') || msg.includes('ETIMEDOUT')) return "请求超时";
+        if (msg.includes('permission denied') || msg.includes('EACCES')) return "权限缺失";
+        return null;
+    }
+
     static async _consultOracle(operationName, error, context, logger) {
         const Hades = HadesEntry({}, logger || getCore());
         let magicWord = '';
@@ -6090,7 +6300,7 @@ class DocHub {
             model: "x1",
             messages: [{ role: "user", content: prompt }],
             stream: false,
-            max_tokens: 150,
+            max_tokens: 300,
             temperature: 0.4,
             top_p: 0.5,
             stop: ["你好，我是云露。", "云露：", "好的，", "好的。", "您好，我是云露。", "解决方案："],
@@ -6142,14 +6352,7 @@ class DocHub {
                 let aiContent = responseData.choices?.[0]?.message?.content;
 
                 if (typeof aiContent === 'string' && aiContent.trim() !== '') {
-                    return aiContent
-                        .replace(/<pre[^>]*>/gi, '')
-                        .replace(/<\/pre>/gi, '')
-                        .replace(/<code[^>]*>/gi, '')
-                        .replace(/<\/code>/gi, '')
-                        .replace(/`/g, '')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\n/g, '<br>');
+                    return aiContent;
                 } else {
                     return "云露分析异常：API成功响应，但未返回有效内容。";
                 }
@@ -9548,8 +9751,16 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         try {
             const keys = await redis.keys('CowCoo:*');
             if (keys && keys.length > 0) {
-                await redis.del(...keys);
-                return { count: keys.length };
+                let deletedCount = 0;
+                for (const key of keys) {
+                    try {
+                        await redis.del(key);
+                        deletedCount++;
+                    } catch (delErr) {
+                        Hades.W(`重置失败Redis: ${key}`, delErr.message);
+                    }
+                }
+                return { count: deletedCount };
             }
             return { count: 0 };
         } catch (err) {
