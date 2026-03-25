@@ -296,19 +296,27 @@ class Nyx {
         return { matched: false, pattern: null, score: 0, level: null };
     }
 
-    static async scan(agentGates = [], nativeIP = null, Hades = console) {
+    static async scan(agentGates = [], nativeIP = null, Hades = console, envData = null) {
         const candidates = await this._buildDiscoveryPool(agentGates, Hades);
         if (candidates.size === 0) return [];
 
-        if (Hades?.D) {
-            const portsStr = Array.from(candidates.values())
-                .map(c => `${c.port}(分:${c.score})`)
-                .join(', ');
-            Hades.D(`[Nyx] 候选端口池: ${portsStr}`);
-        }
-
-        const sniffPromises = Array.from(candidates.values()).map(candidate => this._evaluateCandidate(candidate, nativeIP, Hades));
+        const sniffPromises = Array.from(candidates.values()).map(candidate => this._evaluateCandidate(candidate, nativeIP, Hades, envData));
         const results = (await Promise.all(sniffPromises)).filter(Boolean);
+
+        if (Hades?.D) {
+            const logParts = results.map(r => {
+                let modeStr = r.modeDesc || '未知';
+                if (r.protocol === 'socks5_direct') modeStr = '直连模式';
+                else if (r.protocol === 'socks5_idle') modeStr = '仅握手';
+                else if (r.protocol === 'unknown') modeStr = '未验证';
+                return `${r.port}(分:${r.score})[${modeStr}]`;
+            });
+            if (logParts.length > 0) {
+                Hades.D(`[Nyx] 代理端口池: ${logParts.join(', ')}`);
+            } else {
+                Hades.D(`[Nyx] 代理端口池: 无可用端口`);
+            }
+        }
 
         results.sort((a, b) => {
             if (a.verified !== b.verified) return a.verified ? -1 : 1;
@@ -346,7 +354,7 @@ class Nyx {
         return pool;
     }
 
-    static async _evaluateCandidate(candidate, nativeIP = null, Hades = console) {
+    static async _evaluateCandidate(candidate, nativeIP = null, Hades = console, envData = null) {
         let protocol = null;
         let verified = false;
         let tunVerified = false;
@@ -363,14 +371,22 @@ class Nyx {
                 const proxyCheck = await this._probeS5RealIP(candidate.port, nativeIP);
                 if (proxyCheck) {
                     isDirectMode = proxyCheck.isDirect;
+                    let modeDesc = isDirectMode ? '直连模式' : '全局模式';
+
+                    const puppV4 = envData?.network?.browser?.v4?.ip;
+                    if (isDirectMode && puppV4 && puppV4 !== nativeIP) {
+                        isDirectMode = false;
+                        modeDesc = '规则模式';
+                    }
+
                     if (isDirectMode) {
-                        if (Hades?.D) Hades.D(`[Nyx] 端口 ${candidate.port} 为直连模式`);
                         tunVerified = false;
                         verified = false;
                         protocol = 'socks5_direct';
                     } else {
-                        if (Hades?.D) Hades.D(`[Nyx] 端口 ${candidate.port} 代理有效`);
+                        protocol = 'socks5';
                     }
+                    candidate.modeDesc = modeDesc;
                 }
             }
 
@@ -382,7 +398,8 @@ class Nyx {
                     source: 'handshake_only',
                     verified: false,
                     tunVerified: false,
-                    score: candidate.score
+                    score: candidate.score,
+                    modeDesc: '仅握手'
                 } : null;
             }
 
@@ -395,12 +412,14 @@ class Nyx {
                     verified: false,
                     tunVerified: false,
                     isDirectMode: true,
-                    score: candidate.score
+                    score: candidate.score,
+                    modeDesc: candidate.modeDesc || '直连模式'
                 } : null;
             }
         } else if (await this._sniffHttp(candidate.port)) {
             protocol = 'http';
             verified = true;
+            candidate.modeDesc = 'HTTP代理';
         }
 
         if (verified) {
@@ -411,7 +430,8 @@ class Nyx {
                 source: Array.from(candidate.sources).join('+'),
                 verified: true,
                 tunVerified: true,
-                score: candidate.score
+                score: candidate.score,
+                modeDesc: candidate.modeDesc || '代理有效'
             };
         } else if (candidate.score >= 60) {
             return {
@@ -421,7 +441,8 @@ class Nyx {
                 source: 'os_process_unverified',
                 verified: false,
                 tunVerified: false,
-                score: candidate.score
+                score: candidate.score,
+                modeDesc: '未验证'
             };
         }
 
@@ -2175,7 +2196,7 @@ class Proteus {
         const nativeIP = envData?.inference?.v4Ip || envData?.v4Ip || null;
 
         const [fingerprint, linkStateRaw, v6State, raceData] = await Promise.all([
-            this._scanLocal(envSet, envData?.network?.proxy, nativeIP, Hades),
+            this._scanLocal(envSet, envData?.network?.proxy, nativeIP, Hades, envData),
             this._dialBeacons(),
             v6StatePromise,
             Hermes.dualStackRace(this._setup.BeaconBiz)
@@ -2255,7 +2276,7 @@ class Proteus {
         };
     }
 
-    static async _scanLocal(envSet = false, sysProxy = null, nativeIP = null, Hades = console) {
+    static async _scanLocal(envSet = false, sysProxy = null, nativeIP = null, Hades = console, envData = null) {
         let active = false;
         envSet = !!envSet;
 
@@ -2268,7 +2289,7 @@ class Proteus {
 
         const [procActive, nyxProxies] = await Promise.all([
             scanProc(),
-            Nyx.scan(this._setup.agentGates, nativeIP, Hades)
+            Nyx.scan(this._setup.agentGates, nativeIP, Hades, envData)
         ]);
 
         let proxyContext = null;
@@ -2291,7 +2312,6 @@ class Proteus {
                 proxyContext = trulyVerified;
                 if (Hades?.D) Hades.D(`锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [已穿透验证]`);
             } else if (directMode) {
-                if (Hades?.D) Hades.D(`[Nyx] 端口 ${directMode.port} 为直连模式`);
                 proxyContext = null;
             } else if (handshakeOnly) {
                 if (Hades?.D) Hades.D(`[检测到代理软件端口 ${handshakeOnly.port} 但穿透验证失败（疑似直连模式）`);
@@ -7956,6 +7976,12 @@ class MiaoPluginMBT extends plugin {
 
                   if (isShuttingDown) break;
                   if (nodePool.length === 0) {
+                      if (useGitHubAsBackup) {
+                          nodePool.push(githubNode);
+                          useGitHubAsBackup = false;
+                          continue;
+                      }
+
                       if (cerberusSessionId) cerberus.finishSession(cerberusSessionId, false, { event: 'all-failed', code: waveError?.code, message: waveError?.message });
                       return { success: false, nodeName: "全部失败", error: waveError, mode: MODE, modeMsg: logModeMsg };
                   }
@@ -8290,6 +8316,7 @@ class MiaoPluginMBT extends plugin {
     const triedTargets = new Set();
     let attempt = 0;
     let lastError = null;
+    let accumulated_Metrics = { rx_bytes: 0, io_chunks: 0, instability: 0 };
 
     while (attempt < MAX_RETRIES) {
         attempt++;
@@ -8310,12 +8337,23 @@ class MiaoPluginMBT extends plugin {
         const startTime = Date.now();
 
         const result = await MBTPipeControl("git", ["ls-remote", "--heads", actualUrl], { airlock: true }, TIMEOUT)
-            .then((res) => ({
-                success: true,
-                duration: Date.now() - startTime,
-                metrics: res.metrics
-            }))
+            .then((res) => {
+                if (res.metrics) {
+                    accumulated_Metrics.rx_bytes += (res.metrics.rx_bytes || 0);
+                    accumulated_Metrics.io_chunks += (res.metrics.io_chunks || 0);
+                    accumulated_Metrics.instability += (res.metrics.instability || 0);
+                }
+                return {
+                    success: true,
+                    duration: Date.now() - startTime
+                };
+            })
             .catch((err) => {
+                if (err.metrics) {
+                    accumulated_Metrics.rx_bytes += (err.metrics.rx_bytes || 0);
+                    accumulated_Metrics.io_chunks += (err.metrics.io_chunks || 0);
+                    accumulated_Metrics.instability += (err.metrics.instability || 0);
+                }
                 lastError = err;
                 return null;
             });
@@ -8324,7 +8362,7 @@ class MiaoPluginMBT extends plugin {
             return {
                 success: true,
                 duration: result.duration,
-                metrics: result.metrics,
+                metrics: accumulated_Metrics,
                 isDisguised: true
             };
         }
@@ -8335,7 +8373,7 @@ class MiaoPluginMBT extends plugin {
         duration: Infinity,
         error: lastError,
         isDisguised: true,
-        metrics: null
+        metrics: accumulated_Metrics
     };
   }
 
