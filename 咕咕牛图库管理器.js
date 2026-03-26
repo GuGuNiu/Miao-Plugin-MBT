@@ -371,22 +371,20 @@ class Nyx {
                 const proxyCheck = await this._probeS5RealIP(candidate.port, nativeIP);
                 if (proxyCheck) {
                     isDirectMode = proxyCheck.isDirect;
-                    let modeDesc = isDirectMode ? '直连模式' : '全局模式';
 
                     const puppV4 = envData?.network?.browser?.v4?.ip;
                     if (isDirectMode && puppV4 && puppV4 !== nativeIP) {
                         isDirectMode = false;
-                        modeDesc = '规则模式';
                     }
 
                     if (isDirectMode) {
                         tunVerified = false;
                         verified = false;
                         protocol = 'socks5_direct';
-                    } else {
+                        candidate.modeDesc = '直连模式';
                         protocol = 'socks5';
+                        candidate.modeDesc = '代理模式';
                     }
-                    candidate.modeDesc = modeDesc;
                 }
             }
 
