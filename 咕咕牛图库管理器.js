@@ -1874,7 +1874,7 @@ class Hermes {
 
     static async ActiveProxyPort(ports = null, Hades = console) {
         try {
-            const results = await Nyx.scan(ports, Hades);
+            const results = await Nyx.scan(ports, null, Hades, null);
             if (results && results.length > 0) {
                 const best = results[0];
                 if (Hades?.D) {
@@ -2193,7 +2193,7 @@ class Proteus {
             return !!(HTTP_PROXY || HTTPS_PROXY || ALL_PROXY || http_proxy || https_proxy || all_proxy);
         })();
 
-        const nativeIP = envData?.inference?.v4Ip || envData?.v4Ip || null;
+        const nativeIP = envData?.network?.native?.v4Ip || null;
 
         const [fingerprint, linkStateRaw, v6State, raceData] = await Promise.all([
             this._scanLocal(envSet, envData?.network?.proxy, nativeIP, Hades, envData),
@@ -6087,13 +6087,21 @@ class Presenter {
 
 class DocHub {
     static async report(e, opName, err, ctx = "", logger = getCore()) {
-        if (!ctx && e) {
+        let baseCtx = "";
+        if (e) {
             const parts = [];
             if (e.raw_message || e.msg) parts.push(`触发命令: ${e.raw_message || e.msg}`);
             if (e.user_id) parts.push(`发送者: ${e.user_id}`);
             if (e.group_id) parts.push(`群组: ${e.group_id}`);
-            if (parts.length > 0) ctx = parts.join(" | ");
+            if (parts.length > 0) baseCtx = parts.join(" | ");
         }
+        
+        if (baseCtx && ctx) {
+            ctx = `${baseCtx}\n附加信息: ${ctx}`;
+        } else if (baseCtx && !ctx) {
+            ctx = baseCtx;
+        }
+
         const core = (logger && typeof logger.error === 'function') ? logger : getCore();
         const Hades = HadesEntry({}, core);
 
@@ -6122,10 +6130,12 @@ class DocHub {
                 const context = await Nomos.getContext();
                 const activeRepos = Nomos.ScanQueue(MiaoPluginMBT.Paths, MiaoPluginMBT.MBTConfig, context);
                 const repoStatusPromises = activeRepos.map(async (repo) => {
+                    if (!(await Ananke.Audit(repo.path, true))) return null;
                     const status = await Nomos.getRepoStatus(repo.gitPath);
                     return { num: repo.num, ...status };
                 });
-                const repoStatuses = await Promise.all(repoStatusPromises);
+                const repoStatusesRaw = await Promise.all(repoStatusPromises);
+                const repoStatuses = repoStatusesRaw.filter(r => r !== null);
                 const primaryRepo = repoStatuses.find(r => r.num === 1) || repoStatuses[0];
                 const activeRepoNums = new Set(repoStatuses.map(r => r.num));
                 const shortSha = primaryRepo?.sha ? primaryRepo.sha.substring(0, 25) : 'unknown';
