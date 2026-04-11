@@ -746,6 +746,95 @@ class Nyx {
     }
 }
 
+class StealthFetcher {
+    static StealthMutex = new Metis('StealthFetcher', getCore());
+    static WafCookies = []; 
+    static _withAbort(promise, signal, page) {
+        if (!signal) return promise;
+        let abortHandler;
+        const abortPromise = new Promise((_, reject) => {
+            if (signal.aborted) return reject(new MetisError('请求被中止', 'ABORT_ERR'));
+            abortHandler = () => {
+                if (page && !page.isClosed()) page.close().catch(() => {});
+                reject(new MetisError('请求被中止', 'ABORT_ERR'));
+            };
+            signal.addEventListener('abort', abortHandler, { once: true });
+        });
+
+        return Promise.race([promise, abortPromise]).finally(() => {
+            if (abortHandler) signal.removeEventListener('abort', abortHandler);
+        });
+    }
+
+    static async fetchRaw(url, options = {}) {
+        const { timeout = 30000, logger = getCore(), signal } = options;
+        const Hades = HadesEntry({}, logger);
+
+        return this.StealthMutex.run(async (mutexSignal) => {
+            const effSignal = signal && signal.aborted ? signal : mutexSignal;
+
+            return Morpheus.withPage(async (page) => {
+                await this._withAbort(page.evaluateOnNewDocument(() => {
+                    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                    Object.defineProperty(navigator, 'languages', { get: () => ['zh-CN', 'zh', 'en'] });
+                    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] }); 
+                    window.chrome = { runtime: {} }; 
+                }), effSignal, page);
+
+                if (this.WafCookies.length > 0) {
+                    const targetUrl = new URL(url);
+                    const cookiesToSet = this.WafCookies.map(c => ({ ...c, domain: targetUrl.hostname }));
+                    await page.setCookie(...cookiesToSet);
+                }
+
+                const response = await this._withAbort(
+                    page.goto(url, { waitUntil: 'domcontentloaded', timeout }),
+                    effSignal, page
+                );
+
+                const status = response.status();
+                let content = await page.content();
+
+                const WafChallenge = status === 418 || 
+                                       content.includes('HWWAFSESID') || 
+                                       content.includes('华为云Web应用防火墙') ||
+                                       content.includes('document.cookie');
+
+                if (WafChallenge) {
+                    try {
+                        await this._withAbort(
+                            page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }),
+                            effSignal, page
+                        );
+                    } catch (navErr) {
+                        if (navErr.code === 'ABORT_ERR') throw navErr;
+                    }
+                }
+
+                const currentCookies = await page.cookies();
+                const wafCookies = currentCookies.filter(c => c.name.includes('HWWAF'));
+                if (wafCookies.length > 0) {
+                    this.WafCookies = wafCookies;
+                    Hades.D(`成功提取 WAFCookies: ${wafCookies.map(c => c.name).join(', ')}`);
+                }
+
+                const rawText = await this._withAbort(page.evaluate(() => {
+                    const pre = document.querySelector('pre');
+                    if (pre) return pre.innerText;
+                    return document.body.innerText || document.documentElement.innerText;
+                }), effSignal, page);
+
+                return {
+                    success: true,
+                    status: WafChallenge ? 200 : status, 
+                    body: rawText
+                };
+
+            }, Hades);
+        }, { id: 'StealthFetch_Lock', ttl: timeout + 5000, wait: 10000 });
+    }
+}
+
 class Hermes {
     static #cache = new Map();
     static #envCache = null;
@@ -1431,6 +1520,11 @@ class Hermes {
         const baseHeaders = { 'Connection': 'keep-alive', ...headers };
         if (ua) baseHeaders['User-Agent'] = ua;
 
+        if (url.includes('gitcode.com') && StealthFetcher.WafCookies.length > 0) {
+            const cookieStr = StealthFetcher.WafCookies.map(c => `${c.name}=${c.value}`).join('; ');
+            baseHeaders['Cookie'] = baseHeaders['Cookie'] ? `${baseHeaders['Cookie']}; ${cookieStr}` : cookieStr;
+        }
+
         if (useProxy) {
             return this.#proxyRequest(
                 url,
@@ -1443,6 +1537,16 @@ class Hermes {
 
         return new Promise((resolve) => {
             const req = requestModule.request(url, { method, agent, timeout, signal, family: finalFamily, headers: baseHeaders }, (res) => {
+                if (res.statusCode === 418 && url.includes('gitcode.com')) {
+                    const Hades = HadesEntry();
+                    req.destroy(); 
+                    
+                    StealthFetcher.fetchRaw(url, { timeout, signal, logger: Hades })
+                        .then(stealthRes => resolve(stealthRes))
+                        .catch(err => resolve({ success: false, status: 418, body: null, error: err }));
+                    return;
+                }
+
                 if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location) {
                     let nextUrl = res.headers.location;
                     if (!nextUrl.startsWith('http')) nextUrl = new URL(nextUrl, url).href;
@@ -6177,6 +6281,7 @@ class DocHub {
 
                 if (tplResult.success) {
                     const OpsName = (e?.msg?.startsWith('#') && !opName.startsWith('#')) ? `#${opName}` : opName;
+                    const stealthStatus = this._getStealthStatus();
                     const ViewProps = {
                         operationName: OpsName,
                         errMsg: err.message || "Unknown Error",
@@ -6189,7 +6294,8 @@ class DocHub {
                         stackTrace: diagnosis.stack ? diagnosis.stack.substring(0, 1200) : null,
                         snapshot: snap,
                         error: err,
-                        timestamp: new Date().toLocaleString()
+                        timestamp: new Date().toLocaleString(),
+                        stealthStatus: stealthStatus
                     };
 
                     imgBuffer = await Morpheus.shot("error-report", {
@@ -6238,6 +6344,11 @@ class DocHub {
 
         const type = ErrDoc.diagnose(err);
 
+        const WafBlocked = this._WafBlocked(err, ctx);
+        if (WafBlocked) {
+            report.summary += "\n[检测到 WAF 拦截]";
+        }
+
         const SUGG_MAP = {
             NETWORK: [
                 "- **网络故障**：请执行 `#咕咕牛测速` 诊断节点连通性。",
@@ -6259,10 +6370,19 @@ class DocHub {
             CODE: [
                 "- **程序异常**：此错误可能源于插件逻辑缺陷，请截图反馈。",
                 "- 尝试重启 Yunzai-Bot 看是否恢复。"
+            ],
+            WAF: [
+                "- **WAF 拦截**：GitCode 的 Web 应用防火墙已拦截本次请求。",
+                "- 系统已自动尝试通过 StealthFetcher 绕过，请稍后重试。",
+                "- 若持续失败，请检查 Puppeteer 是否正常安装：`npm list puppeteer`。",
+                "- 或尝试更换网络环境（如使用代理）。"
             ]
         };
 
         let suggs = SUGG_MAP[type] || [];
+        if (WafBlocked) {
+            suggs = [...SUGG_MAP.WAF, ...suggs];
+        }
         suggs.push("- 请查看控制台详细日志。", "- 若问题持续无法解决，建议 `#重置咕咕牛`。");
 
         report.suggestions = [...new Set(suggs)].join("\n");
@@ -6277,6 +6397,49 @@ class DocHub {
         }
 
         return report;
+    }
+
+    static _WafBlocked(err, ctx = "") {
+        if (!err) return false;
+        const msg = (err.message || "").toLowerCase();
+        const code = String(err.code || "").toLowerCase();
+        const status = err.status || 0;
+        const stderr = (err.stderr || "").toLowerCase();
+        const stdout = (err.stdout || "").toLowerCase();
+        const context = (ctx || "").toLowerCase();
+
+        if (status === 418) return true;
+        if (msg.includes('418') || msg.includes('waf') || msg.includes('华为云')) return true;
+        if (stderr.includes('418') || stderr.includes('waf') || stderr.includes('hwwaf')) return true;
+        if (stdout.includes('418') || stdout.includes('waf') || stdout.includes('hwwaf')) return true;
+        if (context.includes('gitcode.com') && (context.includes('418') || context.includes('拦截'))) return true;
+        if (msg.includes('stealthfetcher') || msg.includes('stealth')) return true;
+
+        return false;
+    }
+
+    static _getStealthStatus() {
+        try {
+            const cookieCount = StealthFetcher.WafCookies?.length || 0;
+            const cookieNames = cookieCount > 0 
+                ? StealthFetcher.WafCookies.map(c => c.name).join(', ')
+                : '无';
+            return {
+                available: true,
+                cookieCount: cookieCount,
+                cookieNames: cookieNames,
+                statusText: cookieCount > 0 
+                    ? `已获取 WAF Cookie (${cookieNames})` 
+                    : '未获取 WAF Cookie'
+            };
+        } catch (e) {
+            return {
+                available: false,
+                cookieCount: 0,
+                cookieNames: '未知',
+                statusText: 'StealthFetcher 状态异常'
+            };
+        }
     }
 
     static _extractErrSource(err) {
@@ -7714,6 +7877,11 @@ class MiaoPluginMBT extends plugin {
                       if (preferV6) currentGitConfigs.push('core.ipv6=true');
                       currentGitConfigs.push('http.sslVerify=false');
                       if (isDowngrade) currentGitConfigs.push('http.version=HTTP/1.1');
+
+                      if (actualCloneUrl.includes('gitcode.com') && StealthFetcher.WafCookies.length > 0) {
+                          const cookieStr = StealthFetcher.WafCookies.map(c => `${c.name}=${c.value}`).join('; ');
+                          currentGitConfigs.push(`http.extraHeader=Cookie: ${cookieStr}`);
+                      }
 
                       if (!useAirlock) {
                           const proxyEnv = extraEnv || sysProxyEnv;
