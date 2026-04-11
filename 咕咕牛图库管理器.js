@@ -132,6 +132,147 @@ function HadesEntry(options = {}, core = getCore()) {
 
 const Hades = HadesEntry();
 
+class MetisError extends Error {
+    constructor(message, code) {
+        super(message);
+        this.name = 'MetisError';
+        this.code = code;
+    }
+}
+
+class Metis {
+    constructor(name = 'Anonymous', logger = console) {
+        this.name = name;
+        this.logger = HadesEntry({}, logger || getCore());
+        this._queue = [];
+        this._holder = null;
+        this._isLocked = false;
+        this._perfStart = 0;
+    }
+
+    async run(taskFn, options = {}) {
+        const { ttl = 0, wait = 0, id = 'Unknown', instant = false, priority = 0 } = options;
+        const rid = `[Metis:${this.name}:${id}]`;
+
+        try {
+            await this._acquire(id, wait, instant, priority);
+        } catch (err) {
+            if (err.code === 'METIS_BUSY') {
+                this.logger.debug(`${rid} 🔒 锁被占用`);
+            } else if (err.code === 'METIS_WAIT_TIMEOUT') {
+                this.logger.debug(`${rid} ⏳ 等待锁超时 (${wait}ms)`);
+            }
+            throw err;
+        }
+
+        if (this._holder.reentryCount > 1) {
+            try {
+                return await taskFn(new AbortController().signal);
+            } finally {
+                this._release(id);
+            }
+        }
+
+        const controller = new AbortController();
+        let timeoutTimer = null;
+
+        this._holder.start = performance.now();
+        this._perfStart = this._holder.start;
+
+        if (ttl > 0) {
+            timeoutTimer = setTimeout(() => {
+                const elapsed = performance.now() - this._perfStart;
+                this.logger.debug(`${rid} ⏰ 任务超时 (设:${ttl}ms|实:${elapsed.toFixed(1)}ms)，强制释放`);
+                controller.abort('METIS_TTL_EXPIRED');
+                if (this._holder) this._holder.expired = true;
+            }, ttl);
+        }
+
+        try {
+            return await taskFn(controller.signal);
+        } catch (err) {
+            if (controller.signal.aborted && controller.signal.reason === 'METIS_TTL_EXPIRED') {
+                throw new MetisError(`任务超过 TTL 时间限制 (${ttl}ms)`, 'METIS_TTL_EXPIRED');
+            }
+            throw err;
+        } finally {
+            if (timeoutTimer) clearTimeout(timeoutTimer);
+            this._release(id);
+        }
+    }
+
+    async _acquire(id, waitTime, instant, priority = 0) {
+        if (this._isLocked && this._holder && this._holder.id === id) {
+            this._holder.reentryCount++;
+            return;
+        }
+
+        if (this._isLocked) {
+            if (instant) throw new MetisError('锁被占用', 'METIS_BUSY');
+
+            const { promise, resolve, reject } = Promise.withResolvers();
+            let waitTimer = null;
+            if (waitTime > 0) {
+                waitTimer = setTimeout(() => {
+                    const idx = this._queue.findIndex(item => item.resolve === resolve);
+                    if (idx !== -1) this._queue.splice(idx, 1);
+                    reject(new MetisError('等待超时', 'METIS_WAIT_TIMEOUT'));
+                }, waitTime);
+            }
+
+            this._queue.push({ resolve, reject, timer: waitTimer, id, priority, timestamp: performance.now() });
+            this._queue.sort((a, b) => {
+                if (b.priority !== a.priority) return a.priority - b.priority;
+                return a.timestamp - b.timestamp;
+            });
+
+            await promise;
+        }
+
+        this._isLocked = true;
+        this._holder = { id, reentryCount: 1 };
+    }
+
+    _release(releaserId) {
+        if (!this._holder || (this._holder.id !== releaserId && !this._holder.expired)) return;
+
+        if (this._holder.reentryCount > 1) {
+            this._holder.reentryCount--;
+            return;
+        }
+
+        this._holder = null;
+        if (this._queue.length > 0) {
+            const next = this._queue.shift();
+            if (next.timer) clearTimeout(next.timer);
+            next.resolve();
+        } else {
+            this._isLocked = false;
+        }
+    }
+
+    emergencyReset(reason) {
+        this.logger.warn(`[Metis:${this.name}] 🧨 强制重置: ${reason}`);
+        while (this._queue.length > 0) {
+            const item = this._queue.shift();
+            if (item.timer) clearTimeout(item.timer);
+            item.reject(new MetisError(`锁强制重置: ${reason}`, 'METIS_RESET'));
+        }
+        this._holder = null;
+        this._isLocked = false;
+    }
+
+    getStats() {
+        return {
+            locked: this._isLocked,
+            holder: this._holder ? this._holder.id : null,
+            reentry: this._holder ? this._holder.reentryCount : 0,
+            queueLen: this._queue.length,
+            uptime: this._holder && this._holder.start ? performance.now() - this._holder.start : 0
+        };
+    }
+}
+
 const QuantumFlux = (fn, min = 0, max = 3600000) => {
     return () => {
         const _delta = MBTMath.Range(min, max);
@@ -3908,147 +4049,6 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
       }
     });
   });
-}
-
-class MetisError extends Error {
-    constructor(message, code) {
-        super(message);
-        this.name = 'MetisError';
-        this.code = code;
-    }
-}
-
-class Metis {
-    constructor(name = 'Anonymous', logger = console) {
-        this.name = name;
-        this.logger = HadesEntry({}, logger || getCore());
-        this._queue = [];
-        this._holder = null;
-        this._isLocked = false;
-        this._perfStart = 0;
-    }
-
-    async run(taskFn, options = {}) {
-        const { ttl = 0, wait = 0, id = 'Unknown', instant = false, priority = 0 } = options;
-        const rid = `[Metis:${this.name}:${id}]`;
-
-        try {
-            await this._acquire(id, wait, instant, priority);
-        } catch (err) {
-            if (err.code === 'METIS_BUSY') {
-                this.logger.debug(`${rid} 🔒 锁被占用`);
-            } else if (err.code === 'METIS_WAIT_TIMEOUT') {
-                this.logger.debug(`${rid} ⏳ 等待锁超时 (${wait}ms)`);
-            }
-            throw err;
-        }
-
-        if (this._holder.reentryCount > 1) {
-            try {
-                return await taskFn(new AbortController().signal);
-            } finally {
-                this._release(id);
-            }
-        }
-
-        const controller = new AbortController();
-        let timeoutTimer = null;
-
-        this._holder.start = performance.now();
-        this._perfStart = this._holder.start;
-
-        if (ttl > 0) {
-            timeoutTimer = setTimeout(() => {
-                const elapsed = performance.now() - this._perfStart;
-                this.logger.debug(`${rid} ⏰ 任务超时 (设:${ttl}ms|实:${elapsed.toFixed(1)}ms)，强制释放`);
-                controller.abort('METIS_TTL_EXPIRED');
-                if (this._holder) this._holder.expired = true;
-            }, ttl);
-        }
-
-        try {
-            return await taskFn(controller.signal);
-        } catch (err) {
-            if (controller.signal.aborted && controller.signal.reason === 'METIS_TTL_EXPIRED') {
-                throw new MetisError(`任务超过 TTL 时间限制 (${ttl}ms)`, 'METIS_TTL_EXPIRED');
-            }
-            throw err;
-        } finally {
-            if (timeoutTimer) clearTimeout(timeoutTimer);
-            this._release(id);
-        }
-    }
-
-    async _acquire(id, waitTime, instant, priority = 0) {
-        if (this._isLocked && this._holder && this._holder.id === id) {
-            this._holder.reentryCount++;
-            return;
-        }
-
-        if (this._isLocked) {
-            if (instant) throw new MetisError('锁被占用', 'METIS_BUSY');
-
-            const { promise, resolve, reject } = Promise.withResolvers();
-            let waitTimer = null;
-            if (waitTime > 0) {
-                waitTimer = setTimeout(() => {
-                    const idx = this._queue.findIndex(item => item.resolve === resolve);
-                    if (idx !== -1) this._queue.splice(idx, 1);
-                    reject(new MetisError('等待超时', 'METIS_WAIT_TIMEOUT'));
-                }, waitTime);
-            }
-
-            this._queue.push({ resolve, reject, timer: waitTimer, id, priority, timestamp: performance.now() });
-            this._queue.sort((a, b) => {
-                if (b.priority !== a.priority) return a.priority - b.priority;
-                return a.timestamp - b.timestamp;
-            });
-
-            await promise;
-        }
-
-        this._isLocked = true;
-        this._holder = { id, reentryCount: 1 };
-    }
-
-    _release(releaserId) {
-        if (!this._holder || (this._holder.id !== releaserId && !this._holder.expired)) return;
-
-        if (this._holder.reentryCount > 1) {
-            this._holder.reentryCount--;
-            return;
-        }
-
-        this._holder = null;
-        if (this._queue.length > 0) {
-            const next = this._queue.shift();
-            if (next.timer) clearTimeout(next.timer);
-            next.resolve();
-        } else {
-            this._isLocked = false;
-        }
-    }
-
-    emergencyReset(reason) {
-        this.logger.warn(`[Metis:${this.name}] 🧨 强制重置: ${reason}`);
-        while (this._queue.length > 0) {
-            const item = this._queue.shift();
-            if (item.timer) clearTimeout(item.timer);
-            item.reject(new MetisError(`锁强制重置: ${reason}`, 'METIS_RESET'));
-        }
-        this._holder = null;
-        this._isLocked = false;
-    }
-
-    getStats() {
-        return {
-            locked: this._isLocked,
-            holder: this._holder ? this._holder.id : null,
-            reentry: this._holder ? this._holder.reentryCount : 0,
-            queueLen: this._queue.length,
-            uptime: this._holder && this._holder.start ? performance.now() - this._holder.start : 0
-        };
-    }
 }
 
 class ErrDoc {
