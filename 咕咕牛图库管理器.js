@@ -6908,7 +6908,7 @@ class MiaoPluginMBT extends plugin {
     if (!input) return null;
     if (Buffer.isBuffer(input)) {
       const filePath = this._saveTempImg(input);
-      return segment.image(filePath);
+      return segment.image(`file://${filePath}`);
     }
     if (typeof input === 'string') {
       return segment.image(input);
