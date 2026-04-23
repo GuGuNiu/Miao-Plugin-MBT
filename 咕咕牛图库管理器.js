@@ -132,7 +132,15 @@ function HadesEntry(options = {}, core = getCore()) {
 
 const getHades = (logger) => HadesEntry({}, logger || getCore());
 const toPosix = (p) => p?.replace(/\\/g, "/") || "";
-const toFileUrl = (p) => p ? `file://${toPosix(p)}` : "";
+const toFileUrl = (p) => {
+  if (!p) return "";
+  const posixPath = toPosix(p);
+  if (posixPath.startsWith("file://")) return posixPath;
+  if (/^[a-zA-Z]:/.test(posixPath)) {
+    return `file:///${posixPath}`;
+  }
+  return `file://${posixPath}`;
+};
 
 const Hades = HadesEntry({});
 
@@ -927,7 +935,7 @@ class StealthFetcher {
             }, Hades);
         }, { id: 'StealthFetch_Lock', ttl: timeout + 5000, wait: 10000 });
     }
-} 
+}
 
 class Hermes {
     static #cache = new Map();
@@ -4288,24 +4296,40 @@ class Morpheus {
     }
 
     static #FindBrowserPath() {
-        if (os.platform() !== 'win32') return undefined;
-        
-        const suffixes = [
-            path.join('Microsoft', 'Edge', 'Application', 'msedge.exe'),
-            path.join('Google', 'Chrome', 'Application', 'chrome.exe'),
-        ];
-        
-        const prefixes = [
-            process.env.ProgramFiles,
-            process.env["ProgramFiles(x86)"],
-            process.env.LocalAppData,
-        ].filter(Boolean);
-
-        for (const prefix of prefixes) {
-            for (const suffix of suffixes) {
-                const candidate = path.join(prefix, suffix);
+        const platform = os.platform();
+        if (platform === 'win32') {
+            const suffixes = [
+                path.join('Microsoft', 'Edge', 'Application', 'msedge.exe'),
+                path.join('Google', 'Chrome', 'Application', 'chrome.exe'),
+            ];
+            const prefixes = [
+                process.env.ProgramFiles,
+                process.env["ProgramFiles(x86)"],
+                process.env.LocalAppData,
+            ].filter(Boolean);
+            for (const prefix of prefixes) {
+                for (const suffix of suffixes) {
+                    const candidate = path.join(prefix, suffix);
+                    if (fs.existsSync(candidate)) return candidate;
+                }
+            }
+            return undefined;
+        }
+        if (platform === 'linux') {
+            const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            if (envPath && fs.existsSync(envPath)) return envPath;
+            const linuxPaths = [
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chrome',
+                '/snap/bin/chromium',
+            ];
+            for (const candidate of linuxPaths) {
                 if (fs.existsSync(candidate)) return candidate;
             }
+            return undefined;
         }
         return undefined;
     }
@@ -4329,6 +4353,10 @@ class Morpheus {
             ],
             userDataDir: path.join(MiaoPluginMBT.Paths.TempNiuPath, 'chromium-profile')
         };
+
+        if (MiaoPluginMBT._detectDockerEnv()) {
+            launchOptions.args.push('--single-process');
+        }
 
         const sysBrowser = this.#FindBrowserPath();
         if (sysBrowser) {
@@ -4490,7 +4518,7 @@ class Morpheus {
                 await page.setViewport({ width: width, height: 1000, deviceScaleFactor: 1 });
             }
 
-            await page.goto(`file://${htmlPath}`, { ...navOpts, waitUntil: 'load' });
+            await page.goto(toFileUrl(htmlPath), { ...navOpts, waitUntil: 'load' });
 
             if (MorpheusSignal && signalPromise) {
                 const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(false), 60000));
@@ -6009,8 +6037,16 @@ class Presenter {
                     const absolutePath = await MiaoPluginMBT.FsQuery(relativePath);
                     const MsgNode = [];
                     if (absolutePath) {
-                        if (await Ananke.Audit(absolutePath, false)) MsgNode.push(segment.image(toFileUrl(absolutePath)));
-                        else MsgNode.push(`[图片无法加载: ${fileName}]`);
+                        if (await Ananke.Audit(absolutePath, false)) {
+                            try {
+                                const imgBuffer = fs.readFileSync(absolutePath);
+                                MsgNode.push(segment.image(imgBuffer));
+                            } catch {
+                                MsgNode.push(segment.image(toFileUrl(absolutePath)));
+                            }
+                        } else {
+                            MsgNode.push(`[图片无法加载: ${fileName}]`);
+                        }
                     } else {
                         MsgNode.push(`[图片文件丢失: ${fileName}]`);
                     }
@@ -6048,8 +6084,17 @@ class Presenter {
                     ? await this._resolveZZZTitleFaceUrl(primaryName)
                     : null;
 
-                const makeForwardMsgTitle = titleFaceUrl
-                    ? [segment.image(titleFaceUrl), ` [${primaryName}] 图库详情 (${batchNum}/${pageCount})`]
+                let titleSeg = null;
+                if (titleFaceUrl) {
+                    try {
+                        const titleBuffer = fs.readFileSync(titleFaceUrl.replace(/^file:\/\//, ''));
+                        titleSeg = segment.image(titleBuffer);
+                    } catch {
+                        titleSeg = segment.image(titleFaceUrl);
+                    }
+                }
+                const makeForwardMsgTitle = titleSeg
+                    ? [titleSeg, ` [${primaryName}] 图库详情 (${batchNum}/${pageCount})`]
                     : `[${primaryName}] 图库详情 (${batchNum}/${pageCount})`;
 
                 const forwardList = [];
@@ -6066,8 +6111,16 @@ class Presenter {
                     const absolutePath = await MiaoPluginMBT.FsQuery(relativePath);
                     const MsgNode = [];
                     if (absolutePath) {
-                        if (await Ananke.Audit(absolutePath, false)) MsgNode.push(segment.image(toFileUrl(absolutePath)));
-                        else MsgNode.push(`[图片无法加载: ${fileName}]`);
+                        if (await Ananke.Audit(absolutePath, false)) {
+                            try {
+                                const imgBuffer = fs.readFileSync(absolutePath);
+                                MsgNode.push(segment.image(imgBuffer));
+                            } catch {
+                                MsgNode.push(segment.image(toFileUrl(absolutePath)));
+                            }
+                        } else {
+                            MsgNode.push(`[图片无法加载: ${fileName}]`);
+                        }
                     } else {
                         MsgNode.push(`[图片文件丢失: ${fileName}]`);
                     }
@@ -6806,10 +6859,20 @@ class MiaoPluginMBT extends plugin {
   static ToImgSeg(input) {
     if (!input) return null;
     if (Buffer.isBuffer(input)) {
-      const filePath = this._saveTempImg(input);
-      return segment.image(`file://${filePath}`);
+      return segment.image(input);
     }
     if (typeof input === 'string') {
+      if (input.startsWith('http://') || input.startsWith('https://') || input.startsWith('file://')) {
+        return segment.image(input);
+      }
+      if (path.isAbsolute(input)) {
+        try {
+          const buffer = fs.readFileSync(input);
+          return segment.image(buffer);
+        } catch {
+          return segment.image(toFileUrl(input));
+        }
+      }
       return segment.image(input);
     }
     return segment.image(input);
@@ -6840,7 +6903,16 @@ class MiaoPluginMBT extends plugin {
       }
       return true;
     } catch (sendErr) {
-      Hades.W(`图片发送失败，转文本: ${sendErr?.code || sendErr?.message || 'SEND_FAIL'}`);
+      Hades.W(`图片发送失败: ${sendErr?.code || sendErr?.message || 'SEND_FAIL'}`);
+      if (typeof input === 'string' && !input.startsWith('http') && path.isAbsolute(input)) {
+        try {
+          const buffer = fs.readFileSync(input);
+          await e.reply(segment.image(buffer));
+          return true;
+        } catch (retryErr) {
+          Hades.W(`Buffer重试发送失败: ${retryErr?.message || 'RETRY_FAIL'}`);
+        }
+      }
       if (fallbackText) {
         try { await e.reply(`${fallbackText}\n(Code: ${sendErr?.code || 'SEND_FAIL'})`, true); } catch {}
       }
@@ -7686,7 +7758,7 @@ class MiaoPluginMBT extends plugin {
               }
           }
 
-          Hades.D(`${RidColored}|[S] 模式=${MODE} ${logModeMsg}`);
+          Hades.D(`${RidColored} 模式=${MODE} ${logModeMsg}`);
 
           const githubNode = sortedNodes.find(n => n.name === "GitHub") || {
               name: "GitHub", priority: 0, ClonePrefix: "https://github.com/", protocol: 'HTTPS'
@@ -11210,7 +11282,17 @@ class SleeperAgent extends plugin {
               try {
                 const CREName = fileName.replace(/Gu\d+\.webp$/i, '');
                 const promptText = `输入#咕咕牛查看${CREName}可以看图库全部图片`;
-                const imgSegment = segment.image(imgPath.startsWith('http') ? absolutePath : toFileUrl(absolutePath));
+                let imgSegment;
+                if (imgPath.startsWith('http')) {
+                    imgSegment = segment.image(absolutePath);
+                } else {
+                    try {
+                        const imgBuffer = fs.readFileSync(absolutePath);
+                        imgSegment = segment.image(imgBuffer);
+                    } catch {
+                        imgSegment = segment.image(toFileUrl(absolutePath));
+                    }
+                }
 
                 const forwardList = [promptText, imgSegment];
                 const forwardMsg = await common.makeForwardMsg(e, forwardList, `原图 - ${fileName}`);
