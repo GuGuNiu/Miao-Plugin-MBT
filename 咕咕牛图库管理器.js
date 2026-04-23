@@ -130,7 +130,11 @@ function HadesEntry(options = {}, core = getCore()) {
     return decorate(Hades);
 }
 
-const Hades = HadesEntry();
+const getHades = (logger) => HadesEntry({}, logger || getCore());
+const toPosix = (p) => p?.replace(/\\/g, "/") || "";
+const toFileUrl = (p) => p ? `file://${toPosix(p)}` : "";
+
+const Hades = HadesEntry({});
 
 class MetisError extends Error {
     constructor(message, code) {
@@ -143,7 +147,7 @@ class MetisError extends Error {
 class Metis {
     constructor(name = 'Anonymous', logger = console) {
         this.name = name;
-        this.logger = HadesEntry({}, logger || getCore());
+        this.logger = getHades(logger);
         this._queue = [];
         this._holder = null;
         this._isLocked = false;
@@ -320,67 +324,17 @@ class MBTPagination {
 
 class Nyx {
     static Proxy_Pro = [
-        {
-            name: 'clash',
-            aliases: ['clash-verge', 'clash verge', 'clashverge', 'clash_for_windows', 'clashforwindows'],
-            secondary: ['cfw', 'clash-win64', 'clash-linux', 'clash-meta', 'mihomo', 'clash.meta'],
-            threshold: 0.75
-        },
-        {
-            name: 'v2ray',
-            aliases: ['v2rayn', 'v2ray-core', 'v2raycore'],
-            secondary: ['v2rayn-core', 'v2rayncore', 'v2rayng'],
-            threshold: 0.75
-        },
-        {
-            name: 'sing-box',
-            aliases: ['singbox', 'sing_box'],
-            secondary: [],
-            threshold: 0.8
-        },
-        {
-            name: 'naive',
-            aliases: ['naiveproxy'],
-            secondary: [],
-            threshold: 0.8
-        },
-        {
-            name: 'hysteria',
-            aliases: ['hysteria2'],
-            secondary: [],
-            threshold: 0.8
-        },
-        {
-            name: 'shadowsocks',
-            aliases: ['shadowsocksr', 'ss-local', 'sslocal'],
-            secondary: [],
-            threshold: 0.75
-        },
-        {
-            name: 'trojan',
-            aliases: ['trojan-go', 'trojango'],
-            secondary: [],
-            threshold: 0.8
-        },
-        {
-            name: 'nekoray',
-            aliases: ['nekobox'],
-            secondary: [],
-            threshold: 0.8
-        },
-        {
-            name: 'tuic',
-            aliases: [],
-            secondary: [],
-            threshold: 0.85
-        },
-        {
-            name: 'proxy',
-            aliases: ['vpn'],
-            secondary: [],
-            threshold: 0.7
-        }
-    ];
+        ['clash', ['clashverge', 'clashforwindows'], ['cfw', 'clash-win64', 'clash-linux', 'clash-meta', 'mihomo'], 0.75],
+        ['v2ray', ['v2rayn', 'v2ray-core'], ['v2rayn-core', 'v2rayng'], 0.75],
+        ['sing-box', ['singbox'], [], 0.8],
+        ['naive', ['naiveproxy'], [], 0.8],
+        ['hysteria', ['hysteria2'], [], 0.8],
+        ['shadowsocks', ['shadowsocksr', 'ss-local'], [], 0.75],
+        ['trojan', ['trojan-go'], [], 0.8],
+        ['nekoray', ['nekobox'], [], 0.8],
+        ['tuic', [], [], 0.85],
+        ['proxy', ['vpn'], [], 0.7]
+    ].map(([name, aliases, secondary, threshold]) => ({ name, aliases, secondary, threshold }));
 
     static _nor(str) {
         return str.toLowerCase().replace(/[\s\-_.]/g, '');
@@ -956,7 +910,6 @@ class StealthFetcher {
                 const wafCookies = currentCookies.filter(c => c.name.includes('HWWAF'));
                 if (wafCookies.length > 0) {
                     this.WafCookies = wafCookies;
-                    Hades.D(`成功提取 WAFCookies: ${wafCookies.map(c => c.name).join(', ')}`);
                 }
 
                 const rawText = await this._withAbort(page.evaluate(() => {
@@ -974,7 +927,7 @@ class StealthFetcher {
             }, Hades);
         }, { id: 'StealthFetch_Lock', ttl: timeout + 5000, wait: 10000 });
     }
-}
+} 
 
 class Hermes {
     static #cache = new Map();
@@ -1517,13 +1470,13 @@ class Hermes {
         }
     }
 
-    static #ROUTING = {
-        'speedtest.html': { strategy: 'LOCAL_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/speedtest.html', localSubPath: 'sync' },
-        'help.html': { strategy: 'LOCAL_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/help.html' },
-        'error_report.html': { strategy: 'LOCAL_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/error_report.html' },
-        'download.html': { strategy: 'NET_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/download.html' },
-        'core_repo_download.html': { strategy: 'NET_FIRST', url: 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/core_repo_download.html' }
-    };
+    static #ROUTING = Object.fromEntries([
+        ['speedtest.html', 'LOCAL_FIRST', 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/speedtest.html', 'sync'],
+        ['help.html', 'LOCAL_FIRST', 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/help.html'],
+        ['error_report.html', 'LOCAL_FIRST', 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/error_report.html'],
+        ['download.html', 'NET_FIRST', 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/download.html'],
+        ['core_repo_download.html', 'NET_FIRST', 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/html/sync/core_repo_download.html']
+    ].map(([name, strategy, url, localSubPath]) => [name, { strategy, url, ...(localSubPath ? { localSubPath } : {}) }]));
 
     static #Build_Limit_Error(code, message) {
         const error_item = new Error(message);
@@ -1679,7 +1632,6 @@ class Hermes {
         return new Promise((resolve) => {
             const req = requestModule.request(url, { method, agent, timeout, signal, family: finalFamily, headers: baseHeaders }, (res) => {
                 if (res.statusCode === 418 && url.includes('gitcode.com')) {
-                    const Hades = HadesEntry();
                     req.destroy(); 
                     
                     StealthFetcher.fetchRaw(url, { timeout, signal, logger: Hades })
@@ -2374,7 +2326,7 @@ class HermesMatrix {
                     detected = true;
                     if (geoData[src.geoField] !== src.cnVal) regionCN = false;
                 }
-                if (Hades) Hades.D(`[${tag}] IPv4 探测成功: ${v4Ip} (CN=${regionCN}) 来源: ${src.url}`);
+                if (Hades) Hades.D(`[${tag}] IPv4=${v4Ip} CN=${regionCN} 来源=${src.url}`);
             } else {
                 if (Hades) Hades.D(`[${tag}] IPv4 探测结果格式错误: ${v4Result.ip}`);
             }
@@ -2383,7 +2335,7 @@ class HermesMatrix {
         if (v6Result) {
             if (net.isIPv6(v6Result.ip)) {
                 v6Ip = v6Result.ip;
-                if (Hades) Hades.D(`[${tag}] IPv6 探测成功: ${v6Ip} 来源: ${v6Result.src.url}`);
+                if (Hades) Hades.D(`[${tag}] IPv6=${v6Ip} 来源=${v6Result.src.url}`);
             } else {
                 if (Hades) Hades.D(`[${tag}] IPv6 探测结果格式错误: ${v6Result.ip}`);
             }
@@ -2553,7 +2505,7 @@ class Proteus {
 
             if (trulyVerified) {
                 proxyContext = trulyVerified;
-                if (Hades?.D) Hades.D(`锁定代理: ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [已穿透验证]`);
+                if (Hades?.D) Hades.D(`锁定代理 ${proxyContext.protocol}://${proxyContext.host}:${proxyContext.port} [已验证]`);
             } else if (directMode) {
                 proxyContext = null;
             } else if (handshakeOnly) {
@@ -3022,7 +2974,6 @@ class MBTQuoCRS {
         this.tasks.set(id, task);
         const roleText = BPP ? ' (备用)' : '';
         this.logger.debug(`${this.uiRid} | [Quo] 任务挂载: [${name}]${roleText}`);
-
         promise.then(
             res => this._done(id, res),
             err => this._fail(id, err)
@@ -3086,7 +3037,6 @@ class MBTQuoCRS {
             if (PhysicalPulse) {
                 this._ForceModel(task, now);
                 if (now % 5000 < 1500) {
-                        this.logger.debug(`${this.uiRid} | [Quo] [${task.name}] 进度0%但速度 ${(telemetry.instant_speed/1024).toFixed(0)}KB/s | 状态:${telemetry.connection_state || 'UNKNOWN'}`);
                 }
                 return;
             }
@@ -3095,7 +3045,7 @@ class MBTQuoCRS {
 
             if (runtime > 25000 && telemetry.total_bytes < 102400) {
                  if (task.name.includes("GitHub") || task.name.includes("Direct")) {
-                     this.logger.debug(`${this.uiRid} | [Quo] 流量欺诈检测: [${task.name}] (TCP握手成功但无有效载荷)`);
+                     this.logger.debug(`${this.uiRid} | [Quo] 检测TCP流量握手成功但无有效载荷异常: [${task.name}]`);
                      killReason = "流量欺诈 (虚假连接)";
                  }
             }
@@ -3147,7 +3097,7 @@ class MBTQuoCRS {
     _done(id, result) {
         const task = this.tasks.get(id);
         if (!task) return;
-        this.logger.info(`${this.uiRid} | [Quo] 📥 [${task.name}] 完成下载`);
+        this.logger.info(`${this.uiRid} | [Quo] [${task.name}] 完成下载`);
         this._finalize(result, null);
     }
 
@@ -3160,10 +3110,10 @@ class MBTQuoCRS {
         if (!AbortedSignalStatus) {
             if (err.isMelting) {
                 task.state = MBTQuoCRS.Task_State.Melting;
-                this.logger.debug(`${this.uiRid} | [Quo] 熔断: [${task.name}] - ${err.message}`);
+                this.logger.debug(`${this.uiRid} | [Quo] [${task.name}] ${err.message}`);
             } else {
                 const msg = err.message?.split('\n')[0] || '未知错误';
-                this.logger.debug(`${this.uiRid} | [Quo] 异常: [${task.name}] - ${msg}`);
+                this.logger.debug(`${this.uiRid} | [Quo] [${task.name}] ${msg}`);
             }
         } else {
             if (task.state < MBTQuoCRS.Task_State.Aborting) {
@@ -3219,8 +3169,6 @@ class MBTQuoCRS {
         this.pendingTimers.delete(oldTimerId);
         clearTimeout(oldTimerId);
 
-        this.logger.debug(`${this.uiRid} | [Quo] 前序任务失败触发调度: ${data.id}`);
-
         if (this.closed) return;
 
         const delay = MBTMath.Range(100, 300);
@@ -3247,7 +3195,6 @@ class MBTQuoCRS {
 
     stop() {
         if (!this.closed) {
-            this.logger.warn(`${this.uiRid} | [Quo] 🛑 外部停止`);
             this._finalize(null, new Error("已被信号捕获器停止"));
         }
     }
@@ -3257,7 +3204,7 @@ class MBTSignalTrap extends EventEmitter {
     constructor() {
         super();
         this.setMaxListeners(50);
-        this.logger = HadesEntry({}, getCore());
+        this.logger = Hades;
         this._isShuttingDown = false;
         this._sysHandler = this._sysHandler.bind(this);
         this._bound = false;
@@ -3274,7 +3221,7 @@ class MBTSignalTrap extends EventEmitter {
     }
 
     static async HMR_Entry(logger) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         const oldInstance = global[Trap_Symbol];
         if (oldInstance) {
             Hades.D(`[HMR] 检测到旧实例正在执行卸载...`);
@@ -3332,12 +3279,7 @@ class PoseidonSpear {
         /Protocol "HTTP\/2" not supported or disabled/i
     ];
 
-    static LOG_WHITELIST = [
-        "fatal:", "error:", "remote:", "warning:",
-        "Could not resolve", "timed out", "Connection refused",
-        "SSL", "certificate", "HTTP/2", "stream",
-        "ESLOWNET", "E_GIT_IO_STALL", "E_GIT_BYTE_IDLE_TIMEOUT", "E_GIT_ZOMBIE_IDLE", "E_GIT_SPEED_FLOOR", "龟速", "假死"
-    ];
+    static LOG_WHITELIST = "fatal:|error:|remote:|warning:|Could not resolve|timed out|Connection refused|SSL|certificate|HTTP/2|stream|ESLOWNET|E_GIT_IO_STALL|E_GIT_BYTE_IDLE_TIMEOUT|E_GIT_ZOMBIE_IDLE|E_GIT_SPEED_FLOOR|龟速|假死".split("|");
 
     static get _state() {
         const Pose_Symbol = Symbol.for('Yz.CowCoo.MBT.PoseidonSpear.State.v2');
@@ -3355,7 +3297,7 @@ class PoseidonSpear {
     }
 
     static revive(logger) {
-        const Hades = logger ? HadesEntry({}, logger) : null;
+        const Hades = logger ? getHades(logger) : null;
         let count = 0;
         for (const [name, record] of this._state) {
             if (["网络波动", "限流/拒绝", "性能降级"].includes(record.reason)) {
@@ -3551,23 +3493,19 @@ class Cerberus {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YzPath = path.resolve(__dirname, "..", "..");
-const Version = `5.2.1-${crypto.createHash('md5').update(fs.readFileSync(__filename)).digest('hex').substring(0, 6).toUpperCase()}`;
+const Version = `5.2.2-${crypto.createHash('md5').update(fs.readFileSync(__filename)).digest('hex').substring(0, 6).toUpperCase()}`;
 const PFL = {
   NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2,
-   getDescription: (level) => ({
-    0: "不过滤",
-    1: "过滤R18",
-    2: "全部敏感项"
-  }[level] ?? "未知"),
+   getDescription: (level) => ["不过滤", "过滤R18", "全部敏感项"][level] ?? "未知",
 };
 
-const Valid_Tags = {
-  "彩蛋": { key: "other", value: "Egg" },
-  "ai": { key: "other", value: "LLMCanvas" },
-  "横屏": { key: "layout", value: "fullscreen" },
-  "r18": { key: "rated", value: "r18" },
-  "p18": { key: "rated", value: "p18" },
-};
+const Valid_Tags = Object.fromEntries([
+  ["彩蛋", "other", "Egg"],
+  ["ai", "other", "LLMCanvas"],
+  ["横屏", "layout", "fullscreen"],
+  ["r18", "rated", "r18"],
+  ["p18", "rated", "p18"],
+].map(([name, key, value]) => [name, { key, value }]));
 
 const DFC = {
   Main_Github_URL: "https://github.com/GuGuNiu/Miao-Plugin-MBT/",    // 一号库 (热门五星)
@@ -3592,14 +3530,92 @@ const DFC = {
   logDateFormat: "format:%m-%d %H:%M",
 };
 
-const Repos_List = {
-  "何日见": { url: "https://github.com/herijian1/characterpic1", default: true, order: 1, aboutDisplay: "喵喵插件原神星铁高质量面板图" },
-  "夜": { url: "https://github.com/ye3011/normal-character", default: true, order: 2, aboutDisplay: "喵喵插件面板图" },
-  "花花": { url: "https://gitcode.com/HanaHimeUnica/super-character", default: true, order: 3, aboutDisplay: "喵喵插件面板图" }
+const [Repo1, Repo2, Repo3, Repo4, Repo5, Repo6] = ["一号仓库", "二号仓库", "三号仓库", "四号仓库", "五号仓库", "六号仓库"];
+const RepoDisplayMap = {
+  1: `${Repo1} (核心)`, 2: `${Repo2} (原神)`, 3: `${Repo3} (星铁)`,
+  4: `${Repo4} (综合库)`, 5: `${Repo5} (SR18-GS)`, 6: `${Repo6} (SR18-SR)`
+};
+const RepoNameToId = { [Repo1]: '1', [Repo2]: '2', [Repo3]: '3', [Repo4]: '4' };
+const DOC_SUGG_MAP = {
+  NETWORK: ["- 网络异常: 运行 `#咕咕牛测速`。", "- 检查 DNS/防火墙。", "- 代理需确认可用。"],
+  GIT: ["- 仓库冲突: 尝试 `#更新咕咕牛`。", "- 仓库损坏: 尝试 `#重置咕咕牛`。"],
+  FILESYSTEM: ["- 检查目录读写权限。", "- 重启机器人释放文件锁。"],
+  CONFIG: ["- 检查 `CowCoo` 下 YAML/JSON。", "- 必要时删坏配置后重启。"],
+  CODE: ["- 可能是插件异常，请截图反馈。", "- 可尝试重启 Yunzai-Bot。"],
+  WAF: ["- WAF 拦截: GitCode 已拦截。", "- 已尝试绕过，请稍后重试。", "- 可检查 Puppeteer: `npm list puppeteer`。", "- 或切换网络/代理。"]
+};
+const DOC_SUGG_TAIL = ["- 查看控制台日志。", "- 持续失败可试 `#重置咕咕牛`。"];
+const NOMOS_UNIVERSE_ROWS = [
+  ['gs', '原神', 'gs-character', 'miao-plugin', ['pyro', 'hydro', 'anemo', 'electro', 'dendro', 'cryo', 'geo'], { pyro: '火', hydro: '水', cryo: '冰', electro: '雷', anemo: '风', geo: '岩', dendro: '草' }],
+  ['sr', '星铁', 'sr-character', 'miao-plugin', ['fire', 'ice', 'wind', 'elec', 'phy', 'quantum', 'imaginary'], { fire: '火', ice: '冰', wind: '风', elec: '雷', phy: '物理', quantum: '量子', imaginary: '虚数' }],
+  ['zzz', '绝区零', 'zzz-character', 'ZZZ-Plugin', [], {}],
+  ['waves', '鸣潮', 'waves-character', 'waves-plugin', ['rerong', 'lengning', 'daodian', 'qidong', 'yanshe', 'yanmie'], { '冷凝': 'lengning', '热熔': 'rerong', '导电': 'daodian', '气动': 'qidong', '衍射': 'yanshe', '湮灭': 'yanmie' }]
+];
+const CRE_TARGET_KEYS = ['MiaoCRE', 'ZZZCRE', 'WavesCRE'];
+const TEMP_HTML_CRON_KEYWORDS = ['guguniu', 'render-'];
+const TEMP_HTML_KEYWORDS = ['guguniu', 'render-', 'cowcoo', 'guguniu-gallery', 'gutools', 'cooweb'];
+const LOCK_SPECS = [['MetaMutex', 60000], ['GitMutex', 1800000], ['InstallMutex', 600000], ['RenderMutex', 300000], ['CleanMutex', 300000]];
+const GIT_NETWORK_ERR_KEYWORDS = `connection timed out
+connection was reset
+could not resolve host
+unable to access
+handshake failed
+error: 502
+error: 522
+error: 504
+etimedout
+gnutls_handshake
+rpc failed
+unable to update url base from redirection
+recv failure
+error: 429
+credential url cannot be parsed
+url cannot be parsed
+command timed out
+command timeout
+命令执行超时`.split("\n");
+const GIT_TIMEOUT_ERR_CODES = new Set("ETIMEDOUT ESLOWNET E_GIT_IO_STALL E_GIT_BYTE_IDLE_TIMEOUT E_GIT_ZOMBIE_IDLE E_GIT_SPEED_FLOOR".split(" "));
+const getCreTargets = () => CRE_TARGET_KEYS.map(k => MiaoPluginMBT.Paths.Target[k]).filter(Boolean);
+const isTempHtmlTarget = (name = '', keywords = TEMP_HTML_KEYWORDS) => keywords.some(k => name.toLowerCase().includes(k));
+const getLockStatus = () => LOCK_SPECS.map(([name, maxAge]) => ({ lock: MiaoPluginMBT[name], name, maxAge }));
+const getTempHtmlTargets = async (keywords = TEMP_HTML_KEYWORDS) => {
+  const basePath = MiaoPluginMBT.Paths.TempHtmlPath;
+  const entries = await Ananke.readDir(basePath);
+  return entries.filter(e => e.isDirectory() && isTempHtmlTarget(e.name, keywords)).map(e => path.join(basePath, e.name));
 };
 
+const COMMIT_PREFIX_MAP = {
+  '修复': 'fix', '新增': 'feat', '文档': 'docs', '样式': 'style',
+  '重构': 'refactor', '性能': 'perf', '测试': 'test', '构建': 'build',
+  '部署': 'deploy', '回滚': 'revert', '杂项': 'chore', '持续集成': 'ci'
+};
+const COMMIT_GAME_PREFIXES = [['原神', 'gs'], ['星铁', 'sr'], ['绝区零', 'zzz'], ['鸣潮', 'waves']]
+  .map(([name, key]) => ({ pattern: new RegExp(`^(${name}UP[:：])\\s*`, 'i'), key }));
+const HELP_FALLBACK_LINES = [
+  '『咕咕牛帮助手册』',
+  '--------------------',
+  '【图库安装】',
+  '  #下载咕咕牛: 自动测速下载',
+  '  #更新咕咕牛: 手动更新',
+  '',
+  '【图库操作】',
+  '  #启/禁用咕咕牛: 管理同步',
+  '  #咕咕牛状态: 查看状态',
+  '  #咕咕牛查看[角色名]: 查看图片',
+  '  #咕咕牛导出[角色名+编号]: 导出图片',
+  '  #可视化[角色名]: 显示面板图',
+  '  #重置咕咕牛: 清理图库文件',
+  '',
+  '【封禁与设置】',
+  '  #咕咕牛封/解禁[角色名+编号]: 管理图片',
+  '  #咕咕牛封禁列表: 显示封禁图片',
+  '  #咕咕牛设置净化等级[0-2]: 过滤敏感图',
+  '  #咕咕牛面板: 查看设置',
+  '  #咕咕牛设置[xx][开启/关闭]: Ai/彩蛋/横屏',
+  '--------------------'
+];
+
 function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onStdOut, onProgress, onSlowSpeed, MBTProcc) {
-  const Hades = HadesEntry();
   const Rid = options.Rid || 'SYSTEM';
   const RidTag = options.RidTag || `[${Rid}]`;
 
@@ -3668,7 +3684,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
   } else {
       const inherited = proxyVars.filter(v => runEnv[v]);
       if (inherited.length > 0 && !isSilentOp) {
-          Hades.D(`${RidTag} ⚠️ 警告：进程流将使用任务环境配置！(参数: ${inherited.join(', ')})`);
+          Hades.D(`${RidTag} 警告：进程流将使用任务环境配置！(参数: ${inherited.join(', ')})`);
       }
   }
 
@@ -4109,7 +4125,7 @@ class ErrDoc {
 
 class MBTWorker {
     constructor(logger) {
-        this.logger = HadesEntry({}, logger || getCore());
+        this.logger = getHades(logger);
         this.worker = null;
         this.workerPath = path.join(MiaoPluginMBT.Paths.TempNiuPath, "worker.js");
     }
@@ -4245,7 +4261,7 @@ class Morpheus {
     }
 
     static async #ensureDir(logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         if (this.#initDone) return;
         if (await Ananke.mkdirs(this.RenderDir)) {
             this.#initDone = true;
@@ -4295,7 +4311,7 @@ class Morpheus {
     }
 
     static async #getBrowser(logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         if (this.#browserInstance && this.#browserInstance.isConnected()) {
             return this.#browserInstance;
         }
@@ -4363,7 +4379,7 @@ class Morpheus {
     }
 
     static async withPage(task, logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         let page = null;
         try {
             const browser = await this.#getBrowser(Hades);
@@ -4377,7 +4393,7 @@ class Morpheus {
     }
 
     static async shot(businessName, options = {}) {
-        const Hades = HadesEntry({}, options.logger || getCore());
+        const Hades = getHades(options.logger);
         await this.#ensureDir(Hades);
         const renderLock = MiaoPluginMBT?.RenderMutex;
         if (renderLock?.run && !options.__renderLocked) {
@@ -4400,15 +4416,14 @@ class Morpheus {
             MorpheusSignal = false
         } = options;
 
-        const defaultData = {
-            Version: Version,
+        const DataMaps = {
+            Version,
             RenderMatrix: MiaoPluginMBT.RenderMatrix(),
-            Cow_Res_Path: `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/'),
+            Cow_Res_Path: toFileUrl(`${MiaoPluginMBT.Paths.OpsPath}/`),
             sysTimestamp: Morpheus.#nowStr(),
-            headerImg: await Morpheus.pickHeader()
+            headerImg: await Morpheus.pickHeader(),
+            ...data
         };
-
-        const DataMaps = { ...defaultData, ...data };
         let categoryFolder = "";
         if (businessName.startsWith("Vis-") || businessName.startsWith("visualize-")) {
             categoryFolder = "Vis";
@@ -4544,7 +4559,7 @@ class Morpheus {
     }
 
     static async housekeeping(logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         await this.#ensureDir(Hades);
         const retentionMs = 3 * 24 * 60 * 60 * 1000;
         const now = Date.now();
@@ -4714,7 +4729,6 @@ class Ananke {
             return true;
         } catch (err) {
             if (err.code !== 'ENOENT') {
-                const Hades = HadesEntry();
                 Hades.D(`删除失败: ${targetPath} (${err.code})`);
             }
             return false;
@@ -4750,7 +4764,6 @@ class Ananke {
             return true;
         } catch (error) {
             if (error.code === 'ENOENT') return false;
-            const Hades = HadesEntry();
             if (!['EEXIST', 'EACCES', 'EPERM'].includes(error.code)) {
                 Hades.D(`树复制失败 ${source} -> ${dest}:`, error.message);
             }
@@ -4860,7 +4873,6 @@ class Ananke {
             }
             return false;
         } catch (err) {
-            const Hades = HadesEntry();
             Hades.D(`同步文件失败 ${src} -> ${dest}: ${err.message}`);
             return false;
         }
@@ -4872,7 +4884,6 @@ class Ananke {
             await fsPromises.writeFile(filePath, content, 'utf-8');
             return true;
         } catch (err) {
-            const Hades = HadesEntry();
             Hades.E(`写入文件失败 ${filePath}:`, err);
             return false;
         }
@@ -4892,7 +4903,6 @@ class Ananke {
             await fsPromises.rename(oldPath, newPath);
             return true;
         } catch (err) {
-            const Hades = HadesEntry();
             Hades.E(`重命名失败 ${oldPath} -> ${newPath}:`, err);
             throw err;
         }
@@ -4930,9 +4940,9 @@ class Ananke {
     }
 
     static async loadingConfig(configPath, defaultConfig, logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         if (typeof configPath !== 'string') {
-            Hades.D(`loadingConfig 接收到非法路径 (${typeof configPath})，已回退到默认配置。`);
+            Hades.D(`loadingConfig 路径非法 (${typeof configPath})，回退默认配置`);
             return { ...defaultConfig };
         }
 
@@ -4946,7 +4956,7 @@ class Ananke {
                 throw new Error("无效的YAML内容");
             } catch (error) {
                 if (error.code === 'ENOENT') {
-                    Hades.D(`配置文件 ${path.basename(configPath)} 不存在，正在初始化默认配置...`);
+                    Hades.D(`配置 ${path.basename(configPath)} 不存在，正在初始化默认配置`);
                     try {
                         await Ananke.#PersistCfg(configPath, defaultConfig);
                         Hades.D(`默认配置已写入: ${configPath}`);
@@ -4962,7 +4972,7 @@ class Ananke {
     }
 
     static async SaveConfig(configPath, data, logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         return this.#locks.config.run(async () => {
             try {
                 await Ananke.#PersistCfg(configPath, data);
@@ -4975,7 +4985,7 @@ class Ananke {
     }
 
     static async UpBanList(listPath, banListPayload, logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         return this.#locks.banList.run(async () => {
             try {
                 const dirPath = path.dirname(listPath);
@@ -4992,7 +5002,7 @@ class Ananke {
 
     static async purge(targetDir, logger = console) {
         if (!targetDir) return;
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         let cleanedCount = 0;
         const cerberus = Cerberus.getInstance();
         try {
@@ -5024,7 +5034,7 @@ class Ananke {
 
     static async dispatchSync(tasks, logger = console) {
         if (!tasks || tasks.length === 0) return { success: 0, fail: 0 };
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         const worker = new MBTWorker(Hades);
         try {
             const result = await worker.run('SYNC_BATCH', tasks);
@@ -5051,7 +5061,6 @@ class Ananke {
             return await fsPromises.readdir(targetPath, { withFileTypes: true });
         } catch (err) {
             if (err.code === 'ENOENT') return [];
-            const Hades = HadesEntry();
             Hades.W(`读取目录失败 ${targetPath}: ${err.message}`);
             return [];
         }
@@ -5062,7 +5071,6 @@ class Ananke {
             await fsPromises.copyFile(src, dest);
             return true;
         } catch (err) {
-            const Hades = HadesEntry();
             Hades.E(`复制文件失败 ${src} -> ${dest}:`, err);
             return false;
         }
@@ -5143,59 +5151,18 @@ class Ananke {
 
 class Nomos {
     static #REGISTRY = [
-        {
-            id: 1,
-            key: "Miao-Plugin-MBT",
-            name: "一号仓库",
-            configKey: "Main_Github_URL",
-            pathKey: "MountRepoPath",
-            gitKey: "GitFilePath",
-            required: true
-        },
-        {
-            id: 2,
-            key: "Miao-Plugin-MBT-2",
-            name: "二号仓库",
-            configKey: "Ass_Github_URL",
-            pathKey: "MountRepoPath2",
-            gitKey: "GitFilePath2"
-        },
-        {
-            id: 3,
-            key: "Miao-Plugin-MBT-3",
-            name: "三号仓库",
-            configKey: "Ass2_Github_URL",
-            pathKey: "MountRepoPath3",
-            gitKey: "GitFilePath3"
-        },
-        {
-            id: 4,
-            key: "Miao-Plugin-MBT-4",
-            name: "四号仓库",
-            configKey: "Ass3_Github_URL",
-            pathKey: "MountRepoPath4",
-            gitKey: "GitFilePath4",
-            dependencies: ["zzz", "waves"]
-        },
-        {
-            id: 5,
-            key: "Genshin-CR-Repos",
-            name: "五号仓库",
-            configKey: "Ass4_Github_URL",
-            pathKey: "MountRepoPath5",
-            gitKey: "GitFilePath5",
-            tags: ["SR18"]
-        },
-        {
-            id: 6,
-            key: "StarRail-CR-Repos",
-            name: "六号仓库",
-            configKey: "Ass5_Github_URL",
-            pathKey: "MountRepoPath6",
-            gitKey: "GitFilePath6",
-            tags: ["SR18"]
-        }
-    ];
+        [1, "Miao-Plugin-MBT", Repo1, "Main_Github_URL", "MountRepoPath", "GitFilePath", true],
+        [2, "Miao-Plugin-MBT-2", Repo2, "Ass_Github_URL", "MountRepoPath2", "GitFilePath2"],
+        [3, "Miao-Plugin-MBT-3", Repo3, "Ass2_Github_URL", "MountRepoPath3", "GitFilePath3"],
+        [4, "Miao-Plugin-MBT-4", Repo4, "Ass3_Github_URL", "MountRepoPath4", "GitFilePath4", false, ["zzz", "waves"]],
+        [5, "Genshin-CR-Repos", Repo5, "Ass4_Github_URL", "MountRepoPath5", "GitFilePath5", false, null, ["SR18"]],
+        [6, "StarRail-CR-Repos", Repo6, "Ass5_Github_URL", "MountRepoPath6", "GitFilePath6", false, null, ["SR18"]]
+    ].map(([id, key, name, configKey, pathKey, gitKey, required, dependencies, tags]) => ({
+        id, key, name, configKey, pathKey, gitKey,
+        ...(required ? { required } : {}),
+        ...(dependencies ? { dependencies } : {}),
+        ...(tags ? { tags } : {})
+    }));
 
     static DepState(context = {}, dep) {
         const depMap = {
@@ -5365,7 +5332,6 @@ class Nomos {
     }
 
     static async ModuleOps(repoPath, gameKey, action) {
-        const Hades = HadesEntry();
         if (!repoPath || !gameKey) return false;
 
         const meta = this.Universe?.[gameKey];
@@ -5390,7 +5356,7 @@ class Nomos {
             ? await this.PackOps(repoPath, [normalized], null)
             : await this.PackOps(repoPath, null, [normalized]);
 
-        if (!ok) Hades.D(`[资产管理] ModuleOps 失败: ${action || 'check'} ${gameKey} @ ${repoPath}`);
+        if (!ok) Hades.D(`ModuleOps失败: ${action || 'check'} ${gameKey} @ ${repoPath}`);
         return ok;
     }
 
@@ -5417,7 +5383,7 @@ class Nomos {
 
     static ResolveCharTarget(relativePath, pathsMap) {
         if (!relativePath) return null;
-        const normPath = relativePath.replace(/\\/g, "/");
+        const normPath = toPosix(relativePath);
 
         const parts = normPath.split("/");
         if (parts.length < 3) return null;
@@ -5442,40 +5408,10 @@ class Nomos {
     }
 
     static get Universe() {
-        return {
-            gs: {
-                name: "原神",
-                key: "gs",
-                dirName: "gs-character",
-                pluginPath: path.join(YzPath, "plugins", "miao-plugin"),
-                sortOrders: ['pyro', 'hydro', 'anemo', 'electro', 'dendro', 'cryo', 'geo'],
-                elemMap: { pyro: '火', hydro: '水', cryo: '冰', electro: '雷', anemo: '风', geo: '岩', dendro: '草' }
-            },
-            sr: {
-                name: "星铁",
-                key: "sr",
-                dirName: "sr-character",
-                pluginPath: path.join(YzPath, "plugins", "miao-plugin"),
-                sortOrders: ['fire', 'ice', 'wind', 'elec', 'phy', 'quantum', 'imaginary'],
-                elemMap: { fire: '火', ice: '冰', wind: '风', elec: '雷', phy: '物理', quantum: '量子', imaginary: '虚数' }
-            },
-            zzz: {
-                name: "绝区零",
-                key: "zzz",
-                dirName: "zzz-character",
-                pluginPath: path.join(YzPath, "plugins", "ZZZ-Plugin"),
-                sortOrders: [],
-                elemMap: {}
-            },
-            waves: {
-                name: "鸣潮",
-                key: "waves",
-                dirName: "waves-character",
-                pluginPath: path.join(YzPath, "plugins", "waves-plugin"),
-                sortOrders: ['rerong', 'lengning', 'daodian', 'qidong', 'yanshe', 'yanmie'],
-                elemMap: { '冷凝': 'lengning', '热熔': 'rerong', '导电': 'daodian', '气动': 'qidong', '衍射': 'yanshe', '湮灭': 'yanmie' }
-            }
-        };
+        return Object.fromEntries(NOMOS_UNIVERSE_ROWS.map(([key, name, dirName, plugin, sortOrders, elemMap]) => [key, {
+            name, key, dirName, sortOrders, elemMap,
+            pluginPath: path.join(YzPath, "plugins", plugin)
+        }]));
     }
 
     static MatchGame(inputName) {
@@ -5603,14 +5539,12 @@ class Tianshu {
 
     static async ResolveFace(gameKey, CREName) {
         if (gameKey !== 'gs' && gameKey !== 'sr') return null;
-        const baseDir = gameKey === 'gs'
-          ? MiaoPluginMBT.Paths.Target.Miao_GSAliasDir
-          : MiaoPluginMBT.Paths.Target.Miao_SRAliasDir;
+        const baseDir = MiaoPluginMBT.Paths.Target[gameKey === 'gs' ? 'Miao_GSAliasDir' : 'Miao_SRAliasDir'];
         const imgDir = path.join(baseDir, "..", "character", CREName, "imgs");
         const probe = (p) => Ananke.Audit(p, false).then(exists => exists ? p : null);
         const validPath = await probe(path.join(imgDir, "face2.webp"))
                        || await probe(path.join(imgDir, "face.webp"));
-        return validPath ? `file://${validPath.replace(/\\/g, "/")}` : null;
+        return toFileUrl(validPath) || null;
     }
 
     static async ScanSplashes(sourceDir) {
@@ -5671,7 +5605,7 @@ class Tianshu {
 
                 const iconPath = path.join(faceDir, `IconRoleCircle${iconMatch[0]}.png`);
                 if (await Ananke.Audit(iconPath, false)) {
-                    return `file://${iconPath.replace(/\\/g, "/")}`;
+                    return toFileUrl(iconPath);
                 }
                 return null;
             }
@@ -5691,7 +5625,7 @@ class Tianshu {
 
         for (const item of imageData) {
           if (!item || !item.path) continue;
-          const gid = item.path.replace(/\\/g, "/");
+          const gid = toPosix(item.path);
 
           this._indexByGid.set(gid, item);
 
@@ -5745,7 +5679,7 @@ class Tianshu {
 
     static async FsQuery(relativePath) {
         if (!relativePath) return null;
-        const normalizedPath = relativePath.replace(/\\/g, "/");
+        const normalizedPath = toPosix(relativePath);
 
         const imgData = this._indexByGid.get(normalizedPath);
         const context = await Nomos.getContext();
@@ -5779,7 +5713,7 @@ class Tianshu {
     }
 
     static async UpdateStats(logger = getCore()) {
-         const Hades = HadesEntry({}, logger || getCore());
+         const Hades = getHades(logger);
          const context = await Nomos.getContext();
          const config = await Ananke.loadingConfig(MiaoPluginMBT.Paths.ConfigFilePath, MiaoPluginMBT.MBTConfig);
          const repos = Nomos.ModuleRepoAC(MiaoPluginMBT.Paths, config, context);
@@ -5839,12 +5773,7 @@ class Tianshu {
                         return { key: meta.elemMap[raw] || raw, label: raw };
                     }
 
-                    const aliasDirMap = {
-                        gs: MiaoPluginMBT.Paths.Target.Miao_GSAliasDir,
-                        sr: MiaoPluginMBT.Paths.Target.Miao_SRAliasDir,
-                    };
-
-                    const dataPath = path.join(aliasDirMap[gameKey], charName, 'data.json');
+                    const dataPath = path.join(MiaoPluginMBT.Paths.Target[gameKey === 'gs' ? 'Miao_GSAliasDir' : 'Miao_SRAliasDir'], charName, 'data.json');
                     const data = await Ananke.HydrateJson(dataPath);
                     const raw = data?.elem || 'unknown';
 
@@ -6019,7 +5948,7 @@ class Presenter {
                         const iconMatch = data.Icon?.match(/\d+$/);
                         if (iconMatch) {
                             const zzzFacePath = path.join(MiaoPluginMBT.Paths.Target.ZZZ_FaceDir, `IconRoleCircle${iconMatch[0]}.png`);
-                            return `file://${zzzFacePath.replace(/\\/g, "/")}`;
+                            return toFileUrl(zzzFacePath);
                         }
                         break;
                     }
@@ -6030,7 +5959,7 @@ class Presenter {
     }
 
     static async RenderDashboard(e, stats) {
-        const Hades = HadesEntry({}, e?.logger || getCore());
+        const Hades = getHades(e?.logger);
         const ViewProps = {
             gameData: stats,
             tags: Object.keys(Valid_Tags).sort(),
@@ -6049,7 +5978,7 @@ class Presenter {
     }
 
     static async _PaginateFM(e, data) {
-        const Hades = HadesEntry({}, e?.logger || getCore());
+        const Hades = getHades(e?.logger);
         const cerberus = Cerberus.getInstance();
 
         if (data.type === 'tag') {
@@ -6075,12 +6004,12 @@ class Presenter {
                 forwardList.push(firstNodeText);
 
                 for (const item of activeBatch) {
-                    const relativePath = item.path.replace(/\\/g, "/");
+                    const relativePath = toPosix(item.path);
                     const fileName = path.basename(relativePath);
                     const absolutePath = await MiaoPluginMBT.FsQuery(relativePath);
                     const MsgNode = [];
                     if (absolutePath) {
-                        if (await Ananke.Audit(absolutePath, false)) MsgNode.push(segment.image(`file://${absolutePath}`));
+                        if (await Ananke.Audit(absolutePath, false)) MsgNode.push(segment.image(toFileUrl(absolutePath)));
                         else MsgNode.push(`[图片无法加载: ${fileName}]`);
                     } else {
                         MsgNode.push(`[图片文件丢失: ${fileName}]`);
@@ -6132,12 +6061,12 @@ class Presenter {
                 for (let i = 0; i < activeBatch.length; i++) {
                     const item = activeBatch[i];
                     const itemGlobalIndex = startIndex + i + 1;
-                    const relativePath = item.path.replace(/\\/g, "/");
+                    const relativePath = toPosix(item.path);
                     const fileName = path.basename(relativePath);
                     const absolutePath = await MiaoPluginMBT.FsQuery(relativePath);
                     const MsgNode = [];
                     if (absolutePath) {
-                        if (await Ananke.Audit(absolutePath, false)) MsgNode.push(segment.image(`file://${absolutePath}`));
+                        if (await Ananke.Audit(absolutePath, false)) MsgNode.push(segment.image(toFileUrl(absolutePath)));
                         else MsgNode.push(`[图片无法加载: ${fileName}]`);
                     } else {
                         MsgNode.push(`[图片文件丢失: ${fileName}]`);
@@ -6213,7 +6142,7 @@ class DocHub {
             return;
         }
 
-        Hades.E(`[${opName}] 操作失败:`, err?.message, err?.stack ? `\nStack trace available in report.` : "");
+        Hades.E(`[${opName}] 失败:`, err?.message, err?.stack ? `\nStack in report.` : "");
 
         const diagnosis = this._diagnose(opName, err, ctx);
         let aiSolution = "云露正在摸鱼（AI分析未响应）";
@@ -6349,41 +6278,11 @@ class DocHub {
             report.summary += "\n[检测到 WAF 拦截]";
         }
 
-        const SUGG_MAP = {
-            NETWORK: [
-                "- **网络故障**：请执行 `#咕咕牛测速` 诊断节点连通性。",
-                "- 检查服务器 DNS 设置或防火墙规则。",
-                "- 若使用代理，请确认代理服务是否存活。"
-            ],
-            GIT: [
-                "- **仓库冲突**：尝试 `#更新咕咕牛`，新版会自动尝试强制同步。",
-                "- 若仓库严重损坏，请执行 `#重置咕咕牛`。"
-            ],
-            FILESYSTEM: [
-                "- **权限/占用**：检查 Yunzai 目录读写权限。",
-                "- 尝试重启机器人以释放文件锁 (EBUSY)。"
-            ],
-            CONFIG: [
-                "- **配置损坏**：检查 `CowCoo` 目录下的 YAML/JSON 配置文件。",
-                "- 可删除损坏的配置文件后重启插件。"
-            ],
-            CODE: [
-                "- **程序异常**：此错误可能源于插件逻辑缺陷，请截图反馈。",
-                "- 尝试重启 Yunzai-Bot 看是否恢复。"
-            ],
-            WAF: [
-                "- **WAF 拦截**：GitCode 的 Web 应用防火墙已拦截本次请求。",
-                "- 系统已自动尝试通过 StealthFetcher 绕过，请稍后重试。",
-                "- 若持续失败，请检查 Puppeteer 是否正常安装：`npm list puppeteer`。",
-                "- 或尝试更换网络环境（如使用代理）。"
-            ]
-        };
-
-        let suggs = SUGG_MAP[type] || [];
+        let suggs = DOC_SUGG_MAP[type] || [];
         if (WafBlocked) {
-            suggs = [...SUGG_MAP.WAF, ...suggs];
+            suggs = [...DOC_SUGG_MAP.WAF, ...suggs];
         }
-        suggs.push("- 请查看控制台详细日志。", "- 若问题持续无法解决，建议 `#重置咕咕牛`。");
+        suggs.push(...DOC_SUGG_TAIL);
 
         report.suggestions = [...new Set(suggs)].join("\n");
 
@@ -6468,7 +6367,7 @@ class DocHub {
     }
 
     static async _consultOracle(operationName, error, context, logger) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         let magicWord = '';
         try {
             magicWord = MiaoPluginMBT._IQ();
@@ -6522,7 +6421,7 @@ class DocHub {
                 if (!response.ok) {
                     const errorBody = await response.text();
                     if (response.status === 429 || response.status >= 500 || response.status === 408) {
-                        Hades.D(`  API重试 (${response.status})... ${retryCount + 1}/${maxRetries}`);
+                        Hades.D(`  API重试(${response.status}) ${retryCount + 1}/${maxRetries}`);
                         retryCount++;
                         await new Promise(resolve => setTimeout(resolve, 500 + retryCount * 500));
                         continue;
@@ -6576,7 +6475,7 @@ class MBTCF {
     static get bus() { return this.#bus; }
 
     static async init(logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         try {
             const [banList, tagData] = await Promise.all([
                 Ananke.HydrateJson(MiaoPluginMBT.Paths.BanListPath, []),
@@ -6604,7 +6503,7 @@ class MBTCF {
                 }
             }
 
-            Hades.D(`封禁: ${this.#BanMap.size} (MD5: ${this.#MD5BanSet.size}) | 标签: ${this.#secTags.length}`);
+            Hades.D(`封禁=${this.#BanMap.size} MD5=${this.#MD5BanSet.size} 标签=${this.#secTags.length}`);
 
             this.#bus.emit('ready', {
                 banCount: this.#BanMap.size,
@@ -6697,7 +6596,7 @@ class MBTCF {
     }
 
     static async AddManualBan(relativePath, logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         const p = this.#normalize(relativePath);
 
         if (this.isPurified(p)) throw new Error("目标已被净化规则屏蔽，无法手动封禁");
@@ -6722,7 +6621,7 @@ class MBTCF {
     }
 
     static async RemoveManualBan(relativePath, logger = console) {
-        const Hades = HadesEntry({}, logger || getCore());
+        const Hades = getHades(logger);
         const p = this.#normalize(relativePath);
 
         if (!this.#BanMap.has(p)) throw new Error("未在封禁列表中找到该图片");
@@ -6791,7 +6690,7 @@ class MBTCF {
     }
 
     static #normalize(p) {
-        return p ? p.replace(/\\/g, "/") : "";
+        return toPosix(p);
     }
 
     static #checkPFL(item, level) {
@@ -6917,7 +6816,7 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async ReplyImg(e, input, fallbackText = '', logger = null) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     let imgSeg = null;
     try {
       imgSeg = this.ToImgSeg(input);
@@ -6941,7 +6840,7 @@ class MiaoPluginMBT extends plugin {
       }
       return true;
     } catch (sendErr) {
-      Hades.W(`图片发送失败，转为文本回执: ${sendErr?.code || sendErr?.message || 'SEND_FAIL'}`);
+      Hades.W(`图片发送失败，转文本: ${sendErr?.code || sendErr?.message || 'SEND_FAIL'}`);
       if (fallbackText) {
         try { await e.reply(`${fallbackText}\n(Code: ${sendErr?.code || 'SEND_FAIL'})`, true); } catch {}
       }
@@ -6951,7 +6850,7 @@ class MiaoPluginMBT extends plugin {
 
   static async _CtxPrep(logger = console) {
     const Prep_KEY = 'CowCoo:Runtime:Ctx';
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
 
     try {
       let raw = (typeof redis !== 'undefined') ? await redis.get(Prep_KEY) : null;
@@ -7084,40 +6983,46 @@ class MiaoPluginMBT extends plugin {
     const root = this.CowCooRepoRoot;
     const ops = path.join(root, "Miao-Plugin-MBT", "CowCoo");
     const cow = path.join(root, "CowCoo");
+    const yz = typeof YzPath !== 'undefined' ? YzPath : process.cwd();
+    const repoJoin = (...parts) => path.join(root, ...parts);
+    const opsJoin = (...parts) => path.join(ops, ...parts);
+    const cowJoin = (...parts) => path.join(cow, ...parts);
+    const pluginJoin = (name, ...parts) => path.join(yz, "plugins", name, ...parts);
+    const tempJoin = (...parts) => path.join(yz, "temp", ...parts);
 
     this._pathsCache = {
-      YzPath: typeof YzPath !== 'undefined' ? YzPath : process.cwd(),
+      YzPath: yz,
       CowCooRepoRoot: root,
-      MountRepoPath: path.join(root, "Miao-Plugin-MBT"),    GitFilePath: path.join(root, "Miao-Plugin-MBT", ".git"),
-      MountRepoPath2: path.join(root, "Miao-Plugin-MBT-2"), GitFilePath2: path.join(root, "Miao-Plugin-MBT-2", ".git"),
-      MountRepoPath3: path.join(root, "Miao-Plugin-MBT-3"), GitFilePath3: path.join(root, "Miao-Plugin-MBT-3", ".git"),
-      MountRepoPath4: path.join(root, "Miao-Plugin-MBT-4"), GitFilePath4: path.join(root, "Miao-Plugin-MBT-4", ".git"),
-      MountRepoPath5: path.join(root, "Genshin-CR-Repos"), GitFilePath5: path.join(root, "Genshin-CR-Repos", ".git"),
-      MountRepoPath6: path.join(root, "StarRail-CR-Repos"), GitFilePath6: path.join(root, "StarRail-CR-Repos", ".git"),
+      MountRepoPath: repoJoin("Miao-Plugin-MBT"),    GitFilePath: repoJoin("Miao-Plugin-MBT", ".git"),
+      MountRepoPath2: repoJoin("Miao-Plugin-MBT-2"), GitFilePath2: repoJoin("Miao-Plugin-MBT-2", ".git"),
+      MountRepoPath3: repoJoin("Miao-Plugin-MBT-3"), GitFilePath3: repoJoin("Miao-Plugin-MBT-3", ".git"),
+      MountRepoPath4: repoJoin("Miao-Plugin-MBT-4"), GitFilePath4: repoJoin("Miao-Plugin-MBT-4", ".git"),
+      MountRepoPath5: repoJoin("Genshin-CR-Repos"), GitFilePath5: repoJoin("Genshin-CR-Repos", ".git"),
+      MountRepoPath6: repoJoin("StarRail-CR-Repos"), GitFilePath6: repoJoin("StarRail-CR-Repos", ".git"),
       OpsPath: ops,
-      oldOpsPath: path.join(YzPath, "resources", "Miao-Plugin-MBT", "GuGuNiu-Gallery"),
-      SecTagsPath: path.join(ops, "SecTags.json"),
+      oldOpsPath: path.join(yz, "resources", "Miao-Plugin-MBT", "GuGuNiu-Gallery"),
+      SecTagsPath: opsJoin("SecTags.json"),
       ComResPath: cow,
-      ConfigFilePath: path.join(cow, "CowSet.yaml"),
-      BanListPath: path.join(cow, "banlist.json"),
-      ProvisionPath: path.join(root, ".install_lock"),
-      WavesRoleData: path.join(cow, "waves", "RoleData.json"),
-      MiaoPluginPath: path.join(YzPath, "plugins", "miao-plugin"),
-      ZZZPluginPath: path.join(YzPath, "plugins", "ZZZ-Plugin"),
-      WavesPluginPath: path.join(YzPath, "plugins", "waves-plugin"),
-      RTCPath: path.join(cow, "RepoCache.json"),
-      TempHtmlPath: path.join(YzPath, "temp", "html"), TempNiuPath: path.join(YzPath, "temp", "CowCoo"), TempDownloadPath: path.join(YzPath, "temp", "CowCoo", "Tasks"),
+      ConfigFilePath: cowJoin("CowSet.yaml"),
+      BanListPath: cowJoin("banlist.json"),
+      ProvisionPath: repoJoin(".install_lock"),
+      WavesRoleData: cowJoin("waves", "RoleData.json"),
+      MiaoPluginPath: pluginJoin("miao-plugin"),
+      ZZZPluginPath: pluginJoin("ZZZ-Plugin"),
+      WavesPluginPath: pluginJoin("waves-plugin"),
+      RTCPath: cowJoin("RepoCache.json"),
+      TempHtmlPath: tempJoin("html"), TempNiuPath: tempJoin("CowCoo"), TempDownloadPath: tempJoin("CowCoo", "Tasks"),
       Target: {
-        MiaoCRE: path.join(YzPath, "plugins", "miao-plugin", "resources", "profile", "normal-character"),
-        ZZZCRE: path.join(YzPath, "plugins", "ZZZ-Plugin", "resources", "images", "panel"),
-        WavesCRE: path.join(YzPath, "plugins", "waves-plugin", "resources", "rolePic"),
-        Example: path.join(YzPath, "plugins", "example"),
-        Miao_GSAliasDir: path.join(YzPath, "plugins", "miao-plugin", "resources", "meta-gs", "character"),
-        Miao_SRAliasDir: path.join(YzPath, "plugins", "miao-plugin", "resources", "meta-sr", "character"),
-        ZZZ_AliasDir: path.join(YzPath, "plugins", "ZZZ-Plugin", "defset"),
-        ZZZ_DataDir: path.join(YzPath, "plugins", "ZZZ-Plugin", "resources", "data", "hakush", "data", "character"),
-        ZZZ_FaceDir: path.join(YzPath, "plugins", "ZZZ-Plugin", "resources", "images", "role_circle"),
-        Waves_AliasDir: path.join(YzPath, "plugins", "waves-plugin", "resources", "Alias"),
+        MiaoCRE: pluginJoin("miao-plugin", "resources", "profile", "normal-character"),
+        ZZZCRE: pluginJoin("ZZZ-Plugin", "resources", "images", "panel"),
+        WavesCRE: pluginJoin("waves-plugin", "resources", "rolePic"),
+        Example: pluginJoin("example"),
+        Miao_GSAliasDir: pluginJoin("miao-plugin", "resources", "meta-gs", "character"),
+        Miao_SRAliasDir: pluginJoin("miao-plugin", "resources", "meta-sr", "character"),
+        ZZZ_AliasDir: pluginJoin("ZZZ-Plugin", "defset"),
+        ZZZ_DataDir: pluginJoin("ZZZ-Plugin", "resources", "data", "hakush", "data", "character"),
+        ZZZ_FaceDir: pluginJoin("ZZZ-Plugin", "resources", "images", "role_circle"),
+        Waves_AliasDir: pluginJoin("waves-plugin", "resources", "Alias"),
       },
       SourceDir: (() => {
         const sd = { gallery: "CowCoo" };
@@ -7127,14 +7032,13 @@ class MiaoPluginMBT extends plugin {
         }
         return sd;
       })(),
-      LinkFiles: [{ sourceSubPath: "咕咕牛图库管理器.js", destDir: path.join(YzPath, "plugins", "example"), destFileName: "咕咕牛图库管理器.js" }],
+      LinkFiles: [{ sourceSubPath: "咕咕牛图库管理器.js", destDir: pluginJoin("example"), destFileName: "咕咕牛图库管理器.js" }],
     };
     return this._pathsCache;
   }
 
   static MetaHub = {
     async AC() {
-      const Hades = HadesEntry();
 
       if (!MiaoPluginMBT._AliasData) MiaoPluginMBT._AliasData = { combined: {} };
       if (!MiaoPluginMBT._AliasVerCache) MiaoPluginMBT._AliasVerCache = {};
@@ -7149,7 +7053,7 @@ class MiaoPluginMBT extends plugin {
           const gsVersion = gsStats ? gsStats.mtimeMs : Date.now();
           const gsCacheKey = `${GSAliasPath}@${gsVersion}`;
           if (MiaoPluginMBT._AliasVerCache.gsKey !== gsCacheKey) {
-            const GSModule = await import(`file://${GSAliasPath}?v=${gsVersion}`);
+            const GSModule = await import(`${toFileUrl(GSAliasPath)}?v=${gsVersion}`);
             GSAlias = GSModule.alias || {};
             MiaoPluginMBT._AliasVerCache.gsKey = gsCacheKey;
             MiaoPluginMBT._AliasVerCache.gsData = GSAlias;
@@ -7164,7 +7068,7 @@ class MiaoPluginMBT extends plugin {
           const srVersion = srStats ? srStats.mtimeMs : Date.now();
           const srCacheKey = `${SRAliasPath}@${srVersion}`;
           if (MiaoPluginMBT._AliasVerCache.srKey !== srCacheKey) {
-            const SRModule = await import(`file://${SRAliasPath}?v=${srVersion}`);
+            const SRModule = await import(`${toFileUrl(SRAliasPath)}?v=${srVersion}`);
             SRAlias = SRModule.alias || {};
             MiaoPluginMBT._AliasVerCache.srKey = srCacheKey;
             MiaoPluginMBT._AliasVerCache.srData = SRAlias;
@@ -7241,7 +7145,7 @@ class MiaoPluginMBT extends plugin {
       dsc: "『咕咕牛🐂』",
       event: "message", priority: 40, rule: CowCoo_Rules,
     });
-    this.logger = HadesEntry();
+    this.logger = Hades;
 
     this.task = [
       {
@@ -7267,7 +7171,7 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async _RecoverState(logger) {
-      const Hades = HadesEntry({}, logger || getCore());
+      const Hades = getHades(logger);
       const repoPaths = Nomos.AllRepoPaths(MiaoPluginMBT.Paths);
       let cleanedCount = 0;
 
@@ -7319,7 +7223,7 @@ class MiaoPluginMBT extends plugin {
       if (MiaoPluginMBT.#pendingInit) return MiaoPluginMBT.#pendingInit;
 
       MiaoPluginMBT.#pendingInit = (async () => {
-          const Hades = HadesEntry({}, logger || getCore());
+          const Hades = getHades(logger);
           MiaoPluginMBT._isInitializing = true;
 
           const initTask = async () => {
@@ -7339,7 +7243,7 @@ class MiaoPluginMBT extends plugin {
                   );
 
                   if (![PFL.NONE, PFL.RX18_ONLY, PFL.PX18_PLUS].includes(MiaoPluginMBT.MBTConfig.PFL_Ops)) {
-                      Hades.W(`配置 PFL=${MiaoPluginMBT.MBTConfig.PFL_Ops} 无效，已降级为 ${DFC.PFL_Ops} (${PFL.getDescription(DFC.PFL_Ops)})`);
+                      Hades.W(`PFL=${MiaoPluginMBT.MBTConfig.PFL_Ops} 无效，降级为 ${DFC.PFL_Ops} (${PFL.getDescription(DFC.PFL_Ops)})`);
                       MiaoPluginMBT.MBTConfig.PFL_Ops = DFC.PFL_Ops;
                   }
 
@@ -7435,7 +7339,7 @@ class MiaoPluginMBT extends plugin {
 
   static async ImgMetaAC(reloadCache = false, logger = getCore()) {
     if (MiaoPluginMBT._MetaCache?.length > 0 && !reloadCache) return MiaoPluginMBT._MetaCache;
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     const startTime = Date.now();
     const imageDP = path.join(MiaoPluginMBT.Paths.MountRepoPath, "CowCoo", "imgdata.json");
     let rawData = [];
@@ -7470,20 +7374,19 @@ class MiaoPluginMBT extends plugin {
 
     }).map(item => ({
         ...item,
-        path: item.path.replace(/\\/g, "/")
+        path: toPosix(item.path)
     }));
 
     MiaoPluginMBT._remoteBanCount = upstreamBanCount;
     Tianshu.BuildIndexes(validData);
     MiaoPluginMBT._MetaCache = Object.freeze(validData);
     const duration = Date.now() - startTime;
-    Hades.D(`元数据重构完成耗时[ ${duration}ms ]，索引数据[ ${validData.length} 条 | ${upstreamBanCount} 条 ]`);
+    Hades.D(`元数据重构 ${duration}ms | 索引=${validData.length} | 上游封禁=${upstreamBanCount}`);
 
     return MiaoPluginMBT._MetaCache;
   }
 
   static async OpsGate(e, commandName) {
-    const Hades = HadesEntry();
     const cerberus = Cerberus.getInstance();
     if (cerberus.tier === 1) {
       const freeMB = Math.floor(cerberus.freeMemMB);
@@ -7585,16 +7488,12 @@ class MiaoPluginMBT extends plugin {
   }
 
   static async SCD(logger = getCore()) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     const context = await Nomos.getContext();
     const activeRepos = Nomos.ActiveScope(MiaoPluginMBT.MBTConfig, context);
     const activeKeys = new Set(activeRepos.map(r => r.key));
 
-    const PURGE_PATHS = [
-      MiaoPluginMBT.Paths.Target.MiaoCRE,
-      MiaoPluginMBT.Paths.Target.ZZZCRE,
-      MiaoPluginMBT.Paths.Target.WavesCRE
-    ].filter(Boolean);
+    const PURGE_PATHS = getCreTargets();
 
     await Promise.all(PURGE_PATHS.map((dir) => Ananke.purge(dir, Hades)));
 
@@ -7604,7 +7503,7 @@ class MiaoPluginMBT extends plugin {
 
     if (SyncManifest && SyncManifest.length > 0) {
         for (const imgData of SyncManifest) {
-            const relativePath = imgData.path?.replace(/\\/g, "/");
+            const relativePath = toPosix(imgData.path);
             const storageBox = imgData.storagebox;
 
             if (!relativePath || !storageBox) continue;
@@ -7650,17 +7549,17 @@ class MiaoPluginMBT extends plugin {
         return;
     }
 
-    Hades.D(`准备同步 ${syncTasks.length} 个文件 (已过滤 ${skippedCount} 个)...`);
+    Hades.D(`准备同步 ${syncTasks.length} 个文件，已过滤 ${skippedCount} 个`);
 
     const startTime = Date.now();
     const result = await Ananke.dispatchSync(syncTasks, Hades);
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
-    Hades.D(`同步完成: 成功 ${result.success}, 失败 ${result.fail}, 耗时 ${duration}s`);
+    Hades.D(`同步完成: 成功${result.success} 失败${result.fail} 耗时${duration}s`);
   }
 
   static async RevertFile(relativePath, logger = getCore()) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
 
     const sourcePath = await MiaoPluginMBT.FsQuery(relativePath);
     if (!sourcePath) return false;
@@ -7708,7 +7607,7 @@ class MiaoPluginMBT extends plugin {
       const onShutdown = () => {
           if (isShuttingDown) return;
           isShuttingDown = true;
-          Hades.W(`${RidColored} | [System] 收到停机信号，正在中止下载任务...`);
+          Hades.W(`${RidColored} | 系统收到停机信号正在中止任务`);
           if (cerberusSessionId) cerberus.pulse(cerberusSessionId, { event: 'shutdown', state: 'running' });
           if (activeCRS) activeCRS.stop();
       };
@@ -7765,10 +7664,6 @@ class MiaoPluginMBT extends plugin {
               ? (Number.isFinite(v4Lat) ? (v6Lat * v6Bias < v4Lat) : true)
               : enableV6;
 
-          if (enableV6) {
-              Hades.D(`${RidColored} | [Smart] 检测到 IPv6 双栈环境注入策略中...`);
-          }
-
           useAirlock = execCtx.isAirlock;
           inheritEnv = execCtx.inheritEnv;
           extraEnv = execCtx.gitEnv;
@@ -7791,9 +7686,7 @@ class MiaoPluginMBT extends plugin {
               }
           }
 
-          Hades.D(`${RidColored} | [Smart] 运行模式: ${MODE} | 理由: ${logModeMsg}`);
-
-          if (repoNum === 1) Hades.D(`${RidColored} | [Smart] ${logModeMsg}`);
+          Hades.D(`${RidColored}|[S] 模式=${MODE} ${logModeMsg}`);
 
           const githubNode = sortedNodes.find(n => n.name === "GitHub") || {
               name: "GitHub", priority: 0, ClonePrefix: "https://github.com/", protocol: 'HTTPS'
@@ -7838,7 +7731,6 @@ class MiaoPluginMBT extends plugin {
               if (MODE !== 'USER_PROXY') {
                   RacingQueue.push({ ...githubNode, name: "GitHub_R1", priority: githubNode.priority - 1, retryDelay: 2000 });
                   RacingQueue.push({ ...githubNode, name: "GitHub_R2", priority: githubNode.priority - 2, retryDelay: 4500 });
-                  Hades.D(`${RidColored} | [Smart] 注入 GitHub 竞速重试组`);
               }
 
               useGitHubAsBackup = false;
@@ -7961,7 +7853,7 @@ class MiaoPluginMBT extends plugin {
                           const diagnosis = PoseidonSpear.probeProtocol(err.message || err.stderr);
                           if (err.message === 'Traffic Lie (Fake Connection)') {
                               if (!isDowngrade && preferV6 && node.name === "GitHub") {
-                                  Hades.D(`${RidColored} | [Smart] 检测到 IPv6 数据异常，正在回退至 IPv4 通道...`);
+                                  Hades.D(`${RidColored} 检测到 IPv6 数据异常，正在回退至 IPv4 通道`);
 
                                   preferV6 = false;
 
@@ -7971,7 +7863,6 @@ class MiaoPluginMBT extends plugin {
                                   }
 
                                   if (activeCRS && !activeCRS.closed && mirrorNodes.length > 0) {
-                                      Hades.D(`${RidColored} | [Smart] 启动镜像备援...`);
                                       mirrorNodes.forEach((mirror, idx) => {
                                           activeCRS.addTask(mirror.name, createTaskFactory(mirror), false, 2000 + (idx * 1000));
                                       });
@@ -7982,7 +7873,7 @@ class MiaoPluginMBT extends plugin {
                           }
 
                           if (diagnosis === 'DOWNGRADE_H1' && !isDowngrade) {
-                              Hades.D(`${RidColored} | [Quo] 🧬 节点 [${taskName}] 触发(H2 -> H1)...`);
+                              Hades.D(`${RidColored} | [Quo] ${taskName} H2->H1`);
                               if (activeCRS && !activeCRS.closed) {
                                   const newTaskId = `${node.name}_H1_${uniqueSuffix}`;
                                   activeCRS.addTask(newTaskId, createTaskFactory(node, true), true, 0);
@@ -7994,7 +7885,7 @@ class MiaoPluginMBT extends plugin {
                           if (!isDowngrade) {
                               const strikeRes = PoseidonSpear.strike(node.name, coreReason);
                               if (strikeRes.punished) {
-                                  Hades.D(`${RidColored} | [Smart] 节点熔断: [${node.name}] ${strikeRes.type} (冷却 ${(strikeRes.coolingTime / 60000).toFixed(0)}m)`);
+                                  Hades.D(`${RidColored} 熔断[${node.name}] ${strikeRes.type} ${(strikeRes.coolingTime / 60000).toFixed(0)}m`);
                               }
                           }
 
@@ -8022,7 +7913,7 @@ class MiaoPluginMBT extends plugin {
           const poolNames = nodePool.map(n => n.name).join(', ') || '无';
           const backupName = useGitHubAsBackup ? 'GitHub (75s BPP)' : '无';
           if (MODE !== 'USER_PROXY') {
-              Hades.D(`${RidColored} | [Smart] 🎲 初始节点池: [${poolNames}] | [${backupName}]`);
+             Hades.D(`${RidColored} | [Smart] 🎲 初始节点池: [${poolNames}] | [${backupName}]`);
           }
 
           while (true) {
@@ -8068,7 +7959,6 @@ class MiaoPluginMBT extends plugin {
                   if (githubTimer) clearTimeout(githubTimer);
                   githubTimer = setTimeout(() => {
                       if (activeCRS && !activeCRS.closed && !activeCRS.tasks.has('GitHub')) {
-                          Hades.D(`${RidColored} | [Smart] 🚑 GitHub BPP `);
                           activeCRS.addTask('GitHub', createTaskFactory(githubNode), true, 0);
                       }
                   }, 75000);
@@ -8086,14 +7976,12 @@ class MiaoPluginMBT extends plugin {
                       const nextNode = nodePool.shift();
                       if (nextNode) {
                           const boostDelay = getStartDelay(nextNode, 1, riskMode);
-                          Hades.D(`${RidColored} | [Smart] 🚑 动态补员: ${nextNode.name}`);
                           activeCRS.addTask(nextNode.name, createTaskFactory(nextNode), false, boostDelay);
                           lastTime = now;
                       }
                   }
 
                   if (status.activeCount === 0 && !activeCRS.tasks.has('GitHub')) {
-                       Hades.D(`${RidColored} | [Smart] 提前启动BPP`);
                        if (githubTimer) clearTimeout(githubTimer);
                        activeCRS.addTask('GitHub', createTaskFactory(githubNode), true, 1000);
                        lastTime = now;
@@ -8125,14 +8013,12 @@ class MiaoPluginMBT extends plugin {
 
               } catch (waveError) {
                   if (waveError.isFatal) {
-                      Hades.E(`${RidColored} | [Smart] 触发致命错误熔断: ${waveError.message}`);
                       if (activeCRS) activeCRS.stop(); throw waveError;
                   }
-                  Hades.D(`${RidColored} | [Smart] 本轮调度结束: ${waveError.message}`);
                   activeCRS.stop();
 
                   if (MODE === 'NATIVE' && !retryWithAirlock) {
-                      Hades.W(`${RidColored} | [Smart] 模式失败，正在切换至气闸模式...`);
+                      Hades.W(`${RidColored} 模式失败，正在切换至气闸模式`);
                       retryWithAirlock = true;
                       MODE = 'AIRLOCK_PROXY';
                       useAirlock = true;
@@ -8144,7 +8030,6 @@ class MiaoPluginMBT extends plugin {
                       if (airlockNodes.length > 0) {
                           nodePool.length = 0;
                           nodePool.push(...airlockNodes);
-                          Hades.D(`${RidColored} | [Smart] 已切换至气闸节点: [${airlockNodes.map(n => n.name).join(', ')}]`);
                           await common.sleep(1000);
                           continue;
                       }
@@ -8168,7 +8053,7 @@ class MiaoPluginMBT extends plugin {
           return { success: false, nodeName: "全部失败", error: new Error("所有可用节点均尝试失败"), mode: MODE, modeMsg: logModeMsg };
 
       } catch (SmartErr) {
-          Hades.E(`${RidColored} ${logTag} | [Smart] 调度失败: ${SmartErr.message}`);
+          Hades.E(`${RidColored} ${logTag} 调度失败:${SmartErr.message}`);
           if (cerberusSessionId) cerberus.finishSession(cerberusSessionId, false, { event: 'smart-failed', code: SmartErr?.code, message: SmartErr?.message });
           return { success: false, nodeName: "全部失败", error: SmartErr, mode: MODE, modeMsg: logModeMsg };
       } finally {
@@ -8181,21 +8066,12 @@ class MiaoPluginMBT extends plugin {
 
   static async UpstreamSyncRepo(e, RepoNum, localPath, RepoName, RepoUrl, branch, isScheduled, logger, senseChain) {
     return await MiaoPluginMBT.GitMutex.run(async () => {
-      const Hades = HadesEntry({}, logger || getCore());
+      const Hades = getHades(logger);
       const state = {
         success: false, hasChanges: false, error: null, wasHardReset: false,
         autoSwitchedNode: null, newCommitsCount: 0, diffStat: null, MBTCoreChange: false, log: null
       };
 
-      const Network_Err_KeyWords = [
-        "connection timed out", "connection was reset", "could not resolve host",
-        "unable to access", "handshake failed", "error: 502", "error: 522",
-        "error: 504", "etimedout", "gnutls_handshake", "rpc failed",
-        "unable to update url base from redirection", "recv failure", "error: 429",
-        "credential url cannot be parsed", "url cannot be parsed",
-        "command timed out", "command timeout", "命令执行超时"
-      ];
-      const timeoutErrCodes = new Set(["ETIMEDOUT", "ESLOWNET", "E_GIT_IO_STALL", "E_GIT_BYTE_IDLE_TIMEOUT", "E_GIT_ZOMBIE_IDLE", "E_GIT_SPEED_FLOOR"]);
       const collectGitErrText = (err) => (`${err?.rawStderr || ""}\n${err?.stderr || ""}\n${err?.message || ""}`).toLowerCase();
 
       const cfg = MiaoPluginMBT.MBTConfig || {};
@@ -8293,17 +8169,17 @@ class MiaoPluginMBT extends plugin {
       };
 
 
-      Hades.D(`[Phase 1] ${RepoName} | 模式=${Proteus._describe(mode)}`);
+      Hades.D(`[P1] ${RepoName} 模式=${Proteus._describe(mode)}`);
       let syncResult = await executeSyncLogic(initial_pipe_opts, getModePullTimeout(mode));
 
       if (!syncResult.success) {
         const syncErrText = collectGitErrText(syncResult.error);
-        const isNetErr = !!syncResult.error && (timeoutErrCodes.has(String(syncResult.error.code).toUpperCase()) || Network_Err_KeyWords.some(k => syncErrText.includes(k)));
+        const isNetErr = !!syncResult.error && (GIT_TIMEOUT_ERR_CODES.has(String(syncResult.error.code).toUpperCase()) || GIT_NETWORK_ERR_KEYWORDS.some(k => syncErrText.includes(k)));
 
 
         if (isNetErr) {
           const currentRemote = (await MBTPipeControl("git", ["remote", "get-url", "origin"], { cwd: localPath }).catch(() => ({ stdout: "未知" }))).stdout.trim() || "未知";
-          Hades.W(`[Phase 2] ${RepoName} 网络波动 [当前源: ${currentRemote}] 正在启动镜像路由...`);
+          Hades.W(`[P2] ${RepoName} 网络波动[源:${currentRemote}]`);
 
           let repo_path = parseGitHubRepoPath(RepoUrl) || parseGitHubRepoPath(currentRemote);
           const github_url = repo_path ? `https://github.com/${repo_path}.git` : "";
@@ -8330,14 +8206,14 @@ class MiaoPluginMBT extends plugin {
               const git_rows = await Promise.all(git_jobs);
               orderNodes = await MiaoPluginMBT.AdaptiveSpeed(probe_rows, git_rows, Hades);
               orderNodes = orderNodes.filter(n => n.name !== 'GitHub');
-              Hades.D(`[Phase 2] HTTP 排序镜像节点: [${orderNodes.map(n => n.name).join(', ')}]`);
+              Hades.D(`[P2] 镜像序=[${orderNodes.map(n => n.name).join(', ')}]`);
             } else {
               orderNodes = (DFC.F2Pool || [])
                 .filter(n => n.name !== 'GitHub' && n.ClonePrefix)
                 .sort((a, b) => (a.priority || 999) - (b.priority || 999));
             }
           } catch (e) {
-            Hades.E(`[Phase 2] 路由探测异常:`, e);
+            Hades.E(`[P2] 路由异常:`, e);
             orderNodes = (DFC.F2Pool || [])
               .filter(n => n.name !== 'GitHub' && n.ClonePrefix)
               .sort((a, b) => (a.priority || 999) - (b.priority || 999));
@@ -8361,7 +8237,7 @@ class MiaoPluginMBT extends plugin {
               ).catch(() => ({ stdout: "" }));
 
               if (!lsResult.stdout.trim()) {
-                Hades.D(`[Phase 2] 节点 [${winner.name}] ls-remote 无输出，跳过`);
+                Hades.D(`[P2] ${winner.name} ls-remote空,跳过`);
                 await rollback_origin(`${winner.name}-head-empty`);
                 continue;
               }
@@ -8369,7 +8245,7 @@ class MiaoPluginMBT extends plugin {
               syncResult = await executeSyncLogic(cleanOpts, basePullTimeout);
               if (syncResult.success) {
                 state.autoSwitchedNode = winner.name;
-                Hades.D(`[Phase 2] 镜像节点 [${winner.name}] 同步成功`);
+                Hades.D(`[P2] 镜像成功[${winner.name}]`);
                 break;
               }
               await rollback_origin(`${winner.name}-sync-fail`);
@@ -8379,7 +8255,7 @@ class MiaoPluginMBT extends plugin {
           }
 
           if (!syncResult.success && github_url) {
-            Hades.W(`[Phase 3] ${RepoName} GitHub 竞速组模式唤起...`);
+            Hades.W(`[P3] ${RepoName} GitHub 竞速组模式唤起`);
             const stage_rows = [
               { name: "Stage-1(直连)", opts: { inheritEnv: false, env: null } },
               { name: "Stage-2(H1+剥离)", opts: { inheritEnv: false, env: null, gitConfigs: ["http.version=HTTP/1.1", "http.proxy=", "https.proxy=", "core.gitProxy="] } }
@@ -8410,7 +8286,7 @@ class MiaoPluginMBT extends plugin {
         const rawLog = (await MBTPipeControl("git", ["log", `-n ${RepoNum === 1 ? 5 : 3}`, `--date=${DFC.logDateFormat}`, `--pretty=format:%cd [%h]%n%s%n%b`], { cwd: localPath }, 5000)).stdout;
         if (rawLog) {
           const entries = rawLog.split(/(?=\d{2}-\d{2}\s\d{2}:\d{2}\s+\[)/).filter(s => s.trim());
-          const BtnFaceUrl = `file://${MiaoPluginMBT.Paths.OpsPath}/img/icon/null-btn.png`.replace(/\\/g, "/");
+          const BtnFaceUrl = toFileUrl(path.join(MiaoPluginMBT.Paths.OpsPath, "img", "icon", "null-btn.png"));
           state.log = await Promise.all(entries.map(async (entry) => {
             const lines = entry.trim().split('\n');
             const header = lines.shift() || ""; const subject = lines.shift() || ""; const body = lines.join('\n').trim();
@@ -8418,7 +8294,7 @@ class MiaoPluginMBT extends plugin {
             const ccMatch = subject.match(/^([a-zA-Z\u4e00-\u9fa5]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/);
             if (ccMatch) {
               const rawPrefix = ccMatch[1].toLowerCase();
-              commit.commitPrefix = { '修复': 'fix', '新增': 'feat', '文档': 'docs', '样式': 'style', '重构': 'refactor', '性能': 'perf', '测试': 'test', '构建': 'build', '部署': 'deploy', '回滚': 'revert', '杂项': 'chore', '持续集成': 'ci' }[rawPrefix] || rawPrefix;
+              commit.commitPrefix = COMMIT_PREFIX_MAP[rawPrefix] || rawPrefix;
               commit.commitScope = ccMatch[2] || ccMatch[3]; commit.commitTitle = ccMatch[4].trim();
               if (commit.commitScope) commit.commitScopeClass = commit.commitScope.toLowerCase().includes('web') ? 'scope-web' : (commit.commitScope.toLowerCase().includes('core') ? 'scope-core' : 'scope-default');
             }
@@ -8435,8 +8311,7 @@ class MiaoPluginMBT extends plugin {
               if (inList) html += '</ul>';
               commit.descriptionBodyHtml = html;
             }
-            const gamePrefixes = [{ pattern: /^(原神UP:|原神UP：|原神up:|原神up：)\s*/i, key: "gs" }, { pattern: /^(星铁UP:|星铁UP：|星铁up:|星铁up：)\s*/i, key: "sr" }, { pattern: /^(绝区零UP:|绝区零UP：|绝区零up:|绝区零up：)\s*/i, key: "zzz" }, { pattern: /^(鸣潮UP:|鸣潮UP：|鸣潮up:|鸣潮up：)\s*/i, key: "waves" }];
-            for (const gp of gamePrefixes) {
+            for (const gp of COMMIT_GAME_PREFIXES) {
               if (gp.pattern.test(commit.commitTitle)) {
                 commit.isDescription = false;
                 const names = commit.commitTitle.replace(gp.pattern, '').split(/[/、，,]/).map(n => n.trim()).filter(Boolean);
@@ -8446,7 +8321,7 @@ class MiaoPluginMBT extends plugin {
                   if (aliasRes.exists) displayName = aliasRes.mainName;
                   let faceUrl = BtnFaceUrl;
                   if (gp.key === 'gs' || gp.key === 'sr') faceUrl = await Tianshu.ResolveFace(gp.key, displayName) || BtnFaceUrl;
-                  else if (gp.key === 'zzz') { try { const zzzFiles = await Ananke.readDir(MiaoPluginMBT.Paths.Target.ZZZ_DataDir); for (const f of zzzFiles) { if (!f.name.endsWith('.json')) continue; const d = JSON.parse(await Ananke.readFile(path.join(MiaoPluginMBT.Paths.Target.ZZZ_DataDir, f.name), 'utf-8') || '{}'); if (d.Name === displayName || d.CodeName === displayName) { const iconId = d.Icon?.match(/\d+$/)?.[0]; if (iconId) faceUrl = `file://${path.join(MiaoPluginMBT.Paths.Target.ZZZ_FaceDir, `IconRoleCircle${iconId}.png`).replace(/\\/g, "/")}`; break; } } } catch {} }
+                  else if (gp.key === 'zzz') faceUrl = await this._resolveZZZTitleFaceUrl(displayName) || BtnFaceUrl;
                   else if (gp.key === 'waves') faceUrl = MiaoPluginMBT._wavesRoleDataMap?.get(displayName)?.icon || BtnFaceUrl;
                   commit.displayParts.push({ type: 'character', name: displayName, game: gp.key, imageUrl: faceUrl });
                 }
@@ -8467,7 +8342,7 @@ class MiaoPluginMBT extends plugin {
   static async TestGitVoice(ClonePrefix, nodeName, logger = getCore()) {
     const MAX_RETRIES = 3;
     const TIMEOUT = 15000;
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
 
     const repoPool = (await Hermes.getRepoPool())
         .map(url => url.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/)?.[1])
@@ -8554,60 +8429,45 @@ class MiaoPluginMBT extends plugin {
   }
 
 static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     try {
-      Hades.D(`[调试日志] === 进入 ProvisionPhase (阶段: ${stage}) ===`);
       await MiaoPluginMBT.SSF();
-      Hades.D(`[调试日志] 加载最新配置...`);
       MiaoPluginMBT.MBTConfig = await Ananke.loadingConfig(
           MiaoPluginMBT.Paths.ConfigFilePath,
           DFC,
           Hades
       );
 
-      if (stage === 'core') {
-        Hades.D(`[调试日志] 核心阶段部署完成，提前退出。`);
-        return;
-      }
+      if (stage === 'core') return;
 
-      Hades.D(`[调试日志] 加载图片元数据...`);
       const imageData = await MiaoPluginMBT.ImgMetaAC(true, Hades);
       MiaoPluginMBT._MetaCache = Object.freeze(imageData);
       await MiaoPluginMBT.MetaHub.AC(true);
 
-      Hades.D(`[调试日志] 生成并应用封禁列表...`);
       await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, Hades);
 
       if (MiaoPluginMBT.MBTConfig.Repo_Ops) {
-        Hades.D(`[调试日志] 图库已启用，同步所有角色文件夹...`);
         await MiaoPluginMBT.SCD(Hades);
-      } else {
-        Hades.D(`[调试日志] 图库已禁用，跳过同步角色文件夹。`);
       }
-
-      Hades.D(`[调试日志] 完整部署成功完成所有步骤。`);
 
       if (stage === 'full') {
         try {
           await Ananke.writeText(MiaoPluginMBT.Paths.ProvisionPath, new Date().toISOString());
-          Hades.D(`[调试日志] 已成功创建安装状态标记文件。`);
         } catch (lockError) {
           Hades.E(`创建状态标记文件失败:`, lockError);
         }
       }
     } catch (error) {
-      Hades.E(`ProvisionPhase (阶段: ${stage}) 内部发生致命错误:`, error);
+      Hades.E(`ProvisionPhase[${stage}] 致命错误:`, error);
       if (e) {
         await DocHub.report(e, `安装设置 (${stage}阶段)`, error, "", Hades);
       }
       throw error;
-    } finally {
-      Hades.D(`[调试日志] === 退出 ProvisionPhase (阶段: ${stage}) ===`);
-    }
+    } finally {}
   }
 
  static async HydrateCore(e, isScheduled = false, logger = getCore()) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     try {
       MiaoPluginMBT.MBTConfig = await Ananke.loadingConfig(
           MiaoPluginMBT.Paths.ConfigFilePath,
@@ -8638,7 +8498,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   static async TestCaVoice(logger = getCore()) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     const timeoutDuration = DFC.ProxyRepoTimeout;
     const maxRetries = 3;
     let attempt = 0;
@@ -8654,7 +8514,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       }
 
       if (attempt > 1) {
-        Hades.D(`[测速重试 ${attempt}/${maxRetries}] 切换测试靶: ${targetRawUrl}`);
+        Hades.D(`[测速重试 ${attempt}/${maxRetries}] 切换测试靶=${targetRawUrl}`);
       }
 
       const promises = DFC.F2Pool.map(async (proxy) => {
@@ -8715,7 +8575,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   static async AdaptiveSpeed(HttpResultMap, GitRTTs, logger = getCore(), preferDirect = false) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     if (preferDirect) {
       const githubNode = HttpResultMap.find(n => n.name === 'GitHub');
       if (githubNode?.speed !== Infinity) {
@@ -8876,7 +8736,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async ReconcileTask() {
-    if (!this.logger) this.logger = HadesEntry({}, getCore());
+    if (!this.logger) this.logger = Hades;
     const zzzIns = await Ananke.Audit(MiaoPluginMBT.Paths.ZZZPluginPath);
     const waveIns = await Ananke.Audit(MiaoPluginMBT.Paths.WavesPluginPath);
     const repoContext = { zIn: zzzIns, wIn: waveIns };
@@ -8887,17 +8747,17 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
     const Marking = await Ananke.Audit(MiaoPluginMBT.Paths.ProvisionPath, false);
     if (!Marking) await Ananke.writeText(MiaoPluginMBT.Paths.ProvisionPath, new Date().toISOString()).catch(() => {});
-    this.logger.debug(`开始执行定时更新任务...`);
+    this.logger.debug(`开始定时更新...`);
     const startTime = Date.now();
     let HasAnyChanges = false;
     try {
       HasAnyChanges = await this.Reconcile(null, true);
-      this.logger.debug(`定时更新任务完成。检测到更新: ${HasAnyChanges}`);
+      this.logger.debug(`定时更新完成,有更新:${HasAnyChanges}`);
     } catch (error) {
-      this.logger.error(`定时更新任务执行期间发生意外错误:`, error);
+      this.logger.error(`定时更新异常:`, error);
     } finally {
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      this.logger.debug(`定时更新任务流程结束，总耗时 ${duration} 秒。`);
+      this.logger.debug(`定时更新结束,耗时 ${duration}s`);
     }
   }
 
@@ -8907,28 +8767,22 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     try {
         const envData = await Hermes.getEnvInfo(Hades);
         globalSenseChain = await Proteus.sense(envData, Infinity, Hades);
-        Hades.D(`全局网络态势已锁定: 模式=${Proteus._describe(globalSenseChain.mode)}`);
+        Hades.D(`全局态势模式=${Proteus._describe(globalSenseChain.mode)}`);
     } catch (err) {
-        Hades.W(`全局网络态势感知失败，将使用降级配置: ${err.message}`);
+        Hades.W(`全局态势失败,降级: ${err.message}`);
     }
     return globalSenseChain;
   }
 
   async CronSweep() {
-    this.logger.debug(`咕咕牛准备开始执行系统维护任务...`);
+    this.logger.debug(`开始系统维护...`);
 
-    const LockStatus = [
-        { lock: MiaoPluginMBT.MetaMutex, name: 'MetaMutex', maxAge: 60000 },
-        { lock: MiaoPluginMBT.GitMutex, name: 'GitMutex', maxAge: 1800000 },
-        { lock: MiaoPluginMBT.InstallMutex, name: 'InstallMutex', maxAge: 600000 },
-        { lock: MiaoPluginMBT.RenderMutex, name: 'RenderMutex', maxAge: 300000 },
-        { lock: MiaoPluginMBT.CleanMutex, name: 'CleanMutex', maxAge: 300000 }
-    ];
+    const LockStatus = getLockStatus();
 
     for (const { lock, name, maxAge } of LockStatus) {
         const stats = lock.getStats();
         if (stats.locked && stats.uptime > maxAge) {
-            this.logger.warn(`检测到僵死锁 [${name}] (持有者: ${stats.holder}, 时长: ${stats.uptime}ms)，强制重置。`);
+            this.logger.warn(`检测到僵死锁[${name}] 持有:${stats.holder} 时长:${stats.uptime}ms,强制重置`);
             lock.emergencyReset('CronSweep清理僵死锁');
         }
     }
@@ -8937,12 +8791,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         Ananke.obliterate(MiaoPluginMBT.Paths.TempDownloadPath, 3, 500),
         (async () => {
             try {
-                const entries = await Ananke.readDir(MiaoPluginMBT.Paths.TempHtmlPath);
-                const targets = entries
-                    .filter(e => e.isDirectory() && (e.name.toLowerCase().includes("guguniu") || e.name.includes("render-")))
-                    .map(e => path.join(MiaoPluginMBT.Paths.TempHtmlPath, e.name));
+                const targets = await getTempHtmlTargets(TEMP_HTML_CRON_KEYWORDS);
                 await Promise.all(targets.map(p => Ananke.obliterate(p)));
-            } catch (e) { if (e.code !== 'ENOENT') this.logger.warn(`HTML清理异常: ${e.message}`); }
+            } catch (e) { if (e.code !== 'ENOENT') this.logger.warn(`HTML清理异常:${e.message}`); }
         })(),
         Morpheus.housekeeping(this.logger),
         (async () => {
@@ -9169,7 +9020,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
           if (!result.success) {
               if (repoNum === 1) throw new Error(`核心仓库下载失败: ${result.error?.message}`);
-              else Hades.W(`附属仓库 ${repoNum} 下载失败，跳过。原因: ${result.error?.message}`);
+              else Hades.W(`附属仓库 ${repoNum} 下载失败，跳过: ${result.error?.message}`);
               return result;
           }
 
@@ -9232,7 +9083,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
               cumulativeDelay += jitter;
 
               const jobWrapper = (async () => {
-                  Hades.D(`附属仓库 ${task.repo} 将延迟 ${cumulativeDelay}ms 后启动`);
+                  Hades.D(`附属仓库 ${task.repo} 延迟 ${cumulativeDelay}ms 启动`);
                   await common.sleep(cumulativeDelay);
                   return deployRepo(task);
               })();
@@ -9290,18 +9141,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async _Debrief(e, repoManifest, startTime, allSuccess) {
-      const REPO_NAMES = {
-          1: "一号仓库 (核心)",
-          2: "二号仓库 (原神)",
-          3: "三号仓库 (星铁)",
-          4: "四号仓库 (综合库)",
-          5: "五号仓库 (SR18-GS)",
-          6: "六号仓库 (SR18-SR)"
-      };
-
       const HiddenRepos = [5, 6];
       const results = repoManifest.filter(r => !HiddenRepos.includes(r.repo)).map(r => {
-          const name = REPO_NAMES[r.repo] || `仓库 ${r.repo}`;
+          const name = RepoDisplayMap[r.repo] || `仓库 ${r.repo}`;
 
           if (r.status === 'skipped') {
               if (r.nodeName === '本地') {
@@ -9330,7 +9172,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       const failedRepos = repoManifest.filter(r => r.status === 'fail');
       const failDetailText = failedRepos.length > 0
         ? `\n失败详情：${failedRepos.map(r => {
-            const name = REPO_NAMES[r.repo] || `仓库 ${r.repo}`;
+            const name = RepoDisplayMap[r.repo] || `仓库 ${r.repo}`;
             const errCode = r.error?.code ? `(${r.error.code})` : '';
             const errMsg = r.error?.message || '未知错误';
             return `${name}${errCode}:${errMsg}`;
@@ -9755,34 +9597,34 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const activeRepos = Nomos.ActiveScope(MiaoPluginMBT.MBTConfig, nomosContext);
     const activeRepoIds = new Set(activeRepos.map(r => r.id));
 
-    reportResults.push(await deployRepoResult(1, MiaoPluginMBT.Paths.MountRepoPath, "一号仓库", "Main_Github_URL", "Main_Github_URL", branch, true, globalSenseChain));
+    reportResults.push(await deployRepoResult(1, MiaoPluginMBT.Paths.MountRepoPath, Repo1, "Main_Github_URL", "Main_Github_URL", branch, true, globalSenseChain));
 
-    const repo1Result = reportResults.find(r => r.name === "一号仓库");
+    const repo1Result = reportResults.find(r => r.name === Repo1);
     if (repo1Result && repo1Result.success) {
       JavaScriptSyncStatus = await MiaoPluginMBT.SSF();
     }
 
     if (activeRepoIds.has(2)) {
       const repo2Status = Repo2Exists
-        ? await deployRepoResult(2, MiaoPluginMBT.Paths.MountRepoPath2, "二号仓库", "Ass_Github_URL", "Ass_Github_URL", branch, false, globalSenseChain)
-        : { name: "二号仓库", statusText: "未下载", statusClass: "status-skipped" };
+        ? await deployRepoResult(2, MiaoPluginMBT.Paths.MountRepoPath2, Repo2, "Ass_Github_URL", "Ass_Github_URL", branch, false, globalSenseChain)
+        : { name: Repo2, statusText: "未下载", statusClass: "status-skipped" };
       reportResults.push(repo2Status);
     }
 
     if (activeRepoIds.has(3)) {
       const repo3Status = Repo3Exists
-        ? await deployRepoResult(3, MiaoPluginMBT.Paths.MountRepoPath3, "三号仓库", "Ass2_Github_URL", "Ass2_Github_URL", branch, false, globalSenseChain)
-        : { name: "三号仓库", statusText: "未下载", statusClass: "status-skipped" };
+        ? await deployRepoResult(3, MiaoPluginMBT.Paths.MountRepoPath3, Repo3, "Ass2_Github_URL", "Ass2_Github_URL", branch, false, globalSenseChain)
+        : { name: Repo3, statusText: "未下载", statusClass: "status-skipped" };
       reportResults.push(repo3Status);
     }
 
     if (activeRepoIds.has(4)) {
       const repo4Status = Repo4Exists
-        ? await deployRepoResult(4, MiaoPluginMBT.Paths.MountRepoPath4, "四号仓库", "Ass3_Github_URL", "Ass3_Github_URL", branch, false, globalSenseChain)
-        : { name: "四号仓库", statusText: "未下载", statusClass: "status-skipped" };
+        ? await deployRepoResult(4, MiaoPluginMBT.Paths.MountRepoPath4, Repo4, "Ass3_Github_URL", "Ass3_Github_URL", branch, false, globalSenseChain)
+        : { name: Repo4, statusText: "未下载", statusClass: "status-skipped" };
       reportResults.push(repo4Status);
     } else if (repo4State?.isConfigured) {
-      reportResults.push({ name: "四号仓库", statusText: "未下载 (插件未安装)", statusClass: "status-skipped" });
+      reportResults.push({ name: Repo4, statusText: "未下载 (插件未安装)", statusClass: "status-skipped" });
     }
 
     if (allSuccess && HasAnyChanges) {
@@ -9794,10 +9636,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     let ConfigChanged = false;
     if (!MiaoPluginMBT.MBTConfig.nodeInfo) MiaoPluginMBT.MBTConfig.nodeInfo = {};
-    const repoNameMap = { "一号仓库": '1', "二号仓库": '2', "三号仓库": '3', "四号仓库": '4' };
     for (const result of reportResults) {
       if (result.autoSwitchedNode) {
-        const repoNum = repoNameMap[result.name];
+        const repoNum = RepoNameToId[result.name];
         if (repoNum) {
           MiaoPluginMBT.MBTConfig.nodeInfo[repoNum] = result.autoSwitchedNode;
           ConfigChanged = true;
@@ -9910,46 +9751,22 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     if (!e.isMaster) return e.reply(`这个操作只有我的主人才能用哦~`, true);
     if (e.msg.trim() !== "#重置咕咕牛") return false;
 
-    if (!this.logger) this.logger = HadesEntry({}, getCore());
+    if (!this.logger) this.logger = Hades;
     const Hades = this.logger;
 
     await e.reply("开始重置图库，正在清理文件...", true);
 
-    const LegacyPaths = [
-        path.join(YzPath, "resources", "Miao-Plugin-MBT"),
-        path.join(YzPath, "resources", "Miao-Plugin-MBT-2"),
-        path.join(YzPath, "resources", "Miao-Plugin-MBT-3"),
-        path.join(YzPath, "resources", "Miao-Plugin-MBT-4"),
-        path.join(YzPath, "resources", "CowCoo"),
-        MiaoPluginMBT.Paths.oldOpsPath
-    ];
-
-    const NewPaths = [
-        MiaoPluginMBT.CowCooRepoRoot
-    ];
-
     const obliteratePaths = [
-        ...NewPaths,
-        ...LegacyPaths,
-        path.join(YzPath, "plugins", "GuTools"),
-        path.join(YzPath, "plugins", "CooWeb")
+        MiaoPluginMBT.CowCooRepoRoot,
+        MiaoPluginMBT.Paths.oldOpsPath,
+        ...["Miao-Plugin-MBT", "Miao-Plugin-MBT-2", "Miao-Plugin-MBT-3", "Miao-Plugin-MBT-4", "CowCoo"].map(dir => path.join(YzPath, "resources", dir)),
+        ...["GuTools", "CooWeb"].map(dir => path.join(YzPath, "plugins", dir))
     ];
 
-    const purgePaths = [
-        MiaoPluginMBT.Paths.Target.MiaoCRE,
-        MiaoPluginMBT.Paths.Target.ZZZCRE,
-        MiaoPluginMBT.Paths.Target.WavesCRE
-    ].filter(Boolean);
+    const purgePaths = getCreTargets();
 
     const cleanTempHtml = async () => {
-        const entries = await Ananke.readDir(MiaoPluginMBT.Paths.TempHtmlPath);
-        const targets = entries
-            .filter(e => {
-                if (!e.isDirectory()) return false;
-                const name = e.name.toLowerCase();
-                return name.includes("guguniu") || name.includes("render-") || name.includes("cowcoo") || name.includes("guguniu-gallery") || name.includes("gutools") || name.includes("cooweb");
-            })
-            .map(e => path.join(MiaoPluginMBT.Paths.TempHtmlPath, e.name));
+        const targets = await getTempHtmlTargets();
 
         await Promise.all(targets.map(p => Ananke.obliterate(p)));
         return { count: targets.length };
@@ -10039,7 +9856,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async CheckStatus(e) {
     if (!(await this.CheckInit(e))) return true;
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
     const repo1Exists = await MiaoPluginMBT.ICI();
     if (!repo1Exists) return e.reply("咕咕牛的图库你还没下载呢！", true);
 
@@ -10098,7 +9915,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         GitWorkingSize += gitSize;
 
         statsData.repos[repo.name] = {
-          name: ["一号仓库", "二号仓库", "三号仓库", "四号仓库"][parseInt(repo.name) - 1],
+          name: [Repo1, Repo2, Repo3, Repo4][parseInt(repo.name) - 1],
           nodeName: nodeName,
           sha: currentSha,
           exists: true,
@@ -10258,7 +10075,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         Date: Date
       };
 
-      const Hades = HadesEntry({}, this.logger || getCore());
+      const Hades = getHades(this.logger);
       const imgBuffer = await Morpheus.shot("Status", {
           tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "html", "tools", "status.html"),
           data: ViewProps,
@@ -10280,7 +10097,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async _TriggerMapGeneration(e, logger) {
-      const Hades = HadesEntry({}, logger || getCore());
+      const Hades = getHades(logger);
       const tasks = [
           { key: "gs", width: 1400 },
           { key: "sr", width: 1400 },
@@ -10290,14 +10107,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
       const generatedImgs = [];
 
-      const pluginRoots = {
-          zzz: path.join(MiaoPluginMBT.Paths.YzPath, "plugins", "ZZZ-Plugin"),
-          waves: path.join(MiaoPluginMBT.Paths.YzPath, "plugins", "waves-plugin")
-      };
-
       for (const task of tasks) {
           if (task.optional) {
-              const targetPluginPath = pluginRoots[task.key];
+              const targetPluginPath = task.key === 'zzz' ? MiaoPluginMBT.Paths.ZZZPluginPath : MiaoPluginMBT.Paths.WavesPluginPath;
               if (!targetPluginPath || !(await Ananke.Audit(targetPluginPath))) {
                   continue;
               }
@@ -10329,7 +10141,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async MBTMapTileAss(gameKey, renderWidth, logger) {
-    const Hades = HadesEntry({}, logger || getCore());
+    const Hades = getHades(logger);
     const strategy = Tianshu.GetStrategy(gameKey);
     if (!strategy) return null;
     const cerberus = Cerberus.getInstance();
@@ -10482,11 +10294,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     const msg = e.msg.trim();
     const isMaster = e.isMaster;
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
 
     const getThumbPath = async (imgPath) => {
       const absolutePath = await MiaoPluginMBT.FsQuery(imgPath);
-      return absolutePath ? `file://${absolutePath.replace(/\\/g, "/")}` : "";
+      return toFileUrl(absolutePath);
     };
 
     const pageMatch = msg.match(/^#(?:ban|咕咕牛封禁)列表(?:\s*(\d+))?$/i);
@@ -10665,7 +10477,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         if (imagesForCharacter && imagesForCharacter.length > 0) {
           const Fingerprint = `${primaryName.toLowerCase()}gu${imgNum}.webp`;
           imageData = imagesForCharacter.find((img) =>
-            img.path?.toLowerCase().replace(/\\/g, "/").endsWith(`/${Fingerprint}`)
+            toPosix(img.path).toLowerCase().endsWith(`/${Fingerprint}`)
           );
         }
 
@@ -10683,7 +10495,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           }
         }
 
-        const RelativePath = imageData.path.replace(/\\/g, "/");
+        const RelativePath = toPosix(imageData.path);
         const fileLabel = path.basename(RelativePath);
 
         try {
@@ -10782,14 +10594,14 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const roleNameInput = match[1].trim();
 
     let primaryName = "";
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
 
     try {
       const aliasResult = await Tianshu.NormalizeName(roleNameInput);
       primaryName = aliasResult.mainName || roleNameInput;
 
       let roleFolderPath = null;
-      const SearchPaths = [MiaoPluginMBT.Paths.Target.MiaoCRE, MiaoPluginMBT.Paths.Target.ZZZCRE, MiaoPluginMBT.Paths.Target.WavesCRE].filter(Boolean);
+      const SearchPaths = getCreTargets();
       for (const targetDir of SearchPaths) {
         if (!targetDir) continue;
         const potentialPath = path.join(targetDir, primaryName);
@@ -10799,7 +10611,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         }
       }
 
-      if (!roleFolderPath) { Hades.W(`未在任何目标插件目录中找到角色 '${primaryName}' 的文件夹。`); return e.reply(`『${primaryName}』不存在，可能是未同步/无该角色？`); }
+      if (!roleFolderPath) { Hades.W(`未在目标插件目录找到角色 '${primaryName}' 文件夹。`); return e.reply(`『${primaryName}』不存在，可能是未同步/无该角色？`); }
 
       const supportedExtensions = [".jpg", ".png", ".jpeg", ".webp", ".bmp"];
       let allimgFiles = [];
@@ -10844,15 +10656,15 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
         const VisCharaterdata = currentFiles.map((fileName, index) => ({
           fileName: fileName.replace(/\.\w+$/, ""),
-          filePath: `file://${path.join(roleFolderPath, fileName).replace(/\\/g, "/")}`,
+          filePath: toFileUrl(path.join(roleFolderPath, fileName)),
           originalIndex: startIndex + index,
           isGu: /gu/i.test(fileName)
         }));
 
-        const PluginRolePath = roleFolderPath.replace(/\\/g, '/').toLowerCase();
-        const miaoRoot = MiaoPluginMBT.Paths.MiaoPluginPath.replace(/\\/g, '/').toLowerCase();
-        const zzzRoot = MiaoPluginMBT.Paths.ZZZPluginPath.replace(/\\/g, '/').toLowerCase();
-        const wavesRoot = MiaoPluginMBT.Paths.WavesPluginPath.replace(/\\/g, '/').toLowerCase();
+        const PluginRolePath = toPosix(roleFolderPath).toLowerCase();
+        const miaoRoot = toPosix(MiaoPluginMBT.Paths.MiaoPluginPath).toLowerCase();
+        const zzzRoot = toPosix(MiaoPluginMBT.Paths.ZZZPluginPath).toLowerCase();
+        const wavesRoot = toPosix(MiaoPluginMBT.Paths.WavesPluginPath).toLowerCase();
         let originPlugin = null;
         let originPluginKey = null;
         if (PluginRolePath.startsWith(miaoRoot)) {
@@ -10921,7 +10733,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     if (!match?.[1]) return e.reply("要导出哪个图片呀？格式：#咕咕牛导出 角色名+编号 (例如：心海1)", true);
 
     const rawInput = match[1].trim();
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
 
     try {
         const parsedId = Tianshu.ParseID(rawInput);
@@ -10947,7 +10759,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             return e.reply(`找到了角色 '${primaryName}'，但没有找到编号 ${imgNum} 的图片。`, true);
         }
 
-        const relativePath = imageData.path.replace(/\\/g, "/");
+        const relativePath = toPosix(imageData.path);
         const targetFileName = path.basename(relativePath);
         const absolutePath = await Tianshu.FsQuery(relativePath);
 
@@ -10983,7 +10795,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async HotFix(e) {
     if (!e.isMaster) return e.reply(`这个操作只有我的主人才能用哦~`, true);
-    const Hades = HadesEntry({}, this.logger || getCore());
+    const Hades = getHades(this.logger);
 
     const Cow_Url = "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js";
     const Get_SS5 = path.join(YzPath, "plugins", "example", "咕咕牛图库管理器.js");
@@ -11015,7 +10827,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async Help(e) {
     const isInstalled = await MiaoPluginMBT.ICI();
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
 
     let HelpTpl = "";
     const tplResult = await Hermes.getTemplate('help.html', logger);
@@ -11069,28 +10881,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
 
     if (!HelpTpl) {
-      let ReliefText = "『咕咕牛帮助手册』\n";
-      ReliefText += "--------------------\n";
-      ReliefText += "【图库安装】\n";
-      ReliefText += "  #下载咕咕牛: 自动测速选择合适节点下载\n";
-      ReliefText += "  #更新咕咕牛: 手动执行更新\n";
-      ReliefText += "\n";
-      ReliefText += "【图库操作】\n";
-      ReliefText += "  #启/禁用咕咕牛: 管理图库同步\n";
-      ReliefText += "  #咕咕牛状态: 查看本地参数\n";
-      ReliefText += "  #咕咕牛查看[角色名]: 查看角色图片\n";
-      ReliefText += "  #咕咕牛导出[角色名+编号]: 导出图片文件\n";
-      ReliefText += "  #可视化[角色名]: 显示面板图\n";
-      ReliefText += "  #重置咕咕牛: 清理图库文件\n";
-      ReliefText += "\n";
-      ReliefText += "【封禁与设置】\n";
-      ReliefText += "  #咕咕牛封/解禁[角色名+编号]: 管理单张图片\n";
-      ReliefText += "  #咕咕牛封禁列表: 显示封禁图片\n";
-      ReliefText += "  #咕咕牛设置净化等级[0-2]: 过滤敏感内容\n";
-      ReliefText += "  #咕咕牛面板: 查看设置状态\n";
-      ReliefText += "  #咕咕牛设置[xx][开启/关闭]: Ai/彩蛋/横屏等\n";
-      ReliefText += "--------------------\n";
-      ReliefText += `Miao-Plugin-MBT v${Version}`;
+      const ReliefText = [...HELP_FALLBACK_LINES, `Miao-Plugin-MBT v${Version}`].join("\n");
       await e.reply(ReliefText, true);
     }
 
@@ -11099,7 +10890,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async MBTOpsDeck(e, StatusMsg = "") {
     if (!(await this.CheckInit(e))) return true;
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
     const config = MiaoPluginMBT.MBTConfig || {};
 
     const mapToggle = (key, defaultVal, trueText = "已开启", falseText = "已关闭") => {
@@ -11184,15 +10975,25 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async MutateSubState(e, key, valRaw) {
-    const logger = HadesEntry({}, this.logger || getCore());
+    const logger = getHades(this.logger);
+    const parseBool = (v) => {
+        if (v !== '开启' && v !== '关闭') throw new Error("只能是开启或关闭");
+        return v === '开启';
+    };
+    const refreshList = async (logText, errText, syncRepo = false) => {
+        if (logText) Hades.D(logText);
+        try {
+            await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, logger);
+            if (syncRepo && MiaoPluginMBT.MBTConfig.Repo_Ops) await MiaoPluginMBT.SCD(logger);
+        } catch (err) {
+            Hades.E(`${errText}:`, err);
+        }
+    };
     const strategies = {
         '总开关': {
             cfgKey: 'Repo_Ops',
             name: '图库总开关',
-            parse: (v) => {
-                if (v !== '开启' && v !== '关闭') throw new Error("只能是开启或关闭");
-                return v === '开启';
-            },
+            parse: parseBool,
             sideEffect: async (enable) => {
                 const opName = enable ? "同步/挂载" : "清理/卸载";
                 Hades.D(`[后台任务] 开始执行图库${opName}...`);
@@ -11210,11 +11011,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                             }
                         }
                     } else {
-                        const TARGETS = [
-                            MiaoPluginMBT.Paths.Target.MiaoCRE,
-                            MiaoPluginMBT.Paths.Target.ZZZCRE,
-                            MiaoPluginMBT.Paths.Target.WavesCRE
-                        ];
+                        const TARGETS = getCreTargets();
                         await Promise.all(TARGETS.map(dir => Ananke.purge(dir, logger).catch(() => {})));
                     }
                     Hades.D(`[后台任务] 图库${opName}完成。`);
@@ -11231,15 +11028,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 if (isNaN(level) || ![0, 1, 2].includes(level)) throw new Error("只能是 0, 1, 或 2");
                 return level;
             },
-            sideEffect: async () => {
-                Hades.D(`PFL 变更，正在重新计算封禁列表...`);
-                try {
-                    await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, logger);
-                    if (MiaoPluginMBT.MBTConfig.Repo_Ops) await MiaoPluginMBT.SCD(logger);
-                } catch (err) {
-                    Hades.E(`PFL 应用失败:`, err);
-                }
-            }
+            sideEffect: () => refreshList(`PFL 变更，正在重新计算封禁列表...`, "PFL 应用失败", true)
         },
         '渲染精度': {
             cfgKey: 'RenderScale',
@@ -11254,43 +11043,23 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         'sr18': {
             cfgKey: 'SR18_Ops',
             name: 'SR18仓库',
-            parse: (v) => {
-                if (v !== '开启' && v !== '关闭') throw new Error("只能是开启或关闭");
-                return v === '开启';
-            },
-            sideEffect: async () => {
-                Hades.D(`SR18 状态变更，正在重新计算资源...`);
-                try {
-                    await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, logger);
-                    if (MiaoPluginMBT.MBTConfig.Repo_Ops) await MiaoPluginMBT.SCD(logger);
-                } catch (err) {
-                    Hades.E(`SR18 应用失败:`, err);
-                }
-            }
+            parse: parseBool,
+            sideEffect: () => refreshList(`SR18 状态变更，正在重新计算资源...`, "SR18 应用失败", true)
         }
     };
 
-    ['ai', '彩蛋', '横屏', '官方立绘'].forEach(k => {
-        const map = {
-            'ai': { k: 'Ai', n: 'Ai 图' },
-            '彩蛋': { k: 'EasterEgg', n: '彩蛋图' },
-            '横屏': { k: 'layout', n: '横屏图' },
-            '官方立绘': { k: 'MihoyoSplash', n: '官方立绘同步' }
-        };
+    const toggleMap = {
+        'ai': ['Ai', 'Ai 图'],
+        '彩蛋': ['EasterEgg', '彩蛋图'],
+        '横屏': ['layout', '横屏图'],
+        '官方立绘': ['MihoyoSplash', '官方立绘同步']
+    };
+    Object.entries(toggleMap).forEach(([k, [cfgKey, name]]) => {
         strategies[k] = {
-            cfgKey: map[k].k,
-            name: map[k].n,
-            parse: (v) => {
-                if (v !== '开启' && v !== '关闭') throw new Error("只能是开启或关闭");
-                return v === '开启';
-            },
-            sideEffect: async () => {
-                try {
-                    await MiaoPluginMBT.GenerateList(MiaoPluginMBT._MetaCache, logger);
-                } catch (err) {
-                    Hades.E(`[后台任务] 更新封禁表失败:`, err);
-                }
-            }
+            cfgKey,
+            name,
+            parse: parseBool,
+            sideEffect: () => refreshList("", "[后台任务] 更新封禁表失败")
         };
     });
 
@@ -11365,7 +11134,6 @@ class SleeperAgent extends plugin {
     }
 
     async debugImg(e) {
-      const Hades = HadesEntry();
       const sourceMsgId = e.msg.replace(/^#原图/, '').trim();
 
       const replyReg = /^\[reply:(.+?)\]\n?/;
@@ -11383,7 +11151,7 @@ class SleeperAgent extends plugin {
         return true;
       }
 
-      Hades.O(`[SleeperAgent-Debug] 收到调试指令，目标消息ID: ${sourceMsgId}`);
+      Hades.O(`[SleeperAgent-Debug] 调试目标消息ID: ${sourceMsgId}`);
       const processed = await SleeperAgent._interrogate(e, sourceMsgId);
 
       if (!processed) {
@@ -11442,7 +11210,7 @@ class SleeperAgent extends plugin {
               try {
                 const CREName = fileName.replace(/Gu\d+\.webp$/i, '');
                 const promptText = `输入#咕咕牛查看${CREName}可以看图库全部图片`;
-                const imgSegment = segment.image(imgPath.startsWith('http') ? absolutePath : `file://${absolutePath.replace(/\\/g, "/")}`);
+                const imgSegment = segment.image(imgPath.startsWith('http') ? absolutePath : toFileUrl(absolutePath));
 
                 const forwardList = [promptText, imgSegment];
                 const forwardMsg = await common.makeForwardMsg(e, forwardList, `原图 - ${fileName}`);
@@ -11465,20 +11233,20 @@ class SleeperAgent extends plugin {
 }
 
 const CowCoo_Rules = [
-  { reg: /^#下载咕咕牛$/i, fnc: "Provision", permission: "master" },
-  { reg: /^#更新咕咕牛$/i, fnc: "Reconcile", permission: "master" },
-  { reg: /^#修复咕咕牛$/i, fnc: "HotFix", permission: "master" },
-  { reg: /^#重置咕咕牛$/i, fnc: "ManRepo", permission: "master" },
-  { reg: /^#咕咕牛状态$/i, fnc: "CheckStatus" },
-  { reg: /^#(?:(?:ban|咕咕牛封禁)列表|咕咕牛(?:封禁|解禁)\s*.+)$/i, fnc: "MuB", permission: "master" },
-  { reg: /^#咕咕牛导出\s*.+$/i, fnc: "ExPhFile" },
-  { reg: /^#咕咕牛查看\s*.*$/i, fnc: "QueryData" },
-  { reg: /^#咕咕牛帮助$/i, fnc: "Help" },
-  { reg: /^#咕咕牛测速$/i, fnc: "TestVoice" },
-  { reg: /^#(咕咕牛设置|咕咕牛面板)$/i, fnc: "MBTOpsDeck" },
-  { reg: /^#(?:(启用|禁用)咕咕牛|咕咕牛设置(ai|彩蛋|横屏|净化等级|渲染精度|SR18)(开启|关闭|[0-9]+))$/i, fnc: "RouteOpsHub", permission: "master" },
-  { reg: /^#可视化\s*.+$/i, fnc: "VisSplashes" },
-];
+  [/^#下载咕咕牛$/i, "Provision", "master"],
+  [/^#更新咕咕牛$/i, "Reconcile", "master"],
+  [/^#修复咕咕牛$/i, "HotFix", "master"],
+  [/^#重置咕咕牛$/i, "ManRepo", "master"],
+  [/^#咕咕牛状态$/i, "CheckStatus"],
+  [/^#(?:(?:ban|咕咕牛封禁)列表|咕咕牛(?:封禁|解禁)\s*.+)$/i, "MuB", "master"],
+  [/^#咕咕牛导出\s*.+$/i, "ExPhFile"],
+  [/^#咕咕牛查看\s*.*$/i, "QueryData"],
+  [/^#咕咕牛帮助$/i, "Help"],
+  [/^#咕咕牛测速$/i, "TestVoice"],
+  [/^#(咕咕牛设置|咕咕牛面板)$/i, "MBTOpsDeck"],
+  [/^#(?:(启用|禁用)咕咕牛|咕咕牛设置(ai|彩蛋|横屏|净化等级|渲染精度|SR18)(开启|关闭|[0-9]+))$/i, "RouteOpsHub", "master"],
+  [/^#可视化\s*.+$/i, "VisSplashes"],
+].map(([reg, fnc, permission]) => ({ reg, fnc, ...(permission ? { permission } : {}) }));
 
 setTimeout(async () => {
     try {
