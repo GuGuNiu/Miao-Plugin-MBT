@@ -19,7 +19,7 @@ import dgram from 'node:dgram';
 import { Worker } from 'node:worker_threads';
 const Trap_Symbol = Symbol.for('Yz.CowCoo.MBT.SignalTrap.Lifecycle.v2');
 const Cer_Symbol = Symbol.for('Yz.CowCoo.MBT.Cer.Runtime.v1');
-const Charon = "『咕咕牛🐂』";
+const Charon = "『咕咕牛』";
 const Hades_Symbol = Symbol.for('Yz.CowCoo.MBT.Hades.Entry');
 const getCore = () => global.logger || console;
 
@@ -143,6 +143,76 @@ const toFileUrl = (p) => {
 };
 
 const Hades = HadesEntry({});
+
+class MBTAdapterEnv {
+    static isOneBotFamily(e) {
+        if (!e) return false;
+        const adapterName = e?.bot?.adapter?.name || '';
+        if (adapterName.includes('OneBot')) return true;
+        const selfId = String(e?.self_id || '');
+        if (selfId.startsWith('2900')) return true;
+        return false;
+    }
+}
+
+class Pheme {
+    static async send(e, msg, quote = false) {
+        if (!e?.reply) return false;
+        try { return await e.reply(msg, quote); } catch { return false; }
+    }
+    static async quote(e, msg) { return this.send(e, msg, true); }
+    static async error(e, msg) { return this.quote(e, msg); }
+    static async info(e, msg) { return this.quote(e, msg); }
+    static async success(e, msg) { return this.quote(e, msg); }
+    static async warning(e, msg) { return this.quote(e, msg); }
+    static async img(e, seg, fallbackText = '', logger = null) {
+        return MiaoPluginMBT.ReplyImg(e, seg, fallbackText, logger);
+    }
+    static async forward(e, list, title) {
+        if (!e?.reply || !common?.makeForwardMsg) return false;
+        try {
+            const msg = await common.makeForwardMsg(e, list, title);
+            return await e.reply(msg);
+        } catch { return false; }
+    }
+    static async noPerm(e) { return this.quote(e, '这个操作只有我的主人才能用哦~'); }
+    static async noRepo(e) { return this.quote(e, '咕咕牛的图库你还没下载呢！'); }
+    static async initFail(e) { return this.quote(e, '『咕咕牛🐂』插件初始化失败，请检查后台日志。'); }
+    static async notReady(e) { return this.quote(e, '咕咕牛插件核心服务未就绪，大部分功能无法使用。'); }
+    static async cooldown(e, ttl, tier = '') {
+        const tierStr = tier ? ` (Tier ${tier})` : '';
+        return this.quote(e, `指令冷却中${tierStr}，请等待 ${ttl} 秒。`);
+    }
+    static async emptyResult(e, type, name = '') {
+        const map = {
+            tag: `没有找到任何带${name}的图片哦。`,
+            character: `图库数据中没有找到『${name}』的图片信息。`,
+            ban: '当前没有任何图片被封禁。',
+            folder: `『${name}』的文件夹里没有找到支持的图片文件哦。`,
+            img: `在图库数据里没找到这个图片: ${name}。`,
+            role: `在图库数据里没找到角色: ${name}。`,
+        };
+        return this.quote(e, map[type] || '未找到相关结果。');
+    }
+    static async genFail(e, type = 'img') {
+        const map = {
+            img: '生成图片失败，请查看后台日志。',
+            report: '生成报告失败，请查看后台日志。',
+            status: '状态图生成失败，请查看后台日志。',
+            search: '生成查看助手图片失败，请查看后台日志。',
+            speedtest: '测速报告生成失败。',
+            errorReport: '生成详细错误报告失败，请查看控制台日志。',
+        };
+        return this.quote(e, map[type] || '生成失败，请查看后台日志。');
+    }
+    static async sendFail(e, opName, err, sendErr) {
+        return this.quote(e, `[${opName}] 发送失败已文本通知。\n原错误: ${err?.message || '未知错误'}\n发送错误码: ${sendErr?.code || 'SEND_FAIL'}`);
+    }
+    static async lowMem(e, freeMB) {
+        return this.quote(e, `咕咕牛发现当前系统内存极低 (${freeMB}MB)，已暂时挂起操作。`);
+    }
+    static async wait(e, msg) { return this.quote(e, msg); }
+}
 
 class MetisError extends Error {
     constructor(message, code) {
@@ -297,7 +367,7 @@ const QuantumFlux = (fn, min = 0, max = 3600000) => {
 };
 
 class MBTPagination {
-    static #sizes = { MuB: 28, Vis: 28 };
+    static #sizes = { MuB: 28, Vis: 28, FM: 28 };
 
     static #normalize(size) {
         const value = Number(size);
@@ -415,9 +485,9 @@ class Nyx {
                 return `${r.port}(分:${r.score})[${modeStr}]`;
             });
             if (logParts.length > 0) {
-                Hades.D(`[Nyx] 代理端口池: ${logParts.join(', ')}`);
+                Hades.D(`代理端口池: ${logParts.join(', ')}`);
             } else {
-                Hades.D(`[Nyx] 代理端口池: 无可用端口`);
+                Hades.D(`代理端口池: 无可用端口`);
             }
         }
 
@@ -447,7 +517,7 @@ class Nyx {
             const processPorts = await this._scanSystemProcesses();
             processPorts.forEach(p => addPort(p, 60, 'os_process'));
         } catch (e) {
-            if (Hades?.D) Hades.D(`[Nyx] OS进程扫描异常(已降级): ${e.message}`);
+            if (Hades?.D) Hades.D(`OS进程扫描异常(已降级): ${e.message}`);
         }
 
         if (Array.isArray(agentGates)) {
@@ -3276,7 +3346,9 @@ class PoseidonSpear {
         [/Invalid input|502 Bad Gateway|index-pack/i, { time: 60 * 60 * 1000, type: "协议/服务端故障" }],
         [/403|429|redirection|too many requests/i, { time: 15 * 60 * 1000, type: "限流/拒绝" }],
         [/ESLOWNET|E_GIT_IO_STALL|E_GIT_BYTE_IDLE_TIMEOUT|E_GIT_ZOMBIE_IDLE|E_GIT_SPEED_FLOOR|龟速|假死|LowSpeed|stall threshold/i, { time: 10 * 60 * 1000, type: "性能降级" }],
-        [/timed out|Connection refused|resolve host|Could not resolve/i, { time: 5 * 60 * 1000, type: "网络波动" }]
+        [/timed out|Connection refused|resolve host|Could not resolve/i, { time: 5 * 60 * 1000, type: "网络波动" }],
+        [/early EOF|index-pack failed|unpack-objects|write error|No space left|磁盘已满|out of memory|memory exhausted/i, { time: 3 * 60 * 1000, type: "本地资源不足" }],
+        [/repository not found|Authentication failed|403 Forbidden|401 Unauthorized/i, { time: 30 * 60 * 1000, type: "仓库/认证异常" }]
     ]);
 
     static H2_ERRORS = [
@@ -3287,7 +3359,7 @@ class PoseidonSpear {
         /Protocol "HTTP\/2" not supported or disabled/i
     ];
 
-    static LOG_WHITELIST = "fatal:|error:|remote:|warning:|Could not resolve|timed out|Connection refused|SSL|certificate|HTTP/2|stream|ESLOWNET|E_GIT_IO_STALL|E_GIT_BYTE_IDLE_TIMEOUT|E_GIT_ZOMBIE_IDLE|E_GIT_SPEED_FLOOR|龟速|假死".split("|");
+    static LOG_WHITELIST = "fatal:|error:|remote:|warning:|Could not resolve|timed out|Connection refused|SSL|certificate|HTTP/2|stream|ESLOWNET|E_GIT_IO_STALL|E_GIT_BYTE_IDLE_TIMEOUT|E_GIT_ZOMBIE_IDLE|E_GIT_SPEED_FLOOR|龟速|假死|early EOF|index-pack|unpack-objects|write error|No space left|out of memory|memory exhausted|repository not found|Authentication failed|unexpected disconnect|RPC failed|curl".split("|");
 
     static get _state() {
         const Pose_Symbol = Symbol.for('Yz.CowCoo.MBT.PoseidonSpear.State.v2');
@@ -3322,6 +3394,29 @@ class PoseidonSpear {
         if (!errorMsg) return null;
         for (const regex of this.H2_ERRORS) {
             if (regex.test(errorMsg)) return 'DOWNGRADE_H1';
+        }
+        return null;
+    }
+
+    static diagnose128(rawLog) {
+        if (!rawLog) return null;
+        const patterns = [
+            { regex: /early EOF/i, label: "early EOF (服务端提前断开/数据不完整)" },
+            { regex: /index-pack failed/i, label: "index-pack failed (索引包损坏或内存不足)" },
+            { regex: /unpack-objects failed/i, label: "unpack-objects failed (解包失败)" },
+            { regex: /write error|No space left|磁盘已满/i, label: "磁盘空间不足" },
+            { regex: /out of memory|memory exhausted/i, label: "内存不足" },
+            { regex: /Authentication failed|401 Unauthorized/i, label: "认证失败 (Token/权限不足)" },
+            { regex: /403 Forbidden/i, label: "403 拒绝访问" },
+            { regex: /RPC failed; curl \d+/i, label: "RPC/cURL 传输层错误" },
+            { regex: /unexpected disconnect while reading sideband packet/i, label: "HTTP/2 侧带包断开 (尝试降级HTTP/1.1)" },
+            { regex: /SSL certificate problem/i, label: "SSL证书验证失败" },
+            { regex: /Could not resolve host/i, label: "DNS解析失败" },
+            { regex: /Connection refused/i, label: "连接被拒绝" },
+            { regex: /timed out/i, label: "连接/读取超时" }
+        ];
+        for (const p of patterns) {
+            if (p.regex.test(rawLog)) return p.label;
         }
         return null;
     }
@@ -3536,6 +3631,8 @@ const DFC = {
   Ai: true, EasterEgg: true, layout: true, SR18_Ops: false,
   logPrefix: Charon,
   logDateFormat: "format:%m-%d %H:%M",
+  DockerMode: false,
+  FileUrl_Threshold: 2097152,
 };
 
 const [Repo1, Repo2, Repo3, Repo4, Repo5, Repo6] = ["一号仓库", "二号仓库", "三号仓库", "四号仓库", "五号仓库", "六号仓库"];
@@ -4065,7 +4162,13 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
         const simpleCmd = cmdStr.replace(/git -c .*? clone/, "git clone").split(" ").slice(0, 4).join(" ") + "...";
         const sanitizedStderr = PoseidonSpear.sanitize(stderr);
         const tailLine = sanitizedStderr.trim().split('\n').filter(Boolean).slice(-1)[0];
-        const err = new Error(`命令执行失败 (退出码 ${code}): ${simpleCmd}${tailLine ? ` | ${tailLine}` : ""}`);
+        let diagHint = "";
+        if (code === 128) {
+            const d128 = PoseidonSpear.diagnose128(stderr);
+            if (d128) diagHint = ` [诊断: ${d128}]`;
+            else if (!tailLine || tailLine.includes("未知Git错误")) diagHint = " [诊断: Git返回128但未输出可识别错误, 可能为网络层静默断开或进程被外部终止]";
+        }
+        const err = new Error(`命令执行失败 (退出码 ${code}): ${simpleCmd}${tailLine ? ` | ${tailLine}` : ""}${diagHint}`);
         err.code = code ?? "UNKNOWN"; err.signal = signal;
         err.stdout = stdout; err.stderr = sanitizedStderr; err.rawStderr = stderr;
         err.metrics = finalMetrics;
@@ -4135,7 +4238,7 @@ class MBTWorker {
     constructor(logger) {
         this.logger = getHades(logger);
         this.worker = null;
-        this.workerPath = path.join(MiaoPluginMBT.Paths.TempNiuPath, "worker.js");
+        this.workerPath = MiaoPluginMBT.Paths.WorkerPath;
     }
 
     async _initWorker() {
@@ -4263,6 +4366,7 @@ class Morpheus {
     static #initDone = false;
     static #browserInstance = null;
     static #cleanupHandlers = new Set();
+    static #profileId = null;
 
     static get RenderDir() {
         return path.join(MiaoPluginMBT.Paths.TempNiuPath, "Render");
@@ -4336,9 +4440,16 @@ class Morpheus {
 
     static async #getBrowser(logger = console) {
         const Hades = getHades(logger);
-        if (this.#browserInstance && this.#browserInstance.isConnected()) {
-            return this.#browserInstance;
+        if (this.#browserInstance) {
+            if (this.#browserInstance.isConnected()) {
+                return this.#browserInstance;
+            }
+            Hades.W(`渲染器检测到浏览器实例已断开`);
+            await this.closeBrowser();
         }
+
+        this.#profileId = `${Date.now()}-${crypto.randomBytes(2).toString('hex')}`;
+        const userDataDir = path.join(MiaoPluginMBT.Paths.TempNiuPath, `Chromium-Profile-${this.#profileId}`);
 
         const launchOptions = {
             headless: "new",
@@ -4351,7 +4462,8 @@ class Morpheus {
                 '--no-zygote',
                 '--disable-features=site-per-process'
             ],
-            userDataDir: path.join(MiaoPluginMBT.Paths.TempNiuPath, 'chromium-profile')
+            userDataDir,
+            enableExtensions: true
         };
 
         if (MiaoPluginMBT._detectDockerEnv()) {
@@ -4636,13 +4748,13 @@ class Morpheus {
     static async pickBg() {
         const files = await this.#scanDir(this.#bgCache, "bg");
         const selected = MBTMath.Sample(files);
-        return selected ? `file://${path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'bg', selected).replace(/\\/g, '/')}` : '';
+        return selected ? toFileUrl(path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'bg', selected)) : '';
     }
 
     static async pickHeader() {
         const files = await this.#scanDir(this.#headerCache, "picture");
         const selected = MBTMath.Sample(files);
-        return selected ? `file://${path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'picture', selected).replace(/\\/g, '/')}` : '';
+        return selected ? toFileUrl(path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'picture', selected)) : '';
     }
 
     static async pickHeaderSet(count = 20) {
@@ -4653,7 +4765,7 @@ class Morpheus {
         for (let i = 0; i < count; i++) {
             const file = files[i % files.length];
             if (file) {
-                result.push(`file://${path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'picture', file).replace(/\\/g, '/')}`);
+                result.push(toFileUrl(path.join(MiaoPluginMBT.Paths.OpsPath, 'img', 'picture', file)));
             }
         }
         return MBTMath.Shuffle(result);
@@ -4663,7 +4775,7 @@ class Morpheus {
         const targetPath = subDir
             ? path.join(MiaoPluginMBT.Paths.OpsPath, 'img', subDir, filename)
             : path.join(MiaoPluginMBT.Paths.OpsPath, 'img', filename);
-        return `file://${targetPath.replace(/\\/g, '/')}`;
+        return toFileUrl(targetPath);
     }
 
     static async #scanDir(cacheObj, subDirName) {
@@ -4687,11 +4799,19 @@ class Morpheus {
         if (this.#browserInstance) {
             try {
                 await this.#browserInstance.close();
-                //console.log("[渲染器] 已关闭内置浏览器实例");
             } catch (e) {
-                //console.error("[渲染器] 关闭浏览器失败", e);
+                try {
+                    this.#browserInstance.process()?.kill('SIGKILL');
+                } catch {}
             }
             this.#browserInstance = null;
+        }
+        if (this.#profileId) {
+            const profileDir = path.join(MiaoPluginMBT.Paths.TempNiuPath, `Chromium-Profile-${this.#profileId}`);
+            try {
+                fs.rmSync(profileDir, { recursive: true, force: true });
+            } catch {}
+            this.#profileId = null;
         }
     }
 }
@@ -6000,8 +6120,8 @@ class Presenter {
             logger: Hades
         });
 
-        if (imgBuffer) await MiaoPluginMBT.ReplyImg(e, imgBuffer, '查询面板图片发送失败，已切换文本模式。', Hades);
-        else await e.reply("生成查看助手图片失败，请查看后台日志。", true);
+        if (imgBuffer) await Pheme.img(e, imgBuffer, '查询面板图片发送失败，已切换文本模式。', Hades);
+        else await Pheme.genFail(e, 'search');
         return true;
     }
 
@@ -6011,14 +6131,16 @@ class Presenter {
 
         if (data.type === 'tag') {
             const filteredImg = Array.isArray(data.items) ? data.items : [];
-            if (filteredImg.length === 0) return e.reply(`没有找到任何带${data.title}的图片哦。`, true);
+            if (filteredImg.length === 0) return Pheme.emptyResult(e, 'tag', data.title);
 
-            const Items_Per_Batch = 28;
+            const isOneBot = MBTAdapterEnv.isOneBotFamily(e);
+            const Items_Per_Batch = isOneBot ? 8 : 28;
+            const sleepInterval = isOneBot ? 2000 : 1000;
             const itemCount = filteredImg.length;
             const pageCount = Math.ceil(itemCount / Items_Per_Batch);
             let waitMsg = `收到！正在查找 ${data.title} 的图片，共 ${itemCount} 张...`;
             if (pageCount > 1) waitMsg = `${data.title} (共 ${itemCount} 张)，将分 ${pageCount} 批发送，请稍候...`;
-            await e.reply(waitMsg, true);
+            await Pheme.wait(e, waitMsg);
 
             for (let batchNum = 1; batchNum <= pageCount; batchNum++) {
                 await cerberus.breath(batchNum);
@@ -6037,16 +6159,11 @@ class Presenter {
                     const absolutePath = await MiaoPluginMBT.FsQuery(relativePath);
                     const MsgNode = [];
                     if (absolutePath) {
-                        if (await Ananke.Audit(absolutePath, false)) {
-                            try {
-                                const imgBuffer = fs.readFileSync(absolutePath);
-                                MsgNode.push(segment.image(imgBuffer));
-                            } catch {
-                                MsgNode.push(segment.image(toFileUrl(absolutePath)));
-                            }
-                        } else {
-                            MsgNode.push(`[图片无法加载: ${fileName}]`);
-                        }
+                        const imgSeg = MiaoPluginMBT.ToImgSeg(absolutePath, {
+                            audit: true,
+                            fallbackText: `[图片无法加载: ${fileName}]`
+                        });
+                        if (imgSeg) MsgNode.push(imgSeg);
                     } else {
                         MsgNode.push(`[图片文件丢失: ${fileName}]`);
                     }
@@ -6055,9 +6172,19 @@ class Presenter {
                 }
 
                 if (forwardList.length > 1) {
-                    const forwardMsg = await common.makeForwardMsg(e, forwardList, makeForwardMsgTitle);
-                    await e.reply(forwardMsg);
-                    await common.sleep(1000);
+                    const ok = await Pheme.forward(e, forwardList, makeForwardMsgTitle);
+                    if (!ok) {
+                        for (const node of forwardList) {
+                            const imgSegs = Array.isArray(node)
+                                ? node.filter(n => n?.type === 'image')
+                                : (node?.type === 'image' ? [node] : []);
+                            for (const seg of imgSegs) {
+                                await Pheme.send(e, seg);
+                                await common.sleep(500);
+                            }
+                        }
+                    }
+                    await common.sleep(sleepInterval);
                 }
             }
             return true;
@@ -6066,14 +6193,16 @@ class Presenter {
         if (data.type === 'character') {
             const primaryName = data.primaryName;
             const RawRoleMeta = Array.isArray(data.items) ? data.items : [];
-            if (RawRoleMeta.length === 0) return e.reply(`图库数据中没有找到『${primaryName}』的图片信息。`, true);
+            if (RawRoleMeta.length === 0) return Pheme.emptyResult(e, 'character', primaryName);
 
+            const isOneBot = MBTAdapterEnv.isOneBotFamily(e);
+            const Items_Per_Batch = isOneBot ? 8 : 28;
+            const sleepInterval = isOneBot ? 2000 : 1000;
             const itemCount = RawRoleMeta.length;
-            const Items_Per_Batch = 28;
             const pageCount = Math.ceil(itemCount / Items_Per_Batch);
             let waitMsg = `正在为『${primaryName}』整理 ${itemCount} 张图片...`;
             if (pageCount > 1) waitMsg = `正在为『${primaryName}』整理 ${itemCount} 张图片，将分 ${pageCount} 批发送，请稍候...`;
-            await e.reply(waitMsg, true);
+            await Pheme.wait(e, waitMsg);
 
             for (let batchNum = 1; batchNum <= pageCount; batchNum++) {
                 await cerberus.breath(batchNum);
@@ -6086,11 +6215,16 @@ class Presenter {
 
                 let titleSeg = null;
                 if (titleFaceUrl) {
-                    try {
-                        const titleBuffer = fs.readFileSync(titleFaceUrl.replace(/^file:\/\//, ''));
-                        titleSeg = segment.image(titleBuffer);
-                    } catch {
+                    const config = MiaoPluginMBT.MBTConfig || DFC;
+                    if (config.DockerMode === true) {
                         titleSeg = segment.image(titleFaceUrl);
+                    } else {
+                        try {
+                            const titleBuffer = fs.readFileSync(titleFaceUrl.replace(/^file:\/\//, ''));
+                            titleSeg = segment.image(titleBuffer);
+                        } catch {
+                            titleSeg = segment.image(titleFaceUrl);
+                        }
                     }
                 }
                 const makeForwardMsgTitle = titleSeg
@@ -6111,16 +6245,11 @@ class Presenter {
                     const absolutePath = await MiaoPluginMBT.FsQuery(relativePath);
                     const MsgNode = [];
                     if (absolutePath) {
-                        if (await Ananke.Audit(absolutePath, false)) {
-                            try {
-                                const imgBuffer = fs.readFileSync(absolutePath);
-                                MsgNode.push(segment.image(imgBuffer));
-                            } catch {
-                                MsgNode.push(segment.image(toFileUrl(absolutePath)));
-                            }
-                        } else {
-                            MsgNode.push(`[图片无法加载: ${fileName}]`);
-                        }
+                        const imgSeg = MiaoPluginMBT.ToImgSeg(absolutePath, {
+                            audit: true,
+                            fallbackText: `[图片无法加载: ${fileName}]`
+                        });
+                        if (imgSeg) MsgNode.push(imgSeg);
                     } else {
                         MsgNode.push(`[图片文件丢失: ${fileName}]`);
                     }
@@ -6156,9 +6285,19 @@ class Presenter {
                 }
 
                 if (forwardList.length > 1) {
-                    const forwardMsg = await common.makeForwardMsg(e, forwardList, makeForwardMsgTitle);
-                    await e.reply(forwardMsg);
-                    await common.sleep(1000);
+                    const ok = await Pheme.forward(e, forwardList, makeForwardMsgTitle);
+                    if (!ok) {
+                        for (const node of forwardList) {
+                            const imgSegs = Array.isArray(node)
+                                ? node.filter(n => n?.type === 'image')
+                                : (node?.type === 'image' ? [node] : []);
+                            for (const seg of imgSegs) {
+                                await Pheme.send(e, seg);
+                                await common.sleep(500);
+                            }
+                        }
+                    }
+                    await common.sleep(sleepInterval);
                 }
             }
 
@@ -6280,7 +6419,7 @@ class DocHub {
                         stealthStatus: stealthStatus
                     };
 
-                    imgBuffer = await Morpheus.shot("error-report", {
+                    imgBuffer = await Morpheus.shot("Error-Report", {
                         htmlContent: tplResult.data,
                         data: ViewProps,
                         logger: Hades
@@ -6301,14 +6440,14 @@ class DocHub {
 
         try {
             if (imgBuffer) {
-                await MiaoPluginMBT.ReplyImg(e, imgBuffer, msg, Hades);
+                await Pheme.img(e, imgBuffer, msg, Hades);
             } else {
-                await e.reply(msg);
+                await Pheme.send(e, msg);
             }
         } catch (sendErr) {
             Hades.E(`报告发送失败:`, sendErr);
             try {
-                await e.reply(`[${opName}] 发送失败已文本通知。\n原错误: ${err?.message || '未知错误'}\n发送错误码: ${sendErr?.code || 'SEND_FAIL'}`, true);
+                await Pheme.sendFail(e, opName, err, sendErr);
             } catch {}
         }
     }
@@ -6845,27 +6984,31 @@ class MiaoPluginMBT extends plugin {
     }
   }
 
-  static _saveTempImg(buffer) {
-    const tempDir = path.join(this.Paths.TempNiuPath, 'sending');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    const filename = `${crypto.randomUUID()}.png`;
-    const filePath = path.join(tempDir, filename);
-    fs.writeFileSync(filePath, buffer);
-    return filePath;
-  }
-
-  static ToImgSeg(input) {
+  static ToImgSeg(input, options = {}) {
     if (!input) return null;
+    const { audit = false, fallbackText = null, preferUrl = false } = options;
+
     if (Buffer.isBuffer(input)) {
       return segment.image(input);
     }
+
     if (typeof input === 'string') {
       if (input.startsWith('http://') || input.startsWith('https://') || input.startsWith('file://')) {
         return segment.image(input);
       }
       if (path.isAbsolute(input)) {
+        if (audit) {
+          const exists = fs.existsSync(input);
+          if (!exists) {
+            return fallbackText ? { type: 'text', text: fallbackText } : null;
+          }
+        }
+        const config = MiaoPluginMBT.MBTConfig || DFC;
+        const dockerMode = config.DockerMode === true;
+        const threshold = config.FileUrl_Threshold || 2097152;
+        if (preferUrl || dockerMode || this._shouldFileUrl(input, threshold)) {
+          return segment.image(toFileUrl(input));
+        }
         try {
           const buffer = fs.readFileSync(input);
           return segment.image(buffer);
@@ -6875,7 +7018,17 @@ class MiaoPluginMBT extends plugin {
       }
       return segment.image(input);
     }
+
     return segment.image(input);
+  }
+
+  static _shouldFileUrl(filePath, threshold) {
+    try {
+      const stats = fs.statSync(filePath);
+      return stats.size > threshold;
+    } catch {
+      return false;
+    }
   }
 
   static async ReplyImg(e, input, fallbackText = '', logger = null) {
@@ -6884,37 +7037,27 @@ class MiaoPluginMBT extends plugin {
     try {
       imgSeg = this.ToImgSeg(input);
       if (!imgSeg) return false;
-      await e.reply(imgSeg);
-
-      if (imgSeg.file && typeof imgSeg.file === 'string') {
-        const tempDir = path.join(this.Paths.TempNiuPath, 'sending');
-        const resolvedFile = path.resolve(imgSeg.file);
-        const resolvedTempDir = path.resolve(tempDir);
-
-        if (resolvedFile.startsWith(resolvedTempDir)) {
-             setTimeout(() => {
-                 fs.unlink(resolvedFile, (err) => {
-                     if (err && err.code !== 'ENOENT') {
-                        Hades.D(`临时图片清理失败: ${err.message}`);
-                     }
-                 });
-             }, 60000);
-        }
-      }
+      await Pheme.send(e, imgSeg);
       return true;
     } catch (sendErr) {
       Hades.W(`图片发送失败: ${sendErr?.code || sendErr?.message || 'SEND_FAIL'}`);
       if (typeof input === 'string' && !input.startsWith('http') && path.isAbsolute(input)) {
         try {
-          const buffer = fs.readFileSync(input);
-          await e.reply(segment.image(buffer));
+          await Pheme.send(e, segment.image(toFileUrl(input)));
           return true;
         } catch (retryErr) {
-          Hades.W(`Buffer重试发送失败: ${retryErr?.message || 'RETRY_FAIL'}`);
+          Hades.W(`file:// URL重试发送失败: ${retryErr?.message || 'RETRY_FAIL'}`);
+          try {
+            const buffer = fs.readFileSync(input);
+            await Pheme.send(e, segment.image(buffer));
+            return true;
+          } catch (bufferErr) {
+            Hades.W(`Buffer重试发送失败: ${bufferErr?.message || 'RETRY_FAIL'}`);
+          }
         }
       }
       if (fallbackText) {
-        try { await e.reply(`${fallbackText}\n(Code: ${sendErr?.code || 'SEND_FAIL'})`, true); } catch {}
+        try { await Pheme.quote(e, `${fallbackText}\n(Code: ${sendErr?.code || 'SEND_FAIL'})`); } catch {}
       }
       return false;
     }
@@ -7084,6 +7227,7 @@ class MiaoPluginMBT extends plugin {
       WavesPluginPath: pluginJoin("waves-plugin"),
       RTCPath: cowJoin("RepoCache.json"),
       TempHtmlPath: tempJoin("html"), TempNiuPath: tempJoin("CowCoo"), TempDownloadPath: tempJoin("CowCoo", "Tasks"),
+      WorkerPath: tempJoin("CowCoo", "NetWork", "worker.js"),
       Target: {
         MiaoCRE: pluginJoin("miao-plugin", "resources", "profile", "normal-character"),
         ZZZCRE: pluginJoin("ZZZ-Plugin", "resources", "images", "panel"),
@@ -7213,8 +7357,8 @@ class MiaoPluginMBT extends plugin {
 
   constructor() {
     super({
-      name: `『咕咕牛🐂』图库管理器`,
-      dsc: "『咕咕牛🐂』",
+      name: `『咕咕牛』图库管理器`,
+      dsc: "『咕咕牛』",
       event: "message", priority: 40, rule: CowCoo_Rules,
     });
     this.logger = Hades;
@@ -7462,7 +7606,7 @@ class MiaoPluginMBT extends plugin {
     const cerberus = Cerberus.getInstance();
     if (cerberus.tier === 1) {
       const freeMB = Math.floor(cerberus.freeMemMB);
-      await e.reply(`咕咕牛发现当前系统内存极低 (${freeMB}MB)，已暂时挂起操作。`, true);
+      await Pheme.lowMem(e, freeMB);
       return false;
     }
 
@@ -7478,7 +7622,7 @@ class MiaoPluginMBT extends plugin {
           const ttl = await redis.ttl(redisKey);
           if (ttl && ttl > 0) {
             if (ttl > 3 || cerberus.tier === 2) {
-              await e.reply(`指令冷却中 (Tier ${cerberus.tier})，请等待 ${ttl} 秒。`, true);
+              await Pheme.cooldown(e, ttl, cerberus.tier);
             }
             return false;
           }
@@ -7564,9 +7708,7 @@ class MiaoPluginMBT extends plugin {
     const context = await Nomos.getContext();
     const activeRepos = Nomos.ActiveScope(MiaoPluginMBT.MBTConfig, context);
     const activeKeys = new Set(activeRepos.map(r => r.key));
-
     const PURGE_PATHS = getCreTargets();
-
     await Promise.all(PURGE_PATHS.map((dir) => Ananke.purge(dir, Hades)));
 
     const SyncManifest = MiaoPluginMBT._MetaCache;
@@ -8241,7 +8383,7 @@ class MiaoPluginMBT extends plugin {
       };
 
 
-      Hades.D(`[P1] ${RepoName} 模式=${Proteus._describe(mode)}`);
+      Hades.D(`[Phase 1] ${RepoName} 模式=${Proteus._describe(mode)}`);
       let syncResult = await executeSyncLogic(initial_pipe_opts, getModePullTimeout(mode));
 
       if (!syncResult.success) {
@@ -8251,7 +8393,7 @@ class MiaoPluginMBT extends plugin {
 
         if (isNetErr) {
           const currentRemote = (await MBTPipeControl("git", ["remote", "get-url", "origin"], { cwd: localPath }).catch(() => ({ stdout: "未知" }))).stdout.trim() || "未知";
-          Hades.W(`[P2] ${RepoName} 网络波动[源:${currentRemote}]`);
+          Hades.W(`[Phase 2] ${RepoName} 网络波动[源:${currentRemote}]`);
 
           let repo_path = parseGitHubRepoPath(RepoUrl) || parseGitHubRepoPath(currentRemote);
           const github_url = repo_path ? `https://github.com/${repo_path}.git` : "";
@@ -8260,7 +8402,7 @@ class MiaoPluginMBT extends plugin {
           const rollback_origin = async (reason) => {
             if (rollback_remote && rollback_remote !== "未知") {
               await MBTPipeControl("git", ["remote", "set-url", "origin", rollback_remote], { cwd: localPath }).catch(()=>{});
-              Hades.D(`[Rollback] ${RepoName} 已回滚 origin (${reason})`);
+              Hades.D(`Rollback ${RepoName} 已回滚 origin (${reason})`);
             }
           };
 
@@ -8278,14 +8420,14 @@ class MiaoPluginMBT extends plugin {
               const git_rows = await Promise.all(git_jobs);
               orderNodes = await MiaoPluginMBT.AdaptiveSpeed(probe_rows, git_rows, Hades);
               orderNodes = orderNodes.filter(n => n.name !== 'GitHub');
-              Hades.D(`[P2] 镜像序=[${orderNodes.map(n => n.name).join(', ')}]`);
+              Hades.D(`[Phase 2] 镜像序=[${orderNodes.map(n => n.name).join(', ')}]`);
             } else {
               orderNodes = (DFC.F2Pool || [])
                 .filter(n => n.name !== 'GitHub' && n.ClonePrefix)
                 .sort((a, b) => (a.priority || 999) - (b.priority || 999));
             }
           } catch (e) {
-            Hades.E(`[P2] 路由异常:`, e);
+            Hades.E(`[Phase 2] 路由异常:`, e);
             orderNodes = (DFC.F2Pool || [])
               .filter(n => n.name !== 'GitHub' && n.ClonePrefix)
               .sort((a, b) => (a.priority || 999) - (b.priority || 999));
@@ -8309,7 +8451,7 @@ class MiaoPluginMBT extends plugin {
               ).catch(() => ({ stdout: "" }));
 
               if (!lsResult.stdout.trim()) {
-                Hades.D(`[P2] ${winner.name} ls-remote空,跳过`);
+                Hades.D(`[Phase 2] ${winner.name} ls-remote空,跳过`);
                 await rollback_origin(`${winner.name}-head-empty`);
                 continue;
               }
@@ -8317,7 +8459,7 @@ class MiaoPluginMBT extends plugin {
               syncResult = await executeSyncLogic(cleanOpts, basePullTimeout);
               if (syncResult.success) {
                 state.autoSwitchedNode = winner.name;
-                Hades.D(`[P2] 镜像成功[${winner.name}]`);
+                Hades.D(`[Phase 2] 镜像成功[${winner.name}]`);
                 break;
               }
               await rollback_origin(`${winner.name}-sync-fail`);
@@ -8327,7 +8469,7 @@ class MiaoPluginMBT extends plugin {
           }
 
           if (!syncResult.success && github_url) {
-            Hades.W(`[P3] ${RepoName} GitHub 竞速组模式唤起`);
+            Hades.W(`[Phase 3] ${RepoName} GitHub 竞速组模式唤起`); 
             const stage_rows = [
               { name: "Stage-1(直连)", opts: { inheritEnv: false, env: null } },
               { name: "Stage-2(H1+剥离)", opts: { inheritEnv: false, env: null, gitConfigs: ["http.version=HTTP/1.1", "http.proxy=", "https.proxy=", "core.gitProxy="] } }
@@ -8352,7 +8494,7 @@ class MiaoPluginMBT extends plugin {
       }
 
       Object.assign(state, syncResult);
-      if (e && !isScheduled && !syncResult.success) Promise.resolve(e.reply(`咕咕牛图库的 ${RepoName} 同步失败，请查看失败详情。`)).catch(() => {});
+      if (e && !isScheduled && !syncResult.success) Promise.resolve(Pheme.send(e, `咕咕牛图库的 ${RepoName} 同步失败，请查看失败详情。`)).catch(() => {});
 
       try {
         const rawLog = (await MBTPipeControl("git", ["log", `-n ${RepoNum === 1 ? 5 : 3}`, `--date=${DFC.logDateFormat}`, `--pretty=format:%cd [%h]%n%s%n%b`], { cwd: localPath }, 5000)).stdout;
@@ -8799,12 +8941,28 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     } else if (Bot?.uin) {
       selfIds.add(String(Bot.uin));
     }
-    const AreMaster = MasterQQList.find(id => !selfIds.has(String(id)));
-    if (!AreMaster) return;
 
-    try {
-      await Bot.pickUser(AreMaster)?.sendMsg?.(msg);
-    } catch {}
+    const botIds = new Set();
+    if (Bot?.bots && typeof Bot.bots === 'object') {
+      for (const botId of Object.keys(Bot.bots)) {
+        botIds.add(String(botId));
+      }
+    }
+
+    const validMasters = MasterQQList.filter(id => {
+      const strId = String(id);
+      if (selfIds.has(strId)) return false;
+      if (botIds.has(strId)) return false;
+      return true;
+    });
+
+    if (!validMasters.length) return;
+
+    for (const masterId of validMasters) {
+      try {
+        await Bot.pickUser(masterId)?.sendMsg?.(msg);
+      } catch {}
+    }
   }
 
   async ReconcileTask() {
@@ -8886,7 +9044,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const ensureDirs = [
         MiaoPluginMBT.Paths.TempNiuPath,
         MiaoPluginMBT.Paths.TempDownloadPath,
-        path.join(YzPath, "resources", "Community")
+        path.join(YzPath, "resources", "Community"),
+        path.dirname(MiaoPluginMBT.Paths.WorkerPath)
     ];
     await Promise.all(ensureDirs.map(p => Ananke.mkdirs(p).catch(() => {})));
 
@@ -8908,7 +9067,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     if (!MiaoPluginMBT.InitPromise) {
         Hades.E(`高危: CheckInit 无法建立初始化`);
-        await e.reply('『咕咕牛🐂』插件初始化失败，请检查后台日志。', true);
+        await Pheme.initFail(e);
         return false;
     }
 
@@ -8921,7 +9080,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     }
 
     if (!this.PFSCReady) {
-        await e.reply(`咕咕牛插件核心服务未就绪，大部分功能无法使用。`, true);
+        await Pheme.notReady(e);
         return false;
     }
 
@@ -8963,7 +9122,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       redisKey = `CowCoo:${commandName}:${userId}`;
       const ttl = await redis.ttl(redisKey);
         if (ttl > 0) {
-          await e.reply(`指令冷却中，剩余 ${ttl} 秒后可再次使用哦~`, true);
+          await Pheme.cooldown(e, ttl);
           return true;
         }
     }
@@ -9009,7 +9168,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       const pendingRepos = repoManifest.filter(r => r.status === 'pending');
       if (repoManifest.every(r => r.status === 'skipped' && r.nodeName === '本地')) {
         if (redisKey) await redis.del(redisKey);
-        return e.reply(`咕咕牛图库的资产均已存在。`, true);
+        return Pheme.quote(e, `咕咕牛图库的资产均已存在。`);
       }
       if (pendingRepos.length === 0) {
         const blocked = repoManifest
@@ -9017,13 +9176,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           .map(r => `仓库${r.repo}:${r.reason || '未配置'}`)
           .join('；');
         if (redisKey) await redis.del(redisKey);
-        return e.reply(`『咕咕牛🐂』未发现可下载仓库已跳过下载流程。${blocked ? `\n${blocked}` : ''}`, true);
+        return Pheme.quote(e, `『咕咕牛🐂』未发现可下载仓库已跳过下载流程。${blocked ? `\n${blocked}` : ''}`);
       }
 
       const coreManifest = repoManifest.find(r => r.repo === 1);
       if (coreManifest && coreManifest.status !== 'pending' && coreManifest.nodeName !== '本地') {
         if (redisKey) await redis.del(redisKey);
-        return e.reply(`『咕咕牛🐂』核心仓库前置校验未通过：${coreManifest.reason || '仓库地址无效'}。`, true);
+        return Pheme.quote(e, `『咕咕牛🐂』核心仓库前置校验未通过：${coreManifest.reason || '仓库地址无效'}。`);
       }
 
       const HttpResultMap = await MiaoPluginMBT.TestCaVoice(Hades);
@@ -9034,7 +9193,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       try {
           const sortedNodes = await this._VoiceCore(e, Hades, HttpResultMap, [], startTime, 'Provision');
           validNodes = sortedNodes;
-          await e.reply("测速结果仅供参考，实际下载将根据[CRS动态决策]选择最佳方式", true);
+          await Pheme.quote(e, "测速结果仅供参考，实际下载将根据[CRS动态决策]选择最佳方式");
       } catch (err) {
           Hades.E(`测速报告生成跳过:`, err);
           validNodes = HttpResultMap.filter(r => r.speed !== Infinity).sort((a, b) => a.speed - b.speed);
@@ -9102,7 +9261,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
               HotSwap = true;
               await MiaoPluginMBT.ProvisionPhase(e, Hades, 'core');
               const sendReliefMsg = async () => {
-                  await e.reply("--『咕咕牛🐂』--\n核心仓已部署✅️\n开始聚合下载附属仓库...");
+                  await Pheme.send(e, "--『咕咕牛🐂』--\n核心仓已部署✅️\n开始聚合下载附属仓库...");
               };
 
               try {
@@ -9285,23 +9444,23 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                   await MiaoPluginMBT.ReplyImg(e, imgBuffer, '下载报告图片发送失败已文本回执。', this.logger);
               } catch (sendErr) {
                   this.logger.error(`下载报告图片发送失败:`, sendErr);
-                  await e.reply(`任务结束，但报告图片发送失败，已降级文本回执。(Code: ${sendErr?.code || 'SEND_FAIL'})${failDetailText}`, true);
+                  await Pheme.quote(e, `任务结束，但报告图片发送失败，已降级文本回执。(Code: ${sendErr?.code || 'SEND_FAIL'})${failDetailText}`);
               }
           } else {
-              await e.reply(`任务结束，但报告图片生成失败，请查看后台日志。${failDetailText}`);
+              await Pheme.genFail(e, 'report');
           }
 
           if (allSuccess) {
-              if (!e.replyed) await e.reply("『咕咕牛🐂』成功进入喵喵里面！").catch(() => {});
+              if (!e.replyed) await Pheme.send(e, "『咕咕牛🐂』成功进入喵喵里面！").catch(() => {});
               await common.sleep(1500);
-              await e.reply("建议配置[净化等级]否则风险自负。发送#咕咕牛设置净化等级1可过滤R18内容。", true);
+              await Pheme.quote(e, "建议配置[净化等级]否则风险自负。发送#咕咕牛设置净化等级1可过滤R18内容。");
           } else {
-              await e.reply(`咕咕牛部分仓库下载失败，请检查上方日志或重试。${failDetailText}`);
+              await Pheme.send(e, `咕咕牛部分仓库下载失败，请检查上方日志或重试。${failDetailText}`);
           }
 
       } catch (err) {
           this.logger.error(`报告流程发生意外:`, err);
-          await e.reply(`任务结束，但报告生成失败，请查看日志。${failDetailText}`);
+          await Pheme.genFail(e, 'report');
       }
   }
 
@@ -9336,7 +9495,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async TestVoice(e) {
     const Hades = this.logger;
-    await e.reply("📡 正在进行全量测速...", true);
+    await Pheme.quote(e, "📡 正在进行全量测速...");
 
     const startTime = Date.now();
     const taskCoreProbe = MiaoPluginMBT.TestCaVoice(Hades).then(async (httpResults) => {
@@ -9354,7 +9513,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         await this._VoiceCore(e, Hades, httpResults, gitResults, startTime);
     } catch (err) {
         Hades.E(`测速异常:`, err);
-        await e.reply("测速过程中发生错误，请查看日志。");
+        await Pheme.send(e, "测速过程中发生错误，请查看日志。");
     }
     return true;
   }
@@ -9544,12 +9703,12 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
              pageBoundingRect: { selector: ".container" }
         });
 
-        if (imgBuffer) await MiaoPluginMBT.ReplyImg(e, imgBuffer, '测速报告图片发送失败已文本回执。', Hades);
-        else await e.reply("测速报告生成失败。");
+        if (imgBuffer) await Pheme.img(e, imgBuffer, '测速报告图片发送失败已文本回执。', Hades);
+        else await Pheme.genFail(e, 'speedtest');
 
     } catch (err) {
         Hades.E(`测速报告生成异常:`, err);
-        await e.reply("测速报告生成过程中发生错误，请查看日志。");
+        await Pheme.genFail(e, 'speedtest');
     }
 
     return sortedNodes;
@@ -9570,7 +9729,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const repo1State = await MiaoPluginMBT.GetRepoState(1, repoContext);
     const Repo1Exists = repo1State?.exists;
     if (!Repo1Exists) {
-      if (!isScheduled && e) await e.reply("『咕咕牛🐂』图库未下载", true);
+      if (!isScheduled && e) await Pheme.noRepo(e);
       return false;
     }
 
@@ -9585,11 +9744,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const hasMissingRepo = [repo2State, repo3State, repo4State].some(state => state?.isEnabled && !state?.exists);
 
     if (hasMissingRepo && !isScheduled && e) {
-      await e.reply("『咕咕牛🐂』部分附属仓库未下载，建议先`#下载咕咕牛`补全。", true);
+      await Pheme.quote(e, "『咕咕牛🐂』部分附属仓库未下载，建议先`#下载咕咕牛`补全。");
     }
 
     const startTime = Date.now();
-    if (!isScheduled && e) await e.reply("『咕咕牛🐂』开始检查更新...", true);
+    if (!isScheduled && e) await Pheme.quote(e, "『咕咕牛🐂』开始检查更新...");
 
     const globalSenseChain = await MiaoPluginMBT.acquireGlobalSenseChain(Hades);
 
@@ -9772,16 +9931,15 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   if (imgBuffer) {
       const imgSegment = MiaoPluginMBT.ToImgSeg(imgBuffer);
       if (!isScheduled && e) {
-        await e.reply(imgSegment);
+        await Pheme.send(e, imgSegment);
 
         if (!allSuccess && errorList.length > 0) {
           await common.sleep(500);
           try {
-            const forwardMsg = await common.makeForwardMsg(e, errorList, "咕咕牛更新失败详情");
-            await e.reply(forwardMsg);
+            await Pheme.forward(e, errorList, "咕咕牛更新失败详情");
           } catch (fwdError) {
             Hades.E(`发送详细错误合并消息失败:`, fwdError);
-            await e.reply("生成详细错误报告失败，请查看控制台日志。");
+            await Pheme.genFail(e, 'errorReport');
           }
         }
       } else if (notifyStatus) {
@@ -9798,18 +9956,18 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             if (res.error && res.error.message) ReliefMsg += `  错误: ${res.error.message.split("\n")[0]}\n`;
         });
 
-        if (e && !isScheduled) await e.reply(ReliefMsg);
+        if (e && !isScheduled) await Pheme.send(e, ReliefMsg);
         else if (notifyStatus) await MiaoPluginMBT.SendMasterMsg(ReliefMsg, e, 0, Hades);
 
       } else if (!isScheduled && e && !ViewProps.HasAnyChanges && ViewProps.allSuccess) {
-        await e.reply("更新检查完成，图库已是最新。", true);
+        await Pheme.quote(e, "更新检查完成，图库已是最新。");
       }
     }
 
     if (JavaScriptSyncStatus) {
       const ResMsg = `检测到插件核心逻辑已更新！为确保所有功能正常，强烈建议重启机器人。`;
       if (!isScheduled && e) {
-        await e.reply(ResMsg, true).catch(err => Hades.E("发送重启建议消息失败:", err));
+        await Pheme.quote(e, ResMsg).catch(err => Hades.E("发送重启建议消息失败:", err));
       } else if (notifyStatus) {
         await MiaoPluginMBT.SendMasterMsg(ResMsg);
       }
@@ -9820,13 +9978,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async ManRepo(e) {
-    if (!e.isMaster) return e.reply(`这个操作只有我的主人才能用哦~`, true);
+    if (!e.isMaster) return Pheme.noPerm(e);
     if (e.msg.trim() !== "#重置咕咕牛") return false;
 
     if (!this.logger) this.logger = Hades;
     const Hades = this.logger;
 
-    await e.reply("开始重置图库，正在清理文件...", true);
+    await Pheme.quote(e, "开始重置图库，正在清理文件...");
 
     const obliteratePaths = [
         MiaoPluginMBT.CowCooRepoRoot,
@@ -9916,7 +10074,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
 
     if (failures.length === 0) {
-        await e.reply(`重置完成！所有相关文件和缓存都清理干净啦 (耗时 ${duration}s)。`, true);
+        await Pheme.quote(e, `重置完成！所有相关文件和缓存都清理干净啦 (耗时 ${duration}s)。`);
     } else {
         Hades.W(`重置过程存在部分失败:`, failures);
         const syntheticError = new Error(`部分清理任务失败:\n${failures.join('\n')}`);
@@ -9930,7 +10088,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     if (!(await this.CheckInit(e))) return true;
     const logger = getHades(this.logger);
     const repo1Exists = await MiaoPluginMBT.ICI();
-    if (!repo1Exists) return e.reply("咕咕牛的图库你还没下载呢！", true);
+    if (!repo1Exists) return Pheme.noRepo(e);
 
     try {
       const context = await Nomos.getContext();
@@ -10157,9 +10315,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       });
 
         if (imgBuffer) {
-            await MiaoPluginMBT.ReplyImg(e, imgBuffer, '状态面板图片发送失败已文本回执。', this.logger);
+            await Pheme.img(e, imgBuffer, '状态面板图片发送失败已文本回执。', this.logger);
         } else {
-            await e.reply("状态图生成失败，请查看后台日志。", true);
+            await Pheme.genFail(e, 'status');
         }
         await this._TriggerMapGeneration(e, Hades);
       } catch (error) {
@@ -10196,15 +10354,14 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       }
 
       if (generatedImgs.length > 0) {
-          if (generatedImgs.length === 1) await e.reply(generatedImgs[0]);
+          if (generatedImgs.length === 1) await Pheme.send(e, generatedImgs[0]);
           else {
               try {
-                  const msg = await common.makeForwardMsg(e, generatedImgs, "咕咕牛图库地图总览");
-                  await e.reply(msg);
+                  await Pheme.forward(e, generatedImgs, "咕咕牛图库地图总览");
                   await common.sleep(1500);
               } catch {
                   for (const img of generatedImgs) {
-                      await e.reply(img);
+                      await Pheme.send(e, img);
                       await common.sleep(500);
                   }
              }
@@ -10376,16 +10533,16 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const pageMatch = msg.match(/^#(?:ban|咕咕牛封禁)列表(?:\s*(\d+))?$/i);
     if (pageMatch) {
       if (!isMaster && (msg.startsWith("#咕咕牛封禁 ") || msg.startsWith("#咕咕牛解禁 "))) {
-        return e.reply(`只有主人才能进行封禁或解禁操作哦~`, true);
+        return Pheme.noPerm(e);
       }
 
       const canContinue = await MiaoPluginMBT.OpsGate(e, 'MuB_List');
       if (!canContinue) return true;
 
       const activeBanCount = MBTCF.activeBanSet.size;
-      if (activeBanCount === 0) return e.reply("当前没有任何图片被封禁。", true);
+      if (activeBanCount === 0) return Pheme.emptyResult(e, 'ban');
 
-      await e.reply(`正在整理 ${activeBanCount} 项封禁记录，请稍候...`, true);
+      await Pheme.wait(e, `正在整理 ${activeBanCount} 项封禁记录，请稍候...`);
 
       const PFLItems = [];
       const disabledItems = [];
@@ -10428,8 +10585,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             logger: logger
         });
 
-        if (imgBuffer) await MiaoPluginMBT.ReplyImg(e, imgBuffer, '封禁列表图片发送失败已文本回执。', this.logger);
-        else await e.reply(`[❌ 手动封禁列表第 ${currentPage}/${pageCount} 页生成失败，请看日志]`);
+        if (imgBuffer) await Pheme.img(e, imgBuffer, '封禁列表图片发送失败已文本回执。', this.logger);
+        else await Pheme.send(e, `[❌ 手动封禁列表第 ${currentPage}/${pageCount} 页生成失败，请看日志]`);
       }
 
       if (PFLItems.length > 0) {
@@ -10493,12 +10650,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
         if (forwardMsgs.length > 0) {
           try {
-            const forwardMsg = await common.makeForwardMsg(e, forwardMsgs, `咕咕牛净化列表 (共${pflPageCount}页)`);
-            await e.reply(forwardMsg);
+            await Pheme.forward(e, forwardMsgs, `咕咕牛净化列表 (共${pflPageCount}页)`);
           } catch (fwdError) {
             Hades.E(`创建合并消息失败:`, fwdError);
             for (const m of forwardMsgs) {
-              await e.reply(m); await common.sleep(500);
+              await Pheme.send(e, m); await common.sleep(500);
             }
           }
         }
@@ -10510,7 +10666,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     const delMatch = msg.match(/^#咕咕牛解禁\s*(.+)/i);
 
     if (addMatch || delMatch) {
-      if (!isMaster) return e.reply(`只有主人才能进行封禁或解禁操作哦~`, true);
+      if (!isMaster) return Pheme.noPerm(e);
 
       const isAdding = !!addMatch;
       const rawInput = (isAdding ? addMatch[1] : delMatch[1]).trim();
@@ -10526,13 +10682,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
               setImmediate(() => MiaoPluginMBT.GenerateList(null, logger));
               let reply = `操作完成！\n成功封禁了 ${count} 张带有 [${rawInput}] 标签的图片。`;
               if (already > 0) reply += `\n另外有 ${already} 张之前已经被封禁了。`;
-              await e.reply(reply, true);
+              await Pheme.quote(e, reply);
             } else {
-              await e.reply(`所有带 [${rawInput}] 标签的图片（共 ${already} 张）之前都已经被封禁啦，或者没找到该标签图片。`, true);
+              await Pheme.quote(e, `所有带 [${rawInput}] 标签的图片（共 ${already} 张）之前都已经被封禁啦，或者没找到该标签图片。`);
             }
           } catch (err) {
             Hades.E(`标签封禁失败:`, err);
-            await e.reply("保存封禁列表失败，请查看日志。", true);
+            await Pheme.quote(e, "保存封禁列表失败，请查看日志。");
           }
           return true;
         }
@@ -10573,41 +10729,41 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         try {
           if (isAdding) {
             await MBTCF.AddManualBan(RelativePath, logger);
-            await e.reply(`${fileLabel} 🚫 封禁了~`, true);
+            await Pheme.quote(e, `${fileLabel} 🚫 封禁了~`);
           } else {
             await MBTCF.RemoveManualBan(RelativePath, logger);
-            await e.reply(`${fileLabel} ✅️ 好嘞，解封!`, true);
+            await Pheme.quote(e, `${fileLabel} ✅️ 好嘞，解封!`);
             setImmediate(() => MiaoPluginMBT.RevertFile(RelativePath, logger));
           }
           setImmediate(() => MiaoPluginMBT.GenerateList(null, logger));
         } catch (err) {
           if (err.message === "TARGET_PURIFIED") {
             const level = MiaoPluginMBT.MBTConfig.PFL_Ops ?? DFC.PFL_Ops;
-            await e.reply(`⚠️ ${fileLabel} 受到当前的净化规则 (等级 ${level}) 屏蔽，无法进行手动操作。`, true);
+            await Pheme.quote(e, `⚠️ ${fileLabel} 受到当前的净化规则 (等级 ${level}) 屏蔽，无法进行手动操作。`);
           } else if (err.message === "ALREADY_BANNED") {
-            await e.reply(`${fileLabel} ❌️ 封禁已存在哦。`, true);
+            await Pheme.quote(e, `${fileLabel} ❌️ 封禁已存在哦。`);
           } else if (err.message === "NOT_FOUND") {
-            await e.reply(`${fileLabel} ❓ 没找到哦 (可能未被封禁)。`, true);
+            await Pheme.quote(e, `${fileLabel} ❓ 没找到哦 (可能未被封禁)。`);
           } else {
             Hades.E(`${actionVerb}操作异常:`, err);
             await DocHub.report(e, `${actionVerb}图片`, err);
-            await e.reply(`操作失败: ${err.message}`, true);
+            await Pheme.quote(e, `操作失败: ${err.message}`);
           }
         }
 
       } catch (err) {
         if (err.message === "输入为空") {
-          return e.reply(`要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb} 角色名+编号 或 #咕咕牛封禁 <二级标签>`, true);
+          return Pheme.quote(e, `要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb} 角色名+编号 或 #咕咕牛封禁 <二级标签>`);
         }
         if (err.message === "编号格式无效") {
-          return e.reply("格式好像不对哦，应该是 角色名+编号 (例如：花火1)", true);
+          return Pheme.quote(e, "格式好像不对哦，应该是 角色名+编号 (例如：花火1)");
         }
         if (err.message === "图片未找到") {
-          return e.reply(`在图库数据里没找到这个图片: ${rawInput}。\n(请检查角色名和编号是否准确，或角色是否存在于图库中)`, true);
+          return Pheme.emptyResult(e, 'img', rawInput);
         }
         if (err.message.startsWith("插件未安装")) {
           const pluginLabel = err.message.split(":")[1] || "miao-plugin";
-          return e.reply(`图库数据无记录: ${rawInput}。\n(插件 ${pluginLabel} 未安装)`, true);
+          return Pheme.quote(e, `图库数据无记录: ${rawInput}。\n(插件 ${pluginLabel} 未安装)`);
         }
         throw err;
       }
@@ -10623,7 +10779,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   async QueryData(e) {
     if (!(await this.CheckInit(e))) return true;
     if (!(await MiaoPluginMBT.ICI())) {
-      return e.reply("咕咕牛的图库你还没下载呢！", true);
+      return Pheme.noRepo(e);
     }
 
     const msg = e.msg.replace(/^#咕咕牛查看\s*/i, "").trim();
@@ -10636,11 +10792,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     if (!(await MiaoPluginMBT.OpsGate(e, 'QueryData'))) return true;
 
-    if (data.type === 'help') return e.reply("想看哪个角色呀？格式：#咕咕牛查看 角色名/游戏名/标签 或 #咕咕牛查看 原神 火", true);
-    if (data.type === 'empty') return e.reply(data.msg, true);
+    if (data.type === 'help') return Pheme.quote(e, "想看哪个角色呀？格式：#咕咕牛查看 角色名/游戏名/标签 或 #咕咕牛查看 原神 火");
+    if (data.type === 'empty') return Pheme.quote(e, data.msg);
 
     if (data.type === 'game_group') {
-      await e.reply(`收到！将发送 ${data.title} 的 ${data.items.length} 个角色图库...`, true);
+      await Pheme.wait(e, `收到！将发送 ${data.title} 的 ${data.items.length} 个角色图库...`);
       const cerberus = Cerberus.getInstance();
       for (const charName of data.items) {
         await cerberus.breath(10);
@@ -10662,7 +10818,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     if (!canContinue) return true;
 
     const match = e.msg.match(/^#可视化\s*(.+)$/i);
-    if (!match?.[1]) return e.reply("想可视化哪个角色呀？格式：#可视化角色名", true);
+    if (!match?.[1]) return Pheme.quote(e, "想可视化哪个角色呀？格式：#可视化角色名");
     const roleNameInput = match[1].trim();
 
     let primaryName = "";
@@ -10683,7 +10839,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         }
       }
 
-      if (!roleFolderPath) { Hades.W(`未在目标插件目录找到角色 '${primaryName}' 文件夹。`); return e.reply(`『${primaryName}』不存在，可能是未同步/无该角色？`); }
+      if (!roleFolderPath) { Hades.W(`未在目标插件目录找到角色 '${primaryName}' 文件夹。`); return Pheme.emptyResult(e, 'role', primaryName); }
 
       const supportedExtensions = [".jpg", ".png", ".jpeg", ".webp", ".bmp"];
       let allimgFiles = [];
@@ -10698,7 +10854,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
       if (allimgFiles.length === 0) {
         Hades.W(`角色文件夹 ${roleFolderPath} 为空或不包含支持的图片格式。`);
-        return e.reply(`『${primaryName}』的文件夹里没有找到支持的图片文件哦。`);
+        return Pheme.emptyResult(e, 'folder', primaryName);
        }
 
       allimgFiles.sort((a, b) => {
@@ -10717,7 +10873,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         waitMsg = `[${primaryName}] 的图片过多 (共 ${SplashCount} 张)，将分 ${pageCount} 批生成预览，请注意查收...`;
       }
 
-      await e.reply(waitMsg, true);
+      await Pheme.wait(e, waitMsg);
       await common.sleep(500);
 
       for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
@@ -10777,9 +10933,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         });
 
         if (imgBuffer) {
-            await MiaoPluginMBT.ReplyImg(e, imgBuffer, '角色可视化图片发送失败已文本回执。', this.logger);
+            await Pheme.img(e, imgBuffer, '角色可视化图片发送失败已文本回执。', this.logger);
         } else {
-            await e.reply(`[❌ 第 ${pageNum}/${pageCount} 部分生成失败，请看日志]`, true);
+            await Pheme.quote(e, `[❌ 第 ${pageNum}/${pageCount} 部分生成失败，请看日志]`);
         }
 
         if (pageNum < pageCount) {
@@ -10798,18 +10954,18 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     if (!(await this.CheckInit(e))) return true;
 
     if (!(await MiaoPluginMBT.ICI())) {
-        return e.reply("『咕咕牛』核心库还没下载呢！", true);
+        return Pheme.noRepo(e);
     }
 
     const match = e.msg.match(/^#咕咕牛导出\s*(.+)/i);
-    if (!match?.[1]) return e.reply("要导出哪个图片呀？格式：#咕咕牛导出 角色名+编号 (例如：心海1)", true);
+    if (!match?.[1]) return Pheme.quote(e, "要导出哪个图片呀？格式：#咕咕牛导出 角色名+编号 (例如：心海1)");
 
     const rawInput = match[1].trim();
     const logger = getHades(this.logger);
 
     try {
         const parsedId = Tianshu.ParseID(rawInput);
-        if (!parsedId) return e.reply("格式好像不对哦，应该是 角色名+编号，比如：花火1", true);
+        if (!parsedId) return Pheme.quote(e, "格式好像不对哦，应该是 角色名+编号，比如：花火1");
 
         const { mainName: rawMainName, imgNum } = parsedId;
         const aliasResult = await Tianshu.NormalizeName(rawMainName);
@@ -10819,7 +10975,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
         if (!charImages || charImages.length === 0) {
              const hint = Tianshu._indexByGid.size === 0 ? "(图库数据为空)" : "(未找到该角色的图片数据)";
-             return e.reply(`在图库数据里没找到角色: ${primaryName}。\n${hint}`, true);
+             return Pheme.emptyResult(e, 'role', `${primaryName}。\n${hint}`);
         }
 
         const targetSuffix = `gu${imgNum}.webp`;
@@ -10828,7 +10984,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         );
 
         if (!imageData) {
-            return e.reply(`找到了角色 '${primaryName}'，但没有找到编号 ${imgNum} 的图片。`, true);
+            return Pheme.quote(e, `找到了角色 '${primaryName}'，但没有找到编号 ${imgNum} 的图片。`);
         }
 
         const relativePath = toPosix(imageData.path);
@@ -10836,22 +10992,22 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         const absolutePath = await Tianshu.FsQuery(relativePath);
 
         if (!absolutePath) {
-            return e.reply(`糟糕，数据库里有记录，但物理文件找不到了：${targetFileName}`, true);
+            return Pheme.quote(e, `糟糕，数据库里有记录，但物理文件找不到了：${targetFileName}`);
         }
 
         const fileBuffer = await Ananke.readFile(absolutePath).catch(err => {
             throw new Error(`文件读取失败: ${err.message}`);
         });
 
-        await e.reply(`📦 导出成功！给你 -> ${targetFileName}`);
+        await Pheme.send(e, `📦 导出成功！给你 -> ${targetFileName}`);
         await common.sleep(200);
 
         try {
-            await e.reply(segment.file(fileBuffer, targetFileName));
+            await Pheme.send(e, segment.file(fileBuffer, targetFileName));
         } catch (sendErr) {
             const errMsg = (sendErr.message || "").toLowerCase();
             if (errMsg.includes("highway") || errMsg.includes("file size") || sendErr.code === -36 || sendErr.code === 210005) {
-                await e.reply(`发送失败：文件通道异常 (Code: ${sendErr.code})，可能是文件过大或被风控。`, true);
+                await Pheme.quote(e, `发送失败：文件通道异常 (Code: ${sendErr.code})，可能是文件过大或被风控。`);
             } else {
                 throw sendErr;
             }
@@ -10866,13 +11022,13 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
   }
 
   async HotFix(e) {
-    if (!e.isMaster) return e.reply(`这个操作只有我的主人才能用哦~`, true);
+    if (!e.isMaster) return Pheme.noPerm(e);
     const Hades = getHades(this.logger);
 
     const Cow_Url = "https://cdn.jsdelivr.net/gh/GuGuNiu/Miao-Plugin-MBT@main/咕咕牛图库管理器.js";
     const Get_SS5 = path.join(YzPath, "plugins", "example", "咕咕牛图库管理器.js");
 
-    await e.reply("『咕咕牛🐂』正在执行热修复...", true);
+    await Pheme.quote(e, "『咕咕牛🐂』正在执行热修复...");
 
     try {
       const res = await Hermes.request(Cow_Url, { timeout: 30000 });
@@ -10887,12 +11043,12 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       const newSize = (newStats.size / 1024).toFixed(2);
 
       Hades.O(`热修复完成，新版本已写入: ${newSize} KB`);
-      await e.reply(`『咕咕牛🐂』热修复完成！新版本已写入: ${newSize} KB`, true);
+      await Pheme.quote(e, `『咕咕牛🐂』热修复完成！新版本已写入: ${newSize} KB`);
 
       return true;
     } catch (err) {
       Hades.E(`热修复失败:`, err);
-      await e.reply(`『咕咕牛🐂』热修复失败: ${err.message}`, true);
+      await Pheme.quote(e, `『咕咕牛🐂』热修复失败: ${err.message}`);
       return true;
     }
   }
@@ -10930,7 +11086,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
             insDays,
             headerImg: await Morpheus.pickHeaderSet(20),
             Cow_Res_Path: isInstalled
-              ? `file://${MiaoPluginMBT.Paths.OpsPath}/`.replace(/\\/g, '/')
+              ? toFileUrl(`${MiaoPluginMBT.Paths.OpsPath}/`)
               : 'https://raw.gitcode.com/GuGuNiu/CowCooResPool/raw/master/'
         };
 
@@ -10942,7 +11098,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         });
 
         if (imgBuffer) {
-          await MiaoPluginMBT.ReplyImg(e, imgBuffer, '帮助面板图片发送失败已文本回执。', logger);
+          await Pheme.img(e, imgBuffer, '帮助面板图片发送失败已文本回执。', logger);
         } else {
           throw new Error("生成帮助图片失败 (返回空 Buffer)");
         }
@@ -10954,7 +11110,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
     if (!HelpTpl) {
       const ReliefText = [...HELP_FALLBACK_LINES, `Miao-Plugin-MBT v${Version}`].join("\n");
-      await e.reply(ReliefText, true);
+      await Pheme.quote(e, ReliefText);
     }
 
     return true;
@@ -11003,12 +11159,12 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
         });
 
         if (imgBuffer) {
-            await MiaoPluginMBT.ReplyImg(e, imgBuffer, '设置面板图片发送失败已文本回执。', this.logger);
+            await Pheme.img(e, imgBuffer, '设置面板图片发送失败已文本回执。', this.logger);
         } else {
             const fallbackMsg = StatusMsg
                 ? `${StatusMsg}\n(面板渲染失败，请检查日志)`
                 : `设置面板生成失败，请查看后台日志。`;
-            await e.reply(fallbackMsg, true);
+            await Pheme.quote(e, fallbackMsg);
         }
 
     } catch (error) {
@@ -11022,10 +11178,10 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async RouteOpsHub(e) {
     if (!(await this.CheckInit(e))) return true;
-    if (!e.isMaster) return e.reply(`只有主人才能使用设置命令哦~`, true);
+    if (!e.isMaster) return Pheme.noPerm(e);
 
     if (!(await MiaoPluginMBT.ICI())) {
-        return e.reply("『咕咕牛🐂』图库未下载，请先发送 #下载咕咕牛", true);
+        return Pheme.noRepo(e);
     }
 
     const msg = e.msg.trim();
@@ -11142,7 +11298,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
     try {
         parsedVal = strategy.parse(valRaw);
     } catch (err) {
-        return e.reply(`无效参数: ${err.message}`, true);
+        return Pheme.quote(e, `无效参数: ${err.message}`);
     }
 
     const mutation = await MiaoPluginMBT.MetaMutex.run(async () => {
@@ -11193,7 +11349,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 class SleeperAgent extends plugin {
     constructor() {
       super({
-        name: '『咕咕牛🐂』原图管理器',
+        name: '『咕咕牛』原图管理器',
         event: 'message',
         priority: -100,
         rule: [
@@ -11219,7 +11375,7 @@ class SleeperAgent extends plugin {
       }
 
       if (!sourceMsgId) {
-        await e.reply("调试命令格式错误，请使用 #原图<消息ID>", true);
+        await Pheme.quote(e, "调试命令格式错误，请使用 #原图<消息ID>");
         return true;
       }
 
@@ -11227,7 +11383,7 @@ class SleeperAgent extends plugin {
       const processed = await SleeperAgent._interrogate(e, sourceMsgId);
 
       if (!processed) {
-        await e.reply(`[SleeperAgent-Debug] 未能为ID [${sourceMsgId}] 找到任何原图信息。`, true);
+        await Pheme.quote(e, `[SleeperAgent-Debug] 未能为ID [${sourceMsgId}] 找到任何原图信息。`);
       }
 
       return true;
@@ -11282,25 +11438,14 @@ class SleeperAgent extends plugin {
               try {
                 const CREName = fileName.replace(/Gu\d+\.webp$/i, '');
                 const promptText = `输入#咕咕牛查看${CREName}可以看图库全部图片`;
-                let imgSegment;
-                if (imgPath.startsWith('http')) {
-                    imgSegment = segment.image(absolutePath);
-                } else {
-                    try {
-                        const imgBuffer = fs.readFileSync(absolutePath);
-                        imgSegment = segment.image(imgBuffer);
-                    } catch {
-                        imgSegment = segment.image(toFileUrl(absolutePath));
-                    }
-                }
+                const imgSegment = MiaoPluginMBT.ToImgSeg(absolutePath);
 
                 const forwardList = [promptText, imgSegment];
-                const forwardMsg = await common.makeForwardMsg(e, forwardList, `原图 - ${fileName}`);
-                await e.reply(forwardMsg);
+                await Pheme.forward(e, forwardList, `原图 - ${fileName}`);
                 await common.sleep(300);
-                await e.reply(segment.at(e.user_id), false, { recallMsg: 15 });
+                await Pheme.send(e, segment.at(e.user_id), false, { recallMsg: 15 });
               } catch {
-                await e.reply(`无法获取原图，请稍后再试。`, true);
+                await Pheme.quote(e, `无法获取原图，请稍后再试。`);
               }
               return true;
             } else {
