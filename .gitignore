@@ -10,3 +10,5 @@
 *.backup
 /debug
 CowCoo/.cache/image-metadata.json
+CowCoo/html/help_test.html
+/.npm-tmp-cache

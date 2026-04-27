@@ -74,10 +74,7 @@
 
 配合以下指令可独立管理图片类型开关：
 - #咕咕牛设置 AI图 / 彩蛋图 / 横屏图 ```启|禁用```
-- #咕咕牛封禁 / 解禁 ```角色名``` | ```[二级标签]```
-
-> [!TIP]  
-> [二级标签] 作为可选参数用于更精确的封禁管理，如 #咕咕牛封禁 黑丝 将会封禁所有黑丝相关的图片并且会优先遵循上层过滤等级，使用 #咕咕牛查看 指令查询二级标签信息
+- #咕咕牛封禁 / 解禁 ```角色名``` 
 
 ---
 
@@ -129,7 +126,7 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
 
 </table>
 
-<p>1. 管理器在运行期间会向云仓库自动拉取资源，包含可执行JavaScript文件，URL：https://gitcode.com/GuGuNiu/CowCooPicPool</p>
+<p>管理器在运行期间会向[咕咕牛云仓库](https://gitcode.com/GuGuNiu/CowCooPicPool)自动拉取资源，包含可执行JavaScript文件</p>
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">

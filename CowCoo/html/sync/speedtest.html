@@ -7,6 +7,54 @@
     <title>咕咕牛工具箱-网络测速</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans-sc-400.woff2') format('woff2'),
+                 url('{{Cow_Res_Path}}fonts/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/Orbitron-Regular.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/Rajdhani-Bold.woff2') format('woff2');
+        }
         :root {
             --bg-color: #212428;
             --container-bg: #212428;
@@ -841,7 +889,6 @@
         .priority-label {
             color: var(--text-secondary);
             font-size: 10px;
-            /* margin-left: 10px; */
         }
         
         .priority-value {
@@ -1010,8 +1057,8 @@
         }
         
         .footer {
-            margin-top: 20px;
-            padding: 20px 0;
+            margin-top: 0;
+            padding: 25px 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.2));
             position: relative;
@@ -1258,7 +1305,7 @@
                     </div>
                     <div class="footer-pill">
                         <span class="pill-label">架构</span>
-                        <span class="pill-val">v3.1</span>
+                        <span class="pill-val">v4.0</span>
                     </div>
                 </div>
                 <div class="footer-copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
