@@ -971,23 +971,6 @@
   {
     "storagebox": "Miao-Plugin-MBT",
     "storagebox_type": "gs-character",
-    "gid": "3305385277",
-    "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu54.webp",
-    "attributes": {
-      "filename": "芙宁娜Gu54.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "168846ff6417a268e7104089a436f004",
-      "rated": "none",
-      "other": [],
-      "phash": "7caeacaefe6a6416"
-    },
-    "timestamp": "2025-12-01T11:37:26.077Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "gs-character",
     "gid": "8206834152",
     "characterName": "芙宁娜",
     "path": "gs-character/芙宁娜/芙宁娜Gu55.webp",
@@ -1211,9 +1194,9 @@
     "storagebox_type": "gs-character",
     "gid": "5545918653",
     "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu67.webp",
+    "path": "gs-character/芙宁娜/芙宁娜Gu54.webp",
     "attributes": {
-      "filename": "芙宁娜Gu67.webp",
+      "filename": "芙宁娜Gu54.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "d97746e79bcc1ba4294a37bedf04bd65",
@@ -3471,7 +3454,7 @@
       "md5": "771a0bcb5e37ebf335a8d501b2065545",
       "rated": "p18",
       "other": [],
-      "phash": "44c54d4dc5d5c565"
+      "phash": "45ce46468ecd5a5d"
     },
     "timestamp": "2025-05-26T04:06:33.254Z"
   },
@@ -3480,9 +3463,9 @@
     "storagebox_type": "sr-character",
     "gid": "5102689812",
     "characterName": "风堇",
-    "path": "sr-character/风堇/风堇Gu11.webp",
+    "path": "sr-character/风堇/风堇Gu5.webp",
     "attributes": {
-      "filename": "风堇Gu11.webp",
+      "filename": "风堇Gu5.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "505e8465ad9898eab983295a57d6199b",
@@ -3497,15 +3480,15 @@
     "storagebox_type": "sr-character",
     "gid": "4019532615",
     "characterName": "风堇",
-    "path": "sr-character/风堇/风堇Gu11.webp",
+    "path": "sr-character/风堇/风堇Gu5.webp",
     "attributes": {
-      "filename": "风堇Gu11.webp",
+      "filename": "风堇Gu5.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "c2e31e519a666b4127660029b82cf8d3",
       "rated": "p18",
       "other": [],
-      "phash": "4dcd4d4dd5c5cd4d"
+      "phash": "4ccd4d4dccdeda4e"
     },
     "timestamp": "2025-08-11T06:08:09.414Z"
   },
@@ -3559,23 +3542,6 @@
       "phash": "44dd4d5dccdcdd5c"
     },
     "timestamp": "2025-05-23T04:28:33.694Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "sr-character",
-    "gid": "6368751017",
-    "characterName": "风堇",
-    "path": "sr-character/风堇/风堇Gu5.webp",
-    "attributes": {
-      "filename": "风堇Gu5.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "138ba5c50ff8be962fd39cfd32ed224c",
-      "rated": "none",
-      "other": [],
-      "phash": "65cd454dcdd5c848"
-    },
-    "timestamp": "2025-05-28T03:59:16.268Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -4527,7 +4493,7 @@
       "md5": "19427ff9aae32927295e293bdc5193a9",
       "rated": "p18",
       "other": [],
-      "phash": "45c54d4acad6c642"
+      "phash": "64c54d4d4dcdcd4d"
     },
     "timestamp": "2025-05-26T04:07:41.782Z"
   },
@@ -5646,23 +5612,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-2",
     "storagebox_type": "gs-character",
-    "gid": "6575616529",
-    "characterName": "阿蕾奇诺",
-    "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu18.webp",
-    "attributes": {
-      "filename": "阿蕾奇诺Gu18.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "ca7d6b35be018e4f5be8f668e60714f8",
-      "rated": "none",
-      "other": [],
-      "phash": "cecfcfd7c7df4fcf"
-    },
-    "timestamp": "2025-12-01T11:36:33.192Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
     "gid": "9841015448",
     "characterName": "阿蕾奇诺",
     "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu19.webp",
@@ -5835,9 +5784,9 @@
     "storagebox_type": "gs-character",
     "gid": "5543867400",
     "characterName": "阿蕾奇诺",
-    "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu28.webp",
+    "path": "gs-character/阿蕾奇诺/阿蕾奇诺Gu18.webp",
     "attributes": {
-      "filename": "阿蕾奇诺Gu28.webp",
+      "filename": "阿蕾奇诺Gu18.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "0c318c6527475d1115c774f664a16990",
@@ -6020,40 +5969,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-2",
     "storagebox_type": "gs-character",
-    "gid": "8239858953",
-    "characterName": "爱可菲",
-    "path": "gs-character/爱可菲/爱可菲Gu11.webp",
-    "attributes": {
-      "filename": "爱可菲Gu11.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "3710ecf3e06a6f3d51c25c7ffb58bea5",
-      "rated": "none",
-      "other": [],
-      "phash": "cecfcecec6ce4ece"
-    },
-    "timestamp": "2025-12-01T11:36:33.272Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "4707227060",
-    "characterName": "爱可菲",
-    "path": "gs-character/爱可菲/爱可菲Gu12.webp",
-    "attributes": {
-      "filename": "爱可菲Gu12.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "66806fd32d7e210f671e13b2140cebe5",
-      "rated": "p18",
-      "other": [],
-      "phash": "69edaaa2ee4a5a5a"
-    },
-    "timestamp": "2025-12-01T11:36:33.272Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
     "gid": "7883976937",
     "characterName": "爱可菲",
     "path": "gs-character/爱可菲/爱可菲Gu13.webp",
@@ -6158,9 +6073,9 @@
     "storagebox_type": "gs-character",
     "gid": "3330721711",
     "characterName": "爱可菲",
-    "path": "gs-character/爱可菲/爱可菲Gu19.webp",
+    "path": "gs-character/爱可菲/爱可菲Gu12.webp",
     "attributes": {
-      "filename": "爱可菲Gu19.webp",
+      "filename": "爱可菲Gu12.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "bb928bf45ce8d308278b52d0b65dee16",
@@ -6192,9 +6107,9 @@
     "storagebox_type": "gs-character",
     "gid": "9231731456",
     "characterName": "爱可菲",
-    "path": "gs-character/爱可菲/爱可菲Gu20.webp",
+    "path": "gs-character/爱可菲/爱可菲Gu11.webp",
     "attributes": {
-      "filename": "爱可菲Gu20.webp",
+      "filename": "爱可菲Gu11.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "ddf1dead3e0eb213c9e321f4a53ee145",
@@ -6632,23 +6547,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-2",
     "storagebox_type": "gs-character",
-    "gid": "7213071335",
-    "characterName": "枫原万叶",
-    "path": "gs-character/枫原万叶/枫原万叶Gu3.webp",
-    "attributes": {
-      "filename": "枫原万叶Gu3.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "7ec67008ff7fcad22a6a91fb6e55dacc",
-      "rated": "none",
-      "other": [],
-      "phash": "fd6d66796562f27a"
-    },
-    "timestamp": "2025-05-03T10:18:29.752Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
     "gid": "9267802764",
     "characterName": "枫原万叶",
     "path": "gs-character/枫原万叶/枫原万叶Gu4.webp",
@@ -6704,9 +6602,9 @@
     "storagebox_type": "gs-character",
     "gid": "4353716484",
     "characterName": "枫原万叶",
-    "path": "gs-character/枫原万叶/枫原万叶Gu7.webp",
+    "path": "gs-character/枫原万叶/枫原万叶Gu3.webp",
     "attributes": {
-      "filename": "枫原万叶Gu7.webp",
+      "filename": "枫原万叶Gu3.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "6ede6cecba45d18c840652f940c0b6b0",
@@ -7025,28 +6923,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-2",
     "storagebox_type": "gs-character",
-    "gid": "7548856722",
+    "gid": "2367660577",
     "characterName": "甘雨",
     "path": "gs-character/甘雨/甘雨Gu26.webp",
     "attributes": {
       "filename": "甘雨Gu26.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "b5271cb1f2c240676f4e31f1d621c464",
-      "rated": "r18",
-      "other": [],
-      "phash": "654dadad8daa1d4d"
-    },
-    "timestamp": "2025-09-06T03:29:32.530Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "2367660577",
-    "characterName": "甘雨",
-    "path": "gs-character/甘雨/甘雨Gu27.webp",
-    "attributes": {
-      "filename": "甘雨Gu27.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "2a034930175da3cc1b7a50da7a4ad7a4",
@@ -8030,9 +7911,9 @@
     "storagebox_type": "gs-character",
     "gid": "8706593537",
     "characterName": "克洛琳德",
-    "path": "gs-character/克洛琳德/克洛琳德Gu16.webp",
+    "path": "gs-character/克洛琳德/克洛琳德Gu9.webp",
     "attributes": {
-      "filename": "克洛琳德Gu16.webp",
+      "filename": "克洛琳德Gu9.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "2c859e3feb417f06a474d50b5f1a6947",
@@ -8163,23 +8044,6 @@
       "phash": "34bdadada5ac2c3d"
     },
     "timestamp": "2025-06-10T04:01:42.523Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "1900640545",
-    "characterName": "克洛琳德",
-    "path": "gs-character/克洛琳德/克洛琳德Gu9.webp",
-    "attributes": {
-      "filename": "克洛琳德Gu9.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "632236c4bdc5a2b90ecc57d62b9a3e71",
-      "rated": "none",
-      "other": [],
-      "phash": "35adbdaca2b2353a"
-    },
-    "timestamp": "2025-06-10T04:01:45.532Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -8970,9 +8834,9 @@
     "storagebox_type": "gs-character",
     "gid": "1395883314",
     "characterName": "那维莱特",
-    "path": "gs-character/那维莱特/那维莱特Gu19.webp",
+    "path": "gs-character/那维莱特/那维莱特Gu7.webp",
     "attributes": {
-      "filename": "那维莱特Gu19.webp",
+      "filename": "那维莱特Gu7.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "281621c1e65feb7c020a65e85d7c6771",
@@ -9066,23 +8930,6 @@
       "phash": "ed6defe7e7ebe164"
     },
     "timestamp": "2025-05-25T03:53:11.007Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "8136694992",
-    "characterName": "那维莱特",
-    "path": "gs-character/那维莱特/那维莱特Gu7.webp",
-    "attributes": {
-      "filename": "那维莱特Gu7.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "0ecee7c1969fca82e8e3e54e9a32a0ff",
-      "rated": "none",
-      "other": [],
-      "phash": "25cddec6dadeb6ae"
-    },
-    "timestamp": "2025-09-06T03:56:18.222Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -12530,23 +12377,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-2",
     "storagebox_type": "gs-character",
-    "gid": "9216849803",
-    "characterName": "神里绫华",
-    "path": "gs-character/神里绫华/神里绫华Gu35.webp",
-    "attributes": {
-      "filename": "神里绫华Gu35.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "815d14a5ffd1d789cef4155fdddf4f4d",
-      "rated": "none",
-      "other": [],
-      "phash": "e4eaebede5e66ce4"
-    },
-    "timestamp": "2025-07-18T16:15:02.734Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
     "gid": "5593923271",
     "characterName": "神里绫华",
     "path": "gs-character/神里绫华/神里绫华Gu36.webp",
@@ -12634,9 +12464,9 @@
     "storagebox_type": "gs-character",
     "gid": "1849685153",
     "characterName": "神里绫华",
-    "path": "gs-character/神里绫华/神里绫华Gu40.webp",
+    "path": "gs-character/神里绫华/神里绫华Gu35.webp",
     "attributes": {
-      "filename": "神里绫华Gu40.webp",
+      "filename": "神里绫华Gu35.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "45b3599353a2f03c3ea718de418d96fd",
@@ -12991,9 +12821,9 @@
     "storagebox_type": "gs-character",
     "gid": "1378305780",
     "characterName": "丝柯克",
-    "path": "gs-character/丝柯克/丝柯克Gu23.webp",
+    "path": "gs-character/丝柯克/丝柯克Gu7.webp",
     "attributes": {
-      "filename": "丝柯克Gu23.webp",
+      "filename": "丝柯克Gu7.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "847aaff9f5d2a4837cb109dbbf4a8d5d",
@@ -14594,23 +14424,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-3",
     "storagebox_type": "sr-character",
-    "gid": "1567563718",
-    "characterName": "阿兰",
-    "path": "sr-character/阿兰/阿兰Gu1.webp",
-    "attributes": {
-      "filename": "阿兰Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "54158f546a62866d014de781ff42a3e9",
-      "rated": "none",
-      "other": [],
-      "phash": "f6766e6e6ebe6e66"
-    },
-    "timestamp": "2025-06-09T01:52:35.401Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
     "gid": "7085425047",
     "characterName": "波提欧",
     "path": "sr-character/波提欧/波提欧Gu1.webp",
@@ -14968,28 +14781,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-3",
     "storagebox_type": "sr-character",
-    "gid": "7161859666",
-    "characterName": "丹恒•饮月",
-    "path": "sr-character/丹恒•饮月/丹恒•饮月Gu4.webp",
-    "attributes": {
-      "filename": "丹恒•饮月Gu4.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "68300035ceb600ef4ea8876680b30eb7",
-      "rated": "none",
-      "other": [],
-      "phash": "31135b5333362f6e"
-    },
-    "timestamp": "2025-05-19T07:45:25.796Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
     "gid": "2915447322",
     "characterName": "丹恒•饮月",
-    "path": "sr-character/丹恒•饮月/丹恒•饮月Gu5.webp",
+    "path": "sr-character/丹恒•饮月/丹恒•饮月Gu3.webp",
     "attributes": {
-      "filename": "丹恒•饮月Gu5.webp",
+      "filename": "丹恒•饮月Gu3.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "0cd1f550583b0056b7394e6a3a018f6c",
@@ -14998,40 +14794,6 @@
       "phash": "65cc4c4cccd4d45e"
     },
     "timestamp": "2025-05-26T04:08:03.502Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "6378752011",
-    "characterName": "丹恒•饮月",
-    "path": "sr-character/丹恒•饮月/丹恒•饮月Gu6.webp",
-    "attributes": {
-      "filename": "丹恒•饮月Gu6.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "41137e0fd7a9ad4425e11f43dfb5b1cb",
-      "rated": "none",
-      "other": [],
-      "phash": "242d6c4ecccddd4d"
-    },
-    "timestamp": "2025-06-07T05:54:09.159Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "1221872517",
-    "characterName": "丹恒•饮月",
-    "path": "sr-character/丹恒•饮月/丹恒•饮月Gu3.webp",
-    "attributes": {
-      "filename": "丹恒•饮月Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "302bffd98c753f623f022532ddd7a03b",
-      "rated": "none",
-      "other": [],
-      "phash": "2c054c4d958dcc6c"
-    },
-    "timestamp": "2025-08-09T08:23:16.303Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-3",
@@ -15106,9 +14868,9 @@
     "storagebox_type": "sr-character",
     "gid": "4129735322",
     "characterName": "飞霄",
-    "path": "sr-character/飞霄/飞霄Gu13.webp",
+    "path": "sr-character/飞霄/飞霄Gu4.webp",
     "attributes": {
-      "filename": "飞霄Gu13.webp",
+      "filename": "飞霄Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "64008f398b0ed76cce6e150ccce930c1",
@@ -15149,23 +14911,6 @@
       "rated": "p18",
       "other": [],
       "phash": "45cd642e2e0c064a"
-    },
-    "timestamp": "2025-05-27T07:49:59.190Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "8585219407",
-    "characterName": "飞霄",
-    "path": "sr-character/飞霄/飞霄Gu4.webp",
-    "attributes": {
-      "filename": "飞霄Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "bcdaace66937b4969d728a54cbb6a6c2",
-      "rated": "none",
-      "other": [],
-      "phash": "25255d0d2d0d0e0e"
     },
     "timestamp": "2025-05-27T07:49:59.190Z"
   },
@@ -17258,9 +17003,9 @@
     "storagebox_type": "sr-character",
     "gid": "2417244560",
     "characterName": "黄泉",
-    "path": "sr-character/黄泉/黄泉Gu21.webp",
+    "path": "sr-character/黄泉/黄泉Gu7.webp",
     "attributes": {
-      "filename": "黄泉Gu21.webp",
+      "filename": "黄泉Gu7.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "a1e0af7f518237d0e44824bfb3be29a8",
@@ -17335,23 +17080,6 @@
       "rated": "none",
       "other": [],
       "phash": "959512828c9c1696"
-    },
-    "timestamp": "2025-05-26T03:40:25.512Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "2912006100",
-    "characterName": "黄泉",
-    "path": "sr-character/黄泉/黄泉Gu7.webp",
-    "attributes": {
-      "filename": "黄泉Gu7.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "5a112b5c5103e6cde2b18761a7648879",
-      "rated": "none",
-      "other": [],
-      "phash": "6a6a6e6e6c66ecb5"
     },
     "timestamp": "2025-05-26T03:40:25.512Z"
   },
@@ -19554,9 +19282,9 @@
     "storagebox_type": "sr-character",
     "gid": "9186942410",
     "characterName": "刃",
-    "path": "sr-character/刃/刃Gu5.webp",
+    "path": "sr-character/刃/刃Gu2.webp",
     "attributes": {
-      "filename": "刃Gu5.webp",
+      "filename": "刃Gu2.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "db9a8fb3f1576480595a60fd1b0d7966",
@@ -19571,9 +19299,9 @@
     "storagebox_type": "sr-character",
     "gid": "2224234837",
     "characterName": "刃",
-    "path": "sr-character/刃/刃Gu6.webp",
+    "path": "sr-character/刃/刃Gu1.webp",
     "attributes": {
-      "filename": "刃Gu6.webp",
+      "filename": "刃Gu1.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "42a87baf8ff425ee071eee100b949018",
@@ -21632,9 +21360,9 @@
     "storagebox_type": "gs-character",
     "gid": "7710513720",
     "characterName": "芭芭拉",
-    "path": "gs-character/芭芭拉/芭芭拉Gu10.webp",
+    "path": "gs-character/芭芭拉/芭芭拉Gu4.webp",
     "attributes": {
-      "filename": "芭芭拉Gu10.webp",
+      "filename": "芭芭拉Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "a40faf4473ce55a7bd8d6428cd44bfee",
@@ -21649,9 +21377,9 @@
     "storagebox_type": "gs-character",
     "gid": "6824814986",
     "characterName": "芭芭拉",
-    "path": "gs-character/芭芭拉/芭芭拉Gu11.webp",
+    "path": "gs-character/芭芭拉/芭芭拉Gu7.webp",
     "attributes": {
-      "filename": "芭芭拉Gu11.webp",
+      "filename": "芭芭拉Gu7.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "38df396afe3c9d49a96b861dc2f30c06",
@@ -21692,23 +21420,6 @@
       "rated": "none",
       "other": [],
       "phash": "25edeee266dded4d"
-    },
-    "timestamp": "2025-12-01T11:36:33.204Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "8902706592",
-    "characterName": "芭芭拉",
-    "path": "gs-character/芭芭拉/芭芭拉Gu4.webp",
-    "attributes": {
-      "filename": "芭芭拉Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "7719f25ffde5eb8bce9bbfda991cab6c",
-      "rated": "p18",
-      "other": [],
-      "phash": "48656d6d656d6d64"
     },
     "timestamp": "2025-12-01T11:36:33.204Z"
   },
@@ -21760,23 +21471,6 @@
       "rated": "p18",
       "other": [],
       "phash": "bd2dbdadbca6a62d"
-    },
-    "timestamp": "2025-12-01T11:36:33.205Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "8346925007",
-    "characterName": "芭芭拉",
-    "path": "gs-character/芭芭拉/芭芭拉Gu9.webp",
-    "attributes": {
-      "filename": "芭芭拉Gu9.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "2dfd514661342fe481a68b89bdbea97b",
-      "rated": "p18",
-      "other": [],
-      "phash": "a525a59da5a5ed0d"
     },
     "timestamp": "2025-12-01T11:36:33.205Z"
   },
@@ -21851,28 +21545,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "2200950421",
+    "gid": "5223109097",
     "characterName": "北斗",
     "path": "gs-character/北斗/北斗Gu4.webp",
     "attributes": {
       "filename": "北斗Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "f7b6397b8022e33e78d1ded3470c1af3",
-      "rated": "r18",
-      "other": [],
-      "phash": "ec65ededededcc8c"
-    },
-    "timestamp": "2025-12-01T11:36:33.205Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "5223109097",
-    "characterName": "北斗",
-    "path": "gs-character/北斗/北斗Gu5.webp",
-    "attributes": {
-      "filename": "北斗Gu5.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "ec73d3287b45f0b1ea286395f531adbe",
@@ -21987,23 +21664,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "7352056165",
-    "characterName": "迪希雅",
-    "path": "gs-character/迪希雅/迪希雅Gu2.webp",
-    "attributes": {
-      "filename": "迪希雅Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "cba5874dc61a8828317dae3c175b6603",
-      "rated": "p18",
-      "other": [],
-      "phash": "f2e2e2e9ecececd6"
-    },
-    "timestamp": "2025-12-01T11:36:33.210Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "7092844176",
     "characterName": "迪希雅",
     "path": "gs-character/迪希雅/迪希雅Gu3.webp",
@@ -22091,9 +21751,9 @@
     "storagebox_type": "gs-character",
     "gid": "1992855119",
     "characterName": "迪希雅",
-    "path": "gs-character/迪希雅/迪希雅Gu8.webp",
+    "path": "gs-character/迪希雅/迪希雅Gu2.webp",
     "attributes": {
-      "filename": "迪希雅Gu8.webp",
+      "filename": "迪希雅Gu2.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "2e02f495f64b18420cf220a2e5e3a6f9",
@@ -22140,40 +21800,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "9624868595",
-    "characterName": "珐露珊",
-    "path": "gs-character/珐露珊/珐露珊Gu3.webp",
-    "attributes": {
-      "filename": "珐露珊Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "06fbaa27cf0fd63688e517851cfdc9a3",
-      "rated": "none",
-      "other": [],
-      "phash": "c55ddad6ccfcec5c"
-    },
-    "timestamp": "2025-12-01T11:36:33.211Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6967574326",
-    "characterName": "珐露珊",
-    "path": "gs-character/珐露珊/珐露珊Gu4.webp",
-    "attributes": {
-      "filename": "珐露珊Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "ea59bb41ade75ab4e1a3b18b4879ea00",
-      "rated": "none",
-      "other": [],
-      "phash": "c54dc68cd6dee424"
-    },
-    "timestamp": "2025-12-01T11:36:33.211Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "9015836819",
     "characterName": "珐露珊",
     "path": "gs-character/珐露珊/珐露珊Gu5.webp",
@@ -22210,9 +21836,9 @@
     "storagebox_type": "gs-character",
     "gid": "8678478779",
     "characterName": "珐露珊",
-    "path": "gs-character/珐露珊/珐露珊Gu7.webp",
+    "path": "gs-character/珐露珊/珐露珊Gu3.webp",
     "attributes": {
-      "filename": "珐露珊Gu7.webp",
+      "filename": "珐露珊Gu3.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "c8368cfe2a99127d5193b70d9950f869",
@@ -22227,9 +21853,9 @@
     "storagebox_type": "gs-character",
     "gid": "9198768741",
     "characterName": "珐露珊",
-    "path": "gs-character/珐露珊/珐露珊Gu8.webp",
+    "path": "gs-character/珐露珊/珐露珊Gu4.webp",
     "attributes": {
-      "filename": "珐露珊Gu8.webp",
+      "filename": "珐露珊Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "48af37952b1c3e4c7b7fa435a8d4b9b7",
@@ -22312,9 +21938,9 @@
     "storagebox_type": "gs-character",
     "gid": "1074223947",
     "characterName": "菲谢尔",
-    "path": "gs-character/菲谢尔/菲谢尔Gu14.webp",
+    "path": "gs-character/菲谢尔/菲谢尔Gu13.webp",
     "attributes": {
-      "filename": "菲谢尔Gu14.webp",
+      "filename": "菲谢尔Gu13.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "88fab87f02b29098e6b20a4183f7cfef",
@@ -22517,40 +22143,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "5948390306",
-    "characterName": "基尼奇",
-    "path": "gs-character/基尼奇/基尼奇Gu1.webp",
-    "attributes": {
-      "filename": "基尼奇Gu1.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "4e8968569f02151b6272efec225dc094",
-      "rated": "none",
-      "other": [],
-      "phash": "3170b1a9b021091b"
-    },
-    "timestamp": "2025-12-01T11:36:33.214Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "3603285859",
-    "characterName": "基尼奇",
-    "path": "gs-character/基尼奇/基尼奇Gu2.webp",
-    "attributes": {
-      "filename": "基尼奇Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "8d877a103f5e1e08eb6dc4670f5d39f1",
-      "rated": "none",
-      "other": [],
-      "phash": "7362626562666e6d"
-    },
-    "timestamp": "2025-12-01T11:36:33.214Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "4954514802",
     "characterName": "基尼奇",
     "path": "gs-character/基尼奇/基尼奇Gu3.webp",
@@ -22638,9 +22230,9 @@
     "storagebox_type": "gs-character",
     "gid": "6782192521",
     "characterName": "基尼奇",
-    "path": "gs-character/基尼奇/基尼奇Gu8.webp",
+    "path": "gs-character/基尼奇/基尼奇Gu2.webp",
     "attributes": {
-      "filename": "基尼奇Gu8.webp",
+      "filename": "基尼奇Gu2.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "55082ae3948938a927e56ac482ec256c",
@@ -22655,9 +22247,9 @@
     "storagebox_type": "gs-character",
     "gid": "6365876817",
     "characterName": "基尼奇",
-    "path": "gs-character/基尼奇/基尼奇Gu9.webp",
+    "path": "gs-character/基尼奇/基尼奇Gu1.webp",
     "attributes": {
-      "filename": "基尼奇Gu9.webp",
+      "filename": "基尼奇Gu1.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "f3ff3b6c49102fe04a9dc49391008db0",
@@ -22908,23 +22500,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "3440277127",
-    "characterName": "可莉",
-    "path": "gs-character/可莉/可莉Gu1.webp",
-    "attributes": {
-      "filename": "可莉Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "84d07696afb22f3f565129408c48885a",
-      "rated": "none",
-      "other": [],
-      "phash": "c2c5ccceceeecc4e"
-    },
-    "timestamp": "2025-12-01T11:36:33.217Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "3047334954",
     "characterName": "可莉",
     "path": "gs-character/可莉/可莉Gu2.webp",
@@ -22959,28 +22534,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "5408983729",
-    "characterName": "可莉",
-    "path": "gs-character/可莉/可莉Gu4.webp",
-    "attributes": {
-      "filename": "可莉Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "9b0f234394d28a927119a59c04a521eb",
-      "rated": "none",
-      "other": [],
-      "phash": "496e6a6a7262222e"
-    },
-    "timestamp": "2025-12-01T11:36:33.217Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "9997210535",
     "characterName": "可莉",
-    "path": "gs-character/可莉/可莉Gu5.webp",
+    "path": "gs-character/可莉/可莉Gu1.webp",
     "attributes": {
-      "filename": "可莉Gu5.webp",
+      "filename": "可莉Gu1.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "6b849392a3239ef6fe510134262c8253",
@@ -22989,57 +22547,6 @@
       "phash": "7c6a6a6e246e6d6d"
     },
     "timestamp": "2025-12-01T11:36:33.217Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "9861554268",
-    "characterName": "可莉",
-    "path": "gs-character/可莉/可莉Gu6.webp",
-    "attributes": {
-      "filename": "可莉Gu6.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "3aee561a3adb6b17c135cb8bbb543b3a",
-      "rated": "none",
-      "other": [],
-      "phash": "edcecccecceccc4c"
-    },
-    "timestamp": "2025-12-01T11:36:33.218Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "9548344041",
-    "characterName": "可莉",
-    "path": "gs-character/可莉/可莉Gu7.webp",
-    "attributes": {
-      "filename": "可莉Gu7.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "03162e2a5ae3af60a0fa10975b247043",
-      "rated": "none",
-      "other": [],
-      "phash": "ede1e8f9e6f6d656"
-    },
-    "timestamp": "2025-12-01T11:36:33.218Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "1988171275",
-    "characterName": "可莉",
-    "path": "gs-character/可莉/可莉Gu8.webp",
-    "attributes": {
-      "filename": "可莉Gu8.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "93696a4e9d912155ec0cf378a5f6c963",
-      "rated": "none",
-      "other": [],
-      "phash": "5565656d6566ee6a"
-    },
-    "timestamp": "2025-12-01T11:36:33.218Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -23055,23 +22562,6 @@
       "rated": "p18",
       "other": [],
       "phash": "65adbdacb6fa5a2a"
-    },
-    "timestamp": "2025-12-01T11:36:33.218Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "4300332437",
-    "characterName": "刻晴",
-    "path": "gs-character/刻晴/刻晴Gu10.webp",
-    "attributes": {
-      "filename": "刻晴Gu10.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "1aef1a4ba382df340e630c5ecdcd49a0",
-      "rated": "none",
-      "other": [],
-      "phash": "656d74767666feb6"
     },
     "timestamp": "2025-12-01T11:36:33.218Z"
   },
@@ -23388,28 +22878,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "9258894511",
+    "gid": "1597503049",
     "characterName": "刻晴",
     "path": "gs-character/刻晴/刻晴Gu28.webp",
     "attributes": {
       "filename": "刻晴Gu28.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "18a40163456fa85332d1ca2599e6dd1f",
-      "rated": "none",
-      "other": [],
-      "phash": "ee6f9b97abe3af0b"
-    },
-    "timestamp": "2025-12-01T11:36:33.220Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "1597503049",
-    "characterName": "刻晴",
-    "path": "gs-character/刻晴/刻晴Gu29.webp",
-    "attributes": {
-      "filename": "刻晴Gu29.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "ec9d7418f3104ff014a011c18d7eb418",
@@ -23441,9 +22914,9 @@
     "storagebox_type": "gs-character",
     "gid": "6318372921",
     "characterName": "刻晴",
-    "path": "gs-character/刻晴/刻晴Gu30.webp",
+    "path": "gs-character/刻晴/刻晴Gu10.webp",
     "attributes": {
-      "filename": "刻晴Gu30.webp",
+      "filename": "刻晴Gu10.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "b5e91c447d8f33a1676a5e19fd49db8d",
@@ -23636,7 +23109,7 @@
       "md5": "f5594acefc781df2cc06a81fa8b5f310",
       "rated": "p18",
       "other": [],
-      "phash": "25aaaeaeacee2e22"
+      "phash": "2424aeaeaeae3a75"
     },
     "timestamp": "2025-12-01T11:36:33.222Z"
   },
@@ -23796,40 +23269,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "6316871400",
-    "characterName": "莱依拉",
-    "path": "gs-character/莱依拉/莱依拉Gu1.webp",
-    "attributes": {
-      "filename": "莱依拉Gu1.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "330212f565c879366b17e231bfeaf5aa",
-      "rated": "none",
-      "other": [],
-      "phash": "f1e6e696e6ccee1e"
-    },
-    "timestamp": "2025-12-01T11:36:33.226Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "3321460006",
-    "characterName": "莱依拉",
-    "path": "gs-character/莱依拉/莱依拉Gu2.webp",
-    "attributes": {
-      "filename": "莱依拉Gu2.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "373f18e0fa6b8fb5588d9c4399b14ef5",
-      "rated": "none",
-      "other": [],
-      "phash": "ed68eaaaf8f8c64e"
-    },
-    "timestamp": "2025-12-01T11:36:33.226Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "3874491250",
     "characterName": "莱依拉",
     "path": "gs-character/莱依拉/莱依拉Gu3.webp",
@@ -23883,9 +23322,9 @@
     "storagebox_type": "gs-character",
     "gid": "7355267360",
     "characterName": "莱依拉",
-    "path": "gs-character/莱依拉/莱依拉Gu6.webp",
+    "path": "gs-character/莱依拉/莱依拉Gu2.webp",
     "attributes": {
-      "filename": "莱依拉Gu6.webp",
+      "filename": "莱依拉Gu2.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "83cc4887d67625f8cb48ed8e579f3615",
@@ -23900,9 +23339,9 @@
     "storagebox_type": "gs-character",
     "gid": "3890251351",
     "characterName": "莱依拉",
-    "path": "gs-character/莱依拉/莱依拉Gu7.webp",
+    "path": "gs-character/莱依拉/莱依拉Gu1.webp",
     "attributes": {
-      "filename": "莱依拉Gu7.webp",
+      "filename": "莱依拉Gu1.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "e8aa83138d6f5225542b0ae71d059c64",
@@ -24731,28 +24170,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "7848402463",
+    "gid": "3063058683",
     "characterName": "凝光",
     "path": "gs-character/凝光/凝光Gu4.webp",
     "attributes": {
       "filename": "凝光Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "bb4c75d5d021c7a8ddceb7e4ee0fd006",
-      "rated": "none",
-      "other": [],
-      "phash": "2aaeaaadf46c7c7d"
-    },
-    "timestamp": "2025-12-01T11:36:33.247Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "3063058683",
-    "characterName": "凝光",
-    "path": "gs-character/凝光/凝光Gu5.webp",
-    "attributes": {
-      "filename": "凝光Gu5.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "a6befd4f2ecac91046ed77580e726e99",
@@ -24799,40 +24221,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "3842900032",
-    "characterName": "诺艾尔",
-    "path": "gs-character/诺艾尔/诺艾尔Gu3.webp",
-    "attributes": {
-      "filename": "诺艾尔Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "e055cfa8f7c092b6d695f5c171fac0d4",
-      "rated": "p18",
-      "other": [],
-      "phash": "6d4d6d6d6c6cf878"
-    },
-    "timestamp": "2025-12-01T11:36:33.248Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "1944610398",
-    "characterName": "诺艾尔",
-    "path": "gs-character/诺艾尔/诺艾尔Gu4.webp",
-    "attributes": {
-      "filename": "诺艾尔Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "f788b23ca9363bdc02114ded5dc57760",
-      "rated": "none",
-      "other": [],
-      "phash": "5d5d656d6d6d2d6d"
-    },
-    "timestamp": "2025-12-01T11:36:33.248Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "3726223710",
     "characterName": "诺艾尔",
     "path": "gs-character/诺艾尔/诺艾尔Gu5.webp",
@@ -24869,9 +24257,9 @@
     "storagebox_type": "gs-character",
     "gid": "8966333659",
     "characterName": "诺艾尔",
-    "path": "gs-character/诺艾尔/诺艾尔Gu7.webp",
+    "path": "gs-character/诺艾尔/诺艾尔Gu4.webp",
     "attributes": {
-      "filename": "诺艾尔Gu7.webp",
+      "filename": "诺艾尔Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "0c571b6b29f98d942adf98653c6f1af8",
@@ -24886,9 +24274,9 @@
     "storagebox_type": "gs-character",
     "gid": "7977723113",
     "characterName": "诺艾尔",
-    "path": "gs-character/诺艾尔/诺艾尔Gu8.webp",
+    "path": "gs-character/诺艾尔/诺艾尔Gu4.webp",
     "attributes": {
-      "filename": "诺艾尔Gu8.webp",
+      "filename": "诺艾尔Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "b7bb4db0ef00cbfc2996f589b0aca7fb",
@@ -24903,9 +24291,9 @@
     "storagebox_type": "gs-character",
     "gid": "2767682724",
     "characterName": "诺艾尔",
-    "path": "gs-character/诺艾尔/诺艾尔Gu9.webp",
+    "path": "gs-character/诺艾尔/诺艾尔Gu3.webp",
     "attributes": {
-      "filename": "诺艾尔Gu9.webp",
+      "filename": "诺艾尔Gu3.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "01fbb4374316a30a60bd8112b1106c0e",
@@ -25258,23 +24646,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "1588117408",
-    "characterName": "绮良良",
-    "path": "gs-character/绮良良/绮良良Gu4.webp",
-    "attributes": {
-      "filename": "绮良良Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "8729e920d40fd2ba6d5daface1271b52",
-      "rated": "none",
-      "other": [],
-      "phash": "725a6a696d6e2565"
-    },
-    "timestamp": "2025-12-01T11:36:33.252Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "3391554856",
     "characterName": "绮良良",
     "path": "gs-character/绮良良/绮良良Gu5.webp",
@@ -25294,49 +24665,15 @@
     "storagebox_type": "gs-character",
     "gid": "4737203858",
     "characterName": "绮良良",
-    "path": "gs-character/绮良良/绮良良Gu6.webp",
+    "path": "gs-character/绮良良/绮良良Gu4.webp",
     "attributes": {
-      "filename": "绮良良Gu6.webp",
+      "filename": "绮良良Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "02bebbe30599bb4c47671969b298c5a5",
       "rated": "p18",
       "other": [],
       "phash": "a525a29aa2a2252e"
-    },
-    "timestamp": "2025-12-01T11:36:33.252Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "8266951354",
-    "characterName": "绮良良",
-    "path": "gs-character/绮良良/绮良良Gu7.webp",
-    "attributes": {
-      "filename": "绮良良Gu7.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "2232086348a74136482931f4adbca3d2",
-      "rated": "none",
-      "other": [],
-      "phash": "e545dc8cf4e6fe5c"
-    },
-    "timestamp": "2025-12-01T11:36:33.252Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6614183693",
-    "characterName": "绮良良",
-    "path": "gs-character/绮良良/绮良良Gu8.webp",
-    "attributes": {
-      "filename": "绮良良Gu8.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "35512e0e0658c718fd1351a1ba6a66fc",
-      "rated": "none",
-      "other": [],
-      "phash": "bd2dad9dadbe3a3e"
     },
     "timestamp": "2025-12-01T11:36:33.252Z"
   },
@@ -25354,40 +24691,6 @@
       "rated": "none",
       "other": [],
       "phash": "7dfdaaaef4ed6eae"
-    },
-    "timestamp": "2025-12-01T11:36:33.252Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6472181305",
-    "characterName": "琴",
-    "path": "gs-character/琴/琴Gu2.webp",
-    "attributes": {
-      "filename": "琴Gu2.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "c68526ab7713edd021c957fe0c45d8d9",
-      "rated": "none",
-      "other": [],
-      "phash": "6e586966646cee69"
-    },
-    "timestamp": "2025-12-01T11:36:33.252Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "2481068261",
-    "characterName": "琴",
-    "path": "gs-character/琴/琴Gu3.webp",
-    "attributes": {
-      "filename": "琴Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "f37f07bf6f5689707b8393322343f7d9",
-      "rated": "none",
-      "other": [],
-      "phash": "b83da5ada5ad2d1d"
     },
     "timestamp": "2025-12-01T11:36:33.252Z"
   },
@@ -25428,45 +24731,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "7436769850",
+    "gid": "5715999980",
     "characterName": "赛诺",
     "path": "gs-character/赛诺/赛诺Gu3.webp",
     "attributes": {
       "filename": "赛诺Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "1dd7def57b474aee47b99f0f5b9a64f7",
-      "rated": "none",
-      "other": [],
-      "phash": "ed6decececeeecdc"
-    },
-    "timestamp": "2025-12-01T11:36:33.253Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "8428937419",
-    "characterName": "赛诺",
-    "path": "gs-character/赛诺/赛诺Gu4.webp",
-    "attributes": {
-      "filename": "赛诺Gu4.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "1105139b4f92786584d06d4cc2ab7878",
-      "rated": "none",
-      "other": [],
-      "phash": "fb6fe3e7dfedef6f"
-    },
-    "timestamp": "2025-12-01T11:36:33.253Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "5715999980",
-    "characterName": "赛诺",
-    "path": "gs-character/赛诺/赛诺Gu5.webp",
-    "attributes": {
-      "filename": "赛诺Gu5.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "cfd4d8a02bbbf8614ca3f3360f744a93",
@@ -25490,23 +24759,6 @@
       "rated": "none",
       "other": [],
       "phash": "ed6dcdcce4f4f65c"
-    },
-    "timestamp": "2025-12-01T11:36:33.253Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6522069591",
-    "characterName": "砂糖",
-    "path": "gs-character/砂糖/砂糖Gu2.webp",
-    "attributes": {
-      "filename": "砂糖Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "9de85fc5c04256419e1082838396dada",
-      "rated": "none",
-      "other": [],
-      "phash": "f24adc8edecccc5c"
     },
     "timestamp": "2025-12-01T11:36:33.253Z"
   },
@@ -25549,9 +24801,9 @@
     "storagebox_type": "gs-character",
     "gid": "7881637904",
     "characterName": "砂糖",
-    "path": "gs-character/砂糖/砂糖Gu5.webp",
+    "path": "gs-character/砂糖/砂糖Gu2.webp",
     "attributes": {
-      "filename": "砂糖Gu5.webp",
+      "filename": "砂糖Gu2.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "a9d2727844e66310d1d711ed82022af3",
@@ -25560,23 +24812,6 @@
       "phash": "c4c2dc90ceee6e8c"
     },
     "timestamp": "2025-12-01T11:36:33.253Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "7863151535",
-    "characterName": "砂糖",
-    "path": "gs-character/砂糖/砂糖Gu6.webp",
-    "attributes": {
-      "filename": "砂糖Gu6.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "70a1d5aa15cba31968d55e159cd84caf",
-      "rated": "none",
-      "other": [],
-      "phash": "dd55d4ced4e4ec14"
-    },
-    "timestamp": "2025-12-01T11:36:33.254Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -25592,23 +24827,6 @@
       "rated": "none",
       "other": [],
       "phash": "ea68e5e4a4e6ee0e"
-    },
-    "timestamp": "2025-12-01T11:36:33.254Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "1154694982",
-    "characterName": "神里绫人",
-    "path": "gs-character/神里绫人/神里绫人Gu10.webp",
-    "attributes": {
-      "filename": "神里绫人Gu10.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "9ebecff4a953027e6c6db7467fc1b1b0",
-      "rated": "none",
-      "other": [],
-      "phash": "cecfcde3e7e5733b"
     },
     "timestamp": "2025-12-01T11:36:33.254Z"
   },
@@ -25645,40 +24863,6 @@
       "rated": "none",
       "other": [],
       "phash": "e975d594a4f4f496"
-    },
-    "timestamp": "2025-12-01T11:36:33.254Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6393935248",
-    "characterName": "神里绫人",
-    "path": "gs-character/神里绫人/神里绫人Gu4.webp",
-    "attributes": {
-      "filename": "神里绫人Gu4.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "929cdea4326480197106ebf30e00e666",
-      "rated": "none",
-      "other": [],
-      "phash": "e2d1b6a2f6f2f270"
-    },
-    "timestamp": "2025-12-01T11:36:33.254Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "8958890073",
-    "characterName": "神里绫人",
-    "path": "gs-character/神里绫人/神里绫人Gu5.webp",
-    "attributes": {
-      "filename": "神里绫人Gu5.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "292a1035dd7324c18f476130e65876fd",
-      "rated": "none",
-      "other": [],
-      "phash": "6dfdbcbcbdbe5a26"
     },
     "timestamp": "2025-12-01T11:36:33.254Z"
   },
@@ -25725,9 +24909,9 @@
     "storagebox_type": "gs-character",
     "gid": "9320403627",
     "characterName": "神里绫人",
-    "path": "gs-character/神里绫人/神里绫人Gu8.webp",
+    "path": "gs-character/神里绫人/神里绫人Gu4.webp",
     "attributes": {
-      "filename": "神里绫人Gu8.webp",
+      "filename": "神里绫人Gu4.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "362c4b5f7b151d2b104c59e36f62b324",
@@ -25742,9 +24926,9 @@
     "storagebox_type": "gs-character",
     "gid": "8715234895",
     "characterName": "神里绫人",
-    "path": "gs-character/神里绫人/神里绫人Gu9.webp",
+    "path": "gs-character/神里绫人/神里绫人Gu5.webp",
     "attributes": {
-      "filename": "神里绫人Gu9.webp",
+      "filename": "神里绫人Gu5.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "cad588f3c3f0d46aa706a74fc92112b4",
@@ -27895,23 +27079,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "sr-character",
-    "gid": "9610721367",
-    "characterName": "那刻夏",
-    "path": "sr-character/那刻夏/那刻夏Gu3.webp",
-    "attributes": {
-      "filename": "那刻夏Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "f63683ad0a4be0bec6476b4c223146c5",
-      "rated": "none",
-      "other": [],
-      "phash": "0e9f5f4e86ac1d3b"
-    },
-    "timestamp": "2025-12-01T11:36:33.199Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "sr-character",
     "gid": "2473666410",
     "characterName": "那刻夏",
     "path": "sr-character/那刻夏/那刻夏Gu4.webp",
@@ -27948,9 +27115,9 @@
     "storagebox_type": "sr-character",
     "gid": "6266414172",
     "characterName": "那刻夏",
-    "path": "sr-character/那刻夏/那刻夏Gu6.webp",
+    "path": "sr-character/那刻夏/那刻夏Gu3.webp",
     "attributes": {
-      "filename": "那刻夏Gu6.webp",
+      "filename": "那刻夏Gu3.webp",
       "layout": "fullscreen",
       "isBan": false,
       "md5": "77ae0ebd0ff15065d21a1025ae38c0ac",
@@ -27997,79 +27164,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "sr-character",
-    "gid": "8763905773",
+    "gid": "2421767873",
     "characterName": "赛飞儿",
     "path": "sr-character/赛飞儿/赛飞儿Gu3.webp",
     "attributes": {
       "filename": "赛飞儿Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "1c64093f7f965bcf44b87d20adf1644b",
-      "rated": "none",
-      "other": [],
-      "phash": "65c54444dddcd245"
-    },
-    "timestamp": "2025-12-01T11:36:33.199Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "sr-character",
-    "gid": "7952306247",
-    "characterName": "赛飞儿",
-    "path": "sr-character/赛飞儿/赛飞儿Gu4.webp",
-    "attributes": {
-      "filename": "赛飞儿Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "2eb0c8595ce53ce4be8905f3755db52e",
-      "rated": "none",
-      "other": [],
-      "phash": "4dcd4d4dcdcdc545"
-    },
-    "timestamp": "2025-12-01T11:36:33.200Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "sr-character",
-    "gid": "7968219423",
-    "characterName": "赛飞儿",
-    "path": "sr-character/赛飞儿/赛飞儿Gu5.webp",
-    "attributes": {
-      "filename": "赛飞儿Gu5.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "004a7f7ea7c9dbf9c8838d61a5f4ffca",
-      "rated": "none",
-      "other": [],
-      "phash": "54cd4d4dcdcdcdc4"
-    },
-    "timestamp": "2025-12-01T11:36:33.200Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "sr-character",
-    "gid": "6978459466",
-    "characterName": "赛飞儿",
-    "path": "sr-character/赛飞儿/赛飞儿Gu6.webp",
-    "attributes": {
-      "filename": "赛飞儿Gu6.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "bb7992c09091a2b200133062df02d3ee",
-      "rated": "none",
-      "other": [],
-      "phash": "4ccc4d4dcacec672"
-    },
-    "timestamp": "2025-12-01T11:36:33.200Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "sr-character",
-    "gid": "2421767873",
-    "characterName": "赛飞儿",
-    "path": "sr-character/赛飞儿/赛飞儿Gu7.webp",
-    "attributes": {
-      "filename": "赛飞儿Gu7.webp",
       "layout": "normal",
       "isBan": false,
       "md5": "7c7eb4a39a683f5ccc26bd923b838e2c",
@@ -29078,7 +28177,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "c777b8a6095edff3c19221ebcdb65fd6",
-      "other": []
+      "other": [],
+      "phash": "54cd4d4dcc8e8e4e"
     },
     "timestamp": "2026-03-10 19:09:18"
   },
@@ -29094,7 +28194,8 @@
       "layout": "fullscreen",
       "isBan": false,
       "md5": "69fcc5e9f7e06167aea202bd7218ed66",
-      "other": []
+      "other": [],
+      "phash": "4f0f17179f8fcdce"
     },
     "timestamp": "2026-03-10 19:10:38"
   },
@@ -29110,7 +28211,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "6329429bb398e4a19ff4fb9579ab0e47",
-      "other": []
+      "other": [],
+      "phash": "4ac4455a94dada5c"
     },
     "timestamp": "2026-03-10 19:10:43"
   },
@@ -29126,7 +28228,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "fcd54b0bd5f11734aa6420952d73eba6",
-      "other": []
+      "other": [],
+      "phash": "5dcd4d56c2c6ca4e"
     },
     "timestamp": "2026-03-10 19:10:48"
   },
@@ -29142,7 +28245,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "29ca48c88373626b5f6b38590eec64dc",
-      "other": []
+      "other": [],
+      "phash": "45c54245c2caca4d"
     },
     "timestamp": "2026-03-10 19:10:58"
   },
@@ -29158,7 +28262,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "8de72b0929cd104b8c59cecbb9a04f98",
-      "other": []
+      "other": [],
+      "phash": "4d4d4d4ececedede"
     },
     "timestamp": "2026-03-12 00:01:39"
   },
@@ -29174,7 +28279,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "7588e72a28176fa64632a94402fea916",
-      "other": []
+      "other": [],
+      "phash": "2da4acbdfcb6b6a2"
     },
     "timestamp": "2026-03-12 00:01:51"
   },
@@ -29190,7 +28296,8 @@
       "layout": "fullscreen",
       "isBan": false,
       "md5": "28d9eca015a87986e3893678052d9a6e",
-      "other": []
+      "other": [],
+      "phash": "66e7eecdcdcfcfcf"
     },
     "timestamp": "2026-03-12 00:01:56"
   },
@@ -29206,7 +28313,8 @@
       "layout": "fullscreen",
       "isBan": false,
       "md5": "8ab19824a5b262120aceb96b6a69eb86",
-      "other": []
+      "other": [],
+      "phash": "f7f3f3e3ebebdbf7"
     },
     "timestamp": "2026-03-12 00:02:01"
   },
@@ -29222,7 +28330,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "cbc250998ebda1f3cf0db26ff3b3e97f",
-      "other": []
+      "other": [],
+      "phash": "32b5adec66cece4e"
     },
     "timestamp": "2026-03-12 00:02:04"
   },
@@ -29238,7 +28347,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "36287d5d27fa62240d7d90b924f54765",
-      "other": []
+      "other": [],
+      "phash": "b5e2a6a6eece1e9e"
     },
     "timestamp": "2026-03-12 00:02:07"
   },
@@ -29254,7 +28364,8 @@
       "layout": "fullscreen",
       "isBan": false,
       "md5": "fe82b483597e6cf2612c0f6b3828734e",
-      "other": []
+      "other": [],
+      "phash": "ccd497ced9482b11"
     },
     "timestamp": "2026-03-12 00:02:11"
   },
@@ -29270,7 +28381,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "47371dd91e7249c8d103aedf70c6a6ec",
-      "other": []
+      "other": [],
+      "phash": "34edadaeeef55c6e"
     },
     "timestamp": "2026-03-12 00:02:24"
   },
@@ -29286,7 +28398,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "96f75b08c364f5105c5c0dfa14d0ed70",
-      "other": []
+      "other": [],
+      "phash": "4dcd4dcdc4cdddcd"
     },
     "timestamp": "2026-03-12 00:02:41"
   },
@@ -29302,7 +28415,8 @@
       "layout": "normal",
       "isBan": false,
       "md5": "2b03044592af7b75850963cd9fd5df83",
-      "other": []
+      "other": [],
+      "phash": "3cbaaeaeaeaeac9c"
     },
     "timestamp": "2026-03-20 00:20:19"
   },
@@ -29318,7 +28432,8 @@
       "layout": "fullscreen",
       "isBan": false,
       "md5": "14d0e14d69e87a1a08fe64253f200e8f",
-      "other": []
+      "other": [],
+      "phash": "ccd7cfcfcfedefee"
     },
     "timestamp": "2026-03-20 00:20:27"
   },
@@ -29334,7 +28449,8 @@
       "layout": "fullscreen",
       "isBan": false,
       "md5": "96d34f194e4bb1e590814e96672a52b6",
-      "other": []
+      "other": [],
+      "phash": "c9dbdfcfcfcfcfcf"
     },
     "timestamp": "2026-03-20 00:20:34"
   }

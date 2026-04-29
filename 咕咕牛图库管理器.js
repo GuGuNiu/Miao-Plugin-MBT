@@ -5277,8 +5277,8 @@ class Ananke {
     }
 
     static reset() {
-        if (this.#locks.config) this.#locks.config.emergencyReset('HMR_Gen');
-        if (this.#locks.banList) this.#locks.banList.emergencyReset('HMR_Gen');
+        if (this.#locks.config) this.#locks.config.emergencyReset(`HMR_Gen${this.#locks.config._activeGen}`);
+        if (this.#locks.banList) this.#locks.banList.emergencyReset(`HMR_Gen${this.#locks.banList._activeGen}`);
         this.#locks = {
             config: new Metis('AOPS', getCore()),
             banList: new Metis('ABLT', getCore())
@@ -7628,11 +7628,12 @@ class MiaoPluginMBT extends plugin {
 
       if (!raw) {
         const res = await Hermes.request(MiaoPluginMBT.RANROM_URL, { timeout: 8000 });
+        Hades.D(`鱼池请求结果: success=${res.success}, status=${res.status}, body长度=${res.body?.length || 0}`);
         if (res.success && res.status === 200 && res.body) {
           raw = res.body;
           if (typeof redis !== 'undefined') redis.set(Prep_KEY, raw, { EX: 86400 }).catch(()=>{});
         } else {
-          Hades.D(`鱼池拉取失败: HTTP ${res.status}`);
+          Hades.D(`鱼池拉取失败: HTTP ${res.status}, error=${res.error?.message || '无'}`);
         }
       }
 
@@ -8180,7 +8181,7 @@ class MiaoPluginMBT extends plugin {
           MiaoPluginMBT.InitPromise = null;
 
           if (MiaoPluginMBT.MBTProcc) {
-              await MiaoPluginMBT.MBTProcc.killAll('SIGTERM', isReload ? 'HMR_Gen' : 'Shutdown');
+              await MiaoPluginMBT.MBTProcc.killAll('SIGTERM', isReload ? `HMR_Gen${MiaoPluginMBT._gen || 1}` : 'Shutdown');
           }
 
           if (Morpheus.reset) {
