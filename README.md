@@ -8,7 +8,7 @@
   alt="image"
   title="image">
   
-这个图库是 Yunzai 框架下的插件角色面板图资源补充，涵盖了**原神&星铁&绝区零&鸣潮**的面板图资源，创建于**2023年10月**，希望能提供更优质的面板图资源<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
+图库是 Yunzai 的插件角色面板图资源补充，涵盖了**原神&星铁&绝区零&鸣潮**的面板图资源，创建于**2023年10月**，希望能提供更优质的面板图资源<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
   <button style="
     padding: 10px 20px;
     font-size: 16px;
@@ -33,9 +33,9 @@
 | :--- | :--- |
 | 原神 / 星铁 | Miao-Plugin |
 | 绝区零 | ZZZ-Plugin |
-| 鸣潮 | Waves-Plugin（0卡苏打水版） |
+| 鸣潮 | Waves-Plugin |
 
-面板图采用 `Nano-Banana-Pro`、`ComfyUI` 等工具进行二次调色与扩图处理，在质量优先的前提下图库会定期替换不符合当前审美标准的旧图，避免无序扩张，避免出现超大体积图片，在保证严格控制的文件体积下提供最优的使用体验。 
+面板图采用大模型工具进行二次调色与扩图处理，在质量优先的前提下图库会定期替换不符合当前审美标准的旧图，避免无序扩张，避免出现超大体积图片，在保证严格控制的文件体积下提供最优的使用体验。 
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -125,8 +125,6 @@ curl -o "./plugins/example/咕咕牛图库管理器.js" -L "https://cdn.jsdelivr
   </tr>
 
 </table>
-
-<p>管理器在运行期间会向[咕咕牛云仓库](https://gitcode.com/GuGuNiu/CowCooPicPool)自动拉取资源，包含可执行JavaScript文件</p>
 
 <p align="center">
   <a href="https://github.com/GuGuNiu/Miao-Plugin-MBT">
