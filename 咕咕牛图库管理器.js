@@ -313,9 +313,18 @@ const toFileUrl = (p) => {
   return `file://${posixPath}`;
 };
 
-const toBase64Url = (buffer) => {
-  if (!Buffer.isBuffer(buffer)) return "";
-  return `base64://${buffer.toString("base64")}`;
+const toBuffer = (input) => {
+    if (!input) return null;
+    if (Buffer.isBuffer(input)) return input;
+    if (input instanceof ArrayBuffer) return Buffer.from(input);
+    if (ArrayBuffer.isView(input)) return Buffer.from(input.buffer, input.byteOffset, input.byteLength);
+    return null;
+};
+
+const toBase64Url = (input) => {
+    const buffer = toBuffer(input);
+    if (!buffer) return "";
+    return `base64://${buffer.toString("base64")}`;
 };
 
 class MBTAdapterEnv {
@@ -326,6 +335,28 @@ class MBTAdapterEnv {
         const selfId = String(e?.self_id || '');
         if (selfId.startsWith('2900')) return true;
         return false;
+    }
+
+    static get isOneBot() {
+        try { return typeof Bot?.adapter?.name === 'string' && Bot.adapter.name.includes('OneBot'); }
+        catch { return false; }
+    }
+
+    static get isDocker() {
+        try {
+            if (fs.existsSync('/.dockerenv')) return true;
+            return fs.readFileSync('/proc/1/cgroup', 'utf8').includes('docker');
+        } catch { return false; }
+    }
+
+    static get isOneBotDocker() {
+        return this.isOneBot && this.isDocker;
+    }
+
+    static adaptImgType(requested = 'png') {
+        if (requested !== 'png') return requested;
+        if (!this.isOneBotDocker) return 'png';
+        return 'webp';
     }
 }
 
@@ -4750,7 +4781,7 @@ class Morpheus {
             tplFile,
             htmlContent,
             data = {},
-            imgType = "png",
+            imgType: _imgType = "png",
             navOpts = { waitUntil: "networkidle0", timeout: 30000 },
             pageBoundingRect,
             width,
@@ -4758,6 +4789,9 @@ class Morpheus {
             transparentBackground = false,
             MorpheusSignal = false
         } = options;
+
+        let imgType = _imgType || "png";
+        imgType = MBTAdapterEnv.adaptImgType(imgType);
 
         const DataMaps = {
             Version,
@@ -4851,7 +4885,8 @@ class Morpheus {
                 encoding: 'binary',
                 fullPage: !pageBoundingRect,
                 omitBackground: false,
-                ...(imgType === 'jpeg' ? { quality: 90 } : {})
+                ...(imgType === 'webp' ? { quality: 90 } : {}),
+                ...(imgType === 'jpeg' ? { quality: 80 } : {})
             };
             if (pageBoundingRect) screenshotConfig.clip = pageBoundingRect;
 
@@ -4879,6 +4914,9 @@ class Morpheus {
                 imgBuffer = await page.screenshot(screenshotConfig);
             }
 
+            if (imgBuffer && !Buffer.isBuffer(imgBuffer)) {
+                imgBuffer = Buffer.from(imgBuffer);
+            }
             return imgBuffer;
 
         } catch (err) {
