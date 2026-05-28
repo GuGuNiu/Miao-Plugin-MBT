@@ -9755,6 +9755,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
       const deployRepo = async (repoTask) => {
           const repoNum = repoTask.repo;
+          const repoStart = Date.now();
           const meta = Nomos.MetaNum(repoNum);
           if (!meta) throw new Error(`未知的仓库编号: ${repoNum}`);
           const repoPath = MiaoPluginMBT.Paths[meta.pathKey];
@@ -9785,6 +9786,11 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
               runtimeContext, repoNum, repoUrl, branch,
               repoPath, e, Hades, TheGrid, MBTProcc, null, null, sessionId
           );
+
+          const repoElapsed = Date.now() - repoStart;
+          const bestNode = TheGrid[0];
+          result.duration = `${(repoElapsed / 1000).toFixed(1)}s`;
+          result.latency = bestNode?.speed && bestNode.speed !== Infinity ? `${bestNode.speed}ms` : '-';
 
           if (result.mode) {
               capturedMode = result.mode;
@@ -9819,19 +9825,17 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
                   if (coreTplResult.success && coreTplResult.data) {
                       const ViewProps = {
-                        title: "咕咕牛的主资产仓库下载完成",
-                        subtitle: `已成功部署到本地`,
                         nodeName: result.nodeName,
-                        progress: 100,
-                        StatusMsg: "✅ 开始聚合下载附属仓库...",
-                        statusClass: "status-complete",
+                        duration: result.duration || '-',
+                        latency: result.latency || '-',
                       };
 
                       const imgBuffer = await Morpheus.shot("Core_Repo_Download", {
                         htmlContent: coreTplResult.data,
                         data: ViewProps,
                         logger: Hades,
-                        pageBoundingRect: { selector: ".container" }
+                        pageBoundingRect: { selector: ".container" },
+                        transparentBackground: true
                       });
 
                       if (imgBuffer) {
