@@ -4884,7 +4884,7 @@ class Morpheus {
                 type: imgType,
                 encoding: 'binary',
                 fullPage: !pageBoundingRect,
-                omitBackground: false,
+                omitBackground: transparentBackground,
                 ...(imgType === 'webp' ? { quality: 90 } : {}),
                 ...(imgType === 'jpeg' ? { quality: 80 } : {})
             };
@@ -4899,6 +4899,7 @@ class Morpheus {
                         imgBuffer = await page.screenshot({
                             type: imgType,
                             encoding: 'binary',
+                            omitBackground: transparentBackground,
                             clip: {
                                 x: Math.max(0, box.x - padding),
                                 y: Math.max(0, box.y - padding),
