@@ -366,10 +366,6 @@ class Pheme {
         try { return await e.reply(msg, quote); } catch { return false; }
     }
     static async quote(e, msg) { return this.send(e, msg, true); }
-    static async error(e, msg) { return this.quote(e, msg); }
-    static async info(e, msg) { return this.quote(e, msg); }
-    static async success(e, msg) { return this.quote(e, msg); }
-    static async warning(e, msg) { return this.quote(e, msg); }
     static async img(e, seg, fallbackText = '', logger = null) {
         return MiaoPluginMBT.ReplyImg(e, seg, fallbackText, logger);
     }
@@ -3076,7 +3072,7 @@ class MBTQuoCRS {
         Closed: 3
     };
 
-    constructor(logger, Rid, logTag, colorCode, parentSignal = null) {
+    constructor(logger, Rid, logTag, colorCode, parentSignal = null, cerSessionId = null) {
         this.logger = HadesEntry({ module: "Quo" }, logger || getCore());
         this.Rid = Rid;
         this.logTag = logTag;
@@ -3088,6 +3084,7 @@ class MBTQuoCRS {
         this._state = MBTQuoCRS.CRS_State.Init;
         this.lastHB = Date.now();
         this._activeGen = Moirai.currentGen;
+        this._cerSessionId = cerSessionId;
         ({ promise: this.promise, resolve: this.resolve, reject: this.reject } = Promise.withResolvers());
         this._shutdownTrapListener = () => this.stop();
         this._parentSignal = null;
@@ -3202,6 +3199,19 @@ class MBTQuoCRS {
     _monitor() {
         if (this.tasks.size === 0) return;
         const now = Date.now();
+
+        if (this._cerSessionId) {
+            const cerberus = Cerberus.getInstance();
+            const guardErr = cerberus.guard(this._cerSessionId, { maxPulseIdle: 120000, maxByteIdle: 90000 });
+            if (guardErr) {
+                this.logger.warn(`${this.uiRid} | [Quo] CerberusGuard 触发: ${guardErr.message}，强制终止所有任务`);
+                for (const task of Array.from(this.tasks.values())) {
+                    this._kill(task, `CerberusGuard: ${guardErr.message}`);
+                }
+                return;
+            }
+        }
+
         let leader = null, activeCount = 0;
         const snapshot = Array.from(this.tasks.values());
 
@@ -3283,6 +3293,12 @@ class MBTQuoCRS {
             }
             this.logger.debug(`${this.uiRid} | [Quo] 节点: [${task.name}] 疑似假死，回收任务中... | 状态:${t.connection_state || 'UNKNOWN'}`);
             this._kill(task, "速度过慢且无物理流量");
+        }
+
+        if (leader && task.id === leader.id && task.curr >= 99 && (now - task.active) > 120000) {
+            this.logger.debug(`${this.uiRid} | [Quo] 裁决: [${task.name}] 进度${task.curr}%后停滞${Math.floor((now - task.active) / 1000)}s，Checkout阶段卡死`);
+            this._kill(task, "进度100%后停滞超过2分钟(Cleanup/Checkout阶段卡死)");
+            return;
         }
     }
 
@@ -4691,7 +4707,7 @@ class Morpheus {
             enableExtensions: true
         };
 
-        if (MiaoPluginMBT._detectDockerEnv()) {
+        if (MBTAdapterEnv.isDocker) {
             launchOptions.args.push('--single-process');
         }
 
@@ -4888,14 +4904,14 @@ class Morpheus {
                 ...(imgType === 'webp' ? { quality: 90 } : {}),
                 ...(imgType === 'jpeg' ? { quality: 80 } : {})
             };
-            if (pageBoundingRect) screenshotConfig.clip = pageBoundingRect;
+            if (pageBoundingRect && !pageBoundingRect.selector) screenshotConfig.clip = pageBoundingRect;
 
             let imgBuffer;
             if (pageBoundingRect && pageBoundingRect.selector) {
                 const element = await page.$(pageBoundingRect.selector);
                 if (element) {
                     const box = await element.boundingBox();
-                    if (box) {
+                    if (box && Number.isFinite(box.x) && Number.isFinite(box.y) && Number.isFinite(box.width) && Number.isFinite(box.height) && box.width > 0 && box.height > 0) {
                         imgBuffer = await page.screenshot({
                             type: imgType,
                             encoding: 'binary',
@@ -7485,18 +7501,6 @@ class MiaoPluginMBT extends plugin {
     return token;
   }
 
-  static _detectDockerEnv() {
-    if (fs.existsSync('/.dockerenv')) {
-      return true;
-    }
-    try {
-      const content = fs.readFileSync('/proc/1/cgroup', 'utf8');
-      return content.includes('docker');
-    } catch {
-      return false;
-    }
-  }
-
   static ToImgSeg(input, options = {}) {
     if (!input) return null;
     const { audit = false, fallbackText = null, preferUrl = false } = options;
@@ -8677,7 +8681,7 @@ class MiaoPluginMBT extends plugin {
 
               Hades.O(`${RidColored} ${logTag} | [Quo] 正在调度节点 [${waveNodes.map(n => n.name).join(', ')}]`);
 
-              activeCRS = new MBTQuoCRS(logger, Rid, logTag, colorCode, signal);
+              activeCRS = new MBTQuoCRS(logger, Rid, logTag, colorCode, signal, Cer_SessionId);
 
               const v4Threshold = Proteus._setup.thresholdV4;
               const riskMode = (!Number.isFinite(getNodeLatency(waveNodes[0])) || getNodeLatency(waveNodes[0]) > v4Threshold || udpReach === false);
@@ -8702,7 +8706,7 @@ class MiaoPluginMBT extends plugin {
 
                   const status = activeCRS.getStatus();
 
-                  if (status.activeCount < 2 && status.maxProgress < 80 && nodePool.length > 0) {
+                  if (status.activeCount < 2 && nodePool.length > 0 && (status.maxProgress < 80 || (status.maxProgress >= 99 && status.activeCount === 0))) {
                       const nextNode = nodePool.shift();
                       if (nextNode) {
                           const boostDelay = getStartDelay(nextNode, 1, riskMode);
@@ -9732,7 +9736,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       try {
           const sortedNodes = await this._VoiceCore(e, Hades, HttpResultMap, [], startTime, 'Provision');
           validNodes = sortedNodes;
-          await Pheme.quote(e, "测速结果仅供参考，实际下载将根据[CRS动态决策]选择最佳方式");
+          await Pheme.quote(e, "测速结果仅供参考，实际下载将根据动态决策选择最佳方式");
       } catch (err) {
           validNodes = HttpResultMap.filter(r => r.speed !== Infinity).sort((a, b) => a.speed - b.speed);
       }
@@ -9959,7 +9963,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           }
 
           if (r.status === 'success') {
-              const text = r.repo === 1 ? '下载/部署成功' : '下载成功';
+              const text = r.repo === 1 ? '已部署' : '已下载';
               return { name, text, statusClass: 'status-ok', nodeName: r.nodeName };
           }
 
@@ -10008,7 +10012,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 htmlContent: tplData,
                 data: ViewProps,
                 logger: this.logger,
-                pageBoundingRect: { selector: ".wrapper" }
+                pageBoundingRect: { selector: ".capture-frame" },
+                transparentBackground: true
               });
           } else {
               this.logger.error(`获取下载报告模板失败`);
@@ -10060,7 +10065,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
   async TestVoice(e) {
     const Hades = this.logger;
-    await Pheme.quote(e, "📡 正在进行全量测速...");
+    await Pheme.quote(e, "📡 正在进行测速...");
 
     const startTime = Date.now();
     const taskCoreProbe = MiaoPluginMBT.TestCaVoice(Hades).then(async (httpResults) => {
@@ -10400,27 +10405,20 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
       JavaScriptSyncStatus = await MiaoPluginMBT.SSF();
     }
 
-    if (activeRepoIds.has(2)) {
-      const repo2Status = Repo2Exists
-        ? await deployRepoResult(2, MiaoPluginMBT.Paths.MountRepoPath2, Repo2, "Ass_Github_URL", "Ass_Github_URL", branch, false, globalSenseChain)
-        : { name: Repo2, statusText: "未下载", statusClass: "status-skipped" };
-      reportResults.push(repo2Status);
-    }
+    const Ass_Repo_Configs = [
+      { id: 2, pathKey: 'MountRepoPath2', name: Repo2, configKey: 'Ass_Github_URL', exists: Repo2Exists },
+      { id: 3, pathKey: 'MountRepoPath3', name: Repo3, configKey: 'Ass2_Github_URL', exists: Repo3Exists },
+      { id: 4, pathKey: 'MountRepoPath4', name: Repo4, configKey: 'Ass3_Github_URL', exists: Repo4Exists },
+    ];
 
-    if (activeRepoIds.has(3)) {
-      const repo3Status = Repo3Exists
-        ? await deployRepoResult(3, MiaoPluginMBT.Paths.MountRepoPath3, Repo3, "Ass2_Github_URL", "Ass2_Github_URL", branch, false, globalSenseChain)
-        : { name: Repo3, statusText: "未下载", statusClass: "status-skipped" };
-      reportResults.push(repo3Status);
-    }
-
-    if (activeRepoIds.has(4)) {
-      const repo4Status = Repo4Exists
-        ? await deployRepoResult(4, MiaoPluginMBT.Paths.MountRepoPath4, Repo4, "Ass3_Github_URL", "Ass3_Github_URL", branch, false, globalSenseChain)
-        : { name: Repo4, statusText: "未下载", statusClass: "status-skipped" };
-      reportResults.push(repo4Status);
-    } else if (repo4State?.isConfigured) {
-      reportResults.push({ name: Repo4, statusText: "未下载 (插件未安装)", statusClass: "status-skipped" });
+    for (const cfg of Ass_Repo_Configs) {
+      if (activeRepoIds.has(cfg.id)) {
+        reportResults.push(cfg.exists
+          ? await deployRepoResult(cfg.id, MiaoPluginMBT.Paths[cfg.pathKey], cfg.name, cfg.configKey, cfg.configKey, branch, false, globalSenseChain)
+          : { name: cfg.name, statusText: "未下载", statusClass: "status-skipped" });
+      } else if (cfg.id === 4 && repo4State?.isConfigured) {
+        reportResults.push({ name: cfg.name, statusText: "未下载 (插件未安装)", statusClass: "status-skipped" });
+      }
     }
 
     if (allSuccess && HasAnyChanges) {
