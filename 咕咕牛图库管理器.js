@@ -9969,7 +9969,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
 
           return {
               name,
-              text: '下载失败',
+              text: '失败',
               statusClass: 'status-fail',
               nodeName: r.nodeName ?? '异常'
           };
@@ -10001,6 +10001,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           duration: ((Date.now() - startTime) / 1000).toFixed(1),
           bgImg: await Morpheus.pickBg(),
           isArray: Array.isArray,
+          dividerProgress: configuredCount > 0 ? Math.round((successCount / configuredCount) * 100) : 0,
       };
 
       try {
@@ -10013,7 +10014,8 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 data: ViewProps,
                 logger: this.logger,
                 pageBoundingRect: { selector: ".capture-frame" },
-                transparentBackground: true
+                transparentBackground: true,
+                MorpheusSignal: true
               });
           } else {
               this.logger.error(`获取下载报告模板失败`);
