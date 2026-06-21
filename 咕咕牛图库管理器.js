@@ -4802,7 +4802,7 @@ class Morpheus {
             pageBoundingRect,
             width,
             padding = 0, /*20*/
-            transparentBackground = false,
+            Transparent_Background = false,
             MorpheusSignal = false
         } = options;
 
@@ -4887,9 +4887,16 @@ class Morpheus {
                     const images = Array.from(document.images);
                     return images.every(img => img.complete);
                 }, { timeout: 15000 }).catch(() => {});
+
+                try {
+                    await Promise.race([
+                        page.evaluate(() => document.fonts.ready),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('font wait timeout')), 15000))
+                    ]);
+                } catch (e) {}
             }
 
-            if (transparentBackground) {
+            if (Transparent_Background) {
                 await page.evaluate(() => {
                     document.documentElement.style.background = 'transparent';
                     document.body.style.background = 'transparent';
@@ -4900,7 +4907,7 @@ class Morpheus {
                 type: imgType,
                 encoding: 'binary',
                 fullPage: !pageBoundingRect,
-                omitBackground: transparentBackground,
+                omitBackground: Transparent_Background,
                 ...(imgType === 'webp' ? { quality: 90 } : {}),
                 ...(imgType === 'jpeg' ? { quality: 80 } : {})
             };
@@ -4915,7 +4922,7 @@ class Morpheus {
                         imgBuffer = await page.screenshot({
                             type: imgType,
                             encoding: 'binary',
-                            omitBackground: transparentBackground,
+                            omitBackground: Transparent_Background,
                             clip: {
                                 x: Math.max(0, box.x - padding),
                                 y: Math.max(0, box.y - padding),
@@ -9840,7 +9847,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                         data: ViewProps,
                         logger: Hades,
                         pageBoundingRect: { selector: ".container-shadow-wrapper" },
-                        transparentBackground: true
+                        Transparent_Background: true
                       });
 
                       if (imgBuffer) {
@@ -10014,7 +10021,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                 data: ViewProps,
                 logger: this.logger,
                 pageBoundingRect: { selector: ".capture-frame" },
-                transparentBackground: true,
+                Transparent_Background: true,
                 MorpheusSignal: true
               });
           } else {
@@ -10033,9 +10040,9 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
           }
 
           if (allSuccess) {
-              e.replyed || await Pheme.send(e, "『咕咕牛🐂』成功进入喵喵里面！").catch(() => {});
+              e.replyed || await Pheme.send(e, "咕咕牛🐂成功进入喵喵里面！").catch(() => {});
               await common.sleep(1500);
-              await Pheme.quote(e, "建议配置[净化等级]否则风险自负。发送#咕咕牛设置净化等级1可过滤R18内容。");
+              await Pheme.quote(e, "建议配置'净化等级'否则风险自负。发送'#咕咕牛设置净化等级1'可过滤R18内容。");
           } else {
               await Pheme.send(e, `咕咕牛部分仓库下载失败，请检查上方日志或重试。${failDetailText}`);
           }
