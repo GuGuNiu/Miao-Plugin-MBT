@@ -9839,7 +9839,7 @@ static async ProvisionPhase(e, logger = getCore(), stage = 'full') {
                         htmlContent: coreTplResult.data,
                         data: ViewProps,
                         logger: Hades,
-                        pageBoundingRect: { selector: ".container" },
+                        pageBoundingRect: { selector: ".container-shadow-wrapper" },
                         transparentBackground: true
                       });
 
