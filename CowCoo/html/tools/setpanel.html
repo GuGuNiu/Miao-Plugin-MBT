@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>咕咕牛设置面板</title>
+  <title>咕咕牛 - 设置面板</title>
   <style>
     @font-face {
       font-family: 'Orbitron';
@@ -15,7 +15,7 @@
     }
 
     @font-face {
-      font-family: 'Orbitron-Medium';
+      font-family: 'Orbitron';
       font-style: normal;
       font-weight: 500;
       font-display: swap;
@@ -39,406 +39,294 @@
     }
 
     :root {
-      --bg-color: #f8f9fa;
+      --bg-color: #f0f2f5;
       --container-bg: #ffffff;
-      --container-border: #333333;
-      --text-primary: #212529;
-      --text-secondary: #495057;
-      --text-muted: #adb5bd;
-      --accent-color: #333333;
-      --card-1-color: #20c997;
-      --card-2-color: #1395ff;
-      --card-3-color: #5a5a5a;
-      --card-4-color: #ff9838;
-      --card-text-color: #ffffff;
-      --log-bg: #fdfdff;
-      --log-border: #f1f3f5;
-      --success-color: #28a745;
-      --fail-color: #dc3545;
-      --hard-sync-color: #e67e22;
-      --no-change-color: #6c757d;
-      --accent-glow: rgba(0, 0, 0, 0.4);
-
-      --panel-backdrop-blur: 10px;
-      --header-bg-dark: #333333;
-      --header-title-color: #ffffff;
-      --header-subtitle-color: rgba(255, 255, 255, 0.6);
-      --header-underline-color: var(--card-2-color);
-      --header-border-line: rgba(255, 255, 255, 0.1);
-
-      --item-bg-card: rgba(255, 255, 255, 0.25);
-      --item-border-card: rgba(221, 221, 221, 0.8);
-      --item-shadow-card: rgba(0, 0, 0, 0.04);
-
-      --grad-tuku-start: var(--card-1-color);
-      --grad-tuku-end: #00796b;
-      --glow-tuku: var(--card-1-color);
-
-      --grad-pfl-start: var(--card-4-color);
-      --grad-pfl-end: #ef6c00;
-      --glow-pfl: var(--card-4-color);
-
-      --grad-layout-start: var(--card-2-color);
-      --grad-layout-end: #0d47a1;
-      --glow-layout: var(--card-2-color);
-
-      --grad-easteregg-start: #e1bee7;
-      --grad-easteregg-end: #6a1b9a;
-      --glow-easteregg: #e1bee7;
-
-      --grad-ai-start: #ffccbc;
-      --grad-ai-end: #bf360c;
-      --glow-ai: #ffccbc;
-
-      --grad-merge-start: #c8e6c9;
-      --grad-merge-end: #2e7d32;
-      --glow-merge: var(--grad-merge-start);
-
-      --value-enabled-color: #00af50;
-      --value-enabled-border: rgba(0, 175, 80, 0.4);
-      --value-enabled-bg: rgba(220, 250, 220, 0.8);
-      --value-enabled-color-shadow-glow: rgba(0, 175, 80, 0.5);
-
-      --value-disabled-color: #e00030;
-      --value-disabled-border: rgba(224, 0, 48, 0.4);
-      --value-disabled-bg: rgba(250, 220, 220, 0.8);
-      --value-disabled-color-shadow-glow: rgba(224, 0, 48, 0.5);
-
-      --grid-line-color: rgba(0, 0, 0, 0.008);
-      --grid-cell-size: 20px;
+      --text-primary: #1f2937;
+      --text-secondary: #4b5563;
+      --text-muted: #9ca3af;
+      --accent-color: #3b82f6;
+      --accent-light: rgba(59, 130, 246, 0.1);
+      --accent-border: #e5e7eb;
+      --card-bg: #f8fafc;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --error-color: #ef4444;
+      --highlight-purple: #8b5cf6;
+      --container-glow-blue: rgba(59, 130, 246, 0.28);
+      --container-glow-purple: rgba(139, 92, 246, 0.2);
+      --container-glow-purple-inner: rgba(139, 92, 246, 0.05);
     }
 
     * {
       box-sizing: border-box;
-    }
-
-    html,
-    body {
       margin: 0;
       padding: 0;
     }
 
     body {
       font-family: 'Noto Sans SC', sans-serif;
-      background-color: var(--bg-color);
       color: var(--text-primary);
-      font-size: 14px;
-      line-height: 1.6;
-      width: 560px;
-      position: relative;
-      z-index: 0;
-      min-height: 100vh;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    .container-shadow-wrapper {
-      position: relative;
-      z-index: 2;
-      filter: drop-shadow(0 10px 20px rgba(108, 117, 125, 0.2));
-      padding: 0;
-      box-sizing: border-box;
-      border-radius: 12px;
-      width: 100%;
+      background: var(--bg-color);
+      padding: 15px;
+      width: 600px;
       margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
     }
-
 
     .container {
-      background-image:
-        repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.03) 0, rgba(0, 0, 0, 0.03) 1px, transparent 1px, transparent 20px),
-        repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.03) 0, rgba(0, 0, 0, 0.03) 1px, transparent 1px, transparent 20px);
-      background-size: 20px 20px;
+      width: 100%;
+      background: var(--container-bg);
+      border-radius: 20px;
       position: relative;
-      background-color: var(--container-bg);
-      backdrop-filter: blur(var(--panel-backdrop-blur));
-      -webkit-backdrop-filter: blur(var(--panel-backdrop-blur));
-      border: 1px solid var(--container-border);
-      width: 540px;
-      margin: 0 auto;
-      box-shadow: 0 4px 20px var(--soft-shadow);
-      padding: 0;
-      box-sizing: border-box;
-      z-index: 1;
       overflow: hidden;
-      -webkit-backface-visibility: hidden;
-      -moz-backface-visibility: hidden;
-      -webkit-transform: translate3d(0, 0, 0);
-      -moz-transform: translate3d(0, 0, 0);
-      box-shadow: 0 0 15px 5px var(--accent-glow);
-    }
-
-    .container,
-    .glow-border .glow-clip-inner {
-      clip-path: none;
-    }
-
-    .glow-border,
-    .trapezoid-deco {
-      display: none;
+      border: 1px solid var(--accent-border);
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        0 0 21px var(--container-glow-blue),
+        0 0 42px var(--container-glow-purple),
+        inset 0 0 14px var(--container-glow-purple-inner);
     }
 
     .header {
-      background-color: #050505;
-      padding: 4px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.4),
-        inset 0 1px 1px rgba(255, 255, 255, 0.3),
-        inset 0 -1px 1px rgba(255, 255, 255, 0.1);
-    }
-
-    .header-screen {
+      padding: 35px 50px;
+      background-color: #ffffff;
+      background-image:
+        radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 45%),
+        linear-gradient(to top, rgba(59, 130, 246, 0.05) 0%, transparent 35%),
+        repeating-linear-gradient(45deg, rgba(59, 130, 246, 0.03) 0, rgba(59, 130, 246, 0.03) 1px, transparent 1px, transparent 10px),
+        repeating-linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0, rgba(59, 130, 246, 0.04) 2px, transparent 2px, transparent 24px),
+        radial-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 15px 15px;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 25px;
-      border-radius: 11px 11px 0 0;
-      background-color: #1a0b2e;
-      background-image:
-        repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(0, 0, 0, 0.6) 30px, rgba(0, 0, 0, 0.6) 31.5px),
-        repeating-linear-gradient(-45deg, transparent, transparent 30px, rgba(0, 0, 0, 0.6) 30px, rgba(0, 0, 0, 0.6) 31.5px),
-        linear-gradient(135deg, #2a0e45 0%, #0d1b40 100%);
-      border: none;
+      position: relative;
       box-shadow:
-        inset 0 0 10px 0px rgba(0, 243, 255, 0.25),
-        inset 0 0 30px 5px rgba(188, 19, 254, 0.3);
-      position: relative;
+        inset 0 0 50px rgba(59, 130, 246, 0.05),
+        0 8px 20px -8px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      z-index: 5;
     }
 
-    .header h1 {
-      font-family: 'Noto Sans SC', sans-serif;
-      font-weight: 700;
-      font-size: 26px;
-      color: #ffffff;
-      margin: 0;
-      letter-spacing: 0.5px;
-      position: relative;
-      display: flex;
-      align-items: baseline;
-      padding-bottom: 4px;
-      flex-grow: 1;
-      text-shadow:
-        0 0 5px rgba(0, 243, 255, 0.6),
-        0 0 10px rgba(188, 19, 254, 0.4),
-        2px 2px 0 #000000;
-    }
-
-    .header h1 span {
-      font-family: 'Orbitron';
-      color: #00f3ff;
-      font-size: 16px;
-      margin-left: 10px;
-      letter-spacing: 0.25px;
-      text-transform: uppercase;
-      font-weight: bold;
-      opacity: 0.9;
-    }
-
-    .header h1::after {
+    .header::after {
       content: '';
       position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 30%;
-      height: 3px;
-      background-color: #00f3ff;
-      border-radius: 1px;
-      box-shadow: 0 0 8px #00f3ff;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.03) 0px, rgba(59, 130, 246, 0.03) 1px, transparent 1px, transparent 3px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .header-info {
+      position: relative;
+      z-index: 2;
+    }
+
+    .header-info h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1e40af;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: baseline;
+      text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+      margin-bottom: 5px;
+    }
+
+    .header-info h1 span {
+      font-family: 'Orbitron';
+      font-size: 12px;
+      color: #3b82f6;
+      margin-left: 10px;
+      letter-spacing: 2px;
+      font-weight: 900;
+    }
+
+    .header-subtitle {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mbt-badge {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      font-family: 'Orbitron';
+    }
+
+    .badge-yunzai {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+
+    .badge-version {
+      background: #dcfce7;
+      color: #16a34a;
     }
 
     .header-image-container {
-      width: 60px;
-      height: 60px;
-      flex-shrink: 0;
-      margin-left: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: none;
-      background: transparent;
+      width: 70px;
+      height: 70px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
       position: relative;
+      z-index: 2;
+      background: #fff;
     }
 
-    .header-image-container::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(0, 243, 255, 0.3) 0%, transparent 70%);
-      z-index: -1;
-      filter: blur(8px);
-    }
-
-    .header-cute-image {
+    .header-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
-      mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
-      filter: brightness(1.1) contrast(1.1);
+    }
+
+    .content {
+      padding: 25px 50px;
+      position: relative;
+    }
+
+    .settings-list-section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .settings-category {
+      margin-bottom: 25px;
+    }
+
+    .settings-category:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-category > .setting-item + .setting-item {
+      margin-top: 12px;
     }
 
     .category-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
       font-size: 16px;
       font-weight: 700;
-      color: var(--text-secondary);
-      margin: 20px 0 10px 0;
-      padding-left: 0;
-      letter-spacing: 0.5px;
-      width: 100%;
+      color: var(--text-primary);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .category-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent-color);
+      flex-shrink: 0;
     }
 
     .section-badge-title {
-      font-family: 'Orbitron', sans-serif;
+      display: inline;
+      font-family: inherit;
+      font-size: 16px;
       font-weight: 700;
-      font-size: 1.2em;
-      color: #333;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      white-space: nowrap;
-      margin-right: 15px;
-      padding: 5px 10px;
-      border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .settings-category:nth-child(1) .section-badge-title {
-      background: linear-gradient(to right, rgba(19, 149, 255, 0.1), transparent);
-      border-left: 4px solid #1395ff;
-      color: #0d47a1;
-    }
-
-    .settings-category:nth-child(2) .section-badge-title {
-      background: linear-gradient(to right, rgba(32, 201, 151, 0.1), transparent);
-      border-left: 4px solid #20c997;
-      color: #00796b;
-    }
-
-    .settings-category:nth-child(3) .section-badge-title {
-      background: linear-gradient(to right, rgba(255, 112, 67, 0.1), transparent);
-      border-left: 4px solid #ff7043;
-      color: #e65100;
-    }
-
-    .section-badge-title .icon {
-      margin-right: 8px;
-    }
-
-
-    .settings-list-section {
-      padding: 0 35px 0 35px;
-      position: relative;
-      z-index: 1;
+      color: var(--text-primary);
+      letter-spacing: 0;
+      text-transform: none;
+      background: transparent;
+      border: none;
+      padding: 0;
     }
 
     .setting-row-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 18px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
     .setting-item {
-      background-color: var(--item-bg-card);
-      border-radius: 8px;
-      padding: 18px 22px 18px 20px;
-      margin-bottom: 18px;
-      border: 1px solid var(--item-border-card);
-      box-shadow: 0 2px 8px var(--item-shadow-card);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: relative;
       z-index: 1;
       overflow: hidden;
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
     }
 
-    .setting-row-group .setting-item {
-      flex: 1 1 calc(50% - 7.5px);
+    .setting-row-group .setting-item:not(.sr18-card) {
+      flex: 1 1 calc(50% - 6px);
       margin-bottom: 0;
       flex-direction: column;
       justify-content: space-between;
-      align-items: flex-start;
-      padding: 15px 20px;
-      min-height: 140px;
+      align-items: stretch;
+      min-height: 130px;
     }
 
-    .setting-row-group .setting-item.item-tuku::before,
-    .setting-row-group .setting-item.item-pfl::before {
-      display: none;
+    .setting-row-group .sr18-card {
+      flex: 1 1 calc(50% - 6px);
     }
 
     .feature-toggle-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
     .feature-toggle-group .setting-item {
-      flex: 1 1 calc(33.33% - 6.66px);
+      flex: 1 1 calc(33.33% - 8px);
       min-width: 0;
       margin-bottom: 0;
-      box-shadow: 0 2px 8px var(--item-shadow-card);
-      padding: 10px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
       text-align: center;
       gap: 0;
-      border: 1px solid var(--item-border-card);
-      min-height: 120px;
+      min-height: 110px;
     }
 
-    .feature-toggle-group .setting-item .item-right {
-      display: none;
-    }
-
+    .feature-toggle-group .setting-item .item-right,
     .setting-row-group .setting-item .item-right {
       display: none;
     }
 
     .feature-toggle-group .setting-item .item-left {
-      padding-left: 0;
-      align-items: center;
       width: 100%;
       flex-grow: 1;
-      display: flex;
+      padding-left: 0;
+      align-items: center;
       justify-content: center;
     }
 
-    .setting-row-group .setting-item .item-left {
+    .setting-row-group .setting-item:not(.sr18-card) .item-left {
       width: 100%;
       flex-grow: 1;
       padding-left: 0;
+      align-items: flex-start;
+      justify-content: flex-start;
     }
-
 
     .feature-toggle-group .setting-item .label {
-      font-size: 15px;
-      margin-bottom: 0;
-      padding-bottom: 5px;
-      border-bottom: 0.5px dashed rgba(0, 0, 0, 0.08);
+      font-size: 14px;
+      margin-bottom: 4px;
+      padding-bottom: 0;
       width: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
-      line-height: 1.3;
+      line-height: 1.4;
     }
 
     .feature-toggle-group .setting-item .label::before {
@@ -450,124 +338,218 @@
       display: none;
     }
 
-    .setting-item .value.status-bottom {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      padding: 8px 0;
-      margin-top: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.05);
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
-    }
-
+    .setting-item .value.status-bottom,
     .setting-item .value.status-bottom-main {
       display: flex;
       justify-content: center;
       align-items: center;
       width: 100%;
-      padding: 8px 0;
-      margin-top: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.05);
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+      padding: 0;
+      margin-top: auto;
+      padding-top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: transparent;
+      border: none;
+      color: var(--status-color, var(--text-primary));
     }
 
-    .feature-toggle-group .setting-item.value-enabled {
-      box-shadow: 0 0 0 1px var(--value-enabled-color),
-        0 0 10px 3px var(--value-enabled-color-shadow-glow),
-        0 2px 8px var(--item-shadow-card);
+    .feature-toggle-group .setting-item.value-enabled .value,
+    .setting-item .value.value-enabled {
+      --status-color: var(--success-color);
     }
 
-    .feature-toggle-group .setting-item.value-disabled {
-      box-shadow: 0 0 0 1px var(--value-disabled-color),
-        0 0 10px 3px var(--value-disabled-color-shadow-glow),
-        0 2px 8px var(--item-shadow-card);
+    .feature-toggle-group .setting-item.value-disabled .value,
+    .setting-item .value.value-disabled {
+      --status-color: var(--error-color);
     }
-
-    .setting-row-group .setting-item.value-enabled {
-      box-shadow: 0 0 0 2px var(--value-enabled-color),
-        0 2px 8px var(--item-shadow-card);
-      border-color: var(--value-enabled-color);
-    }
-
 
     .group-command-example {
-      margin-top: -10px;
-      margin-bottom: 18px;
+      margin: 4px 0 28px;
       text-align: center;
-      background-color: rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 10px 15px;
-      border: 1px dashed rgba(0, 0, 0, 0.1);
       color: var(--text-secondary);
-      backdrop-filter: blur(3px);
-      -webkit-backdrop-filter: blur(3px);
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 11px;
+      line-height: 1.5;
     }
 
     .group-command-example .value-description {
-      font-size: 13px;
-      margin-bottom: 5px;
+      display: inline;
+      font-size: 11px;
       color: var(--text-secondary);
       padding-left: 0;
+      margin-bottom: 0;
     }
 
     .group-command-example .command-example {
-      font-size: 12px;
+      display: inline;
+      font-size: 10px;
       color: var(--text-muted);
-      padding-left: 0;
+      padding-left: 4px;
+      font-family: 'Consolas', 'Menlo', monospace;
+    }
+
+    .group-command-example .command-example::before {
+      content: '·';
+      margin-right: 6px;
+      color: var(--text-muted);
     }
 
     .value-level-0 {
-      --status-color: var(--value-enabled-color);
-      --status-border: var(--value-enabled-border);
-      --status-bg: var(--value-enabled-bg);
-      background-color: var(--status-bg) !important;
-      border: 1px solid var(--status-border) !important;
-      color: var(--status-color) !important;
-      box-shadow: 0 0 5px var(--value-enabled-color-shadow-glow);
+      --status-color: var(--text-muted);
     }
 
-    .item-tuku {
-      --item-color: var(--card-1-color);
-      border: 1px solid rgba(19, 149, 255, 0.15) !important;
+    .item-tuku { --item-color: #3b82f6; }
+    .item-pfl { --item-color: #f59e0b; }
+    .item-layout { --item-color: #3b82f6; }
+    .item-easteregg { --item-color: #8b5cf6; }
+    .item-ai { --item-color: #ef4444; }
+    .item-merge { --item-color: #10b981; }
+    .item-placeholder { --item-color: #06b6d4; }
+    .item-renderscale,
+    .item-original-intercept {
+      position: relative;
+      overflow: hidden;
     }
 
-    .item-pfl {
-      --item-color: var(--card-4-color);
-      border: 1px solid rgba(19, 149, 255, 0.15) !important;
+    .item-renderscale { --item-color: #64748b; }
+
+    .item-renderscale::after,
+    .item-original-intercept::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30px;
+      width: 140px;
+      height: 200%;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.8) 8px, transparent 8px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.8) 8px, transparent 8px);
+      background-size: 16px 16px;
+      transform: rotate(45deg);
+      transform-origin: center;
+      filter: blur(0.5px);
+      box-shadow: -6px 0 16px rgba(0, 0, 0, 0.05);
+      mask-image: linear-gradient(to right, transparent 0%, black 18%, black 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 100%);
+      clip-path: polygon(
+        0% 0%, 100% 0%, 100% 100%, 0% 100%,
+        0% 88%, 28% 88%, 28% 78%, 0% 78%,
+        0% 66%, 36% 66%, 36% 54%, 0% 54%,
+        0% 44%, 24% 44%, 24% 34%, 0% 34%,
+        0% 22%, 32% 22%, 32% 12%, 0% 12%
+      );
     }
 
-    .item-tuku .label,
-    .item-pfl .label {
-      border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
-      padding-bottom: 4px;
-      margin-bottom: 8px;
-      width: 100%;
-      font-weight: bold;
+    .item-original-intercept { --item-color: #ec4899; }
+
+    .item-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex-grow: 1;
+      position: relative;
+      z-index: 1;
+      padding-left: 0;
     }
 
-    .item-layout {
-      --item-color: var(--card-2-color);
+    .setting-item .label {
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 15px;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      letter-spacing: 0.25px;
+      font-weight: 700;
     }
 
-    .item-easteregg {
-      --item-color: #8e24aa;
+    .setting-item .label::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--item-color);
+      flex-shrink: 0;
     }
 
-    .item-ai {
-      --item-color: #e53935;
+    .value-description {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      padding-left: 0;
+      margin-top: 2px;
     }
 
-    .item-merge {
-      --item-color: #4caf50;
+    .command-example {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding-left: 0;
+      margin-top: 4px;
+      font-family: 'Consolas', 'Menlo', monospace;
     }
 
-    .item-placeholder {
-      --item-color: #26a69a;
+    .item-right {
+      text-align: right;
+      flex-shrink: 0;
+      min-width: 95px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .setting-item .value {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: transparent;
+      display: inline-block;
+      border: none;
+      color: var(--status-color, var(--text-primary));
+    }
+
+    .value-enabled {
+      --status-color: var(--success-color);
+    }
+
+    .value-disabled {
+      --status-color: var(--error-color);
+    }
+
+    .setting-row-group .setting-item.item-pfl .value.status-bottom-main[data-level="0"] {
+      --status-color: var(--text-muted);
+    }
+
+    .value-level-custom {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+      border: 1px solid rgba(0, 188, 212, 0.35);
+      color: #0d47a1;
+      box-shadow: 0 0 8px rgba(0, 188, 212, 0.2);
+      text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.05);
+    }
+
+    .item-disabled .label,
+    .item-disabled .value-description,
+    .item-disabled .command-example {
+      color: var(--text-muted) !important;
+    }
+
+    .item-disabled .label::before {
+      background: var(--text-muted) !important;
+    }
+
+    .item-disabled .value {
+      opacity: 0.6;
     }
 
     .sr18-card {
@@ -840,337 +822,166 @@
       100% { clip-path: inset(50% 0 45% 0); }
     }
 
-    .item-left {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      flex-grow: 1;
-      position: relative;
-      z-index: 1;
-      padding-left: 0;
-    }
-
-    .setting-item .label {
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      font-size: 14px;
-      margin-bottom: 5px;
-      letter-spacing: 0.25px;
-    }
-
-    .setting-item .label::before {
-      content: '◈';
-      display: inline-block;
-      margin-right: 5px;
-      color: var(--item-color);
-      font-size: 13px;
-      transform: translateY(-0.5px);
-    }
-
-    .value-description {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-      padding-left: 12px;
-      font-family: 'Noto Sans SC', sans-serif;
-      font-weight: 400;
-    }
-
-    .command-example {
-      font-size: 11px;
-      color: var(--text-muted);
-      padding-left: 12px;
-      margin-top: 2px;
-      font-family: 'Consolas', 'Menlo', 'monospace';
-      opacity: 0.9;
-    }
-
-    .item-right {
-      text-align: right;
-      flex-shrink: 0;
-      min-width: 95px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .setting-item .value {
-      font-size: 14px;
-      padding: 6px 12px;
-      border-radius: 5px;
-      background-color: var(--status-bg);
-      display: inline-block;
-      border: 1px solid var(--status-border);
-      color: var(--status-color);
-      text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.05);
-    }
-
-    .item-placeholder .value.value-enabled {
-      font-weight: 700;
-      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
-      border: 1px solid #4db6ac;
-      color: #004d40;
-      box-shadow: 0 0 8px rgba(0, 150, 136, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.7);
-    }
-
-    .item-placeholder .value.value-disabled {
-      font-weight: 700;
-      background: #f5f5f5;
-      border: 1px solid #b0bec5;
-      color: #37474f;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-      text-shadow: none;
-    }
-
-    .value-enabled {
-      --status-color: var(--value-enabled-color);
-      --status-border: var(--value-enabled-border);
-      --status-bg: var(--value-enabled-bg);
-    }
-
-    .value-disabled {
-      --status-color: var(--value-disabled-color);
-      --status-border: var(--value-disabled-border);
-      --status-bg: var(--value-disabled-bg);
-    }
-
-    .setting-row-group .setting-item.item-pfl .value.status-bottom-main[data-level="0"] {
-      background-color: #f5f5f5;
-      border: 1px solid #b0bec5;
-      color: #37474f;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-      text-shadow: none;
-    }
-
-    .value-level-custom {
-      --status-color: #00838f;
-      --status-border: rgba(0, 188, 212, 0.3);
-      --status-bg: rgba(178, 235, 242, 0.6);
-    }
-
-    .item-disabled .label,
-    .item-disabled .value-description,
-    .item-disabled .command-example {
-      color: #9e9e9e !important;
-      text-shadow: none;
-    }
-
-    .item-disabled .label::before {
-      color: #9e9e9e !important;
-    }
-
-    .item-disabled .value {
-      filter: grayscale(80%);
-      opacity: 0.7;
-    }
-
     .footer {
-      margin-top: 20px;
-      padding: 20px 0;
-      border-top: 1px solid rgba(0, 0, 0, 0.05);
-      background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05));
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .footer-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .footer-pill {
-      display: flex;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.05);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 0;
-      clip-path: polygon(
-        6px 0,
-        100% 0,
-        100% calc(100% - 6px),
-        calc(100% - 6px) 100%,
-        0 100%,
-        0 6px
-      );
-      overflow: visible;
-      height: 24px;
-      position: relative;
-    }
-
-    .pill-label {
+      padding: 0 0 25px;
+      text-align: center;
       font-family: 'Orbitron', sans-serif;
-      font-size: 10px;
-      font-weight: 700;
-      background: rgba(0, 0, 0, 0.05);
-      color: var(--text-secondary);
-      padding: 0 8px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      border-right: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .pill-val {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--header-underline-color);
-      padding: 0 8px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-    }
-
-    .footer-copyright {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 14px;
-      color: var(--text-secondary);
-      letter-spacing: 0.25px;
+      font-size: 13px;
       font-weight: 500;
-      margin-top: 5px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      pointer-events: none;
     }
   </style>
 </head>
 
 <body style="{{RenderMatrix}}">
-  <div class="container-shadow-wrapper">
-    <div class="container">
-      <header class="header">
-        <div class="header-screen">
-          <h1>咕咕牛的设置面板<span>/ISETTINGI/</span></h1>
-          <div class="header-image-container">
-            {{ if headerImg }}
-            <img src="{{ headerImg }}" class="header-cute-image" />
-            {{ /if }}
-          </div>
+  <div class="container">
+    <header class="header">
+      <div class="header-info">
+        <h1>咕咕牛的设置面板<span>/ISETTINGI/</span></h1>
+        <div class="header-subtitle">
+          <div class="mbt-badge badge-yunzai">Yunzai</div>
+          <div class="mbt-badge badge-version">v{{ Version }}</div>
         </div>
-      </header>
+      </div>
+      <div class="header-image-container">
+        {{ if headerImg }}
+        <img src="{{ headerImg }}" class="header-image" />
+        {{ /if }}
+      </div>
+    </header>
 
-      <main class="settings-list-section">
-        <div class="settings-category">
-          <h2 class="category-title">
-            <span class="section-badge-title">
-              <span class="icon"></span>主要设置
-            </span>
-          </h2>
-          <div class="setting-row-group">
-            <div class="setting-item item-tuku">
-              <div class="item-left">
-                <span class="label">图库状态</span>
-                <div class="value-description">同步图库至插件内的文件夹</div>
-                <div class="command-example">#[启用/禁用]咕咕牛</div>
-              </div>
-              <span class="value status-bottom-main {{ tuKuStatus.class }}">{{ tuKuStatus.text }}</span>
-            </div>
-            <div class="setting-item item-pfl">
-              <div class="item-left">
-                <span class="label">净化等级</span>
-                <div class="value-description">{{ pflStatus.description }}</div>
-                <div class="command-example">#咕咕牛设置净化等级[0/1/2]</div>
-              </div>
-              <span class="value status-bottom-main {{ pflStatus.class }}">{{ pflStatus.level }}</span>
-            </div>
-            <div class="setting-item sr18-card {{ sr18Status.class }}">
-              <div class="sr18-corner-deco"></div>
-              <div class="sr18-text-group">
-                <div class="sr18-main-row">
-                  <div class="sr18-title-group">
-                    <span class="sr18-main-text">SR18+</span>
-                    <span class="sr18-command">#咕咕牛设置SR18开启/关闭</span>
-                  </div>
-                  <div class="breasts-icon">
-                    <div class="breast"></div>
-                    <div class="breast"></div>
-                  </div>
-                </div>
-                <span class="sr18-sub-text">S-RARE :: RESTRICTED CONTENT</span>
-              </div>
-              <div class="sr18-description">高尺度的性趣味玩法图片 & 限制级22+，需要做好心理准备</div>
-              <svg class="sr18-heel-deco" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19.33,15.25l-3.61-3.61a1.49,1.49,0,0,0-2.1,0L11.78,13.5a.49.49,0,0,1-.69,0L5.33,7.74a1.49,1.49,0,0,0-2.1,0L2.4,8.57a1.49,1.49,0,0,0,0,2.1l5.76,5.76a.49.49,0,0,1,0,.69L4.22,21.06a1.49,1.49,0,0,0,0,2.1l.83.83a1.49,1.49,0,0,0,2.1,0l3.94-3.94a.49.49,0,0,1,.69,0l1.84,1.84a1.49,1.49,0,0,0,2.1,0l3.61-3.61A1.49,1.49,0,0,0,19.33,15.25Z"/>
-              </svg>
-              <div class="sr18-status">
-                <div class="sr18-wine-glass">
-                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 6c0 4.97-3.13 9-7 9s-7-4.03-7-9V5h14v1z" />
-                    <path d="M12 15v6" />
-                    <path d="M8 21h8" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-category">
-          <h2 class="category-title">
-            <span class="section-badge-title">
-              <span class="icon"></span>附加选项
-            </span>
-          </h2>
-          <div class="feature-toggle-group">
-            <div class="setting-item item-ai {{ aiStatus.class }}">
-              <div class="item-left">
-                <span class="label">AI图</span>
-              </div>
-              <span class="value status-bottom {{ aiStatus.class }}">{{ aiStatus.text }}</span>
-            </div>
-            <div class="setting-item item-easteregg {{ easterEggStatus.class }}">
-              <div class="item-left">
-                <span class="label">彩蛋图</span>
-              </div>
-              <span class="value status-bottom {{ easterEggStatus.class }}">{{ easterEggStatus.text }}</span>
-            </div>
-            <div class="setting-item item-layout {{ layoutStatus.class }}">
-              <div class="item-left">
-                <span class="label">横屏图</span>
-              </div>
-              <span class="value status-bottom {{ layoutStatus.class }}">{{ layoutStatus.text }}</span>
-            </div>
-          </div>
-          <div class="group-command-example">
-            <div class="value-description">是否允许使用Ai生成、彩蛋、横屏图片</div>
-            <div class="command-example">#咕咕牛设置[Ai/彩蛋/横屏][开启/关闭]</div>
-          </div>
-          <div class="setting-item item-renderscale">
+    <main class="content settings-list-section">
+      <div class="settings-category">
+        <h2 class="category-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+          </svg>
+          <span class="section-badge-title">主要设置</span>
+        </h2>
+        <div class="setting-row-group">
+          <div class="setting-item item-tuku">
             <div class="item-left">
-              <span class="label">渲染精度</span>
-              <div class="value-description">调整所有生成图片的清晰度(缩放因子)(100%-500%)</div>
-              <div class="command-example">#咕咕牛设置渲染精度[数值]</div>
+              <span class="label">图库状态</span>
+              <div class="value-description">同步图库至插件内的文件夹</div>
+              <div class="command-example">#[启用/禁用]咕咕牛</div>
             </div>
-            <div class="item-right">
-              <span class="value value-level-custom">{{ RenderScale.value }}%</span>
+            <span class="value status-bottom-main {{ tuKuStatus.class }}">{{ tuKuStatus.text }}</span>
+          </div>
+          <div class="setting-item item-pfl">
+            <div class="item-left">
+              <span class="label">净化等级</span>
+              <div class="value-description">{{ pflStatus.description }}</div>
+              <div class="command-example">#咕咕牛设置净化等级[0/1/2]</div>
+            </div>
+            <span class="value status-bottom-main {{ pflStatus.class }}" data-level="{{ pflStatus.level }}">{{ pflStatus.level }}</span>
+          </div>
+          <div class="setting-item sr18-card {{ sr18Status.class }}">
+            <div class="sr18-corner-deco"></div>
+            <div class="sr18-text-group">
+              <div class="sr18-main-row">
+                <div class="sr18-title-group">
+                  <span class="sr18-main-text">SR18+</span>
+                  <span class="sr18-command">#咕咕牛设置SR18开启/关闭</span>
+                </div>
+                <div class="breasts-icon">
+                  <div class="breast"></div>
+                  <div class="breast"></div>
+                </div>
+              </div>
+              <span class="sr18-sub-text">S-RARE :: RESTRICTED CONTENT</span>
+            </div>
+            <div class="sr18-description">高尺度的性趣味玩法图片 & 限制级22+，需要做好心理准备</div>
+            <svg class="sr18-heel-deco" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.33,15.25l-3.61-3.61a1.49,1.49,0,0,0-2.1,0L11.78,13.5a.49.49,0,0,1-.69,0L5.33,7.74a1.49,1.49,0,0,0-2.1,0L2.4,8.57a1.49,1.49,0,0,0,0,2.1l5.76,5.76a.49.49,0,0,1,0,.69L4.22,21.06a1.49,1.49,0,0,0,0,2.1l.83.83a1.49,1.49,0,0,0,2.1,0l3.94-3.94a.49.49,0,0,1,.69,0l1.84,1.84a1.49,1.49,0,0,0,2.1,0l3.61-3.61A1.49,1.49,0,0,0,19.33,15.25Z"/>
+            </svg>
+            <div class="sr18-status">
+              <div class="sr18-wine-glass">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 6c0 4.97-3.13 9-7 9s-7-4.03-7-9V5h14v1z" />
+                  <path d="M12 15v6" />
+                  <path d="M8 21h8" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
-      </main>
-      <footer class="footer">
-        <div class="footer-content">
-          <div class="footer-pill">
-            <span class="pill-label">运行版本</span>
-            <span class="pill-val">v{{ Version }}</span>
+      </div>
+
+      <div class="settings-category">
+        <h2 class="category-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span class="section-badge-title">附加选项</span>
+        </h2>
+        <div class="feature-toggle-group">
+          <div class="setting-item item-ai {{ aiStatus.class }}">
+            <div class="item-left">
+              <span class="label">AI图</span>
+            </div>
+            <span class="value status-bottom {{ aiStatus.class }}">{{ aiStatus.text }}</span>
           </div>
-          <div class="footer-pill">
-            <span class="pill-label">框架</span>
-            <span class="pill-val">Yunzai</span>
+          <div class="setting-item item-easteregg {{ easterEggStatus.class }}">
+            <div class="item-left">
+              <span class="label">彩蛋图</span>
+            </div>
+            <span class="value status-bottom {{ easterEggStatus.class }}">{{ easterEggStatus.text }}</span>
           </div>
-          <div class="footer-pill">
-            <span class="pill-label">架构</span>
-            <span class="pill-val">v4.0</span>
+          <div class="setting-item item-layout {{ layoutStatus.class }}">
+            <div class="item-left">
+              <span class="label">横屏图</span>
+            </div>
+            <span class="value status-bottom {{ layoutStatus.class }}">{{ layoutStatus.text }}</span>
           </div>
         </div>
-        <div class="footer-copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
-      </footer>
-    </div>
+        <div class="group-command-example">
+          <div class="value-description">是否允许使用Ai生成、彩蛋、横屏图片</div>
+          <div class="command-example">#咕咕牛设置[Ai/彩蛋/横屏][开启/关闭]</div>
+        </div>
+        <div class="setting-item item-renderscale">
+          <div class="item-left">
+            <span class="label">渲染精度</span>
+            <div class="value-description">调整所有生成图片的清晰度(缩放因子)(100%-500%)</div>
+            <div class="command-example">#咕咕牛设置渲染精度[数值]</div>
+          </div>
+          <div class="item-right">
+            <div class="value value-level-custom">{{ RenderScale.value }}%</div>
+          </div>
+        </div>
+        <div class="setting-item item-original-intercept">
+          <div class="item-left">
+            <span class="label">原图拦截</span>
+            <div class="value-description">是否允许发送面板图的原图，非图库面板图不受影响</div>
+            <div class="command-example">#咕咕牛设置原图拦截[开启/关闭]</div>
+          </div>
+          <div class="item-right">
+            <span class="value value-disabled">关闭</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023
+    </footer>
   </div>
+<script>
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() {
+      console.log('CowCoo:Morpheus-Ready');
+    });
+  });
+</script>
 </body>
 
 </html>

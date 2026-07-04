@@ -12,8 +12,8 @@
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}fonts/noto-sans-sc-400.woff2') format('woff2'),
-                 url('{{Cow_Res_Path}}fonts/NotoSansSC-Regular.woff2') format('woff2');
+            src: url('{{ResPool_Font_Path}}noto-sans-sc-400.woff2') format('woff2'),
+                 url('{{ResPool_Font_Path}}NotoSansSC-Regular.woff2') format('woff2');
         }
 
         @font-face {
@@ -21,7 +21,7 @@
             font-style: normal;
             font-weight: 400;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}fonts/Orbitron-Regular.woff2') format('woff2');
+            src: url('{{ResPool_Font_Path}}Orbitron-Regular.woff2') format('woff2');
         }
 
         @font-face {
@@ -29,7 +29,7 @@
             font-style: normal;
             font-weight: 500;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}fonts/Orbitron-Medium.woff2') format('woff2');
+            src: url('{{ResPool_Font_Path}}Orbitron-Medium.woff2') format('woff2');
         }
 
         @font-face {
@@ -37,7 +37,7 @@
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}fonts/Orbitron-Bold.woff2') format('woff2');
+            src: url('{{ResPool_Font_Path}}Orbitron-Bold.woff2') format('woff2');
         }
 
         @font-face {
@@ -45,7 +45,7 @@
             font-style: normal;
             font-weight: 500;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}fonts/Rajdhani-Medium.woff2') format('woff2');
+            src: url('{{ResPool_Font_Path}}Rajdhani-Medium.woff2') format('woff2');
         }
 
         @font-face {
@@ -53,7 +53,7 @@
             font-style: normal;
             font-weight: 700;
             font-display: swap;
-            src: url('{{Cow_Res_Path}}fonts/Rajdhani-Bold.woff2') format('woff2');
+            src: url('{{ResPool_Font_Path}}Rajdhani-Bold.woff2') format('woff2');
         }
         :root {
             --bg-color: #212428;
@@ -1312,6 +1312,13 @@
             </footer>
         </div>
     </div>
+<script>
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() {
+      console.log('CowCoo:Morpheus-Ready');
+    });
+  });
+</script>
 </body>
 
 </html>

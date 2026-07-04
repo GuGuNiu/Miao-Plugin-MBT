@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咕咕牛查看助手</title>
+    <title>咕咕牛 - 查看助手</title>
     <style>
         @font-face {
             font-family: 'Orbitron';
@@ -39,32 +39,25 @@
         }
 
         :root {
-            --bg-color: #f8f9fa;
+            --bg-color: #f0f2f5;
             --container-bg: #ffffff;
-            --container-border: #333333;
-            --text-primary: #212529;
-            --text-secondary: #495057;
-            --text-muted: #adb5bd;
-            --accent-color: #00acc1;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --accent-color: #3b82f6;
+            --accent-light: rgba(59, 130, 246, 0.1);
+            --accent-border: #e5e7eb;
+            --card-bg: #f8fafc;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --highlight-purple: #8b5cf6;
+            --container-glow-blue: rgba(59, 130, 246, 0.28);
+            --container-glow-purple: rgba(139, 92, 246, 0.2);
+            --container-glow-purple-inner: rgba(139, 92, 246, 0.05);
 
-            --success-color: #28a745;
-            --fail-color: #dc3545;
-            --na-color: #78909c;
-            --default-color: #3f51b5;
-
-            --soft-shadow: rgba(0, 0, 0, 0.08);
-            --header-bg: #333333;
-            --header-title-color: #ffffff;
-            --header-subtitle-color: rgba(255, 255, 255, 0.6);
-            --header-underline-color: #1395ff;
-            --header-border-line: rgba(255, 255, 255, 0.1);
-
-            --section-bg-card: rgba(255, 255, 255, 0.95);
-            --section-border-card: #e0e0e0;
-            --section-shadow-card: rgba(0, 0, 0, 0.05);
-            --accent-glow: rgba(0, 0, 0, 0.4);
-            --panel-backdrop-blur: 5px;
-
+            --popular-char-bg: #e6f7ff;
+            --popular-char-text: #007bff;
             --gs-tag-bg: #cfe2ff;
             --gs-tag-text: #0a58ca;
             --sr-tag-bg: #e9ecef;
@@ -75,230 +68,150 @@
             --waves-tag-text: #fc9d05;
             --misc-tag-bg: #e1bee7;
             --misc-tag-text: #7b1fa2;
-
-            --popular-char-bg: #e6f7ff;
-            --popular-char-text: #007bff;
-            --popular-char-border: #99d2f7;
-            --popular-char-shadow: rgba(0, 123, 255, 0.08);
-
-            --games-section-bg: #fff0e0;
-            --games-section-title: #ff9838;
-            --games-section-deco: #ff7b00;
-
             --secondary-tag-bg: #e0f2f1;
             --secondary-tag-text: #00796b;
-            --secondary-tag-deco: #004d40;
         }
 
         * {
             box-sizing: border-box;
-        }
-
-        html,
-        body {
             margin: 0;
             padding: 0;
         }
 
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background-color: var(--bg-color);
             color: var(--text-primary);
-            font-size: 14px;
-            line-height: 1.6;
-            width: 700px;
-            position: relative;
-            z-index: 0;
-            min-height: 100vh;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        .container-shadow-wrapper {
-            position: relative;
-            z-index: 2;
-            filter: drop-shadow(0 10px 20px rgba(108, 117, 125, 0.2));
-            padding: 0;
-            box-sizing: border-box;
-            border-radius: 12px;
-            width: 100%;
+            background: var(--bg-color);
+            padding: 15px;
+            width: 680px;
             margin: 0 auto;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            background-image:
-                repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.03) 0, rgba(0, 0, 0, 0.03) 1px, transparent 1px, transparent 20px),
-                repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.03) 0, rgba(0, 0, 0, 0.03) 1px, transparent 1px, transparent 20px);
-            background-size: 20px 20px;
+            width: 100%;
+            background: var(--container-bg);
+            border-radius: 20px;
             position: relative;
-            background-color: var(--container-bg);
-            backdrop-filter: blur(var(--panel-backdrop-blur));
-            -webkit-backdrop-filter: blur(var(--panel-backdrop-blur));
-            border: 1px solid var(--container-border);
-            margin: 0 auto;
-            box-shadow: 0 4px 20px var(--soft-shadow);
-            padding: 0;
-            box-sizing: border-box;
-            z-index: 1;
             overflow: hidden;
-            -webkit-backface-visibility: hidden;
-            -moz-backface-visibility: hidden;
-            -webkit-transform: translate3d(0, 0, 0);
-            -moz-transform: translate3d(0, 0, 0);
-            box-shadow: 0 0 15px 5px var(--accent-glow);
-        }
-
-        .container::before,
-        .container::after,
-        body::before,
-        body::after {
-            display: none;
+            border: 1px solid var(--accent-border);
+            box-shadow:
+                0 8px 24px rgba(0, 0, 0, 0.08),
+                0 0 21px var(--container-glow-blue),
+                0 0 42px var(--container-glow-purple),
+                inset 0 0 14px var(--container-glow-purple-inner);
         }
 
         .header {
-            background-color: #050505;
-            padding: 4px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            box-shadow:
-                0 10px 25px rgba(0, 0, 0, 0.4),
-                inset 0 1px 1px rgba(255, 255, 255, 0.3),
-                inset 0 -1px 1px rgba(255, 255, 255, 0.1);
-        }
-
-        .header-screen {
+            padding: 35px 50px;
+            background-color: #ffffff;
+            background-image:
+                radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 45%),
+                linear-gradient(to top, rgba(59, 130, 246, 0.05) 0%, transparent 35%),
+                repeating-linear-gradient(45deg, rgba(59, 130, 246, 0.03) 0, rgba(59, 130, 246, 0.03) 1px, transparent 1px, transparent 10px),
+                repeating-linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0, rgba(59, 130, 246, 0.04) 2px, transparent 2px, transparent 24px),
+                radial-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 15px 15px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 25px;
-            border-radius: 11px 11px 0 0;
-            background-color: #1a0b2e;
-            background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(0, 0, 0, 0.6) 30px, rgba(0, 0, 0, 0.6) 31.5px),
-                repeating-linear-gradient(-45deg, transparent, transparent 30px, rgba(0, 0, 0, 0.6) 30px, rgba(0, 0, 0, 0.6) 31.5px),
-                linear-gradient(135deg, #2a0e45 0%, #0d1b40 100%);
-            border: none;
+            position: relative;
             box-shadow:
-                inset 0 0 10px 0px rgba(0, 243, 255, 0.25),
-                inset 0 0 30px 5px rgba(188, 19, 254, 0.3);
-            position: relative;
+                inset 0 0 50px rgba(59, 130, 246, 0.05),
+                0 8px 20px -8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            z-index: 5;
         }
 
-        .header h1 {
-            font-family: 'Noto Sans SC', sans-serif;
-            font-weight: 700;
-            font-size: 26px;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: 0.5px;
-            position: relative;
-            display: flex;
-            align-items: baseline;
-            padding-bottom: 4px;
-            flex-grow: 1;
-            text-shadow:
-                0 0 5px rgba(0, 243, 255, 0.6),
-                0 0 10px rgba(188, 19, 254, 0.4),
-                2px 2px 0 #000000;
-        }
-
-        .header h1 span {
-            font-family: 'Orbitron';
-            color: #00f3ff;
-            font-size: 16px;
-            margin-left: 10px;
-            letter-spacing: 0.25px;
-            text-transform: uppercase;
-            font-weight: bold;
-            opacity: 0.9;
-        }
-
-        .header h1::after {
+        .header::after {
             content: '';
             position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 30%;
-            height: 3px;
-            background-color: #00f3ff;
-            border-radius: 1px;
-            box-shadow: 0 0 8px #00f3ff;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.03) 0px, rgba(59, 130, 246, 0.03) 1px, transparent 1px, transparent 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header-info {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header-info h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e40af;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: baseline;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+        }
+
+        .header-info h1 span {
+            font-family: 'Orbitron';
+            font-size: 12px;
+            color: #3b82f6;
+            margin-left: 10px;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        .header-subtitle {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mbt-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            font-family: 'Orbitron';
+        }
+
+        .badge-yunzai {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .badge-version {
+            background: #dcfce7;
+            color: #16a34a;
         }
 
         .header-image-container {
-            width: 60px;
-            height: 60px;
-            flex-shrink: 0;
-            margin-left: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            background: transparent;
+            width: 70px;
+            height: 70px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            position: relative;
+            z-index: 2;
+            background: #fff;
+        }
+
+        .header-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .content {
+            padding: 25px 50px;
             position: relative;
         }
 
-        .header-image-container::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(0, 243, 255, 0.3) 0%, transparent 70%);
-            z-index: -1;
-            filter: blur(8px);
-        }
-
-        .header-cute-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
-            mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
-            filter: brightness(1.1) contrast(1.1);
-        }
-
-        .header-cute-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .intro {
-            text-align: center;
-            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
-            font-size: 15px;
-            color: var(--text-secondary);
-            margin: 20px 30px 30px 30px;
-            padding: 0;
-        }
-
-        .intro code {
-            font-family: 'Consolas', 'Menlo', monospace;
-            background-color: var(--section-border-card);
-            padding: 3px 7px;
-            border-radius: 4px;
-            color: var(--default-color);
-            font-size: 14px;
-        }
-
-        .main-content {
-            padding: 0 30px;
-        }
-
         .section {
-            margin-bottom: 22px;
-            padding: 20px;
-            border-radius: 12px;
-            background-color: var(--section-bg-card);
-            border: 1px solid var(--section-border-card);
-            box-shadow: 0 4px 15px var(--section-shadow-card);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
         }
 
         .section:last-of-type {
@@ -311,69 +224,50 @@
             align-items: center;
             margin: 0 0 15px 0;
             padding-bottom: 10px;
-            border-bottom: 1px solid var(--section-border-card);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .title-wrapper {
             display: flex;
             align-items: center;
+            gap: 8px;
         }
 
         .title-deco {
             flex-shrink: 0;
-            width: 7px;
+            width: 20px;
             height: 20px;
-            border-radius: 3px;
-            background-color: var(--deco-color);
-            margin-right: 12px;
-            box-shadow: 0 0 6px var(--deco-color);
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-deco svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         h2 {
             font-family: 'Noto Sans SC', sans-serif;
             font-weight: 700;
-            font-size: 20px;
+            font-size: 16px;
             margin: 0;
             padding: 0;
             line-height: 20px;
-            color: var(--title-color);
-        }
-
-        .popular-characters .title-wrapper {
-            --title-color: #3f51b5;
-            --deco-color: #5c6bc0;
-        }
-
-        .gs .title-wrapper {
-            --title-color: #0d6efd;
-            --deco-color: #4dabf7;
-        }
-
-        .sr .title-wrapper {
-            --title-color: #495057;
-            --deco-color: #adb5bd;
-        }
-
-        .games-section .title-wrapper {
-            --title-color: var(--games-section-title);
-            --deco-color: var(--games-section-deco);
-        }
-
-        .tags .title-wrapper {
-            --title-color: #8e24aa;
-            --deco-color: #ab47bc;
-        }
-        
-        .secondary-tags .title-wrapper {
-            --title-color: var(--secondary-tag-deco);
-            --deco-color: var(--secondary-tag-text);
+            color: var(--text-primary);
         }
 
         .example-text {
-            font-size: 13px;
+            font-size: 12px;
             font-family: 'Consolas', 'Menlo', monospace;
-            font-weight: 700;
-            color: var(--text-secondary);
+            font-weight: 600;
+            color: var(--text-muted);
         }
 
         .item-list {
@@ -387,25 +281,16 @@
             font-size: 14px;
             font-family: 'Noto Sans SC', sans-serif;
             font-weight: 500;
-            border-radius: 6px;
+            border-radius: 8px;
             white-space: nowrap;
-            background-color: var(--tag-bg);
-            color: var(--tag-text);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-            transition: transform 0.1s ease;
-        }
-
-        .item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            background-color: var(--accent-light);
+            color: var(--accent-color);
+            border: none;
         }
 
         .popular-char-tag {
             background-color: var(--popular-char-bg);
             color: var(--popular-char-text);
-            border: 1px solid var(--popular-char-border);
-            box-shadow: 0 1px 4px var(--popular-char-shadow);
         }
 
         .gs .item {
@@ -432,219 +317,164 @@
             background-color: var(--misc-tag-bg);
             color: var(--misc-tag-text);
         }
-        
+
         .secondary-tags .item {
             background-color: var(--secondary-tag-bg);
             color: var(--secondary-tag-text);
         }
 
         .footer {
-            margin-top: 20px;
-            padding: 20px 0;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            background: linear-gradient(to bottom, rgba(0,0,0,0.02), rgba(0,0,0,0.05));
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .footer-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .footer-pill {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 0;
-            clip-path: polygon(
-                6px 0,
-                100% 0,
-                100% calc(100% - 6px),
-                calc(100% - 6px) 100%,
-                0 100%,
-                0 6px
-            );
-            overflow: visible;
-            height: 24px;
-            position: relative;
-        }
-
-        .pill-label {
+            padding: 0 0 25px;
+            text-align: center;
             font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--text-secondary);
-            padding: 0 8px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            border-right: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .pill-val {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--header-underline-color);
-            padding: 0 8px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-
-        .footer-copyright {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--text-secondary);
-            letter-spacing: 0.25px;
+            font-size: 13px;
             font-weight: 500;
-            margin-top: 5px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            pointer-events: none;
         }
     </style>
 </head>
 
 <body style="{{RenderMatrix}}">
-    <div class="container-shadow-wrapper">
-        <div class="container">
-            <header class="header">
-                <div class="header-screen">
-                    <h1>咕咕牛的查看助手<span>/ISEARCHI/</span></h1>
-                    <div class="header-image-container">
-                        {{ if headerImg }}
-                        <img src="{{ headerImg }}" class="header-cute-image" />
-                        {{ /if }}
-                    </div>
+    <div class="container">
+        <header class="header">
+            <div class="header-info">
+                <h1>咕咕牛的查看助手<span>/ISEARCHI/</span></h1>
+                <div class="header-subtitle">
+                    <div class="mbt-badge badge-yunzai">Yunzai</div>
+                    <div class="mbt-badge badge-version">v{{ Version }}</div>
                 </div>
-            </header>
-            
-            <main class="main-content">
-                <div class="section popular-characters">
-                    <div class="section-header">
-                        <div class="title-wrapper">
-                            <div class="title-deco"></div>
-                            <h2>热门角色</h2>
-                        </div>
-                        <span class="example-text">#咕咕牛查看芙宁娜/芙芙/水神</span>
-                    </div>
-                    <div class="item-list">
-                        <span class="item popular-char-tag">芙宁娜</span>
-                        <span class="item popular-char-tag">玛薇卡</span>
-                        <span class="item popular-char-tag">遐蝶</span>
-                        <span class="item popular-char-tag">橘福福</span>
-                        <span class="item popular-char-tag">卡提希娅</span>
-                    </div>
-                </div>
-
-                {{ if gameData.gs }}
-                <div class="section gs">
-                    <div class="section-header">
-                        <div class="title-wrapper">
-                            <div class="title-deco"></div>
-                            <h2>{{ gameData.gs.name }}</h2>
-                        </div>
-                        <span class="example-text">#咕咕牛查看原神 <元素></span>
-                    </div>
-                    <div class="item-list">
-                        {{ each gameData.gs.elements element }}
-                        <span class="item">{{ element }}</span>
-                        {{ /each }}
-                    </div>
-                </div>
+            </div>
+            <div class="header-image-container">
+                {{ if headerImg }}
+                <img src="{{ headerImg }}" class="header-image" />
                 {{ /if }}
+            </div>
+        </header>
 
-                {{ if gameData.sr }}
-                <div class="section sr">
-                    <div class="section-header">
-                        <div class="title-wrapper">
-                            <div class="title-deco"></div>
-                            <h2>{{ gameData.sr.name }}</h2>
+        <main class="content">
+            <div class="section popular-characters">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
                         </div>
-                        <span class="example-text">#咕咕牛查看星铁 <元素></span>
+                        <h2>热门角色</h2>
                     </div>
-                    <div class="item-list">
-                        {{ each gameData.sr.elements element }}
-                        <span class="item">{{ element }}</span>
-                        {{ /each }}
-                    </div>
+                    <span class="example-text">#咕咕牛查看芙宁娜/芙芙/水神</span>
                 </div>
-                {{ /if }}
+                <div class="item-list">
+                    <span class="item popular-char-tag">桑多涅</span>
+                    <span class="item popular-char-tag">哥伦比娅</span>
+                    <span class="item popular-char-tag">流萤</span>
+                    <span class="item popular-char-tag">白厄</span>
+                    <span class="item popular-char-tag">卡芙卡</span>
+                </div>
+            </div>
 
-                <div class="section games-section">
-                    <div class="section-header">
-                        <div class="title-wrapper">
-                            <div class="title-deco"></div>
-                            <h2>更多游戏</h2>
+            {{ if gameData.gs }}
+            <div class="section gs">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
                         </div>
-                        <span class="example-text">#咕咕牛查看<游戏名></span>
+                        <h2>{{ gameData.gs.name }}</h2>
                     </div>
-                    <div class="item-list">
-                        {{ if gameData.zzz }}<span class="item zzz-tag">绝区零</span>{{ /if }}
-                        {{ if gameData.waves }}<span class="item waves-tag">鸣潮</span>{{ /if }}
-                    </div>
+                    <span class="example-text">#咕咕牛查看原神 <元素></span>
                 </div>
+                <div class="item-list">
+                    {{ each gameData.gs.elements element }}
+                    <span class="item">{{ element }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+            {{ /if }}
 
-                <div class="section tags">
-                    <div class="section-header">
-                        <div class="title-wrapper">
-                            <div class="title-deco"></div>
-                            <h2>主标签</h2>
+            {{ if gameData.sr }}
+            <div class="section sr">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                         </div>
-                        <span class="example-text">#咕咕牛查看<标签名></span>
+                        <h2>{{ gameData.sr.name }}</h2>
                     </div>
-                    <div class="item-list">
-                        {{ each tags tagName }}
-                        <span class="item misc-tag">{{ tagName }}</span>
-                        {{ /each }}
-                    </div>
+                    <span class="example-text">#咕咕牛查看星铁 <元素></span>
                 </div>
-                
-                {{ if secTags && secTags.length > 0 }}
-                <div class="section secondary-tags">
-                    <div class="section-header">
-                        <div class="title-wrapper">
-                            <div class="title-deco"></div>
-                            <h2>二级标签</h2>
-                        </div>
-                        <span class="example-text">#咕咕牛查看<二级标签></span>
-                    </div>
-                    <div class="item-list">
-                        {{ each secTags tagName }}
-                        <span class="item">{{ tagName }}</span>
-                        {{ /each }}
-                    </div>
+                <div class="item-list">
+                    {{ each gameData.sr.elements element }}
+                    <span class="item">{{ element }}</span>
+                    {{ /each }}
                 </div>
-                {{ /if }}
-            </main>
+            </div>
+            {{ /if }}
 
-            <footer class="footer">
-                <div class="footer-content">
-                    <div class="footer-pill">
-                        <span class="pill-label">运行版本</span>
-                        <span class="pill-val">v{{ Version }}</span>
+            <div class="section games-section">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        </div>
+                        <h2>更多游戏</h2>
                     </div>
-                    <div class="footer-pill">
-                        <span class="pill-label">框架</span>
-                        <span class="pill-val">Yunzai</span>
-                    </div>
-                    <div class="footer-pill">
-                        <span class="pill-label">架构</span>
-                        <span class="pill-val">v4.0</span>
-                    </div>
+                    <span class="example-text">#咕咕牛查看<游戏名></span>
                 </div>
-                <div class="footer-copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
-            </footer>
-        </div>
+                <div class="item-list">
+                    {{ if gameData.zzz }}<span class="item zzz-tag">绝区零</span>{{ /if }}
+                    {{ if gameData.waves }}<span class="item waves-tag">鸣潮</span>{{ /if }}
+                </div>
+            </div>
+
+            <div class="section tags">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                        </div>
+                        <h2>主标签</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看<标签名></span>
+                </div>
+                <div class="item-list">
+                    {{ each tags tagName }}
+                    <span class="item misc-tag">{{ tagName }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+
+            {{ if secTags && secTags.length > 0 }}
+            <div class="section secondary-tags">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><path d="M17.5 19c0-1.7-1.3-3-3-3h-5c-1.7 0-3 1.3-3 3"></path><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        </div>
+                        <h2>二级标签</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看<二级标签></span>
+                </div>
+                <div class="item-list">
+                    {{ each secTags tagName }}
+                    <span class="item">{{ tagName }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+            {{ /if }}
+        </main>
+
+        <footer class="footer">
+            Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023
+        </footer>
     </div>
+<script>
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() {
+      console.log('CowCoo:Morpheus-Ready');
+    });
+  });
+</script>
 </body>
 
 </html>
