@@ -1,0 +1,57 @@
+{
+  "diagnosis": {
+    "rules": {
+      "NETWORK": {
+        "keywords": ["timed out","timeout","connection refused","connection was reset","resolve host","could not resolve host","unable to access","403 forbidden","502 bad gateway","504 gateway time-out","error: 502","error: 522","error: 504","error: 429","etimedout","econnrefused","enotfound","http/2","rpc failed","curl 56","curl 92","curl 35","ssl connect error","ssl certificate problem","ssl/tls connection failed","schannel: failed to receive handshake","gnutls_handshake","handshake failed","recv failure","eslownet","socks","代理连接失败","请求超时","连接超时","命令执行超时","command timed out","command timeout","credential url cannot be parsed","url cannot be parsed","unexpected disconnect"],
+        "suggestions": ["- 网络异常: 运行 `#咕咕牛测速`","- 检查 DNS/防火墙/系统代理","- 镜像失败可试 `#更新咕咕牛` 或 `#下载咕咕牛`"]
+      },
+      "GIT": {
+        "keywords": ["not a git repository","lock file","index.lock","shallow.lock","authentication failed","permission denied","unrelated histories","diverging branches","git","clone","pull","push","early eof","index-pack failed","unpack-objects failed","repository not found","commit your changes","untracked working tree files","exit code 128","e_git_io_stall","e_git_byte_idle_timeout","e_git_zombie_idle","e_git_speed_floor","e_all_node_failed","e_zero_byte_all","eslownet","abuse report","suspended due to abuse","401 unauthorized","403 forbidden"],
+        "suggestions": ["- 仓库冲突/损坏: 尝试 `#更新咕咕牛`","- 严重损坏: 尝试 `#重置咕咕牛` 后重新 `#下载咕咕牛`","- 网络型Git错误: 运行 `#咕咕牛测速`","- 节点封禁/限流: 等待后重试或 `#咕咕牛测速` 切换节点"]
+      },
+      "FILESYSTEM": {
+        "keywords": ["eacces","eperm","ebusy","enoent","permission denied","access denied","no space left","write error","磁盘已满","out of memory","memory exhausted"],
+        "suggestions": ["- 检查目录读写权限与磁盘空间","- 重启机器人释放文件锁","- 持续失败可试 `#重置咕咕牛`"]
+      },
+      "CONFIG": {
+        "keywords": ["json.parse","yaml.parse","unexpected token","syntaxerror","无效的yaml内容","prompt解析失败","初始化配置文件失败","cowset.yaml","banlist.json","repodata.json"],
+        "suggestions": ["- 检查 `CowCoo/CowSet.yaml` 与 `CowCoo/banlist.json` 格式","- 远端配置损坏: 删除缓存后重启","- 必要时 `#重置咕咕牛` 恢复默认配置"]
+      },
+      "RENDER": {
+        "keywords": ["渲染器截图失败","渲染器html生成失败","font wait timeout","puppeteer","chromium","生成帮助图片失败","截图失败","morpheus","pageboundingrect","morpheussignal","模板渲染失败","evaltemplate"],
+        "suggestions": ["- 检查 Puppeteer/Chromium 依赖是否完整","- 检查临时目录权限与磁盘空间","- 插件会自动降级为文本回复，可重试"]
+      },
+      "WORKER": {
+        "keywords": ["worker线程异常退出","worker initialization failed","未知的任务类型"],
+        "suggestions": ["- Worker 已自动切换到主线程执行","- 持续失败可重启 Yunzai-Bot","- 异常频繁可尝试 `#重置咕咕牛`"]
+      },
+      "SCHEDULER": {
+        "keywords": ["metis_busy","metis_wait_timeout","metis_ttl_expired","metis_reset","metiserror","scheduler_abort","sigterm","abort_err","aborterror","任务超过ttl时间限制","锁被占用","锁强制重置"],
+        "suggestions": ["- 检查是否有其他 `#下载咕咕牛`/`#更新咕咕牛` 正在运行","- 等待后重试","- 卡死可 `#重置咕咕牛` 清锁"]
+      },
+      "MEMORY": {
+        "keywords": ["e_cerberus_pulse_timeout","e_cerberus_byte_idle","cerberus","内存极低","内存不足","lowmem","freeMemMB","系统内存极低"],
+        "suggestions": ["- 系统内存不足，关闭其他占内存程序","- 重启 Yunzai-Bot 释放内存","- 减少并发下载数量，避免同时运行多个耗时操作"]
+      },
+      "COMMUNITY": {
+        "keywords": ["社区图库","commins","commsync","commun","咕咕牛安装","咕咕牛更新","咕咕牛卸载","咕咕牛列表","repopool","sync_manifest","未找到别名"],
+        "suggestions": ["- 检查仓库 URL 是否有效","- 运行 `#咕咕牛列表` 查看已安装的社区图库","- 重新安装: `#咕咕牛安装 [URL]:[别名]`"]
+      },
+      "LIFECYCLE": {
+        "keywords": ["初始化失败","初始化提交被拒绝","非法生命周期流转","hmr_gen","gensync","系统正在关闭","bootstrap","teardown"],
+        "suggestions": ["- 重启 Yunzai-Bot","- 如初始化持续失败: `#重置咕咕牛` 后 `#下载咕咕牛`"]
+      },
+      "REDIS": {
+        "keywords": ["redis","cooldown","cd:","redis 操作失败"],
+        "suggestions": ["- 检查 Redis 服务是否正常运行","- 重启 Yunzai-Bot 重连 Redis","- 冷却限制属正常机制，等待后重试即可"]
+      },
+      "CODE": {
+        "keywords": ["referenceerror","typeerror","rangeerror","is not defined"],
+        "suggestions": ["- 可能是插件内部异常，请截图反馈","- 可尝试重启 Yunzai-Bot","- 持续失败可 `#重置咕咕牛`"]
+      }
+    },
+    "common_suggestions": ["- 查看控制台日志获取完整堆栈","- 持续失败可试 `#重置咕咕牛`","- 网络类问题优先运行 `#咕咕牛测速`"],
+    "debounce_ms": 5000,
+    "memory_threshold_gb": 1.2
+  }
+}

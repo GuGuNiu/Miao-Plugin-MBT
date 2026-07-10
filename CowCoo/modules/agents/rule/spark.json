@@ -1,0 +1,19 @@
+{
+  "name": "spark",
+  "enabled": true,
+  "priority": 99,
+  "api": {
+    "url": "https://spark-api-open.xf-yun.com/v1/chat/completions",
+    "key_encrypted": "eHVTaXRQSkFPSU9Fa3lubW5rZ3U6T2poY3dtclVJTVFudFdXcXBCZFY=",
+    "timeout_ms": 30000,
+    "max_retries": 3,
+    "retry_delay_ms": 500
+  },
+  "model": {
+    "name": "lite",
+    "max_tokens": 4096,
+    "temperature": 0.6,
+    "top_p": 0.5,
+    "stream": false
+  }
+}

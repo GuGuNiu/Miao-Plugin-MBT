@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛图库帮助菜单 - 字体测试</title>
+    <style>
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans/noto-sans-sc-400.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans/noto-sans-sc-700.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 900;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans/noto-sans-sc-900.woff2') format('woff2');
+        }
+
+        /* 只使用 TTF 格式测试 */
+        @font-face {
+            font-family: 'ZCOOL KuaiLe';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/zcool-kuaile/ZCOOLKuaiLe-Regular.ttf') format('truetype');
+        }
+
+        /* 备用：使用 woff2 */
+        @font-face {
+            font-family: 'ZCOOL KuaiLe Woff2';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/zcool-kuaile/zcool-kuaile.woff2') format('woff2');
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #e0f7fa;
+            color: #5d4037;
+            width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .test-section h2 {
+            margin-top: 0;
+            color: #1565C0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        /* 原始主标题样式 */
+        .title-original {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-weight: 400;
+            font-size: 55px;
+            margin: 0;
+            line-height: 1.2;
+            background: linear-gradient(120deg, #1565C0 0%, #2E7D32 50%, #EF6C00 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 3px 3px 0px rgba(255, 255, 255, 0.95), 6px 6px 0px rgba(21, 101, 192, 0.2), 9px 9px 0px rgba(239, 108, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            padding: 4px 4px;
+            border-radius: 16px;
+            display: inline-block;
+        }
+
+        /* 纯文字样式（无特效） */
+        .title-plain {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-weight: 400;
+            font-size: 55px;
+            margin: 10px 0;
+            color: #1565C0;
+        }
+
+        /* Version 文本样式 */
+        .ver-text {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-weight: 400;
+            font-size: 16px;
+            color: #ff8a65;
+            margin-left: 5px;
+        }
+
+        /* 对比测试 */
+        .compare-box {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        .compare-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .compare-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* 不同字体的对比 */
+        .font-compare {
+            font-size: 36px;
+            margin: 10px 0;
+        }
+
+        .font-zcool {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            color: #2E7D32;
+        }
+
+        .font-zcool-woff2 {
+            font-family: 'ZCOOL KuaiLe Woff2', cursive;
+            color: #ab47bc;
+        }
+
+        .font-noto {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: #1565C0;
+        }
+
+        .font-system {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            color: #EF6C00;
+        }
+
+        /* 调试信息 */
+        .debug-info {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        .font-loaded {
+            color: #4caf50;
+        }
+
+        .font-error {
+            color: #f44336;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-section">
+        <h2>字体加载测试</h2>
+        <div id="font-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>主标题对比</h2>
+        <div class="compare-box">
+            <div class="compare-item">
+                <div class="compare-label">原始样式（带渐变特效）</div>
+                <div class="title-original">咕咕牛图库菜单</div>
+            </div>
+            <div class="compare-item">
+                <div class="compare-label">纯文字样式（无特效）</div>
+                <div class="title-plain">咕咕牛图库菜单</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Version 文本样式</h2>
+        <div style="font-size: 15px; color: #e0e0e0; background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 12px; display: inline-block;">
+            当前使用的版本:<span class="ver-text">v2.0.0</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>字体对比测试</h2>
+        <div class="font-compare font-zcool">ZCOOL KuaiLe (TTF): 咕咕牛图库菜单</div>
+        <div class="font-compare font-zcool-woff2">ZCOOL KuaiLe (Woff2): 咕咕牛图库菜单</div>
+        <div class="font-compare font-noto">Noto Sans SC: 咕咕牛图库菜单</div>
+        <div class="font-compare font-system">系统字体: 咕咕牛图库菜单</div>
+    </div>
+
+    <div class="test-section">
+        <h2>字体路径检查</h2>
+        <div class="debug-info">
+            字体文件路径:<br>
+            - {{Cow_Res_Path}}fonts/zcool-kuaile/zcool-kuaile.woff2<br>
+            - {{Cow_Res_Path}}fonts/zcool-kuaile/ZCOOLKuaiLe-Regular.ttf<br><br>
+            请确认以上路径是否正确，以及字体文件是否存在。
+        </div>
+    </div>
+
+    <script>
+        // 检测字体加载状态
+        async function checkFontStatus() {
+            const statusDiv = document.getElementById('font-status');
+            const fonts = [
+                { name: 'ZCOOL KuaiLe', family: "'ZCOOL KuaiLe', cursive" },
+                { name: 'Noto Sans SC', family: "'Noto Sans SC', sans-serif" }
+            ];
+
+            let html = '<table style="width:100%; border-collapse: collapse;">';
+            html += '<tr style="background:#f5f5f5;"><th style="padding:10px; text-align:left;">字体名称</th><th style="padding:10px; text-align:left;">状态</th></tr>';
+
+            for (const font of fonts) {
+                try {
+                    await document.fonts.load(`16px ${font.family}`);
+                    const loaded = document.fonts.check(`16px ${font.family}`);
+                    html += `<tr><td style="padding:10px; border-bottom:1px solid #e0e0e0;">${font.name}</td><td style="padding:10px; border-bottom:1px solid #e0e0e0;" class="${loaded ? 'font-loaded' : 'font-error'}">${loaded ? '已加载' : '未加载'}</td></tr>`;
+                } catch (e) {
+                    html += `<tr><td style="padding:10px; border-bottom:1px solid #e0e0e0;">${font.name}</td><td style="padding:10px; border-bottom:1px solid #e0e0e0;" class="font-error">检测失败: ${e.message}</td></tr>`;
+                }
+            }
+
+            html += '</table>';
+            statusDiv.innerHTML = html;
+        }
+
+        checkFontStatus();
+    </script>
+</body>
+
+</html>

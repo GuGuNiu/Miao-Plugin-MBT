@@ -1,0 +1,446 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>咕咕牛 - 社区图库报告</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/rajdhani/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.ttf') format('truetype'),
+            url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f5f3ff;
+            --container-bg: rgba(255, 255, 255, 0.72);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --accent-color: #8b5cf6;
+            --accent-light: rgba(139, 92, 246, 0.12);
+            --accent-border: rgba(167, 139, 250, 0.45);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --container-glow-purple: rgba(139, 92, 246, 0.28);
+            --container-glow-soft: rgba(167, 139, 250, 0.22);
+            --container-glow-inner: rgba(139, 92, 246, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: var(--text-primary);
+            width: 800px;
+            margin: 50px auto;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 378px;
+            background: var(--container-bg);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--accent-border);
+            box-shadow:
+                0 12px 40px rgba(91, 33, 182, 0.12),
+                0 0 24px var(--container-glow-purple),
+                0 0 48px var(--container-glow-soft),
+                inset 0 0 20px rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px) saturate(140%);
+            display: flex;
+            flex-direction: row;
+        }
+
+        .header {
+            width: 220px;
+            flex-shrink: 0;
+            padding: 35px 25px;
+            background-color: rgba(255, 255, 255, 0.55);
+            background-image:
+                radial-gradient(circle at 50% 15%, rgba(139, 92, 246, 0.2) 0%, transparent 52%),
+                linear-gradient(to bottom, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+                repeating-linear-gradient(45deg, rgba(139, 92, 246, 0.03) 0, rgba(139, 92, 246, 0.03) 1px, transparent 1px, transparent 10px),
+                repeating-linear-gradient(135deg, rgba(139, 92, 246, 0.04) 0, rgba(139, 92, 246, 0.04) 2px, transparent 2px, transparent 24px),
+                radial-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 15px 15px;
+            border-right: 1px solid rgba(167, 139, 250, 0.22);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            box-shadow:
+                inset 0 0 50px rgba(139, 92, 246, 0.06),
+                4px 0 20px -8px rgba(91, 33, 182, 0.1);
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, rgba(139, 92, 246, 0.03) 0px, rgba(139, 92, 246, 0.03) 1px, transparent 1px, transparent 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header-logo {
+            width: 130px;
+            height: 130px;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+            object-fit: contain;
+            margin-bottom: 22px;
+        }
+
+        .header-info {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-info h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: #5b21b6;
+            letter-spacing: -0.3px;
+            line-height: 1.35;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+            margin-bottom: 6px;
+        }
+
+        .header-info h1 span {
+            display: block;
+            font-family: 'Orbitron';
+            font-size: 11px;
+            color: #8b5cf6;
+            letter-spacing: 2px;
+            font-weight: 900;
+            margin-top: 6px;
+        }
+
+        .header-subtitle {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mbt-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            font-family: 'Orbitron';
+        }
+
+        .badge-yunzai {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-version {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .main-content-area {
+            flex: 1;
+            padding: 35px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 25px;
+            position: relative;
+            z-index: 2;
+            background-image:
+                radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 35%),
+                radial-gradient(circle at 15% 85%, rgba(167, 139, 250, 0.06) 0%, transparent 30%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 0 L80 40 L40 80 L0 40 Z' fill='none' stroke='rgba(139,92,246,0.05)' stroke-width='1'/%3E%3Cpath d='M40 20 L60 40 L40 60 L20 40 Z' fill='none' stroke='rgba(139,92,246,0.035)' stroke-width='1'/%3E%3C/svg%3E");
+        }
+
+        .content-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            position: relative;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            font-size: 15px;
+        }
+
+        .info-label {
+            flex-shrink: 0;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            word-break: break-all;
+            font-weight: 500;
+        }
+
+        .alias-value {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            color: var(--accent-color);
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+
+        .owner-value {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .owner-value img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.55);
+            border-radius: 16px;
+            border: 1px solid rgba(167, 139, 250, 0.35);
+            box-shadow:
+                0 8px 20px rgba(91, 33, 182, 0.12),
+                0 2px 8px rgba(139, 92, 246, 0.08);
+            overflow: hidden;
+            z-index: 3;
+            transform: translateY(-4px);
+        }
+
+        .platform-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 28px 0px;
+            border-top: 1px dashed rgba(139, 92, 246, 0.18);
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(8px);
+        }
+
+        .analysis-capsules {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .capsule {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 999px;
+            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.05);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .capsule-count {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .result-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--success-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+            flex-shrink: 0;
+        }
+
+        .result-icon svg {
+            width: 24px;
+            height: 24px;
+            color: #fff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .result-text {
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .sync-count {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent-color);
+            margin: 0 4px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body style="{{ RenderMatrix }}">
+    <div class="container">
+        <header class="header">
+            <img class="header-logo" src="{{ Cow_Res_Path }}img/icon/cowcoos/RM_Safety.png" alt="Logo">
+            <div class="header-info">
+                <h1>社区图库部署<span>/IREPORTI/</span></h1>
+                <div class="header-subtitle">
+                    <div class="mbt-badge badge-version">v{{ Version }}</div>
+                </div>
+            </div>
+            <footer class="footer">CowCoo 面板图库 © 2023</footer>
+        </header>
+        <main class="main-content-area">
+            <div class="content-top">
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">简 称</span>
+                        <span class="info-value alias-value">{{ alias }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">用 户</span>
+                        <span class="info-value owner-value">
+                            <span>{{ ownerName || '未知作者' }}</span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">来 源</span>
+                        <span class="info-value">{{ url }}</span>
+                    </div>
+                </div>
+                <div class="platform-icon">
+                    {{ if ownerAvatarUrl }}
+                    <img src="{{ ownerAvatarUrl }}" alt="avatar" onerror="this.onerror=null;this.src='{{ if url.includes('github') }}{{ Cow_Res_Path }}img/icon/github.png{{ else if url.includes('gitee') }}{{ Cow_Res_Path }}img/icon/gitee.png{{ else if url.includes('gitcode') }}{{ Cow_Res_Path }}img/icon/gitcode.png{{ else }}{{ Cow_Res_Path }}img/icon/github.png{{ /if }}'">
+                    {{ else if url.includes('github') }}
+                    <img src="{{ Cow_Res_Path }}img/icon/github.png">
+                    {{ else if url.includes('gitee') }}
+                    <img src="{{ Cow_Res_Path }}img/icon/gitee.png">
+                    {{ else if url.includes('gitcode') }}
+                    <img src="{{ Cow_Res_Path }}img/icon/gitcode.png">
+                    {{ /if }}
+                </div>
+            </div>
+            <div class="result-panel">
+                <div class="result-text">
+                    成功同步并应用了 <span class="sync-count">{{ syncedCount }}</span> 张角色的面板图
+                </div>
+                <div class="analysis-capsules">
+                    {{ each analysisCapsules }}
+                    <div class="capsule"><span>{{ $value.label }}</span><span class="capsule-count">{{ $value.count }}</span></div>
+                    {{ /each }}
+                </div>
+            </div>
+        </main>
+    </div>
+<script>
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() {
+      console.log('CowCoo:Morpheus-Ready');
+    });
+  });
+</script>
+</body>
+
+</html>

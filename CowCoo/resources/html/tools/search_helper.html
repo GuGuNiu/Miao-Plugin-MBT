@@ -1,0 +1,481 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咕咕牛 - 查看助手</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/rajdhani/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.ttf') format('truetype'),
+            url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --accent-color: #3b82f6;
+            --accent-light: rgba(59, 130, 246, 0.1);
+            --accent-border: #e5e7eb;
+            --card-bg: #f8fafc;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --highlight-purple: #8b5cf6;
+            --container-glow-blue: rgba(59, 130, 246, 0.28);
+            --container-glow-purple: rgba(139, 92, 246, 0.2);
+            --container-glow-purple-inner: rgba(139, 92, 246, 0.05);
+
+            --popular-char-bg: #e6f7ff;
+            --popular-char-text: #007bff;
+            --gs-tag-bg: #cfe2ff;
+            --gs-tag-text: #0a58ca;
+            --sr-tag-bg: #e9ecef;
+            --sr-tag-text: #495057;
+            --zzz-tag-bg: #fce4ec;
+            --zzz-tag-text: #ad1457;
+            --waves-tag-bg: #fffde7;
+            --waves-tag-text: #fc9d05;
+            --misc-tag-bg: #e1bee7;
+            --misc-tag-text: #7b1fa2;
+            --secondary-tag-bg: #e0f2f1;
+            --secondary-tag-text: #00796b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: var(--text-primary);
+            background: transparent !important;
+            padding: 15px;
+            width: 680px;
+            margin: 0 auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            background: var(--container-bg);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--accent-border);
+            box-shadow:
+                0 8px 24px rgba(0, 0, 0, 0.08),
+                0 0 21px var(--container-glow-blue),
+                0 0 42px var(--container-glow-purple),
+                inset 0 0 14px var(--container-glow-purple-inner);
+        }
+
+        .header {
+            padding: 35px 50px;
+            background-color: #ffffff;
+            background-image:
+                radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 45%),
+                linear-gradient(to top, rgba(59, 130, 246, 0.05) 0%, transparent 35%),
+                repeating-linear-gradient(45deg, rgba(59, 130, 246, 0.03) 0, rgba(59, 130, 246, 0.03) 1px, transparent 1px, transparent 10px),
+                repeating-linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0, rgba(59, 130, 246, 0.04) 2px, transparent 2px, transparent 24px),
+                radial-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 15px 15px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            box-shadow:
+                inset 0 0 50px rgba(59, 130, 246, 0.05),
+                0 8px 20px -8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.03) 0px, rgba(59, 130, 246, 0.03) 1px, transparent 1px, transparent 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header-info {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header-info h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e40af;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: baseline;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+        }
+
+        .header-info h1 span {
+            font-family: 'Orbitron';
+            font-size: 12px;
+            color: #3b82f6;
+            margin-left: 10px;
+            letter-spacing: 2px;
+            font-weight: 900;
+        }
+
+        .header-subtitle {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mbt-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            font-family: 'Orbitron';
+        }
+
+        .badge-yunzai {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .badge-version {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .header-image-container {
+            width: 70px;
+            height: 70px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            position: relative;
+            z-index: 2;
+            background: #fff;
+        }
+
+        .header-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .content {
+            padding: 25px 50px;
+            position: relative;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-deco {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-deco svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        h2 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            margin: 0;
+            padding: 0;
+            line-height: 20px;
+            color: var(--text-primary);
+        }
+
+        .example-text {
+            font-size: 12px;
+            font-family: 'Consolas', 'Menlo', monospace;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .item {
+            padding: 6px 14px;
+            font-size: 14px;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 500;
+            border-radius: 8px;
+            white-space: nowrap;
+            background-color: var(--accent-light);
+            color: var(--accent-color);
+            border: none;
+        }
+
+        .popular-char-tag {
+            background-color: var(--popular-char-bg);
+            color: var(--popular-char-text);
+        }
+
+        .gs .item {
+            background-color: var(--gs-tag-bg);
+            color: var(--gs-tag-text);
+        }
+
+        .sr .item {
+            background-color: var(--sr-tag-bg);
+            color: var(--sr-tag-text);
+        }
+
+        .zzz-tag {
+            background-color: var(--zzz-tag-bg);
+            color: var(--zzz-tag-text);
+        }
+
+        .waves-tag {
+            background-color: var(--waves-tag-bg);
+            color: var(--waves-tag-text);
+        }
+
+        .tags .item {
+            background-color: var(--misc-tag-bg);
+            color: var(--misc-tag-text);
+        }
+
+        .secondary-tags .item {
+            background-color: var(--secondary-tag-bg);
+            color: var(--secondary-tag-text);
+        }
+
+        .footer {
+            padding: 0 0 25px;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body style="{{RenderMatrix}}">
+    <div class="container">
+        <header class="header">
+            <div class="header-info">
+                <h1>咕咕牛的查看助手<span>/ISEARCHI/</span></h1>
+                <div class="header-subtitle">
+                    <div class="mbt-badge badge-yunzai">Yunzai</div>
+                    <div class="mbt-badge badge-version">v{{ Version }}</div>
+                </div>
+            </div>
+            <div class="header-image-container">
+                {{ if headerImg }}
+                <img src="{{ headerImg }}" class="header-image" />
+                {{ /if }}
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="section popular-characters">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                        </div>
+                        <h2>热门角色</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看芙宁娜/芙芙/水神</span>
+                </div>
+                <div class="item-list">
+                    <span class="item popular-char-tag">桑多涅</span>
+                    <span class="item popular-char-tag">哥伦比娅</span>
+                    <span class="item popular-char-tag">流萤</span>
+                    <span class="item popular-char-tag">白厄</span>
+                    <span class="item popular-char-tag">卡芙卡</span>
+                </div>
+            </div>
+
+            {{ if gameData.gs }}
+            <div class="section gs">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                        </div>
+                        <h2>{{ gameData.gs.name }}</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看原神 <元素></span>
+                </div>
+                <div class="item-list">
+                    {{ each gameData.gs.elements element }}
+                    <span class="item">{{ element }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+            {{ /if }}
+
+            {{ if gameData.sr }}
+            <div class="section sr">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h2>{{ gameData.sr.name }}</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看星铁 <元素></span>
+                </div>
+                <div class="item-list">
+                    {{ each gameData.sr.elements element }}
+                    <span class="item">{{ element }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+            {{ /if }}
+
+            <div class="section games-section">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        </div>
+                        <h2>更多游戏</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看<游戏名></span>
+                </div>
+                <div class="item-list">
+                    {{ if gameData.zzz }}<span class="item zzz-tag">绝区零</span>{{ /if }}
+                    {{ if gameData.waves }}<span class="item waves-tag">鸣潮</span>{{ /if }}
+                </div>
+            </div>
+
+            <div class="section tags">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                        </div>
+                        <h2>主标签</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看<标签名></span>
+                </div>
+                <div class="item-list">
+                    {{ each tags tagName }}
+                    <span class="item misc-tag">{{ tagName }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+
+            {{ if secTags && secTags.length > 0 }}
+            <div class="section secondary-tags">
+                <div class="section-header">
+                    <div class="title-wrapper">
+                        <div class="title-deco">
+                            <svg viewBox="0 0 24 24"><path d="M17.5 19c0-1.7-1.3-3-3-3h-5c-1.7 0-3 1.3-3 3"></path><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        </div>
+                        <h2>二级标签</h2>
+                    </div>
+                    <span class="example-text">#咕咕牛查看<二级标签></span>
+                </div>
+                <div class="item-list">
+                    {{ each secTags tagName }}
+                    <span class="item">{{ tagName }}</span>
+                    {{ /each }}
+                </div>
+            </div>
+            {{ /if }}
+        </main>
+
+        <footer class="footer">
+            Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023
+        </footer>
+    </div>
+<script>
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() {
+      console.log('CowCoo:Morpheus-Ready');
+    });
+  });
+</script>
+</body>
+
+</html>

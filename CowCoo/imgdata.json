@@ -18164,23 +18164,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-3",
     "storagebox_type": "sr-character",
-    "gid": "7576533730",
-    "characterName": "米沙",
-    "path": "sr-character/米沙/米沙Gu2.webp",
-    "attributes": {
-      "filename": "米沙Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "c32b066cff2001435c41e7578c646043",
-      "rated": "none",
-      "other": [],
-      "phash": "46cc4d4c86c6c24a"
-    },
-    "timestamp": "2025-06-09T01:52:35.407Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
     "gid": "3350974554",
     "characterName": "貊泽",
     "path": "sr-character/貊泽/貊泽Gu1.webp",
@@ -20716,40 +20699,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-4",
     "storagebox_type": "gs-character",
-    "gid": "8829825232",
-    "characterName": "迪卢克",
-    "path": "gs-character/迪卢克/迪卢克Gu3.webp",
-    "attributes": {
-      "filename": "迪卢克Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "01f6dd61735145cbc3ddb3e0d42f86bb",
-      "rated": "none",
-      "other": [],
-      "phash": "6dadadad4d4d6e25"
-    },
-    "timestamp": "2025-12-01T11:36:33.209Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "5936679786",
-    "characterName": "迪卢克",
-    "path": "gs-character/迪卢克/迪卢克Gu2.webp",
-    "attributes": {
-      "filename": "迪卢克Gu2.webp",
-      "layout": "fullscreen",
-      "isBan": false,
-      "md5": "bd0addf104d17acbfbcf1d4fe251f670",
-      "rated": "none",
-      "other": [],
-      "phash": "f772f1f3f1ecf872"
-    },
-    "timestamp": "2025-12-01T11:36:33.209Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
     "gid": "4157987429",
     "characterName": "迪希雅",
     "path": "gs-character/迪希雅/迪希雅Gu1.webp",
@@ -21447,57 +21396,6 @@
       "phash": "fa30a2a655aa0e49"
     },
     "timestamp": "2025-12-01T11:36:33.216Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "5257354111",
-    "characterName": "久岐忍",
-    "path": "gs-character/久岐忍/久岐忍Gu3.webp",
-    "attributes": {
-      "filename": "久岐忍Gu3.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "5df84902c85c6a854af260095e4e6eeb",
-      "rated": "none",
-      "other": [],
-      "phash": "52666e6e6e726a6d"
-    },
-    "timestamp": "2025-12-01T11:36:33.216Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "4323923893",
-    "characterName": "久岐忍",
-    "path": "gs-character/久岐忍/久岐忍Gu4.webp",
-    "attributes": {
-      "filename": "久岐忍Gu4.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "96eadc29190d796a77ea8fd746fb90aa",
-      "rated": "p18",
-      "other": [],
-      "phash": "95951d148c94160c"
-    },
-    "timestamp": "2025-12-01T11:36:33.216Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "3273028080",
-    "characterName": "久岐忍",
-    "path": "gs-character/久岐忍/久岐忍Gu2.webp",
-    "attributes": {
-      "filename": "久岐忍Gu2.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "83ab8770ce5fa3c44ca4bd85aa259124",
-      "rated": "p18",
-      "other": [],
-      "phash": "e86dcee6ceecee4c"
-    },
-    "timestamp": "2025-12-01T11:36:33.217Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -23718,40 +23616,6 @@
       "rated": "none",
       "other": [],
       "phash": "d9dd163a07558a2a"
-    },
-    "timestamp": "2025-12-01T11:36:33.255Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "6386148643",
-    "characterName": "提纳里",
-    "path": "gs-character/提纳里/提纳里Gu1.webp",
-    "attributes": {
-      "filename": "提纳里Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "fc1859722c4cc8e9727f0b7893a8cab4",
-      "rated": "none",
-      "other": [],
-      "phash": "38a4a4a5a5a56525"
-    },
-    "timestamp": "2025-12-01T11:36:33.255Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "gs-character",
-    "gid": "5545710217",
-    "characterName": "托马",
-    "path": "gs-character/托马/托马Gu1.webp",
-    "attributes": {
-      "filename": "托马Gu1.webp",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "98671939ba229be02520950bea74ff93",
-      "rated": "none",
-      "other": [],
-      "phash": "6dadbcbdfdfd6d2d"
     },
     "timestamp": "2025-12-01T11:36:33.255Z"
   },
@@ -26761,22 +26625,6 @@
       "phash": "ea0f1c3e5fddd555"
     },
     "timestamp": "2025-12-01T11:36:33.203Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "1620141420",
-    "characterName": "丝柯克",
-    "path": "gs-character/丝柯克/丝柯克Gu24.webp",
-    "attributes": {
-      "filename": "丝柯克Gu24.webp",
-      "rated": "none",
-      "layout": "normal",
-      "isBan": false,
-      "md5": "40362a58b3f898c765b995bff558cb7f",
-      "other": []
-    },
-    "timestamp": "2026-01-20 20:36:04"
   },
   {
     "storagebox": "Miao-Plugin-MBT",

@@ -1,0 +1,855 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>咕咕牛 - 错误报告</title>
+	<style>
+		@font-face {
+			font-family: 'Noto Sans SC';
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Noto Sans SC';
+			font-style: normal;
+			font-weight: 500;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/noto-sans/noto-sans-sc-500.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Noto Sans SC';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/noto-sans/noto-sans-sc-700.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Orbitron';
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Regular.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Orbitron';
+			font-style: normal;
+			font-weight: 500;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Medium.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Orbitron';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Bold.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Rajdhani';
+			font-style: normal;
+			font-weight: 500;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/rajdhani/Rajdhani-Medium.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Rajdhani';
+			font-style: normal;
+			font-weight: 600;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/rajdhani/Rajdhani-SemiBold.woff2') format('woff2');
+		}
+		@font-face {
+			font-family: 'Rajdhani';
+			font-style: normal;
+			font-weight: 700;
+			font-display: swap;
+			src: url('{{Cow_Res_Path}}fonts/rajdhani/Rajdhani-Bold.woff2') format('woff2');
+		}
+		:root {
+			--bg-color: #f1f4f9;
+			--container-bg: #ffffff;
+			--danger-main: #e74c3c;
+			--danger-dark: #c0392b;
+			--dark-slate: #1e222b;
+			--dark-slate-secondary: #2c313c;
+			--text-primary: #2d3436;
+			--text-secondary: #636e72;
+			--border-subtle: #dfe6e9;
+			--code-bg: #1e222b;
+			--code-text: #a9b7c6;
+			--panel-bg: #f8f9fa;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: 'Noto Sans SC', sans-serif;
+			background-color: var(--bg-color);
+			color: var(--text-primary);
+			max-width: 1000px;
+			margin: 0 auto;
+			font-size: 15px;
+			line-height: 1.6;
+			pointer-events: none;
+			user-select: none;
+		}
+
+		.container {
+			background-color: var(--container-bg);
+			border: 1px solid var(--border-subtle);
+			box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+			overflow: hidden;
+			position: relative;
+		}
+
+		
+		.container::before {
+			content: '';
+			display: block;
+			height: 6px;
+			background: repeating-linear-gradient(
+				-45deg,
+				var(--danger-main),
+				var(--danger-main) 12px,
+				var(--dark-slate) 12px,
+				var(--dark-slate) 24px
+			);
+		}
+
+		.header {
+			background-color: var(--dark-slate);
+			background-image: 
+				
+				radial-gradient(circle at 85% 15%, rgba(231, 76, 60, 0.2) 0%, transparent 45%),
+				
+				linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 35%),
+				
+				repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 10px),
+				
+				repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 24px),
+				
+				radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+			background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 15px 15px;
+			position: relative;
+			padding: 28px 40px;
+			display: flex; align-items: center; gap: 30px;
+			border-bottom: 3px solid var(--danger-main);
+			box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+			overflow: hidden;
+		}
+		
+		
+		.header::after {
+			content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+			background: 
+				repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px);
+			pointer-events: none; z-index: 1;
+		}
+		
+
+
+		.header-side-strip {
+			position: absolute;
+			top: 0; bottom: 0; width: 6px;
+			background: repeating-linear-gradient(to bottom, var(--danger-main) 0, var(--danger-main) 10px, transparent 10px, transparent 15px);
+			opacity: 0.5;
+		}
+		.header-side-strip.left { left: 0; }
+		.header-side-strip.right { right: 0; }
+
+		.header-mascot {
+			width: 80px; height: 80px; flex-shrink: 0;
+			filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+			z-index: 2;
+		}
+
+		.header-info { flex: 1; z-index: 2; }
+		.header h1 {
+			font-family: 'Noto Sans SC', sans-serif;
+			font-weight: 700; font-size: 24px; color: #fff;
+			margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+		}
+
+		.header p { color: #b2bec3; font-size: 14px; display: flex; justify-content: space-between; align-items: center; line-height: 1.2; }
+		.header .timestamp {
+			font-family: 'Orbitron', sans-serif; font-weight: 700; color: #fff;
+			background: var(--danger-main); padding: 2px 10px; border-radius: 0;
+		}
+
+		.main-content { padding: 30px 40px; display: flex; flex-direction: column; gap: 30px; }
+
+		
+		.sec-head {
+			display: flex; align-items: center; gap: 12px;
+			margin-bottom: 20px; position: relative;
+			padding: 4px 12px 10px 12px;
+			background: linear-gradient(90deg, rgba(0,0,0,0.03) 0%, transparent 80%);
+			border-bottom: 2px solid rgba(0,0,0,0.05);
+		}
+		.sec-head::before {
+			content: ''; width: 4px; height: 18px;
+			background: var(--danger-main); border-radius: 0;
+		}
+		.sec-head h3 {
+			font-family: 'Noto Sans SC', sans-serif; font-size: 18px; font-weight: 800;
+			color: var(--dark-slate); letter-spacing: 1px; flex: 1;
+			display: flex; align-items: center; gap: 8px;
+		}
+		.sec-head svg {
+			width: 22px; height: 22px; fill: none;
+			stroke: var(--danger-main); stroke-width: 2.2;
+			stroke-linecap: round; stroke-linejoin: round;
+		}
+		.sec-head::after {
+			content: 'DATA_SEGMENT'; position: absolute; right: 0; top: 0;
+			font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+			color: var(--border-subtle); letter-spacing: 1px;
+		}
+
+		
+		.summary-panel {
+			background: #fff; border: 1px solid var(--border-subtle); border-radius: 0;
+			overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.04);
+			position: relative;
+		}
+		.summary-body { padding: 25px; display: flex; gap: 25px; align-items: flex-start; }
+		
+		.error-identity {
+			flex-shrink: 0; background: #fff5f5; border: 1.5px solid #feb2b2;
+			border-radius: 0; padding: 15px; min-width: 120px; max-width: 200px; text-align: center;
+			display: flex; flex-direction: column; gap: 5px;
+			box-shadow: 0 4px 12px rgba(231, 76, 60, 0.08);
+			word-wrap: break-word;
+		}
+		.err-id-label { font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 800; color: #e53e3e; letter-spacing: 1.5px; opacity: 0.8; }
+		.err-id-code { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; color: var(--danger-dark); word-break: break-all; line-height: 1.2; }
+		
+		.error-detail { flex: 1; min-width: 0; }
+		.error-detail-title { 
+			font-size: 12px; font-weight: 700; color: var(--text-secondary); 
+			text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+			display: flex; align-items: center; gap: 8px;
+		}
+		.error-detail-title::after { content: ''; flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--border-subtle) 0, var(--border-subtle) 2px, transparent 2px, transparent 4px); }
+		
+		.error-message { 
+			font-size: 17px; font-weight: 700; color: var(--dark-slate); 
+			line-height: 1.5; word-wrap: break-word; margin-bottom: 5px;
+		}
+		.fault-loc {
+			display: inline-flex; align-items: center; gap: 8px;
+			font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 800;
+			color: #fff; background: var(--danger-main);
+			padding: 2px 10px; border-radius: 0; border: 1px solid rgba(255,255,255,0.2);
+			box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+			position: relative; overflow: hidden;
+		}
+		.fault-loc::before {
+			content: '故障溯源:'; opacity: 1; font-size: 10.5px; font-weight: 700; 
+			font-family: 'Noto Sans SC', sans-serif;
+		}
+		.fault-loc::after {
+			content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+			animation: fault-glide 3s infinite;
+		}
+		@keyframes fault-glide {
+			0% { left: -100%; }
+			30% { left: 100%; }
+			100% { left: 100%; }
+		}
+		.err-type-badge {
+			display: inline-flex; align-items: center;
+			font-family: 'Noto Sans SC', sans-serif; font-size: 11px; font-weight: 800;
+			color: #fff; background: #6c5ce7; 
+			padding: 2px 10px; border-radius: 0; border: 1px solid rgba(255,255,255,0.2);
+			box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
+			margin-left: 5px;
+		}
+		
+		
+		.res-panel {
+			margin: 0 25px 25px 25px; padding: 15px;
+			background: var(--panel-bg); border-radius: 0; border: 1px solid var(--border-subtle);
+		}
+		.res-panel-head { 
+			font-size: 12px; font-weight: 700; color: var(--text-secondary); 
+			margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+		}
+		.res-count-badge { background: var(--dark-slate); color: #fff; padding: 2px 8px; border-radius: 0; font-family: 'Rajdhani', sans-serif; font-size: 11px; }
+		
+		.res-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+		.res-chip {
+			background: #fff; border: 1px solid var(--border-subtle); border-radius: 0;
+			padding: 8px 12px; display: flex; align-items: center; gap: 10px;
+			font-family: 'SF Mono', 'Consolas', monospace; font-size: 12.5px; color: var(--dark-slate-secondary);
+		}
+		.res-chip::before { content: ''; width: 6px; height: 6px; background: var(--danger-main); border-radius: 0; flex-shrink: 0; }
+
+		
+		.dashboard-container {
+			padding: 0; position: relative;
+			background-image: 
+				linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+			background-size: 30px 30px;
+		}
+
+		.dash-grid {
+			display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 20px;
+		}
+
+		.dash-tile {
+			background: #fff; border: 1px solid var(--border-subtle);
+			border-radius: 0; padding: 18px; position: relative;
+			display: flex; flex-direction: column;
+		}
+
+		
+		.dash-tile::before {
+			content: '┌'; position: absolute; top: 0; left: 0; font-size: 14px; padding: 4px; color: var(--border-subtle);
+		}
+		.dash-tile::after {
+			content: '┘'; position: absolute; bottom: 0; right: 0; font-size: 14px; padding: 4px; color: var(--border-subtle);
+		}
+
+		.tile-title {
+			font-size: 13px; font-weight: 700; color: var(--text-secondary);
+			margin-bottom: 15px; display: flex; align-items: center; gap: 8px;
+		}
+		.tile-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+
+		
+		.repo-cluster { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+		.cluster-viz { width: 140px; height: 100px; position: relative; }
+		.node-core {
+			position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+			width: 60px; height: 60px; background: var(--danger-main); border: 3px solid #fff;
+			box-shadow: 0 0 15px rgba(231, 76, 60, 0.4); border-radius: 0; z-index: 5;
+			display: flex; align-items: center; justify-content: center;
+		}
+		.node-core svg { width: 24px; height: 24px; fill: #fff; }
+
+		.node-sub {
+			position: absolute; width: 18px; height: 18px; background: #fff;
+			border: 1.5px solid var(--danger-main); border-radius: 0; z-index: 4;
+		}
+		.node-sub.dim { border-color: var(--border-subtle); opacity: 0.5; }
+
+		.n-1 { top: 5px; left: 50%; transform: translateX(-50%); }
+		.n-2 { bottom: 5px; left: 20%; }
+		.n-3 { bottom: 5px; right: 20%; }
+		.n-4 { top: 30%; left: 0%; }
+		.n-5 { top: 30%; right: 0%; }
+
+		.repo-info-box {
+			width: 100%; padding: 8px; background: var(--panel-bg);
+			border: 1px solid var(--border-subtle); border-radius: 0;
+			text-align: center; font-family: 'Rajdhani', sans-serif;
+		}
+		.repo-label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 2px; }
+		.repo-val { font-size: 14px; font-weight: 700; color: var(--dark-slate); }
+
+		
+		.data-row {
+			display: flex; justify-content: space-between; padding: 10px 0;
+			border-bottom: 1px solid var(--panel-bg);
+		}
+		.data-row:last-child { border-bottom: none; }
+		.data-row-label { font-size: 12px; color: var(--text-secondary); }
+		.data-row-val { font-family: 'SF Mono', 'Consolas', monospace; font-size: 13px; font-weight: 700; color: var(--dark-slate); }
+
+		
+		
+		:root { --tech-blue: #00d2ff; --ai-depth: #1e272e; }
+		.ai-panel {
+			border: 1px solid rgba(0, 210, 255, 0.2); border-radius: 0; overflow: hidden;
+			box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 210, 255, 0.05);
+			background: #fff; margin-bottom: 5px;
+		}
+		.ai-header {
+			background: linear-gradient(135deg, rgba(0, 210, 255, 0.05), rgba(0, 210, 255, 0.02)); 
+			padding: 18px 25px;
+			display: flex; align-items: center; gap: 18px; 
+			border-bottom: 3px solid var(--tech-blue);
+			position: relative;
+		}
+		
+		.ai-header::before {
+			content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+			background: linear-gradient(90deg, transparent, var(--tech-blue), transparent);
+			opacity: 0.5;
+		}
+		.ai-header-icon { 
+			width: 38px; height: 38px; flex-shrink: 0; 
+			filter: drop-shadow(0 0 8px var(--tech-blue));
+		}
+		.ai-header h2 { 
+			font-family: 'Noto Sans SC', sans-serif; font-size: 17px; font-weight: 800; 
+			color: var(--dark-slate); margin: 0; letter-spacing: 0.5px;
+			display: flex; align-items: center; justify-content: space-between; flex: 1;
+		}
+		.ai-header h2::after {
+			content: 'Model: Spark 星火大模型'; font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+			font-size: 11px; font-weight: 700; color: var(--tech-blue);
+			background: url("data:image/svg+xml;charset=UTF-8,%3Csvg viewBox='0 0 100 20' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,10 15,10 20,4 25,16 30,10 70,10 75,4 80,16 85,10 100,10' stroke='rgba(0, 210, 255, 0.3)' stroke-width='1.5' fill='none' vector-effect='non-scaling-stroke' /%3E%3Cpolyline points='15,10 20,4 25,16 30,10' stroke='%2300d2ff' stroke-width='2' fill='none' vector-effect='non-scaling-stroke'/%3E%3Cpolyline points='70,10 75,4 80,16 85,10' stroke='%2300d2ff' stroke-width='2' fill='none' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat center center;
+			background-size: 100% 100%;
+			padding: 4px 15px;
+			border: none;
+			clip-path: none; box-shadow: none;
+			text-shadow: none;
+			letter-spacing: 1px;
+			margin-left: auto;
+		}
+
+		.ai-content { 
+			padding: 30px; background: #fff; 
+			position: relative; overflow: hidden;
+		}
+		
+		.ai-content::before {
+			content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px;
+			background: radial-gradient(circle at 100% 0%, rgba(0, 210, 255, 0.03) 0%, transparent 70%);
+			pointer-events: none;
+		}
+		.ai-text { font-size: 14.5px; line-height: 1.9; color: var(--text-primary); overflow-wrap: anywhere; word-break: normal; }
+		.ai-text p { margin-bottom: 12px; }
+		.ai-text p:last-child { margin-bottom: 0; }
+		.ai-text strong { color: var(--dark-slate); font-weight: 800; }
+		
+		.ai-text ul, .ai-text ol { padding-left: 20px; margin-bottom: 12px; }
+		.ai-text li { margin-bottom: 4px; }
+		.ai-text code { background: rgba(9, 132, 227, 0.08); padding: 2px 5px; border-radius: 0; font-family: 'SF Mono', 'Consolas', monospace; font-size: 13.5px; color: #0984e3; white-space: pre-wrap; word-break: break-all; }
+		.ai-text pre { background: var(--code-bg); color: var(--code-text); padding: 12px; border-radius: 0; overflow-x: auto; margin-bottom: 12px; font-size: 13px; }
+		.ai-text pre code { background: transparent; padding: 0; color: inherit; }
+		.ai-text blockquote { border-left: 4px solid var(--tech-blue); padding-left: 12px; color: var(--text-secondary); margin-bottom: 12px; background: rgba(0,210,255,0.05); padding: 8px 12px; border-radius: 0; }
+		.ai-text h1, .ai-text h2, .ai-text h3 { margin-top: 18px; margin-bottom: 10px; color: var(--dark-slate); font-weight: 700; line-height: 1.4; }
+		.ai-text h1 { font-size: 20px; } .ai-text h2 { font-size: 18px; } .ai-text h3 { font-size: 16px; }
+		.ai-text a { color: #0984e3; text-decoration: none; }
+		.ai-text table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+		.ai-text th, .ai-text td { border: 1px solid var(--border-subtle); padding: 8px; text-align: left; }
+		.ai-text th { background: var(--panel-bg); font-weight: bold; }
+		.cmd-highlight { color: #0984e3; font-weight: 700; }
+
+		.suggestion-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+		.suggestion-item {
+			background: var(--panel-bg); border: 1px solid var(--border-subtle); border-radius: 0;
+			padding: 12px 15px 12px 40px; position: relative; font-size: 14px;
+		}
+		.suggestion-item::before { content: ''; position: absolute; left: 16px; top: 18px; width: 8px; height: 8px; background: var(--tech-blue); border-radius: 0; }
+
+		.code-block {
+			background: var(--code-bg); color: var(--code-text); padding: 18px; border-radius: 0;
+			font-family: 'SF Mono', 'Consolas', monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all;
+			max-height: none; overflow-y: visible; border: 1px solid var(--dark-slate);
+			box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+		}
+
+		.footer {
+			margin-top: 20px; padding: 40px 35px;
+			background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.02));
+			border-top: 1px dashed var(--border-subtle);
+			display: flex; flex-direction: column; align-items: center; gap: 15px;
+			position: relative;
+		}
+		
+		.footer::before {
+			content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+			width: 100px; height: 3px; background: var(--danger-main);
+			box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+		}
+		.footer-pill-row { 
+			display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; 
+			width: 100%;
+		}
+		.footer-pill {
+			display: flex; align-items: center; background: rgba(255, 255, 255, 0.8);
+			border: 1px solid var(--border-subtle); border-radius: 0;
+			height: 28px; overflow: hidden; transform: skewX(-15deg);
+			box-shadow: 3px 3px 0 var(--border-subtle);
+		}
+		.pill-lab {
+			padding: 0 12px; height: 100%; display: flex; align-items: center;
+			background: var(--dark-slate); color: #fff;
+			font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 800;
+			letter-spacing: 1.5px; text-transform: uppercase;
+			transform: skewX(15deg) translateX(-2px);
+		}
+		.pill-val {
+			padding: 0 15px; height: 100%; display: flex; align-items: center;
+			color: var(--dark-slate); font-weight: 800; font-size: 13px;
+			font-family: 'Orbitron', sans-serif;
+			transform: skewX(15deg);
+		}
+		.copyright {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 16.5px; color: #000; font-weight: 600;
+			letter-spacing: 0.5px; display: flex; align-items: center; gap: 15px;
+			opacity: 0.8; width: 100%; justify-content: center;
+		}
+		.copyright::before, .copyright::after {
+			content: ''; flex: 1; max-width: 60px; height: 1px; 
+			background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+		}
+	</style>
+</head>
+
+<body style="{{RenderMatrix}}">
+	<div class="container">
+		<header class="header">
+			<div class="header-side-strip left"></div>
+			<div class="header-side-strip right"></div>
+			<div class="header-mascot">
+				
+				<svg viewBox="0 0 100 100" overflow="visible">
+					
+					<polygon points="50,2 95,25 95,75 50,98 5,75 5,25" fill="rgba(44, 62, 80, 0.4)" transform="translate(-10 -10) scale(1.2) rotate(15 50 50)"/>
+					
+					<polygon points="50,2 95,25 95,75 50,98 5,75 5,25" fill="rgba(231, 76, 60, 0.25)" transform="translate(-5 -5) scale(1.1) rotate(30 50 50)"/>
+					
+					<polygon points="50,2 95,25 95,75 50,98 5,75 5,25" fill="#2c3e50" stroke="#e74c3c" stroke-width="3"/>
+					<image href="{{Cow_Res_Path}}img/icon/cowcoos/CM_Chip.webp" x="-2.75" y="-2.75" width="104.5" height="104.5" />
+					<circle cx="95" cy="88" r="10" fill="#e74c3c" stroke="#fff" stroke-width="2"/>
+					<rect x="93.5" y="82" width="3" height="8" fill="#fff" />
+					<circle cx="95" cy="94" r="1.5" fill="#fff"/>
+				</svg>
+			</div>
+			<div class="header-info">
+				<h1>
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--danger-main)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+						<circle cx="12" cy="12" r="10" />
+						<line x1="15" y1="9" x2="9" y2="15" />
+						<line x1="9" y1="9" x2="15" y2="15" />
+					</svg>
+					操作失败: {{ operationName }}
+				</h1>
+				<p>
+					<span>咕咕牛在执行任务时遇到了一个问题。</span>
+					<span class="timestamp">{{ timestamp }}</span>
+				</p>
+			</div>
+		</header>
+
+		<main class="main-content">
+			
+			<div class="section">
+				<div class="sec-head error-summary-head">
+
+					<svg viewBox="0 0 24 24">
+						
+						<path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" stroke-dasharray="2,1"/>
+						<path d="M12 8V13" stroke-width="2.5" />
+						<circle cx="12" cy="17" r="1.2" fill="currentColor"/>
+						<path d="M8 12L4 7M16 12L20 7" opacity="0.6"/>
+					</svg>
+					<h3>错误摘要</h3>
+				</div>
+				<div class="summary-panel">
+					<div class="summary-body">
+						<div class="error-identity">
+							<span class="err-id-label">错误代码</span>
+							<span class="err-id-code">{{ errCode }}</span>
+						</div>
+						<div class="error-detail">
+							<div class="error-detail-title">异常反馈描述</div>
+							<div class="error-message">{{ errMsg }}</div>
+							<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+								{{ if errorSource }}
+								<div class="fault-loc">L-{{ errorSource }}</div>
+								{{ /if }}
+								{{ if errType }}
+								<div class="err-type-badge">{{ errType }}</div>
+								{{ /if }}
+							</div>
+						</div>
+					</div>
+					{{if error && error.syncDetails && error.syncDetails.files}}
+					<div class="res-panel">
+						<div class="res-panel-head">
+							<span>可能涉及的资源文件</span>
+							<span class="res-count-badge">{{error.syncDetails.count || 0}} 项</span>
+						</div>
+						<div class="res-grid">
+							{{each error.syncDetails.files}}
+							<div class="res-chip">{{$value}}</div>
+							{{/each}}
+						</div>
+					</div>
+					{{/if}}
+				</div>
+			</div>
+
+			
+			<div class="section ai-panel">
+				<div class="ai-header">
+					<div class="ai-header-icon">
+						<svg viewBox="0 0 100 100">
+							<line x1="50" y1="20" x2="50" y2="5" stroke="var(--tech-blue)" stroke-width="4" stroke-linecap="round"/>
+							<circle cx="50" cy="5" r="5" fill="#74b9ff"/>
+							<rect x="15" y="20" width="70" height="60" fill="#74b9ff" stroke="var(--tech-blue)" stroke-width="3"/>
+							<rect x="25" y="30" width="50" height="40" fill="#2c3e50"/>
+							<path d="M 35 45 Q 40 40 45 45" fill="none" stroke="#55efc4" stroke-width="4" stroke-linecap="round"/>
+							<path d="M 55 45 Q 60 40 65 45" fill="none" stroke="#55efc4" stroke-width="4" stroke-linecap="round"/>
+							<path d="M 45 55 Q 50 58 55 55" fill="none" stroke="#55efc4" stroke-width="3" stroke-linecap="round"/>
+						</svg>
+					</div>
+					<h2>云露智能体-错误分析&解决方案</h2>
+				</div>
+			<div class="ai-content">
+				<div class="ai-text">{{@ aiSolutionHtml}}</div>
+			</div>
+			</div>
+			
+			{{if snapshot}}
+			<style>
+				.env-snapshot-sec .dash-grid {
+					display: flex; flex-direction: column; gap: 20px;
+				}
+				.env-snapshot-sec .top-viz-row {
+					width: 100%; display: flex; flex-direction: column; align-items: center;
+					background: rgba(255,255,255,0.5); border-radius: 0; padding: 25px;
+					border: 1px solid var(--border-subtle); position: relative;
+				}
+				.env-snapshot-sec .bottom-data-row {
+					display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+				}
+				
+				.env-snapshot-sec .cluster-viz { 
+					width: 100%; max-width: 220px; height: 160px; margin: 0 auto; position: relative;
+				}
+				
+				
+				.env-snapshot-sec .node-core {
+					width: 62px; height: 62px; border-radius: 8px;
+					background: #3498db; 
+					box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+					display: flex; align-items: center; justify-content: center;
+				}
+				.env-snapshot-sec .node-core.dim {
+					background: #95a5a6;
+					box-shadow: none; opacity: 0.7;
+					border-color: #7f8c8d;
+				}
+				.env-snapshot-sec .node-core div { font-size: 12px !important; }
+				.env-snapshot-sec .node-core svg { width: 32px; height: 32px; }
+
+				.env-snapshot-sec .node-sub {
+					width: 36px; height: 36px; border-radius: 6px; font-size: 14px;
+					font-weight: 800; color: #3498db; display: flex; align-items: center; justify-content: center; line-height: 1;
+					border-color: #3498db;
+				}
+				
+				
+				.env-snapshot-sec .n-4:not(.dim), .env-snapshot-sec .n-5:not(.dim) {
+					background: linear-gradient(135deg, #ff79c6, #bd93f9);
+					color: #fff; border-color: #fff;
+					box-shadow: 0 0 15px rgba(189, 147, 249, 0.6);
+					overflow: hidden;
+				}
+				.env-snapshot-sec .n-4:not(.dim)::before, .env-snapshot-sec .n-5:not(.dim)::before {
+					content: '★'; position: absolute; font-size: 8px; top: 2px; right: 2px; opacity: 0.8;
+				}
+
+				
+				.env-snapshot-sec .n-4.dim, .env-snapshot-sec .n-5.dim {
+					background: #f1f2f6; border: 1.5px dashed #b2bec3; color: #b2bec3;
+					opacity: 0.7; overflow: hidden;
+				}
+				.env-snapshot-sec .n-4.dim::after, .env-snapshot-sec .n-5.dim::after {
+					content: ''; position: absolute; width: 140%; height: 1.5px;
+					background: rgba(178, 190, 195, 0.4); transform: rotate(-45deg);
+				}
+				
+				
+				.env-snapshot-sec .node-sub.dim:not(.n-4):not(.n-5) { color: #b2bec3; border-color: #dfe6e9; background: #fafafa; }
+				
+				.env-snapshot-sec .merged-data { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+				.env-snapshot-sec .landscape-footer { text-align: center; margin-top: auto; padding-top: 15px; font-size: 18px; letter-spacing: 10px; opacity: 0.9; }
+				
+				
+				.env-snapshot-sec .top-viz-row::before {
+					content: ''; position: absolute; top: 12px; left: 12px; width: 14px; height: 14px;
+					border-top: 3px solid #3498db; border-left: 3px solid #3498db;
+				}
+				.env-snapshot-sec .top-viz-row::after {
+					content: ''; position: absolute; bottom: 12px; right: 12px; width: 14px; height: 14px;
+					border-bottom: 3px solid #3498db; border-right: 3px solid #3498db;
+				}
+				.env-snapshot-sec .viz-desc {
+					position: absolute; top: 12px; right: 18px;
+					font-size: 10px; font-weight: 800; color: #3498db;
+					letter-spacing: 2px; text-transform: uppercase;
+					display: flex; align-items: center; gap: 6px;
+					opacity: 0.8;
+				}
+				.env-snapshot-sec .viz-desc::before {
+					content: ''; width: 6px; height: 6px; background: #3498db; border-radius: 50%;
+					box-shadow: 0 0 5px #3498db;
+				}
+				
+				.env-snapshot-sec .env-snapshot-head {
+					background: linear-gradient(90deg, rgba(52, 152, 219, 0.08) 0%, transparent 80%);
+					border-bottom-color: rgba(52, 152, 219, 0.15);
+				}
+				.env-snapshot-sec .env-snapshot-head::before { background: #3498db; }
+				.env-snapshot-sec .env-snapshot-head h3 { color: #2c3e50; }
+				.env-snapshot-sec .env-snapshot-head svg { stroke: #3498db; }
+				.env-snapshot-sec .env-snapshot-head::after { content: '[ENV_SNAPSHOT]'; color: rgba(52, 152, 219, 0.4); }
+
+				
+				.error-summary-head {
+					background: linear-gradient(90deg, rgba(231, 76, 60, 0.08) 0%, transparent 80%) !important;
+					border-bottom-color: rgba(231, 76, 60, 0.15) !important;
+				}
+				.error-summary-head::after { 
+					content: '[DIAGNOSTIC_SUMMARY]'; 
+					color: rgba(231, 76, 60, 0.4) !important;
+				}
+			</style>
+
+			<div class="section env-snapshot-sec">
+				<div class="sec-head env-snapshot-head">
+					<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+					<h3>环境快照</h3>
+				</div>
+				<div class="dashboard-container">
+					<div class="dash-grid">
+						
+						<div class="top-viz-row">
+							<div class="viz-desc">仓库资产节点</div>
+							<div class="cluster-viz">
+								
+								<div class="node-core {{if !snapshot.core.active}}dim{{/if}}">
+									<div style="font-size: 12px; font-weight: 800; color: #fff; letter-spacing: 1px; text-align: center; line-height: 1.2;">主资产</div>
+								</div>
+								{{each snapshot.repos item index}}
+								<div class="node-sub n-{{index + 1}} {{if !item.active}}dim{{/if}}">{{item.num}}</div>
+								{{/each}}
+								
+								<svg style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
+									<line x1="50%" y1="50%" x2="50%" y2="15%" stroke="#dfe6e9" stroke-width="2" stroke-dasharray="3,3"/>
+									<line x1="50%" y1="50%" x2="25%" y2="85%" stroke="#dfe6e9" stroke-width="2" stroke-dasharray="3,3"/>
+									<line x1="50%" y1="50%" x2="75%" y2="85%" stroke="#dfe6e9" stroke-width="2" stroke-dasharray="3,3"/>
+									<line x1="50%" y1="50%" x2="10%" y2="35%" stroke="#dfe6e9" stroke-width="2" stroke-dasharray="3,3"/>
+									<line x1="50%" y1="50%" x2="90%" y2="35%" stroke="#dfe6e9" stroke-width="2" stroke-dasharray="3,3"/>
+								</svg>
+							</div>
+						</div>
+
+						
+						<div class="bottom-data-row">
+							
+							<div class="dash-tile">
+								<div class="tile-title">📦 管理器状态表 🌱</div>
+								<div class="merged-data">
+									<div class="data-row">
+										<span class="data-row-label">🥝 运行版本</span>
+										<span class="data-row-val">{{snapshot.core.version}}</span>
+									</div>
+									<div class="data-row">
+										<span class="data-row-label">🍉 代码体积</span>
+										<span class="data-row-val">{{snapshot.core.size}}</span>
+									</div>
+									<div class="data-row">
+										<span class="data-row-label">🫐 最后修改</span>
+										<span class="data-row-val">{{snapshot.core.mtime}}</span>
+									</div>
+									<div class="data-row">
+										<span class="data-row-label">🍓 SHA-1</span>
+										<span class="data-row-val" style="word-break: break-all; max-width: 140px; text-align: right; line-height: 1.2; font-size: 11px;">{{snapshot.git.sha}}</span>
+									</div>
+								</div>
+							</div>
+
+							
+							<div class="dash-tile">
+								<div class="tile-title">🖥️ 运行环境信息 🌿</div>
+								<div class="data-row">
+									<span class="data-row-label">🍎 Yunzai 版本</span>
+									<span class="data-row-val">{{snapshot.system.yzVer}}</span>
+								</div>
+								<div class="data-row">
+									<span class="data-row-label">🍋 Node 环境</span>
+									<span class="data-row-val">{{snapshot.system.nodever}}</span>
+								</div>
+								<div class="data-row">
+									<span class="data-row-label">🍊 操作系统</span>
+									<span class="data-row-val">{{snapshot.system.platform}}</span>
+								</div>
+								<div class="landscape-footer">🍄 🌵 🌲 🪴</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			{{/if}}
+
+			
+			{{ if suggestions && suggestions.length > 0 }}
+			<div class="section">
+				<div class="sec-head">
+					<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+					<h3>故障排除预案</h3>
+				</div>
+				<ul class="suggestion-list">
+					{{ each suggestions item }}
+					<li class="suggestion-item">{{@ item.replace(/(#[\u4e00-\u9fa5\w-]+)/g, '<span class="cmd-highlight">$1</span>') }}</li>
+					{{ /each }}
+				</ul>
+			</div>
+			{{ /if }}
+
+			
+			{{ if contextInfo && contextInfo.trim() }}
+			<div class="section">
+				<div class="sec-head" style="--data-label: 'STACK_TRACE'">
+					<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+					<h3>执行上下文</h3>
+				</div>
+				<div class="code-block">{{ contextInfo }}</div>
+			</div>
+			{{ /if }}
+
+			{{ if stackTrace && stackTrace.trim() !== '（调用栈信息丢失，大概是飞升了）' }}
+			<div class="section">
+				<div class="sec-head" style="--data-label: 'SYS_TRACE'">
+					<svg viewBox="0 0 24 24"><path d="M12 2v10l4.5 4.5"></path><circle cx="12" cy="12" r="10"></circle></svg>
+					<h3>技术细节 - 调用栈</h3>
+				</div>
+				<div class="code-block">{{ stackTrace }}</div>
+			</div>
+			{{ /if }}
+		</main>
+
+		<footer class="footer">
+			<div class="footer-pill-row">
+				<div class="footer-pill">
+					<span class="pill-lab">运行版本</span>
+					<span class="pill-val">v{{ Version }}</span>
+				</div>
+				<div class="footer-pill">
+					<span class="pill-lab">框架</span>
+					<span class="pill-val">Yunzai</span>
+				</div>
+			</div>
+			<div class="copyright">Github项目库: Miao-Plugin-MBT & CowCoo 面板图库 © 2023</div>
+		</footer>
+	</div>
+	<script>
+		window.addEventListener('load', function() {
+			requestAnimationFrame(function() {
+				console.log('CowCoo:Morpheus-Ready');
+			});
+		});
+	</script>
+</body>
+
+</html>

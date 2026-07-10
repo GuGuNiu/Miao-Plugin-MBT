@@ -1,0 +1,19 @@
+{
+  "name": "glm4_7",
+  "enabled": true,
+  "priority": 3,
+  "api": {
+    "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+    "key_encrypted": "YTM3ZGM4NDNjZDVkNDI2M2E5NjMzMjJjODJkOWU5ODEuTlRaRHZtZE82ZzI0TEpDWg==",
+    "timeout_ms": 30000,
+    "max_retries": 3,
+    "retry_delay_ms": 500
+  },
+  "model": {
+    "name": "GLM-4.7-Flash",
+    "max_tokens": 4096,
+    "temperature": 0.6,
+    "top_p": 0.5,
+    "stream": false
+  }
+}

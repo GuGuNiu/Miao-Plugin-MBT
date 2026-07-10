@@ -1,0 +1,655 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>咕咕牛 - 社区图库列表</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Bold.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Orbitron';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/orbitron/Orbitron-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/rajdhani/Rajdhani-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.ttf') format('truetype'),
+            url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.woff2') format('woff2');
+        }
+
+        :root {
+            --bg-color: #f5f3ff;
+            --container-bg: rgba(255, 255, 255, 0.72);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --accent-color: #8b5cf6;
+            --accent-light: rgba(139, 92, 246, 0.12);
+            --accent-border: rgba(167, 139, 250, 0.45);
+            --card-bg: #faf8ff;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --container-glow-purple: rgba(139, 92, 246, 0.28);
+            --container-glow-soft: rgba(167, 139, 250, 0.22);
+            --container-glow-inner: rgba(139, 92, 246, 0.06);
+
+            --github-color: #181717;
+            --gitee-color: #c71d23;
+            --gitcode-color: #e67e22;
+
+            --gs-tag-bg: #e0f2fe;
+            --gs-tag-text: #0369a1;
+            --sr-tag-bg: #e5e7eb;
+            --sr-tag-text: #374151;
+            --zzz-tag-bg: #ffedd5;
+            --zzz-tag-text: #c2410c;
+            --waves-tag-bg: #fce7f3;
+            --waves-tag-text: #be185d;
+            --unknown-tag-bg: #f3e8ff;
+            --unknown-tag-text: #7c3aed;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: var(--text-primary);
+            background: transparent !important;
+            padding: 15px;
+            width: 860px;
+            margin: 0 auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 378px;
+            background: var(--container-bg);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--accent-border);
+            box-shadow:
+                0 12px 40px rgba(91, 33, 182, 0.12),
+                0 0 24px var(--container-glow-purple),
+                0 0 48px var(--container-glow-soft),
+                inset 0 0 20px rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px) saturate(140%);
+            display: flex;
+            flex-direction: row;
+        }
+
+        .header {
+            width: 220px;
+            flex-shrink: 0;
+            padding: 35px 25px;
+            background-color: rgba(255, 255, 255, 0.55);
+            background-image:
+                radial-gradient(circle at 50% 15%, rgba(139, 92, 246, 0.2) 0%, transparent 52%),
+                linear-gradient(to bottom, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+                repeating-linear-gradient(45deg, rgba(139, 92, 246, 0.03) 0, rgba(139, 92, 246, 0.03) 1px, transparent 1px, transparent 10px),
+                repeating-linear-gradient(135deg, rgba(139, 92, 246, 0.04) 0, rgba(139, 92, 246, 0.04) 2px, transparent 2px, transparent 24px),
+                radial-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 15px 15px;
+            border-right: 1px solid rgba(167, 139, 250, 0.22);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            box-shadow:
+                inset 0 0 50px rgba(139, 92, 246, 0.06),
+                4px 0 20px -8px rgba(91, 33, 182, 0.1);
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, rgba(139, 92, 246, 0.03) 0px, rgba(139, 92, 246, 0.03) 1px, transparent 1px, transparent 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header-logo {
+            width: 130px;
+            height: 130px;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+            object-fit: contain;
+            margin-bottom: 22px;
+        }
+
+        .header-info {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-info h1 {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: #5b21b6;
+            letter-spacing: -0.3px;
+            line-height: 1.35;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.8);
+            margin-bottom: 6px;
+        }
+
+        .header-info h1 span {
+            display: block;
+            font-family: 'Orbitron';
+            font-size: 11px;
+            color: #8b5cf6;
+            letter-spacing: 2px;
+            font-weight: 900;
+            margin-top: 6px;
+        }
+
+        .header-subtitle {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mbt-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            font-family: 'Orbitron';
+        }
+
+        .badge-version {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+
+        .main-content-area {
+            flex: 1;
+            padding: 32px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            position: relative;
+            z-index: 2;
+            background-image:
+                radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 35%),
+                radial-gradient(circle at 15% 85%, rgba(167, 139, 250, 0.06) 0%, transparent 30%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 0 L80 40 L40 80 L0 40 Z' fill='none' stroke='rgba(139,92,246,0.05)' stroke-width='1'/%3E%3Cpath d='M40 20 L60 40 L40 60 L20 40 Z' fill='none' stroke='rgba(139,92,246,0.035)' stroke-width='1'/%3E%3C/svg%3E");
+        }
+
+        .summary-panel {
+            display: flex;
+            gap: 12px;
+            margin: 0 -36px;
+            padding: 10px 25px;
+            background: rgba(255, 255, 255, 0.55);
+            border: none;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .summary-panel::after {
+            content: '';
+            position: absolute;
+            left: 40px;
+            right: 40px;
+            bottom: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(167, 139, 250, 0.2), transparent);
+        }
+
+        .summary-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 2px;
+        }
+
+        .summary-item + .summary-item {
+            border-left: none;
+            position: relative;
+        }
+
+        .summary-item + .summary-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 15%;
+            bottom: 15%;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(167, 139, 250, 0.25), transparent);
+        }
+
+        .summary-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent-color);
+            line-height: 1.2;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .repo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .repo-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 3px 10px rgba(91, 33, 182, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .repo-card.border-gitcode {
+            border-left: none;
+            position: relative;
+        }
+        .repo-card.border-gitcode::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 4px;
+            background: var(--gitcode-color);
+            border-radius: 12px 0 0 12px;
+        }
+
+        .repo-card.not-installed {
+            background-color: rgba(250, 250, 250, 0.7);
+            opacity: 0.85;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+        }
+
+        .platform-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .platform-icon-wrap img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+        }
+
+        .card-title-group {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-alias {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--accent-color);
+            letter-spacing: 0.3px;
+            line-height: 1.4;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .status-installed { background-color: var(--success-color); }
+        .status-not-installed { background-color: #6c757d; }
+
+        .card-body {
+            display: flex;
+            padding: 16px 20px 16px 14px;
+            gap: 18px;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .card-watermark {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 48px;
+            height: 48px;
+            opacity: 0.08;
+            transform: rotate(-45deg);
+            pointer-events: none;
+            z-index: 1;
+            object-fit: contain;
+        }
+
+        .card-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card-info-footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .card-info-footer .time-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 6px;
+        }
+
+        .card-info-footer .time-item.install {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .card-info-footer .time-item.sync {
+            background: rgba(139, 92, 246, 0.08);
+            color: #7c3aed;
+        }
+
+        .card-info-footer .time-icon {
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
+        }
+
+        .info-line {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .info-line .label {
+            flex-shrink: 0;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 48px;
+            text-align: right;
+            font-size: 11px;
+        }
+
+        .info-line .value {
+            color: var(--text-primary);
+            word-break: break-all;
+            font-weight: 500;
+        }
+
+        .info-line .url-value {
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .content-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .game-tag {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .game-tag.gs { background-color: var(--gs-tag-bg); color: var(--gs-tag-text); }
+        .game-tag.sr { background-color: var(--sr-tag-bg); color: var(--sr-tag-text); }
+        .game-tag.zzz { background-color: var(--zzz-tag-bg); color: var(--zzz-tag-text); }
+        .game-tag.waves { background-color: var(--waves-tag-bg); color: var(--waves-tag-text); }
+
+        .unknown-tag {
+            background-color: var(--unknown-tag-bg);
+            color: var(--unknown-tag-text);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .card-stats {
+            flex-shrink: 0;
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 12px;
+            background: rgba(139, 92, 246, 0.04);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-size {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-color);
+            letter-spacing: 0.5px;
+        }
+
+        .stat-size::after {
+            content: '';
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: var(--accent-border);
+            margin: 4px auto;
+            border-radius: 1px;
+        }
+
+        .stat-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .no-repo-message {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            padding: 30px;
+            background-color: var(--card-bg);
+            border-radius: 14px;
+            border: 1px dashed var(--accent-border);
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body style="{{RenderMatrix}}">
+    <div class="container">
+        <header class="header">
+            <img class="header-logo" src="{{ Cow_Res_Path }}img/icon/cowcoos/RM_Safety.png" alt="Logo">
+            <div class="header-info">
+                <h1>社区图库列表<span>/IREPOLISTI/</span></h1>
+                <div class="header-subtitle">
+                    <div class="mbt-badge badge-version">v{{ Version }}</div>
+                </div>
+            </div>
+            <footer class="footer">CowCoo 面板图库 © 2023</footer>
+        </header>
+        <main class="main-content-area">
+            <div class="summary-panel">
+                <div class="summary-item">
+                    <div class="summary-value">{{ repos.length }}</div>
+                    <div class="summary-label">总仓库</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">{{ repos.filter(r => !r.notInstalled).length }}</div>
+                    <div class="summary-label">已安装</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">{{ repos.filter(r => r.notInstalled).length }}</div>
+                    <div class="summary-label">未安装</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">{{ repos.reduce((sum, r) => sum + (r.contentMap.gs || 0) + (r.contentMap.sr || 0) + (r.contentMap.zzz || 0) + (r.contentMap.waves || 0), 0) }}</div>
+                    <div class="summary-label">图片数量</div>
+                </div>
+            </div>
+
+            <div class="repo-list">
+                {{ each repos item }}
+                {{ if item.default }}
+                <div class="repo-card{{ if item.notInstalled }} not-installed{{ /if }}{{ if item.platform === 'gitcode' }} border-gitcode{{ /if }}">
+                    <div class="card-header">
+                        <div class="platform-icon-wrap">
+                            <img src="{{ if item.url.includes('github') }}{{ Cow_Res_Path }}img/icon/github.png{{ else if item.url.includes('gitee') }}{{ Cow_Res_Path }}img/icon/gitee.png{{ else if item.url.includes('gitcode') }}{{ Cow_Res_Path }}img/icon/gitcode.png{{ else }}{{ Cow_Res_Path }}img/icon/github.png{{ /if }}" alt="{{ item.platform }}">
+                        </div>
+                        <div class="card-title-group">
+                            <div class="card-alias">{{ item.alias }}</div>
+                            <div class="card-meta">
+                                {{ if item.aboutDisplay }}<span>{{ item.aboutDisplay }}</span>{{ else if item.description }}<span>{{ item.description }}</span>{{ /if }}
+                            </div>
+                        </div>
+                        <span class="status-badge{{ if item.notInstalled }} status-not-installed{{ else }} status-installed{{ /if }}">{{ if item.notInstalled }}未安装{{ else }}已安装{{ /if }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-info">
+                            <div class="info-line">
+                                <span class="label">来源</span>
+                                <span class="value url-value">{{ item.url }}</span>
+                            </div>
+                            {{ if !item.notInstalled }}
+                            <div class="info-line">
+                                <span class="label">内容</span>
+                                <div class="content-tags">
+                                    {{ if item.contentMap.gs > 0 }}<span class="game-tag gs">原神 {{ item.contentMap.gs }}</span>{{ /if }}
+                                    {{ if item.contentMap.sr > 0 }}<span class="game-tag sr">星铁 {{ item.contentMap.sr }}</span>{{ /if }}
+                                    {{ if item.contentMap.zzz > 0 }}<span class="game-tag zzz">绝区零 {{ item.contentMap.zzz }}</span>{{ /if }}
+                                    {{ if item.contentMap.waves > 0 }}<span class="game-tag waves">鸣潮 {{ item.contentMap.waves }}</span>{{ /if }}
+                                    {{ if item.contentMap.unknown > 0 }}<span class="unknown-tag">未识别 {{ item.contentMap.unknown }}</span>{{ /if }}
+                                </div>
+                            </div>
+                            <div class="card-info-footer">
+                                <span class="time-item install"><svg class="time-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>安装时间：{{ item.CommInsDate }}</span>
+                                <span class="time-item sync"><svg class="time-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>上次更新：{{ item.CommLastSync }}</span>
+                            </div>
+                            {{ /if }}
+                        </div>
+                        {{ if !item.notInstalled }}
+                        <div class="card-stats">
+                            <span class="stat-size">{{ item.CommRepoSize }}</span>
+                        </div>
+                        <img class="card-watermark" src="{{ Cow_Res_Path }}img/icon/code/{{ if item.platform === 'github' }}github{{ else if item.platform === 'gitee' }}gitee{{ else if item.platform === 'gitcode' }}gitcode{{ else }}github{{ /if }}.png" alt="">
+                        {{ /if }}
+                    </div>
+                </div>
+                {{ /if }}
+                {{ /each }}
+            </div>
+        </main>
+    </div>
+    <script>
+        window.addEventListener('load', function () {
+            requestAnimationFrame(function () {
+                console.log('CowCoo:Morpheus-Ready');
+            });
+        });
+    </script>
+</body>
+
+</html>
