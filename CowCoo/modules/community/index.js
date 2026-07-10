@@ -177,6 +177,7 @@ export function Community(ctx) {
         const isGroup = !!e.isGroup;
         const result = await this.awaitContext(isGroup, 60);
         if (result === false) {
+          if (ctx) ctx.markNoOp();
           await Pheme.quote(e, "确认超时，操作已自动取消。");
           return false;
         }
@@ -184,6 +185,7 @@ export function Community(ctx) {
           await Pheme.quote(e, "确认成功，开始下载...");
           return true;
         }
+        if (ctx) ctx.markNoOp();
         await Pheme.quote(e, "未收到确认指令，操作已取消。");
         return false;
       } finally {
@@ -574,10 +576,14 @@ export function Community(ctx) {
               await this._loadConfig();
               if (this.config[alias]) {
                 await Pheme.quote(e, `图库 [${alias}] 已安装`);
+                ctx.markNoOp();
                 return;
               }
               this._checkDup(url);
-              if (!(await this._warnLargeRepo(e, DfcRp, ctx))) return;
+              if (!(await this._warnLargeRepo(e, DfcRp, ctx))) {
+                ctx.markNoOp();
+                return;
+              }
               await Ananke.mkdirs(this.paths.base);
               if (isHG) await this._DLGitHubRepo(e, url, TgtP, Signal, DfcRp);
               else await this._cloneToTemp(url, TgtP, Signal);
@@ -639,15 +645,20 @@ export function Community(ctx) {
             await this._loadConfig();
             if (this.config[alias]) {
               await Pheme.quote(e, `图库 [${alias}] 已安装`);
+              ctx.markNoOp();
               return;
             }
             if (MtDfc && MtDfc.alias !== alias && this.config[MtDfc.alias]) {
               await Pheme.quote(e, `内置图库 [${MtDfc.alias}] 已安装`);
+              ctx.markNoOp();
               return;
             }
             if (MtDfc && MtDfc.alias !== alias) await Pheme.quote(e, `检测到内置图库 [${MtDfc.alias}] ${MtDfc.repoInfo.aboutDisplay || ""}，将识别为内置镜像安装。`);
             this._checkDup(url);
-            if (DfcInfo && !(await this._warnLargeRepo(e, DfcInfo, ctx))) return;
+            if (DfcInfo && !(await this._warnLargeRepo(e, DfcInfo, ctx))) {
+              ctx.markNoOp();
+              return;
+            }
             await Ananke.mkdirs(this.paths.base);
             if (isHG) await this._DLGitHubRepo(e, url, TgtP, Signal, DfcInfo);
             else await this._cloneToTemp(url, TgtP, Signal);

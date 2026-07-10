@@ -73,7 +73,7 @@ class CommunityTaskQueue {
         this._cooldownMs - (performance.now() - this._lastReleaseTime);
       if (cooldownRemaining > 0) {
         const cooldownSec = Math.ceil(cooldownRemaining / 1000);
-        this.Hades.O(`[${this.name}] 冷却等待 ${cooldownSec}s`);
+        this.Hades.D(`[${this.name}] 冷却等待 ${cooldownSec}s`);
         await notify(`任务 [${taskLabel}] 进入冷却等待（${cooldownSec}s）...`);
         await new Promise((r) => setTimeout(r, cooldownRemaining));
       }
@@ -89,13 +89,14 @@ class CommunityTaskQueue {
     }
 
     let suspended = false;
+    let noOp = false;
     const ctx = {
       suspend: async (reason = "manual") => {
         if (suspended) return;
         suspended = true;
-        this.Hades.O(`[${this.name}] 任务 [${id}] 挂起: ${reason}`);
+        this.Hades.D(`[${this.name}] 任务 [${id}] 挂起: ${reason}`);
         this._mutex._release(id);
-        await notify(`💤 任务 [${taskLabel}] 已挂起（${reason}）`);
+        await notify(`任务 [${taskLabel}] 已挂起（${reason}）`);
       },
       resume: async () => {
         if (!suspended) return;
@@ -104,12 +105,15 @@ class CommunityTaskQueue {
         if (this._mutex._holder) {
           this._mutex._holder.start = performance.now();
         }
-        this.Hades.O(`[${this.name}] 任务 [${id}] 恢复执行`);
+        this.Hades.D(`[${this.name}] 任务 [${id}] 恢复执行`);
+      },
+      markNoOp: () => {
+        noOp = true;
       }
     };
 
     try {
-      this.Hades.O(`[${this.name}] 任务 [${id}] 开始执行`);
+      this.Hades.D(`[${this.name}] 任务 [${id}] 开始执行`);
       return await taskFn(controller.signal, ctx);
     } catch (err) {
       if (controller.signal.aborted && controller.signal.reason === "TTL_Expired") {
@@ -119,11 +123,11 @@ class CommunityTaskQueue {
     } finally {
       if (timeoutTimer) clearTimeout(timeoutTimer);
       this._mutex._release(id);
-      if (!skipCooldown && !suspended) {
+      if (!skipCooldown && !suspended && !noOp) {
         this._lastReleaseTime = performance.now();
       }
       this._totalProcessed++;
-      this.Hades.O(`[${this.name}] 任务 [${id}] 完成`);
+      this.Hades.D(`[${this.name}] 任务 [${id}] 完成`);
     }
   }
 

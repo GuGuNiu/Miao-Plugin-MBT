@@ -5055,6 +5055,27 @@ async function reloadModules() {
   return true;
 }
 
+async function postDeployMount(Hades) {
+  const pending = [];
+  if (!CommunityMBT) {
+    await CommunityModule();
+    if (CommunityMBT) pending.push(CommunityMBT);
+  }
+  if (pending.length === 0) return;
+  try {
+    const loader = (await import("../../lib/plugins/loader.js")).default;
+    const fileKey = "example/咕咕牛图库管理器.js";
+    for (const cls of pending) {
+      if (loader.priority.some((p) => p.class === cls)) continue;
+      await loader.loadPlugin({ name: fileKey }, cls);
+    }
+    loader.createTask();
+    loader.priority.sort((a, b) => a.priority - b.priority);
+  } catch (err) {
+    Hades?.E?.("动态注册模块失败:", err);
+  }
+}
+
 async function initModules() {
   await DockerModule();
   await ProtocolModule();
@@ -10397,6 +10418,7 @@ class MiaoPluginMBT extends plugin {
         MiaoPluginMBT.InitPromise = Promise.resolve(true);
         MiaoPluginMBT.PFSCReady = true;
         setupSuccess = true;
+        await postDeployMount(Hades);
       } catch (setupError) {
         Hades.E(`安装部署失败:`, setupError);
         await DocHub.report(e, "安装部署 (full)", setupError, "所有仓库已下载，但最终配置失败。", Hades);
