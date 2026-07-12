@@ -3737,7 +3737,7 @@ class PoseidonSpear {
       }
     }
     if (count > 0 && Hades) {
-      Hades.D(`[PoseidonSpear] 🚑 紧急复活 ${count} 个节点以应对节点枯竭: [${revived.join(", ")}]`);
+      Hades.D(`[PoseidonSpear] 紧急复活 ${count} 个节点以应对节点枯竭: [${revived.join(", ")}]`);
     }
   }
 

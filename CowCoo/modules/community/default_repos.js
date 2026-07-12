@@ -27,7 +27,15 @@ export const DefaultRepos = {
             diskSpaceExemptGB: 100
         }
     },
-    
+
+    "阿修": {
+        default: true,
+        order: 3,
+        aboutDisplay: "Yunzai的原神&星铁面板图图库",
+        url: "https://github.com/AxiuCN/miao-plugin-ProfileImg",
+        canonicalId: "axiucn/miao-plugin-profileimg"
+    },
+
 };
 
 export default DefaultRepos;``

@@ -71,10 +71,12 @@
 | :--- | :--- | :--- |
 | 何日见 | <https://github.com/herijian1/characterpic1> | 喵喵插件原神星铁高质量面板图 
 | 夜 | <https://github.com/ye3011/normal-character> | 喵喵插件面板图 
+| 阿修 | <https://github.com/AxiuCN/miao-plugin-ProfileImg> | Yunzai的原神&星铁面板图图库 
 
 一键部署命令： 
 - #咕咕牛安装何日见
 - #咕咕牛安装夜
+- #咕咕牛安装阿修
 
 ---
 
