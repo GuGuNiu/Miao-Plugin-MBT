@@ -8,24 +8,7 @@
   alt="image"
   title="image">
   
-图库是 Yunzai 的插件角色面板图资源补充，涵盖了**原神&星铁&绝区零&鸣潮**的面板图资源，创建于**2023年10月**，希望能提供更优质的面板图资源<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
-  <button style="
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(to right, #00aaff, #0077ff);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: background 0.3s ease;
-  " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'"
-     onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
-    💬 QQ群：留学移民交流群
-  </button>
-</a>，不过还是以原神和星铁为主！
-
+图库是 Yunzai 的插件角色面板图资源补充，涵盖了**原神&星铁&绝区零&鸣潮**的面板图资源，创建于**2023年10月**，希望能提供更优质的面板图资源。管理器内置 [智谱，讯飞星火] 双智能体辅助提供智能决策；同时支持 99.7% 的热重载可在不重启下热更新插件和子模块；
 
 #### 适配的游戏插件
 
@@ -34,8 +17,6 @@
 | 原神 / 星铁 | Miao-Plugin |
 | 绝区零 | ZZZ-Plugin |
 | 鸣潮 | Waves-Plugin |
-
-管理器已内置 [智谱，讯飞星火] 双智能体辅助提供智能决策；同时支持 99.7% 的热重载可在不重启下热更新插件和子模块；
 
 ### ⚠️ 使用须知 · 请务必仔细阅读
 
@@ -72,6 +53,24 @@
 - #咕咕牛安装何日见
 - #咕咕牛安装夜
 - #咕咕牛安装阿修
+
+<a href="https://qm.qq.com/q/cyXMqRBzY6" target="_blank" style="text-decoration: none;">
+  <button style="
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(to right, #00aaff, #0077ff);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease;
+  " onmouseover="this.style.background='linear-gradient(to right, #0099dd, #0055dd)'"
+     onmouseout="this.style.background='linear-gradient(to right, #00aaff, #0077ff)'">
+    💬 留学移民交流
+  </button>
+</a>
 
 #### 自动下载算法途径
 
