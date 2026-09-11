@@ -174,34 +174,15 @@
 
     .main-title {
       position: relative;
-      font-size: 46px;
+      font-size: 52px;
       color: var(--header-title-color);
       font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
       font-weight: 400;
       letter-spacing: 2px;
       z-index: 2;
-      text-shadow: 0 4px 12px rgba(136, 19, 55, 0.45);
-    }
-
-    .main-title::before {
-      content: attr(data-text);
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      color: #9f1239;
-      z-index: -1;
-      filter: none;
-      opacity: 0.7;
-    }
-
-    .main-title::after {
-      content: attr(data-text);
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      color: rgba(0, 0, 0, 0.25);
-      z-index: -2;
-      filter: blur(4px);
+      text-shadow:
+        3px 3px 0px rgba(159, 18, 57, 0.7),
+        6px 6px 4px rgba(0, 0, 0, 0.25);
     }
 
     .title-divider {

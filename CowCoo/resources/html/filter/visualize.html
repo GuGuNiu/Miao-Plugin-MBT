@@ -97,13 +97,13 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(3px 3px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 50px 70px, #fef08a, rgba(0,0,0,0)),
-                radial-gradient(3px 3px at 130px 40px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 200px 80px, #67e8f9, rgba(0,0,0,0)),
-                radial-gradient(3px 3px at 280px 120px, #ffffff, rgba(0,0,0,0));
+                radial-gradient(3px 3px at 24px 32px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 70px 85px, #fef08a, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 140px 45px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 180px 130px, #67e8f9, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 260px 90px, #ffffff, rgba(0,0,0,0));
             background-repeat: repeat;
-            background-size: 300px 200px;
+            background-size: 280px 180px;
             opacity: 0.8;
             z-index: 0;
         }
@@ -164,34 +164,15 @@
 
         .main-title {
             position: relative;
-            font-size: 46px;
+            font-size: 52px;
             color: var(--header-title-color);
             font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
             font-weight: 400;
             letter-spacing: 2px;
             z-index: 2;
-            text-shadow: 0 4px 12px rgba(29, 78, 216, 0.4);
-        }
-
-        .main-title::before {
-            content: attr(data-text);
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            color: #1d4ed8;
-            z-index: -1;
-            filter: none;
-            opacity: 0.7;
-        }
-
-        .main-title::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            color: rgba(0, 0, 0, 0.2);
-            z-index: -2;
-            filter: blur(4px);
+            text-shadow:
+                3px 3px 0px rgba(29, 78, 216, 0.7),
+                6px 6px 4px rgba(0, 0, 0, 0.25);
         }
 
         .title-divider {
@@ -216,8 +197,8 @@
         .divider-dot.accent {
             width: 6px;
             height: 6px;
-            background: #ffffff;
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.9), 0 0 4px rgba(255, 255, 255, 0.6);
+            background: #fbbf24;
+            box-shadow: 0 0 12px #fbbf24, 0 0 4px rgba(251, 191, 36, 0.6);
         }
 
         .divider-line {
@@ -240,6 +221,7 @@
             position: relative;
             display: inline-flex;
             align-items: center;
+            gap: 8px;
             height: 38px;
             box-sizing: border-box;
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
@@ -257,6 +239,40 @@
             border: 2px solid rgba(255, 255, 255, 0.95);
             z-index: 3;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        .security-status-tag {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 38px;
+            padding: 0 16px;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: #bfdbfe;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-beacon {
+            width: 7px;
+            height: 7px;
+            background: #fbbf24;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fbbf24, 0 0 4px #ffffff;
+            animation: pulse-beacon 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-beacon {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.75); }
         }
         
         .origin-plugin-tag { 
@@ -349,7 +365,7 @@
         }
 
         .stat-item span {
-            color: #475569;
+            color: #1e3a8a;
             font-size: 13px;
             font-weight: 900;
             font-family: 'Noto Sans SC', sans-serif;
@@ -360,10 +376,10 @@
         .digit-container {
             display: flex;
             gap: 4px;
-            background: rgba(226, 232, 240, 0.6);
+            background: rgba(191, 219, 254, 0.6);
             padding: 4px;
             border-radius: 10px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: inset 0 2px 4px rgba(37, 99, 235, 0.08);
         }
 
         .digit {
@@ -402,7 +418,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #475569;
+            color: #1e3a8a;
             font-family: 'Orbitron', monospace;
             font-size: 13px;
             font-weight: 800;
@@ -641,6 +657,10 @@
            </div>
           <div class="tags-row">
             <div class="list-type-tag">{{ characterName || CREName }}</div>
+            <div class="security-status-tag">
+              <span class="status-beacon"></span>
+              <span>VISUAL ARCHIVE</span>
+            </div>
             {{ if originPlugin }}
             <div class="origin-plugin-tag origin-{{ (originPluginKey || originPlugin).toLowerCase() }}">
               {{ originPlugin }}
