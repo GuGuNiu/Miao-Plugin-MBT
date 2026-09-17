@@ -30,7 +30,6 @@
             src: url('{{Cow_Res_Path}}fonts/noto-sans/noto-sans-sc-900.woff2') format('woff2');
         }
 
-        /* 只使用 TTF 格式测试 */
         @font-face {
             font-family: 'ZCOOL KuaiLe';
             font-style: normal;
@@ -39,7 +38,6 @@
             src: url('{{Cow_Res_Path}}fonts/zcool-kuaile/ZCOOLKuaiLe-Regular.ttf') format('truetype');
         }
 
-        /* 备用：使用 woff2 */
         @font-face {
             font-family: 'ZCOOL KuaiLe Woff2';
             font-style: normal;
@@ -77,7 +75,6 @@
             padding-bottom: 10px;
         }
 
-        /* 原始主标题样式 */
         .title-original {
             font-family: 'ZCOOL KuaiLe', cursive;
             font-weight: 400;
@@ -96,7 +93,6 @@
             display: inline-block;
         }
 
-        /* 纯文字样式（无特效） */
         .title-plain {
             font-family: 'ZCOOL KuaiLe', cursive;
             font-weight: 400;
@@ -105,7 +101,6 @@
             color: #1565C0;
         }
 
-        /* Version 文本样式 */
         .ver-text {
             font-family: 'ZCOOL KuaiLe', cursive;
             font-weight: 400;
@@ -114,7 +109,6 @@
             margin-left: 5px;
         }
 
-        /* 对比测试 */
         .compare-box {
             display: flex;
             gap: 30px;
@@ -136,7 +130,6 @@
             margin-bottom: 10px;
         }
 
-        /* 不同字体的对比 */
         .font-compare {
             font-size: 36px;
             margin: 10px 0;
@@ -162,7 +155,6 @@
             color: #EF6C00;
         }
 
-        /* 调试信息 */
         .debug-info {
             background: #263238;
             color: #aed581;
@@ -229,7 +221,6 @@
     </div>
 
     <script>
-        // 检测字体加载状态
         async function checkFontStatus() {
             const statusDiv = document.getElementById('font-status');
             const fonts = [
