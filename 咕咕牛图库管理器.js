@@ -3916,7 +3916,7 @@ class Cerberus {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YzPath = path.resolve(__dirname, "..", "..");
-const Version = `5.2.6-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
+const Version = `5.2.7-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
 const PFL = {
   NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2,
   getDescription: (level) => ["不过滤", "过滤R18", "全部敏感项"][level] ?? "未知"
@@ -7629,9 +7629,9 @@ class Presenter {
 }
 
 class MBTCF {
-  static #BanMap = new Map();
-  static #MD5BanSet = new Set();
+  static #BanGidMap = new Map();
   static #activeBans = new Set();
+  static #userKilled = new Set();
   static #secTags = [];
   static #remoteBanCount = 0;
   static #bus = new EventEmitter();
@@ -7648,16 +7648,13 @@ class MBTCF {
     try {
       const [banList, tagData] = await Promise.all([Ananke.HydrateJson(MiaoPluginMBT.Paths.BanListPath, []), Ananke.HydrateJson(MiaoPluginMBT.Paths.SecTagsPath, {})]);
 
-      this.#BanMap.clear();
-      this.#MD5BanSet.clear();
+      this.#BanGidMap.clear();
 
       (Array.isArray(banList) ? banList : [])
-        .filter((item) => item?.path)
         .forEach((item) => {
-          const p = this.#normalize(item.path);
-          const md5 = item.md5 || null;
-          this.#BanMap.set(p, { md5, timestamp: item.timestamp });
-          if (md5) this.#MD5BanSet.add(md5);
+          const gid = String(item?.gid ?? "").trim();
+          if (!gid) return;
+          this.#BanGidMap.set(gid, { timestamp: item.timestamp });
         });
 
       this.#secTags = Object.values(tagData ?? {})
@@ -7665,19 +7662,19 @@ class MBTCF {
         .flat();
 
       this.#bus.emit("ready", {
-        banCount: this.#BanMap.size,
+        banCount: this.#BanGidMap.size,
         tagCount: this.#secTags.length
       });
     } catch (err) {
-      this.#BanMap.clear();
-      this.#MD5BanSet.clear();
+      this.#BanGidMap.clear();
       this.#secTags = [];
       this.#bus.emit("error", err);
     }
   }
 
   static Compute(imageData, config, logger = console) {
-    const killList = new Set(this.#BanMap.keys());
+    const killList = new Set();
+    const userKilled = new Set();
     const pflLevel = config.PFL_Ops ?? DFC.PFL_Ops;
 
     const policy = {
@@ -7699,14 +7696,14 @@ class MBTCF {
         }
 
         const normPath = this.#normalize(item.path);
-        const itemMD5 = item.attributes?.md5;
 
-        if (killList.has(normPath) || (itemMD5 && this.#MD5BanSet.has(itemMD5))) {
+        if (item.gid && this.#BanGidMap.has(String(item.gid))) {
           killList.add(normPath);
+          userKilled.add(normPath);
           continue;
         }
 
-        if (this.#checkPFL(item, policy.pflLevel)) {
+        if (this._checkPFL(item, policy.pflLevel)) {
           killList.add(normPath);
           continue;
         }
@@ -7721,6 +7718,7 @@ class MBTCF {
     }
 
     this.#activeBans = killList;
+    this.#userKilled = userKilled;
     this.#remoteBanCount = remoteCount;
 
     return this.#activeBans;
@@ -7746,47 +7744,41 @@ class MBTCF {
     }
   }
 
-  static async AddManualBan(relativePath, logger = console) {
+  static async AddManualBan(gid, relativePath, logger = console) {
     const Hades = getHades(logger);
-    const p = this.#normalize(relativePath);
+    const key = String(gid ?? "").trim();
 
-    if (this.isPurified(p)) throw new Error("目标已被净化规则屏蔽，无法手动封禁");
-    if (this.#BanMap.has(p)) throw new Error("该图片已在封禁列表中");
+    if (!key) throw new Error("该图片缺少 gid，无法封禁");
+    if (this.isPurified(relativePath)) throw new Error("TARGET_PURIFIED");
+    if (this.#BanGidMap.has(key)) throw new Error("ALREADY_BANNED");
 
-    const item = Tianshu._indexByGid.get(p);
-    const md5 = item?.attributes?.md5 || null;
-
-    this.#BanMap.set(p, { md5, timestamp: new Date().toISOString() });
-    if (md5) this.#MD5BanSet.add(md5);
+    this.#BanGidMap.set(key, { timestamp: new Date().toISOString() });
 
     try {
       await this.#persist(Hades);
-      this.#bus.emit("ban", p);
+      this.#bus.emit("ban", key);
       return true;
     } catch {
-      this.#BanMap.delete(p);
-      if (md5) this.#MD5BanSet.delete(md5);
+      this.#BanGidMap.delete(key);
       throw new Error("保存封禁配置失败，操作已撤销");
     }
   }
 
-  static async RemoveManualBan(relativePath, logger = console) {
+  static async RemoveManualBan(gid, logger = console) {
     const Hades = getHades(logger);
-    const p = this.#normalize(relativePath);
+    const key = String(gid ?? "").trim();
 
-    if (!this.#BanMap.has(p)) throw new Error("未在封禁列表中找到该图片");
+    if (!this.#BanGidMap.has(key)) throw new Error("NOT_FOUND");
 
-    const record = this.#BanMap.get(p);
-    this.#BanMap.delete(p);
-    if (record.md5) this.#MD5BanSet.delete(record.md5);
+    const record = this.#BanGidMap.get(key);
+    this.#BanGidMap.delete(key);
 
     try {
       await this.#persist(Hades);
-      this.#bus.emit("unban", p);
+      this.#bus.emit("unban", key);
       return true;
     } catch (err) {
-      this.#BanMap.set(p, record);
-      if (record.md5) this.#MD5BanSet.add(record.md5);
+      this.#BanGidMap.set(key, record);
       throw new Error("保存封禁配置失败，操作已撤销");
     }
   }
@@ -7794,24 +7786,21 @@ class MBTCF {
   static async TagsBanMan(tagName, metaCache, logger = console) {
     if (!Array.isArray(metaCache)) return { count: 0, already: 0 };
 
-    const targets = metaCache.filter((item) => item.attributes?.SecTags?.includes(tagName));
+    const targets = metaCache.filter((item) => item.gid && item.attributes?.SecTags?.includes(tagName));
     if (targets.length === 0) return { count: 0, already: 0 };
 
     let added = 0;
     let exist = 0;
 
-    const mapSnapshot = new Map(this.#BanMap);
-    const md5Snapshot = new Set(this.#MD5BanSet);
+    const snapshot = new Map(this.#BanGidMap);
 
     try {
       for (const item of targets) {
-        const p = this.#normalize(item.path);
-        if (this.#BanMap.has(p)) {
+        const key = String(item.gid);
+        if (this.#BanGidMap.has(key)) {
           exist++;
         } else {
-          const md5 = item.attributes?.md5 || null;
-          this.#BanMap.set(p, { md5, timestamp: new Date().toISOString() });
-          if (md5) this.#MD5BanSet.add(md5);
+          this.#BanGidMap.set(key, { timestamp: new Date().toISOString() });
           added++;
         }
       }
@@ -7821,8 +7810,8 @@ class MBTCF {
         this.#bus.emit("batch-ban", { tagName, count: added });
       }
     } catch (err) {
-      this.#BanMap = mapSnapshot;
-      this.#MD5BanSet = md5Snapshot;
+      this.#BanGidMap.clear();
+      snapshot.forEach((value, key) => this.#BanGidMap.set(key, value));
       throw new Error("批量封禁保存失败，操作已全部撤销");
     }
 
@@ -7830,9 +7819,9 @@ class MBTCF {
   }
 
   static reset() {
-    this.#BanMap.clear();
-    this.#MD5BanSet.clear();
+    this.#BanGidMap.clear();
     this.#activeBans.clear();
+    this.#userKilled.clear();
     this.#secTags = [];
     this.#remoteBanCount = 0;
     this.#bus.emit("reset");
@@ -7842,23 +7831,23 @@ class MBTCF {
     return toPosix(p);
   }
 
-  static #checkPFL(item, level) {
+  static _checkPFL(item, level) {
     if (!item?.attributes || level <= 0) return false;
     const r = item.attributes.rated;
     return (level === 1 && r === "r18") || (level === 2 && (r === "r18" || r === "p18"));
   }
 
   static async #persist(logger) {
-    const payload = [...this.#BanMap.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([path, { md5, timestamp }]) => ({ path, md5, timestamp }));
+    const payload = [...this.#BanGidMap.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([gid, { timestamp }]) => ({ gid, timestamp }));
 
     if (!(await Ananke.UpBanList(MiaoPluginMBT.Paths.BanListPath, payload, logger))) throw new Error("IO写入失败");
   }
   static isPurified(relativePath) {
     const p = this.#normalize(relativePath);
-    return this.#activeBans.has(p) && !this.#BanMap.has(p);
+    return this.#activeBans.has(p) && !this.#userKilled.has(p);
   }
   static get userBanCount() {
-    return this.#BanMap.size;
+    return this.#userKilled.size;
   }
   static get activeBanCount() {
     return this.#activeBans.size;
@@ -7870,7 +7859,7 @@ class MBTCF {
     return this.#remoteBanCount;
   }
   static get userBanSet() {
-    return new Set(this.#BanMap.keys());
+    return new Set(this.#userKilled);
   }
   static get activeBanSet() {
     return new Set(this.#activeBans);
@@ -7942,7 +7931,7 @@ class MiaoPluginMBT extends plugin {
 
   static async GenerateList(data, logger = console) {
     const config = MiaoPluginMBT.MBTConfig || DFC;
-    MBTCF.Compute(data, config, logger);
+    MBTCF.Compute(data ?? MiaoPluginMBT._MetaCache ?? [], config, logger);
     await MBTCF.ApplyBans();
   }
 
@@ -11586,7 +11575,9 @@ class MiaoPluginMBT extends plugin {
           tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "resources", "html", "filter", "banlist.html"),
           data: ViewProps,
           logger: logger,
-          pageBoundingRect: { selector: ".container" }
+          width: 1100,
+          pageBoundingRect: { selector: "body" },
+          Transparent_Background: true
         });
 
         if (imgBuffer) await Pheme.img(e, imgBuffer, "封禁列表图片发送失败已文本回执。", this.logger);
@@ -11597,15 +11588,15 @@ class MiaoPluginMBT extends plugin {
         if (disabledItems.length > 0) await common.sleep(1000);
 
         const purgedCount = PFLItems.length;
-        const pflPageCount = Math.ceil(purgedCount / BATCH_SIZE);
+        const pflPageCount = Math.ceil(purgedCount / Page_Size);
         const forwardMsgs = [];
 
         for (let i = 0; i < pflPageCount; i++) {
           await MiaoPluginMBT.OpsGate(e, "MuB_Batch");
 
           const currentPage = i + 1;
-          const startIndex = i * BATCH_SIZE;
-          const batchItems = PFLItems.slice(startIndex, startIndex + BATCH_SIZE);
+          const startIndex = i * Page_Size;
+          const batchItems = PFLItems.slice(startIndex, startIndex + Page_Size);
 
           const VewItems = await Promise.all(
             batchItems.map(async (item, index) => {
@@ -11647,7 +11638,9 @@ class MiaoPluginMBT extends plugin {
             tplFile: path.join(MiaoPluginMBT.Paths.OpsPath, "resources", "html", "filter", "banlist.html"),
             data: ViewProps,
             logger: logger,
-            pageBoundingRect: { selector: ".container" }
+            width: 1100,
+            pageBoundingRect: { selector: "body" },
+            Transparent_Background: true
           });
 
           if (imgBuffer) forwardMsgs.push(MiaoPluginMBT.ToImgSeg(imgBuffer));
@@ -11700,19 +11693,18 @@ class MiaoPluginMBT extends plugin {
           return true;
         }
 
-        const parsedId = Tianshu.ParseID(rawInput);
-        if (!parsedId) throw new Error("编号格式无效");
+        const gidInput = /^\d{10}$/.test(rawInput) ? rawInput : "";
+        const parsedId = gidInput ? null : Tianshu.ParseID(rawInput);
+        if (!gidInput && !parsedId) throw new Error("编号格式无效");
 
-        const { mainName: rawMainName, imgNum: imgNum } = parsedId;
-        const aliasResult = await Tianshu.NormalizeName(rawMainName);
-        const primaryName = aliasResult.exists ? aliasResult.mainName : rawMainName;
+        const aliasResult = parsedId ? await Tianshu.NormalizeName(parsedId.mainName) : null;
+        const primaryName = aliasResult?.exists ? aliasResult.mainName : parsedId?.mainName;
+        const charImg = primaryName ? Tianshu._indexByCRE.get(primaryName) : null;
+        const Fingerprint = primaryName ? `${primaryName.toLowerCase()}gu${parsedId.imgNum}.webp` : "";
 
-        let imageData = null;
-        const charImg = Tianshu._indexByCRE.get(primaryName);
-        if (charImg && charImg.length > 0) {
-          const Fingerprint = `${primaryName.toLowerCase()}gu${imgNum}.webp`;
-          imageData = charImg.find((img) => toPosix(img.path).toLowerCase().endsWith(`/${Fingerprint}`));
-        }
+        let imageData = gidInput
+          ? (MiaoPluginMBT._MetaCache ?? []).find((item) => String(item.gid ?? "") === gidInput)
+          : charImg?.find((img) => toPosix(img.path).toLowerCase().endsWith(`/${Fingerprint}`));
 
         if (!imageData || !imageData.path) throw new Error("图片未找到");
 
@@ -11733,10 +11725,10 @@ class MiaoPluginMBT extends plugin {
 
         try {
           if (isAdding) {
-            await MBTCF.AddManualBan(RelativePath, logger);
+            await MBTCF.AddManualBan(imageData.gid, RelativePath, logger);
             await Pheme.quote(e, `${fileLabel} 🚫 封禁了~`);
           } else {
-            await MBTCF.RemoveManualBan(RelativePath, logger);
+            await MBTCF.RemoveManualBan(imageData.gid, logger);
             await Pheme.quote(e, `${fileLabel} ✅️ 好嘞，解封!`);
             setImmediate(() => MiaoPluginMBT.RevertFile(RelativePath, logger));
           }
@@ -11757,7 +11749,7 @@ class MiaoPluginMBT extends plugin {
         }
       } catch (err) {
         if (err.message === "输入为空") {
-          return Pheme.quote(e, `要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb} 角色名+编号 或 #咕咕牛封禁 <二级标签>`);
+          return Pheme.quote(e, `要${actionVerb}哪个图片呀？格式：#咕咕牛${actionVerb} 角色名+编号 / GID 或 #咕咕牛封禁 <二级标签>`);
         }
         if (err.message === "编号格式无效") {
           return Pheme.quote(e, "格式好像不对哦，应该是 角色名+编号 (例如：花火1)");
@@ -11941,7 +11933,9 @@ class MiaoPluginMBT extends plugin {
           data: ViewProps,
           logger: logger,
           navOpts: { waitUntil: "load", timeout: 45000 },
-          pageBoundingRect: { selector: ".container" }
+          width: 1100,
+          pageBoundingRect: { selector: "body" },
+          Transparent_Background: true
         });
 
         if (imgBuffer) {

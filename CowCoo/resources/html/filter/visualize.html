@@ -4,28 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>角色图片可视化 - {{ characterName }}</title>
+    <title>角色图片可视化 - {{ characterName || CREName }}</title>
     <style>
         :root {
-            --bg-color: #ffffff;
             --container-bg: #ffffff;
-            --container-border: #2563eb;
-            --text-primary: #1d4ed8;
+            --container-border: #93c5fd;
+            --text-primary: #1e3a8a;
             --text-secondary: #64748b;
-            --header-bg: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
-            --header-title-color: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.85);
-            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.12);
-            --item-bg: rgba(240, 246, 255, 0.75);
-            --item-border: rgba(255, 255, 255, 0.9);
-            --item-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.15), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
-            --error-text-color: #dc2626;
-            --error-bg-color: #fef2f2;
-            --gu-item-bg: linear-gradient(135deg, rgba(254, 240, 138, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
-            --gu-item-border: rgba(245, 158, 11, 0.8);
-            --gu-item-shadow: 0 12px 28px rgba(245, 158, 11, 0.22);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #38bdf8;
+            --item-bg: #edf3fd;
+            --item-border: #c7dcfa;
+            --item-shadow: rgba(59, 130, 246, 0.14);
+            --gu-item-bg: linear-gradient(135deg, #fef9c3 0%, #ffffff 100%);
+            --gu-item-border: #fbbf24;
+            --gu-item-shadow: rgba(251, 191, 36, 0.3);
             --gu-label-bg: linear-gradient(45deg, #f59e0b, #fbbf24);
+            --error-text-color: #ef4444;
+            --error-bg-color: #fef2f2;
         }
 
         @font-face {
@@ -42,7 +38,7 @@
             font-weight: 400;
             font-display: swap;
             src: url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.ttf') format('truetype'),
-            url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.woff2') format('woff2'); 
+                 url('{{Cow_Res_Path}}fonts/noto-sans/NotoSansSC-Regular.woff2') format('woff2'); 
         }
 
         @font-face {
@@ -56,24 +52,32 @@
 
         * {
             box-sizing: border-box;
+            user-select: none;
         }
 
         body {
-            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-            margin: 20px auto;
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 30px auto;
+            padding: 10px;
+            width: 1060px;
             color: var(--text-primary);
             font-size: 14px;
-            line-height: 1.6;
-            width: 1000px;
+            line-height: 1.5;
+            width: 1040px;
         }
 
         .container {
             background-color: var(--container-bg);
-            border: 3px solid var(--container-border);
+            border: 2.5px solid var(--container-border);
+            border-radius: 28px;
             padding: 0;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 20px 50px rgba(37, 99, 235, 0.2);
+            box-shadow: 
+                0 12px 32px rgba(15, 23, 42, 0.06),
+                0 30px 70px rgba(30, 58, 138, 0.16),
+                0 50px 100px -10px rgba(15, 23, 42, 0.12),
+                0 0 50px rgba(56, 189, 248, 0.14);
         }
 
         .header {
@@ -82,9 +86,8 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
-            padding: 45px 30px 75px; 
-            background: var(--header-bg);
-            border-bottom: none;
+            padding: 40px 34px 62px; 
+            background: linear-gradient(180deg, #2563eb 0%, #3b82f6 45%, #60a5fa 100%);
             position: relative;
             overflow: hidden;
         }
@@ -97,15 +100,34 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(3px 3px at 24px 32px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 70px 85px, #fef08a, rgba(0,0,0,0)),
-                radial-gradient(3px 3px at 140px 45px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 180px 130px, #67e8f9, rgba(0,0,0,0)),
-                radial-gradient(3px 3px at 260px 90px, #ffffff, rgba(0,0,0,0));
+                radial-gradient(2px 2px at 24px 32px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2.5px 2.5px at 76px 82px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 134px 38px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 186px 112px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 244px 58px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 314px 128px, #ffffff, rgba(0,0,0,0));
             background-repeat: repeat;
-            background-size: 280px 180px;
-            opacity: 0.8;
+            background-size: 260px 220px;
+            opacity: 0.55;
             z-index: 0;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 50px;
+            width: 320px;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6a26 26 0 1 0 26 26 7 7 0 0 1-7-7 7 7 0 0 1 7-7 26 26 0 0 0-26-12z' fill='%23fef08a' fill-opacity='0.9' filter='drop-shadow(0 0 10px rgba(254,240,138,0.45))'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M10 35 Q20 15 40 30 T70 25 T90 35' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' opacity='0.35'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M10 25 Q30 5 50 20 T90 25' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.25'/%3E%3C/svg%3E");
+            background-size: 56px 56px, 120px 60px, 100px 50px;
+            background-repeat: no-repeat;
+            background-position: top 10px right 15px, top 36px right 90px, top 12px right 165px;
+            z-index: 0;
+            pointer-events: none;
         }
 
         .header-landscape {
@@ -124,8 +146,8 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 50px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.2C969.89,39,1047,24.38,1123.2,30.28,1149.52,32.31,1175.36,38.16,1200,46.2V0Z' fill='%23ffffff' fill-opacity='0.25'/%3E%3C/svg%3E");
+            height: 42px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.2C969.89,39,1047,24.38,1123.2,30.28,1149.52,32.31,1175.36,38.16,1200,46.2V0Z' fill='%23ffffff' fill-opacity='0.2'/%3E%3C/svg%3E");
             background-size: cover;
             background-position: center bottom;
         }
@@ -136,7 +158,7 @@
             bottom: -1px;
             left: 0;
             width: 100%;
-            height: 40px;
+            height: 36px;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23ffffff'/%3E%3C/svg%3E");
             background-size: cover;
             transform: rotate(180deg);
@@ -144,14 +166,18 @@
 
         .scene-container {
             position: absolute;
-            bottom: 12px;
-            right: 25px;
-            width: 260px;
+            bottom: 14px;
+            right: 28px;
+            width: 250px;
             height: 110px;
             z-index: 2;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 110'%3E%3Cdefs%3E%3Cfilter id='glow' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur in='SourceAlpha' stdDeviation='3'/%3E%3CfeOffset dx='1' dy='2' result='offsetblur'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.25'/%3E%3C/feComponentTransfer%3E%3CfeMerge%3E%3CfeMergeNode/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23glow)'%3E%3Cpath d='M10 30 Q25 18 45 25 T80 20 T110 30' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' opacity='0.7'/%3E%3Cpath d='M180 20 Q195 10 215 17 T250 15' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' opacity='0.5'/%3E%3Cpath d='M230 12 L233 5 L240 8 L235 15 Z' fill='%23fef08a' opacity='0.9'/%3E%3Crect x='30' y='82' width='7' height='18' rx='2' fill='%2378350f'/%3E%3Cpath d='M15 85 L33.5 35 L52 85 Z' fill='%2310b981'/%3E%3Cpath d='M15 85 L33.5 35 L52 85 Z' fill='none' stroke='%23059669' stroke-width='2'/%3E%3Crect x='58' y='82' width='7' height='18' rx='2' fill='%2378350f'/%3E%3Cpath d='M43 85 L61.5 45 L80 85 Z' fill='%2334d399'/%3E%3Cpath d='M43 85 L61.5 45 L80 85 Z' fill='none' stroke='%2310b981' stroke-width='2'/%3E%3Crect x='110' y='52' width='65' height='42' rx='6' fill='%23ffffff' stroke='%23cbd5e1' stroke-width='2.5'/%3E%3Cpath d='M98 54 L142.5 20 L187 54 Z' fill='%23f43f5e' stroke='%23be123c' stroke-width='2.5' stroke-linejoin='round'/%3E%3Crect x='158' y='24' width='14' height='18' fill='%23ffffff' stroke='%23cbd5e1' stroke-width='2'/%3E%3Crect x='155' y='21' width='20' height='5' rx='2' fill='%23f43f5e'/%3E%3Crect x='134' y='66' width='18' height='28' rx='3' fill='%23fbbf24' stroke='%23d97706' stroke-width='2'/%3E%3Ccircle cx='148' cy='80' r='2.5' fill='%23b45309'/%3E%3Crect x='118' y='62' width='12' height='12' rx='3' fill='%2338bdf8' stroke='%230284c7' stroke-width='2'/%3E%3Cpath d='M124 62 V74 M118 68 H130' stroke='%23ffffff' stroke-width='1.5'/%3E%3Crect x='156' y='62' width='12' height='12' rx='3' fill='%2338bdf8' stroke='%230284c7' stroke-width='2'/%3E%3Cpath d='M162 62 V74 M156 68 H168' stroke='%23ffffff' stroke-width='1.5'/%3E%3Ccircle cx='165' cy='16' r='3.5' fill='white' opacity='0.9'/%3E%3Ccircle cx='171' cy='9' r='5.5' fill='white' opacity='0.7'/%3E%3Ccircle cx='178' cy='2' r='7.5' fill='white' opacity='0.5'/%3E%3Cpath d='M190 75 V94 M200 75 V94 M210 75 V94 M220 75 V94' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M187 80 H223 M187 89 H223' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: bottom right;
+            pointer-events: none;
+        }
+
+        .scene-container svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
         }
 
         .header-content-left {
@@ -163,16 +189,17 @@
         }
 
         .main-title {
-            position: relative;
-            font-size: 52px;
-            color: var(--header-title-color);
+            font-size: 48px;
+            color: #ffffff;
             font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
             font-weight: 400;
             letter-spacing: 2px;
             z-index: 2;
-            text-shadow:
-                3px 3px 0px rgba(29, 78, 216, 0.7),
-                6px 6px 4px rgba(0, 0, 0, 0.25);
+            line-height: 1.15;
+            text-shadow: 
+                0 2px 0 rgba(30, 58, 138, 0.28),
+                0 4px 10px rgba(15, 23, 42, 0.18),
+                0 10px 22px rgba(30, 64, 175, 0.25);
         }
 
         .title-divider {
@@ -180,7 +207,7 @@
             align-items: center;
             width: 100%;
             height: 6px;
-            margin: 4px 0 10px;
+            margin: -2px 0 4px;
             gap: 6px;
             z-index: 2;
         }
@@ -191,21 +218,21 @@
             background: rgba(255, 255, 255, 0.6);
             border-radius: 50%;
             flex-shrink: 0;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
         }
 
         .divider-dot.accent {
             width: 6px;
             height: 6px;
-            background: #fbbf24;
-            box-shadow: 0 0 12px #fbbf24, 0 0 4px rgba(251, 191, 36, 0.6);
+            background: #ffffff;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.9), 0 0 4px rgba(255, 255, 255, 0.6);
         }
 
         .divider-line {
             flex: 1;
-            height: 2px;
+            height: 1.5px;
             margin-left: 4px;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 60%, transparent 100%);
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.15) 60%, transparent 100%);
             border-radius: 2px;
             box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
         }
@@ -215,137 +242,116 @@
             align-items: center;
             gap: 12px;
             z-index: 2;
+            flex-wrap: wrap;
         }
 
-        .list-type-tag {
+        .cyber-pill {
             position: relative;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            height: 38px;
-            box-sizing: border-box;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: #ffffff;
-            padding: 0 22px;
+            height: 36px;
+            padding: 0 4px 0 0;
             border-radius: 14px;
-            font-family: 'Noto Sans SC', sans-serif;
-            font-size: 16px;
-            font-weight: 900;
-            line-height: 1;
-            box-shadow: 
-                0 6px 16px rgba(29, 78, 216, 0.35),
-                inset 0 2px 3px rgba(255, 255, 255, 0.5),
-                inset 0 -2px 3px rgba(0, 0, 0, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.95);
-            z-index: 3;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
-        .security-status-tag {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            height: 38px;
-            padding: 0 16px;
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(10px);
-            border-radius: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: #bfdbfe;
-            font-family: 'Orbitron', monospace;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .status-beacon {
-            width: 7px;
-            height: 7px;
-            background: #fbbf24;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #fbbf24, 0 0 4px #ffffff;
-            animation: pulse-beacon 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse-beacon {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.35; transform: scale(0.75); }
-        }
-        
-        .origin-plugin-tag { 
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            height: 38px;
-            box-sizing: border-box;
-            padding: 0 18px;
-            border-radius: 14px;
-            font-family: "Orbitron", sans-serif;
-            font-size: 12px;
-            font-weight: 800;
-            color: #ffffff;
-            line-height: 1;
-            border: 2px solid rgba(255, 255, 255, 0.95);
-            z-index: 2;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        .origin-plugin-tag.origin-miao { 
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.4);
-        }
-        .origin-plugin-tag.origin-zzz { 
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
-            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.4);
-        }
-        .origin-plugin-tag.origin-waves { 
-            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); 
-            box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.4);
-        }
-
-        .folder-size-tag {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            height: 38px;
-            box-sizing: border-box;
-            gap: 6px;
-            background: linear-gradient(135deg, rgba(254, 243, 199, 0.95) 0%, rgba(253, 230, 138, 0.95) 100%);
-            backdrop-filter: blur(10px);
-            color: #b45309;
-            padding: 0 16px;
-            border-radius: 14px;
-            font-family: "Orbitron", sans-serif;
-            font-size: 12px;
-            font-weight: 800;
-            line-height: 1;
-            box-shadow: 
-                0 6px 16px rgba(245, 158, 11, 0.2), 
-                inset 0 1px 2px rgba(255, 255, 255, 0.8);
-            border: 2px solid #ffffff;
-            z-index: 1;
-        }
-
-        .list-type-tag::before, .origin-plugin-tag::before, .folder-size-tag::before {
+        .cyber-pill::after {
             content: '';
             position: absolute;
+            top: 1px;
             left: 8px;
-            top: 18%;
-            width: 35%;
-            height: 20%;
-            background: rgba(255, 255, 255, 0.45);
-            border-radius: 10px;
+            right: 8px;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 10px 10px 0 0;
             pointer-events: none;
+        }
+
+        .pill-prefix {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            padding: 0 10px;
+            border-radius: 0 9px 9px 0;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            line-height: 1;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.28);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .pill-value {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 12px 0 10px;
+            font-weight: 900;
+            line-height: 1;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+        }
+
+        .cyber-pill.pill-character {
+            background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        .cyber-pill.pill-character .pill-value {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 14px;
+        }
+
+        .cyber-pill.pill-origin-miao {
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        .cyber-pill.pill-origin-zzz {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        .cyber-pill.pill-origin-waves {
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+            box-shadow: 0 4px 16px rgba(219, 39, 119, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        .cyber-pill.pill-origin-default {
+            background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        .cyber-pill[class*="pill-origin-"] .pill-value {
+            font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
+            font-size: 12px;
+        }
+
+        .cyber-pill.pill-storage {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        .cyber-pill.pill-storage .pill-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #67e8f9;
+            box-shadow: 0 0 8px #67e8f9, 0 0 2px #ffffff;
         }
 
         .header-stats-area {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 12px;
+            gap: 10px;
             margin-left: auto;
             z-index: 2;
         }
@@ -354,52 +360,50 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 8px 12px 8px 20px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border-radius: 16px;
+            padding: 6px 8px 6px 16px;
+            background: #ffffff;
+            border-radius: 14px;
             box-shadow: 
-                0 12px 30px rgba(0, 0, 0, 0.12), 
-                inset 0 1px 2px rgba(255, 255, 255, 0.9);
-            border: 1.5px solid var(--glass-border);
+                0 8px 20px -4px rgba(15, 23, 42, 0.08), 
+                0 2px 6px -2px rgba(15, 23, 42, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.85);
         }
 
         .stat-item span {
-            color: #1e3a8a;
+            color: #64748b;
             font-size: 13px;
-            font-weight: 900;
+            font-weight: 800;
             font-family: 'Noto Sans SC', sans-serif;
             letter-spacing: 2px;
-            text-transform: uppercase;
         }
 
         .digit-container {
             display: flex;
             gap: 4px;
-            background: rgba(191, 219, 254, 0.6);
+            background: #f1f5f9;
             padding: 4px;
-            border-radius: 10px;
-            box-shadow: inset 0 2px 4px rgba(37, 99, 235, 0.08);
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .digit {
             position: relative;
-            width: 30px;
-            height: 38px;
+            width: 28px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
             color: #ffffff;
-            border-radius: 6px;
+            border-radius: 5px;
             font-family: 'Orbitron', monospace;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             line-height: 1;
             box-shadow: 
-                0 3px 6px rgba(29, 78, 216, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5);
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+                0 2px 5px rgba(37, 99, 235, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             overflow: hidden;
         }
 
@@ -409,134 +413,143 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 48%;
-            background: rgba(255, 255, 255, 0.2);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+            height: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .pagination-info {
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #1e3a8a;
+            color: #64748b;
             font-family: 'Orbitron', monospace;
-            font-size: 13px;
-            font-weight: 800;
-            padding: 6px 18px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(6px);
             border-radius: 20px;
-            border: 1.5px solid var(--glass-border);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         }
 
         .page-number {
             color: #2563eb;
-            font-size: 16px;
-            font-weight: 900;
+            font-size: 14px;
+            font-weight: 800;
         }
 
         .main-content {
-            padding: 40px 30px;
-            background-color: #f8fafc;
-            background-image: 
-                radial-gradient(#93c5fd 1.5px, transparent 1.5px),
-                radial-gradient(#3b82f6 1px, transparent 1px);
-            background-size: 30px 30px, 60px 60px;
-            background-position: 0 0, 15px 15px;
+            padding: 34px 28px 40px;
+            background-color: #ffffff;
+            background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+            background-size: 28px 28px;
         }
 
         .ban-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
             list-style: none;
             margin: 0;
             padding: 0;
         }
 
-        .ban-item { 
+        .ban-item {
             background: var(--item-bg);
-            backdrop-filter: blur(16px);
-            border-radius: 22px;
-            padding: 10px;
+            border-radius: 18px;
+            padding: 10px 10px 12px;
             border: 2px solid var(--item-border);
-            box-shadow: var(--item-shadow);
+            box-shadow: 0 4px 14px var(--item-shadow);
             display: flex;
             flex-direction: column;
-            text-align: center;
             position: relative;
-            transition: transform 0.2s ease;
+            min-width: 0;
         }
 
         .ban-item.is-gu {
             background: var(--gu-item-bg);
-            border: 2.5px solid var(--gu-item-border);
-            box-shadow: var(--gu-item-shadow);
+            border: 2px solid var(--gu-item-border);
+            box-shadow: 0 6px 16px var(--gu-item-shadow);
+        }
+
+        .gu-label {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--gu-label-bg);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            z-index: 5;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: 2px solid #ffffff;
+        }
+
+        .image-box {
+            position: relative;
+            width: 100%;
+            background-color: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
         }
 
         .ban-item img {
             display: block;
             width: 100%;
             height: auto;
-            aspect-ratio: 16/9;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
             object-fit: contain;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            background-color: #ffffff;
-            border: 1.5px solid rgba(226, 232, 240, 0.8);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
         }
 
-        .ban-item .error-placeholder {
+        .error-placeholder {
             width: 100%;
             height: auto;
-            aspect-ratio: 16/9;
+            aspect-ratio: 16 / 9;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            background-color: var(--error-bg-color);
+            padding: 10px;
+            font-size: 11px;
+            font-weight: 700;
             color: var(--error-text-color);
-            font-size: 12px;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            padding: 15px;
-            border: 2px dashed var(--error-text-color);
+            background-color: var(--error-bg-color);
+            border: 1.5px dashed #fca5a5;
+            border-radius: 10px;
             text-align: center;
             word-break: break-all;
-            font-weight: 700;
         }
 
         .filename-area {
+            text-align: center;
+            padding: 3px 4px 0;
             margin-top: auto;
-            padding: 4px 6px 2px;
         }
 
-        .ban-item .filename {
+        .filename {
             font-size: 13px;
-            color: var(--text-primary);
-            word-break: break-all;
+            font-weight: 700;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             line-height: 1.4;
-            font-weight: 800;
         }
 
-        .gu-label {
-            position: absolute;
-            top: -10px;
-            right: -8px;
-            background: var(--gu-label-bg);
-            color: #ffffff;
-            padding: 5px 14px;
-            border-radius: 16px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 900;
-            z-index: 2;
-            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
-            border: 2px solid #ffffff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        .ban-item.is-gu .filename {
+            color: #92400e;
         }
 
         .empty-list {
@@ -544,8 +557,7 @@
             color: var(--text-secondary);
             font-size: 15px;
             padding: 50px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(16px);
+            background: #ffffff;
             border-radius: 20px;
             border: 2px dashed #93c5fd;
             font-weight: 800;
@@ -553,7 +565,8 @@
 
         .footer {
             padding: 0;
-            background-color: #eff6ff;
+            background-color: #f8fafc;
+            border-top: none;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -566,11 +579,11 @@
             content: '';
             display: block;
             width: 100%;
-            height: 40px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23eff6ff'/%3E%3C/svg%3E");
+            height: 38px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23f8fafc'/%3E%3C/svg%3E");
             background-size: cover;
             transform: rotate(180deg);
-            margin-top: -30px;
+            margin-top: -28px;
             position: relative;
             z-index: 2;
         }
@@ -579,10 +592,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
-            padding-bottom: 25px;
-            background-color: #eff6ff;
+            padding-bottom: 24px;
+            background-color: #f8fafc;
             width: 100%;
         }
 
@@ -592,31 +605,29 @@
             background: rgba(255, 255, 255, 0.95);
             border-radius: 50px;
             overflow: hidden;
-            height: 38px;
+            height: 36px;
             box-shadow: 
-                0 6px 18px rgba(37, 99, 235, 0.15),
-                inset 0 1px 2px rgba(255, 255, 255, 1);
+                0 4px 12px rgba(148, 163, 184, 0.18),
+                0 0 0 1.5px rgba(255, 255, 255, 0.9);
             position: relative;
-            backdrop-filter: blur(10px);
-            border: 1.5px solid rgba(255, 255, 255, 0.8);
         }
 
-        .pill-label {
+        .footer-pill-lbl {
             font-family: 'Noto Sans SC', sans-serif;
             font-size: 13px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: #ffffff;
             padding: 0 18px;
             height: 100%;
             display: flex;
             align-items: center;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
             position: relative;
             z-index: 1;
         }
 
-        .pill-label::after {
+        .footer-pill-lbl::after {
             content: '';
             position: absolute;
             right: -10px;
@@ -624,16 +635,16 @@
             width: 20px;
             height: 100%;
             background: inherit;
-            transform: skewX(-18deg);
+            transform: skewX(-20deg);
             z-index: -1;
         }
 
-        .pill-val {
+        .footer-pill-val {
             font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
-            color: #1d4ed8;
-            padding: 0 20px 0 22px;
+            color: #2563eb;
+            padding: 0 18px 0 22px;
             height: 100%;
             display: flex;
             align-items: center;
@@ -644,77 +655,172 @@
 
 <body style="{{RenderMatrix}}">
     <div class="container">
-      <div class="header">
-        <div class="header-landscape"></div>
-        <div class="scene-container"></div>
-        <div class="header-content-left">
-          <div class="main-title" data-text="咕咕牛图库的面板图可视化">咕咕牛图库的面板图可视化</div>
-          <div class="title-divider">
-             <div class="divider-dot accent"></div>
-             <div class="divider-dot"></div>
-             <div class="divider-dot"></div>
-             <div class="divider-line"></div>
-           </div>
-          <div class="tags-row">
-            <div class="list-type-tag">{{ characterName || CREName }}</div>
-            <div class="security-status-tag">
-              <span class="status-beacon"></span>
-              <span>VISUAL ARCHIVE</span>
+        <div class="header">
+            <div class="header-landscape"></div>
+
+            <div class="scene-container">
+                <svg viewBox="0 0 250 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <filter id="soft-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <linearGradient id="warm-light" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fffbeb"/>
+                            <stop offset="60%" stop-color="#fef08a"/>
+                            <stop offset="100%" stop-color="#f59e0b"/>
+                        </linearGradient>
+                        <linearGradient id="roof-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8"/>
+                            <stop offset="100%" stop-color="#0284c7"/>
+                        </linearGradient>
+                        <linearGradient id="tree-grad-1" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#6ee7b7"/>
+                            <stop offset="100%" stop-color="#059669"/>
+                        </linearGradient>
+                        <linearGradient id="tree-grad-2" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#34d399"/>
+                            <stop offset="100%" stop-color="#047857"/>
+                        </linearGradient>
+                    </defs>
+
+                    <g opacity="0.85">
+                        <circle cx="168" cy="30" r="4.5" fill="#ffffff" opacity="0.6"/>
+                        <circle cx="173" cy="22" r="6.5" fill="#ffffff" opacity="0.5"/>
+                        <circle cx="170" cy="12" r="8" fill="#ffffff" opacity="0.4"/>
+                        <circle cx="178" cy="4" r="9.5" fill="#ffffff" opacity="0.25"/>
+                    </g>
+
+                    <path d="M12 96 Q32 80 62 96 Z" fill="#22c55e" opacity="0.3"/>
+                    <path d="M42 98 Q72 82 102 98 Z" fill="#16a34a" opacity="0.35"/>
+
+                    <rect x="36" y="78" width="7" height="20" rx="3" fill="#5c3a21"/>
+                    <circle cx="39" cy="62" r="22" fill="url(#tree-grad-2)"/>
+                    <circle cx="28" cy="65" r="16" fill="url(#tree-grad-2)"/>
+                    <circle cx="50" cy="67" r="15" fill="url(#tree-grad-2)"/>
+
+                    <rect x="68" y="80" width="6" height="18" rx="3" fill="#78350f"/>
+                    <circle cx="71" cy="67" r="19" fill="url(#tree-grad-1)"/>
+                    <circle cx="62" cy="71" r="13" fill="url(#tree-grad-1)"/>
+                    <circle cx="80" cy="72" r="13" fill="url(#tree-grad-1)"/>
+                    <ellipse cx="68" cy="56" rx="9" ry="4.5" fill="#ffffff" opacity="0.35"/>
+
+                    <rect x="116" y="58" width="64" height="38" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+                    <rect x="114" y="94" width="68" height="4" rx="2" fill="#94a3b8"/>
+
+                    <path d="M106 59 L148 26 L190 59 Z" fill="url(#roof-grad)"/>
+                    <path d="M106 59 L148 26 L190 59 Z" fill="none" stroke="#0369a1" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M112 55 L148 29 L184 55" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+
+                    <rect x="162" y="32" width="12" height="17" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.2"/>
+                    <rect x="160" y="30" width="16" height="4" rx="1.5" fill="#f43f5e"/>
+
+                    <circle cx="148" cy="44" r="5.5" fill="url(#warm-light)" filter="url(#soft-glow)"/>
+                    <circle cx="148" cy="44" r="5.5" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+
+                    <rect x="125" y="66" width="16" height="16" rx="2" fill="url(#warm-light)" filter="url(#soft-glow)"/>
+                    <path d="M133 66 V82 M125 74 H141" stroke="#b45309" stroke-width="1.5"/>
+                    <rect x="124" y="65" width="18" height="18" rx="2" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+
+                    <rect x="153" y="68" width="17" height="28" rx="3" fill="#d97706" stroke="#78350f" stroke-width="1.5"/>
+                    <circle cx="166" cy="82" r="1.5" fill="#fef08a"/>
+
+                    <path d="M188 78 V95 M198 78 V95 M208 78 V95 M218 78 V95" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M185 83 H221 M185 91 H221" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="188" cy="94" r="5" fill="#10b981"/>
+                    <circle cx="192" cy="92" r="3.5" fill="#34d399"/>
+                    <circle cx="218" cy="94" r="6" fill="#10b981"/>
+                    <circle cx="219" cy="90" r="2.5" fill="#fbbf24"/>
+
+                    <path d="M228 35 L230 26 L238 29 L230 32 Z" fill="#fef08a" opacity="0.9" filter="url(#soft-glow)"/>
+                    <path d="M102 24 L103 18 L108 20 L103 22 Z" fill="#38bdf8" opacity="0.9"/>
+                    <circle cx="240" cy="58" r="1.8" fill="#fde047" opacity="0.75"/>
+                    <circle cx="92" cy="45" r="1.5" fill="#ffffff" opacity="0.8"/>
+                </svg>
             </div>
-            {{ if originPlugin }}
-            <div class="origin-plugin-tag origin-{{ (originPluginKey || originPlugin).toLowerCase() }}">
-              {{ originPlugin }}
+            
+            <div class="header-content-left">
+                <div class="main-title">咕咕牛图库的面板图可视化</div>
+                <div class="title-divider">
+                    <div class="divider-dot accent"></div>
+                    <div class="divider-dot"></div>
+                    <div class="divider-dot"></div>
+                    <div class="divider-line"></div>
+                </div>
+
+                <div class="tags-row">
+                    <div class="cyber-pill pill-character">
+                        <span class="pill-prefix">角色</span>
+                        <span class="pill-value">
+                            <span class="status-dot"></span>
+                            <span>{{ characterName || CREName }}</span>
+                        </span>
+                    </div>
+
+                    {{ if originPlugin }}
+                    <div class="cyber-pill pill-origin-{{ (originPluginKey || originPlugin).toLowerCase() }}">
+                        <span class="pill-prefix">来源</span>
+                        <span class="pill-value">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                                <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z"/>
+                            </svg>
+                            <span>{{ originPlugin }}</span>
+                        </span>
+                    </div>
+                    {{ /if }}
+
+                    {{ if folderSize }}
+                    <div class="cyber-pill pill-storage">
+                        <span class="pill-prefix">容量</span>
+                        <span class="pill-value">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                                <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"/>
+                            </svg>
+                            <span>{{ folderSize }}</span>
+                        </span>
+                    </div>
+                    {{ /if }}
+                </div>
             </div>
-            {{ /if }} {{ if folderSize }}
-            <div class="folder-size-tag">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                fill="currentColor"
-              >
-                <path
-                  d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"
-                />
-              </svg>
-              <span>{{ folderSize }}</span>
+
+            <div class="header-stats-area">
+                <div class="stat-item">
+                    <span>总数</span>
+                    <div class="digit-container">
+                        {{ if odometer && odometer.length > 0 }}
+                        {{ each odometer digit }}
+                        <div class="digit">{{ digit }}</div>
+                        {{ /each }}
+                        {{ else if countDigits && countDigits.length > 0 }}
+                        {{ each countDigits digit }}
+                        <div class="digit">{{ digit }}</div>
+                        {{ /each }}
+                        {{ else }}
+                        <div class="digit">0</div>
+                        {{ /if }}
+                    </div>
+                </div>
+                <div class="pagination-info">
+                    PAGE <span class="page-number">{{ batchNum }}</span> / {{ totalPages || pageCount }}
+                </div>
             </div>
-            {{ /if }}
-          </div>
         </div>
-        <div class="header-stats-area">
-          <div class="stat-item">
-            <span>总数</span>
-            <div class="digit-container">
-              {{ if odometer && odometer.length > 0 }}
-              {{ each odometer digit }}
-              <div class="digit">{{ digit }}</div>
-              {{ /each }}
-              {{ else if countDigits && countDigits.length > 0 }}
-              {{ each countDigits digit }}
-              <div class="digit">{{ digit }}</div>
-              {{ /each }}
-              {{ else }}
-              <div class="digit">0</div>
-              {{ /if }}
-            </div>
-          </div>
-          <div class="pagination-info">
-            PAGE <span class="page-number">{{ batchNum }}</span> / {{ totalPages || pageCount }}
-          </div>
-        </div>
-      </div>
+
         <div class="main-content">
             {{ if images && images.length > 0 }}
             <div class="ban-grid">
                 {{ each images item index }}
                 <li class="ban-item {{ if item.isGu }}is-gu{{ /if }}">
                     {{ if item.isGu }}<span class="gu-label">Gu</span>{{ /if }}
-                    <img src="{{ item.filePath }}" alt="{{ item.fileName }}"
-                        onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.innerHTML='<div>图片加载失败:</div><div>' + this.alt + '</div>'; this.parentNode.insertBefore(ph, this);" />
+                    <div class="image-box">
+                        <img src="{{ item.filePath }}" alt="{{ item.fileName }}"
+                            onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.innerHTML='<div>图片加载失败:</div><div>' + this.alt + '</div>'; this.parentNode.insertBefore(ph, this);" />
+                    </div>
                     <div class="filename-area">
-                        <div class="filename">
+                        <div class="filename" title="{{ item.originalIndex + 1 }}. {{ item.fileName }}">
                             {{ item.originalIndex + 1 }}. {{ item.fileName }}
                         </div>
                     </div>
@@ -725,19 +831,25 @@
             <p class="empty-list">当前页面无内容</p>
             {{ /if }}
         </div>
+
         <div class="footer">
             <div class="footer-content">
                 <div class="footer-pill">
-                    <span class="pill-label">运行版本</span>
-                    <span class="pill-val">v{{ Version }}</span>
+                    <span class="footer-pill-lbl">版本</span>
+                    <span class="footer-pill-val">v{{ Version }}</span>
                 </div>
                 <div class="footer-pill">
-                    <span class="pill-label">机器人框架</span>
-                    <span class="pill-val">Yunzai</span>
+                    <span class="footer-pill-lbl">框架</span>
+                    <span class="footer-pill-val">Yunzai</span>
+                </div>
+                <div class="footer-pill">
+                    <span class="footer-pill-lbl">项目</span>
+                    <span class="footer-pill-val">Miao-Plugin-MBT</span>
                 </div>
             </div>
         </div>
     </div>
+
     <script>
         window.addEventListener('load', function() {
             requestAnimationFrame(function() {

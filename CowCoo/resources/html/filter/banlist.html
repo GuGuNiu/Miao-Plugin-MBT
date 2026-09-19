@@ -7,28 +7,26 @@
   <title>咕咕牛 - 封禁列表</title>
   <style>
     :root {
-      --bg-color: #ffffff;
       --container-bg: #ffffff;
-      --container-border: #e11d48;
+      --container-border: #fecdd3;
       --text-primary: #9f1239;
       --text-secondary: #64748b;
-      --header-bg: linear-gradient(135deg, #881337 0%, #be123c 50%, #f43f5e 100%);
-      --header-title-color: #ffffff;
-      --glass-bg: rgba(255, 255, 255, 0.78);
-      --glass-border: rgba(255, 255, 255, 0.88);
-      --glass-shadow: 0 8px 32px 0 rgba(136, 19, 55, 0.15);
-      --item-bg: rgba(255, 241, 242, 0.75);
-      --item-border: rgba(255, 255, 255, 0.95);
-      --item-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.16), 0 8px 10px -6px rgba(225, 29, 72, 0.08);
-      --reason-bg: linear-gradient(135deg, rgba(254, 205, 211, 0.9) 0%, rgba(255, 228, 230, 0.9) 100%);
-      --reason-border: rgba(244, 63, 94, 0.35);
-      --reason-text: #9f1239;
-      --error-text-color: #dc2626;
-      --error-bg-color: #fef2f2;
-      --gu-item-bg: linear-gradient(135deg, rgba(254, 240, 138, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
-      --gu-item-border: rgba(245, 158, 11, 0.8);
-      --gu-item-shadow: 0 12px 28px rgba(245, 158, 11, 0.22);
+      --accent-rose: #f43f5e;
+      --accent-ruby: #e11d48;
+      --accent-crimson: #be123c;
+      --accent-gold: #fbbf24;
+      --item-bg: #fff1f2;
+      --item-border: #fecdd3;
+      --item-shadow: rgba(225, 29, 72, 0.12);
+      --gu-item-bg: linear-gradient(135deg, #fef9c3 0%, #ffffff 100%);
+      --gu-item-border: #fbbf24;
+      --gu-item-shadow: rgba(251, 191, 36, 0.3);
       --gu-label-bg: linear-gradient(45deg, #f59e0b, #fbbf24);
+      --reason-bg: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+      --reason-border: #fecdd3;
+      --reason-text: #be123c;
+      --error-text-color: #ef4444;
+      --error-bg-color: #fef2f2;
     }
 
     @font-face {
@@ -61,25 +59,33 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      user-select: none;
     }
 
     body {
-      font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-      margin: 20px auto;
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 30px auto;
+      padding: 10px;
+      width: 1060px;
       color: var(--text-primary);
       font-size: 14px;
-      line-height: 1.6;
-      width: 1000px;
+      line-height: 1.5;
+      width: 1040px;
       -webkit-font-smoothing: antialiased;
     }
 
     .container {
       background-color: var(--container-bg);
-      border: 3px solid var(--container-border);
+      border: 2.5px solid var(--container-border);
+      border-radius: 28px;
       padding: 0;
       overflow: hidden;
       position: relative;
-      box-shadow: 0 20px 50px rgba(225, 29, 72, 0.2);
+      box-shadow: 
+        0 12px 32px rgba(15, 23, 42, 0.06),
+        0 30px 70px rgba(190, 18, 60, 0.18),
+        0 50px 100px -10px rgba(15, 23, 42, 0.12),
+        0 0 50px rgba(244, 63, 94, 0.16);
     }
 
     .header {
@@ -88,9 +94,8 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 15px;
-      padding: 45px 30px 75px;
-      background: var(--header-bg);
-      border-bottom: none;
+      padding: 40px 34px 64px; 
+      background: linear-gradient(180deg, #be123c 0%, #e11d48 45%, #fb7185 100%);
       position: relative;
       overflow: hidden;
     }
@@ -103,15 +108,34 @@
       width: 100%;
       height: 100%;
       background-image: 
-        radial-gradient(3px 3px at 24px 32px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 70px 85px, #fef08a, rgba(0,0,0,0)),
-        radial-gradient(3px 3px at 140px 45px, #ffffff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 180px 130px, #fecdd3, rgba(0,0,0,0)),
-        radial-gradient(3px 3px at 260px 90px, #ffffff, rgba(0,0,0,0));
+        radial-gradient(2.5px 2.5px at 24px 32px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(3px 3px at 76px 82px, #fef08a, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 134px 38px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 186px 112px, #fecdd3, rgba(0,0,0,0)),
+        radial-gradient(2.5px 2.5px at 244px 58px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(3px 3px at 314px 128px, #ffffff, rgba(0,0,0,0));
       background-repeat: repeat;
-      background-size: 280px 180px;
-      opacity: 0.8;
+      background-size: 260px 220px;
+      opacity: 0.65;
       z-index: 0;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      right: 50px;
+      width: 320px;
+      height: 100%;
+      background-image: 
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6a26 26 0 1 0 26 26 7 7 0 0 1-7-7 7 7 0 0 1 7-7 26 26 0 0 0-26-12z' fill='%23fef08a' fill-opacity='0.95' filter='drop-shadow(0 0 10px rgba(254,240,138,0.5))'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M10 35 Q20 15 40 30 T70 25 T90 35' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' opacity='0.35'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Cpath d='M10 25 Q30 5 50 20 T90 25' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' opacity='0.25'/%3E%3C/svg%3E");
+      background-size: 56px 56px, 120px 60px, 100px 50px;
+      background-repeat: no-repeat;
+      background-position: top 10px right 15px, top 36px right 90px, top 12px right 165px;
+      z-index: 0;
+      pointer-events: none;
     }
 
     .header-landscape {
@@ -130,8 +154,8 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 50px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.2C969.89,39,1047,24.38,1123.2,30.28,1149.52,32.31,1175.36,38.16,1200,46.2V0Z' fill='%23ffffff' fill-opacity='0.25'/%3E%3C/svg%3E");
+      height: 42px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.2C969.89,39,1047,24.38,1123.2,30.28,1149.52,32.31,1175.36,38.16,1200,46.2V0Z' fill='%23ffffff' fill-opacity='0.22'/%3E%3C/svg%3E");
       background-size: cover;
       background-position: center bottom;
     }
@@ -142,7 +166,7 @@
       bottom: -1px;
       left: 0;
       width: 100%;
-      height: 40px;
+      height: 36px;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23ffffff'/%3E%3C/svg%3E");
       background-size: cover;
       transform: rotate(180deg);
@@ -150,10 +174,10 @@
 
     .scene-container {
       position: absolute;
-      bottom: 12px;
-      right: 25px;
-      width: 270px;
-      height: 115px;
+      bottom: 14px;
+      right: 28px;
+      width: 260px;
+      height: 112px;
       z-index: 2;
       pointer-events: none;
     }
@@ -161,7 +185,7 @@
     .header-scene-svg {
       width: 100%;
       height: 100%;
-      display: block;
+      overflow: visible;
     }
 
     .header-content-left {
@@ -173,16 +197,17 @@
     }
 
     .main-title {
-      position: relative;
-      font-size: 52px;
-      color: var(--header-title-color);
+      font-size: 50px;
+      color: #ffffff;
       font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
       font-weight: 400;
       letter-spacing: 2px;
       z-index: 2;
-      text-shadow:
-        3px 3px 0px rgba(159, 18, 57, 0.7),
-        6px 6px 4px rgba(0, 0, 0, 0.25);
+      line-height: 1.15;
+      text-shadow: 
+        0 2px 0 rgba(136, 19, 55, 0.35),
+        0 4px 10px rgba(15, 23, 42, 0.2),
+        0 10px 22px rgba(190, 18, 60, 0.28);
     }
 
     .title-divider {
@@ -190,7 +215,7 @@
       align-items: center;
       width: 100%;
       height: 6px;
-      margin: 4px 0 10px;
+      margin: -2px 0 4px;
       gap: 6px;
       z-index: 2;
     }
@@ -201,7 +226,7 @@
       background: rgba(255, 255, 255, 0.6);
       border-radius: 50%;
       flex-shrink: 0;
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
     }
 
     .divider-dot.accent {
@@ -213,7 +238,7 @@
 
     .divider-line {
       flex: 1;
-      height: 2px;
+      height: 1.5px;
       margin-left: 4px;
       background: linear-gradient(90deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 60%, transparent 100%);
       border-radius: 2px;
@@ -225,93 +250,109 @@
       align-items: center;
       gap: 12px;
       z-index: 2;
+      flex-wrap: wrap;
     }
 
-    .list-type-tag {
+    .cyber-pill {
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      height: 38px;
-      box-sizing: border-box;
-      background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
-      color: #ffffff;
-      padding: 0 22px;
+      height: 36px;
+      padding: 0 4px 0 0;
       border-radius: 14px;
-      font-family: 'Noto Sans SC', sans-serif;
-      font-size: 16px;
-      font-weight: 900;
-      line-height: 1;
-      box-shadow: 
-        0 6px 16px rgba(190, 18, 60, 0.4),
-        inset 0 2px 3px rgba(255, 255, 255, 0.5),
-        inset 0 -2px 3px rgba(0, 0, 0, 0.2);
       border: 2px solid rgba(255, 255, 255, 0.95);
-      z-index: 3;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
     }
 
-    .list-type-tag.manual {
-      background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
-      box-shadow: 0 6px 16px rgba(225, 29, 72, 0.4);
-    }
-
-    .list-type-tag.purified {
-      background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
-      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
-    }
-
-    .list-type-tag::before {
+    .cyber-pill::after {
       content: '';
       position: absolute;
+      top: 1px;
       left: 8px;
-      top: 18%;
-      width: 35%;
-      height: 20%;
-      background: rgba(255, 255, 255, 0.45);
-      border-radius: 10px;
+      right: 8px;
+      height: 40%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+      border-radius: 10px 10px 0 0;
       pointer-events: none;
     }
 
-    .security-status-tag {
-      position: relative;
+    .pill-prefix {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 0 9px 9px 0;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.28);
+      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .pill-value {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      height: 38px;
-      padding: 0 16px;
-      background: rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(10px);
-      border-radius: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.5);
-      color: #fecdd3;
-      font-family: 'Orbitron', monospace;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      padding: 0 12px 0 10px;
+      font-weight: 900;
+      line-height: 1;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+    }
+
+    .cyber-pill.pill-type {
+      background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+      box-shadow: 0 4px 16px rgba(225, 29, 72, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .cyber-pill.pill-type.manual {
+      background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+    }
+    .cyber-pill.pill-type.purified {
+      background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+    }
+
+    .cyber-pill.pill-type .pill-value {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 14px;
+    }
+
+    .cyber-pill.pill-status {
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .cyber-pill.pill-status .pill-value {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.5px;
     }
 
     .status-beacon {
       width: 7px;
       height: 7px;
-      background: #fbbf24;
       border-radius: 50%;
-      box-shadow: 0 0 10px #fbbf24, 0 0 4px #ffffff;
+      background-color: #ffffff;
+      box-shadow: 0 0 8px #ffffff, 0 0 12px #fef08a;
       animation: pulse-beacon 2s infinite ease-in-out;
     }
 
     @keyframes pulse-beacon {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.35; transform: scale(0.75); }
+      50% { opacity: 0.4; transform: scale(0.8); }
     }
 
     .header-stats-area {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 12px;
+      gap: 10px;
       margin-left: auto;
       z-index: 2;
     }
@@ -320,52 +361,50 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 8px 12px 8px 20px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px);
-      border-radius: 16px;
+      padding: 6px 8px 6px 16px;
+      background: #ffffff;
+      border-radius: 14px;
       box-shadow: 
-        0 12px 30px rgba(0, 0, 0, 0.12), 
-        inset 0 1px 2px rgba(255, 255, 255, 0.9);
-      border: 1.5px solid var(--glass-border);
+        0 8px 20px -4px rgba(15, 23, 42, 0.08), 
+        0 2px 6px -2px rgba(15, 23, 42, 0.04);
+      border: 1.5px solid rgba(255, 255, 255, 0.85);
     }
 
     .stat-item span {
-      color: #881337;
+      color: #9f1239;
       font-size: 13px;
-      font-weight: 900;
+      font-weight: 800;
       font-family: 'Noto Sans SC', sans-serif;
       letter-spacing: 2px;
-      text-transform: uppercase;
     }
 
     .digit-container {
       display: flex;
       gap: 4px;
-      background: rgba(254, 205, 211, 0.6);
+      background: #fff1f2;
       padding: 4px;
-      border-radius: 10px;
-      box-shadow: inset 0 2px 4px rgba(225, 29, 72, 0.08);
+      border-radius: 8px;
+      box-shadow: inset 0 2px 4px rgba(225, 29, 72, 0.06);
     }
 
     .digit {
       position: relative;
-      width: 30px;
-      height: 38px;
+      width: 28px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(180deg, #f43f5e 0%, #be123c 100%);
+      background: linear-gradient(to bottom, #f43f5e 0%, #be123c 100%);
       color: #ffffff;
-      border-radius: 6px;
+      border-radius: 5px;
       font-family: 'Orbitron', monospace;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       line-height: 1;
       box-shadow: 
-        0 3px 6px rgba(190, 18, 60, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.5);
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        0 2px 5px rgba(190, 18, 60, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
       overflow: hidden;
     }
 
@@ -375,48 +414,45 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 48%;
-      background: rgba(255, 255, 255, 0.2);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+      height: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
 
     .pagination-info {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #881337;
+      color: #9f1239;
       font-family: 'Orbitron', monospace;
-      font-size: 13px;
-      font-weight: 800;
-      padding: 6px 18px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 16px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(6px);
       border-radius: 20px;
-      border: 1.5px solid var(--glass-border);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     }
 
     .page-number {
       color: #e11d48;
-      font-size: 16px;
-      font-weight: 900;
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .main-content {
-      padding: 40px 30px;
-      background-color: #fff1f2;
-      background-image: 
-        radial-gradient(#fecdd3 1.5px, transparent 1.5px),
-        radial-gradient(#f43f5e 1px, transparent 1px);
-      background-size: 30px 30px, 60px 60px;
-      background-position: 0 0, 15px 15px;
+      padding: 34px 28px 40px;
+      background-color: #ffffff;
+      background-image: radial-gradient(#fecdd3 1.2px, transparent 1.2px);
+      background-size: 28px 28px;
       min-height: 240px;
     }
 
     .ban-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 20px;
       list-style: none;
       margin: 0;
       padding: 0;
@@ -424,63 +460,110 @@
 
     .ban-item {
       background: var(--item-bg);
-      backdrop-filter: blur(16px);
-      border-radius: 22px;
-      padding: 10px;
+      border-radius: 18px;
+      padding: 10px 10px 12px;
       border: 2px solid var(--item-border);
-      box-shadow: var(--item-shadow);
+      box-shadow: 0 4px 14px var(--item-shadow);
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: transform 0.2s ease;
+      min-width: 0;
     }
 
     .ban-item.is-gu {
       background: var(--gu-item-bg);
-      border: 2.5px solid var(--gu-item-border);
-      box-shadow: var(--gu-item-shadow);
-    }
-
-    .img-box {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/9;
-      background-color: #ffffff;
-      border-radius: 14px;
-      overflow: hidden;
-      margin-bottom: 10px;
-      border: 1.5px solid rgba(254, 205, 211, 0.8);
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-    }
-
-    .ban-item img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background-color: #ffffff;
+      border: 2px solid var(--gu-item-border);
+      box-shadow: 0 6px 16px var(--gu-item-shadow);
     }
 
     .card-badge {
       position: absolute;
       top: 6px;
       left: 6px;
-      background: rgba(136, 19, 55, 0.85);
+      background: rgba(190, 18, 60, 0.85);
       backdrop-filter: blur(4px);
+      color: #ffffff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      line-height: 1.3;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      z-index: 2;
+    }
+
+    .pfl-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      display: inline-flex;
+      align-items: stretch;
+      height: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      z-index: 5;
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 10px rgba(190, 18, 60, 0.28);
+    }
+
+    .pfl-badge-num {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 9px;
+      background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
       color: #ffffff;
       font-family: 'Orbitron', sans-serif;
       font-size: 11px;
       font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 8px;
-      line-height: 1.4;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      z-index: 2;
+      line-height: 1;
+    }
+
+    .pfl-badge-sep {
+      width: 1.5px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .pfl-badge-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 10px;
+      background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+      color: #ffffff;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      line-height: 1;
+    }
+
+    .img-box {
+      position: relative;
+      width: 100%;
+      background-color: #ffffff;
+      border: 1px solid #fecdd3;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .ban-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+      background-color: #ffffff;
     }
 
     .ban-item .error-placeholder {
       width: 100%;
-      height: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -489,29 +572,32 @@
       background-color: var(--error-bg-color);
       color: var(--error-text-color);
       font-size: 11px;
-      border-radius: 14px;
+      border-radius: 10px;
       padding: 10px;
-      border: 2px dashed var(--error-text-color);
+      border: 1.5px dashed #fca5a5;
       text-align: center;
       word-break: break-all;
       font-weight: 700;
     }
 
     .filename-area {
-      margin-top: auto;
-      padding: 4px 6px 2px;
+      text-align: center;
+      padding: 3px 4px 0;
       display: flex;
       flex-direction: column;
       gap: 6px;
+      margin-top: auto;
     }
 
     .ban-item .filename {
       font-size: 13px;
-      color: var(--text-primary);
+      color: #881337;
       word-break: break-all;
       line-height: 1.4;
-      font-weight: 800;
-      text-align: center;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .ban-reasons {
@@ -522,24 +608,24 @@
     }
 
     .reason-tag {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--reason-text);
-      padding: 3px 10px;
-      border-radius: 8px;
+      padding: 2px 8px;
+      border-radius: 6px;
       background: var(--reason-bg);
-      border: 1.5px solid var(--reason-border);
+      border: 1px solid var(--reason-border);
       white-space: nowrap;
       font-weight: 800;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      box-shadow: 0 2px 6px rgba(225, 29, 72, 0.08);
+      box-shadow: 0 1px 3px rgba(225, 29, 72, 0.06);
     }
 
     .reason-tag::before {
       content: '';
-      width: 5px;
-      height: 5px;
+      width: 4px;
+      height: 4px;
       border-radius: 50%;
       background-color: #e11d48;
     }
@@ -547,18 +633,18 @@
     .empty-list {
       text-align: center;
       color: var(--text-secondary);
-      font-size: 15px;
-      padding: 50px;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(16px);
-      border-radius: 20px;
-      border: 2px dashed #fca5a5;
+      font-size: 14px;
+      padding: 46px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 18px;
+      border: 2px dashed #fecdd3;
       font-weight: 800;
     }
 
     .footer {
       padding: 0;
-      background-color: #fff1f2;
+      background-color: #fff5f6;
+      border-top: none;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -571,11 +657,11 @@
       content: '';
       display: block;
       width: 100%;
-      height: 40px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23fff1f2'/%3E%3C/svg%3E");
+      height: 38px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23fff5f6'/%3E%3C/svg%3E");
       background-size: cover;
       transform: rotate(180deg);
-      margin-top: -30px;
+      margin-top: -28px;
       position: relative;
       z-index: 2;
     }
@@ -584,10 +670,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
-      padding-bottom: 25px;
-      background-color: #fff1f2;
+      padding-bottom: 24px;
+      background-color: #fff5f6;
       width: 100%;
     }
 
@@ -597,31 +683,29 @@
       background: rgba(255, 255, 255, 0.95);
       border-radius: 50px;
       overflow: hidden;
-      height: 38px;
+      height: 36px;
       box-shadow: 
-        0 6px 18px rgba(225, 29, 72, 0.15),
-        inset 0 1px 2px rgba(255, 255, 255, 1);
+        0 4px 12px rgba(225, 29, 72, 0.14),
+        0 0 0 1.5px rgba(255, 255, 255, 0.9);
       position: relative;
-      backdrop-filter: blur(10px);
-      border: 1.5px solid rgba(255, 255, 255, 0.8);
     }
 
-    .pill-label {
+    .footer-pill-lbl {
       font-family: 'Noto Sans SC', sans-serif;
       font-size: 13px;
-      font-weight: 900;
-      background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+      font-weight: 800;
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
       color: #ffffff;
       padding: 0 18px;
       height: 100%;
       display: flex;
       align-items: center;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
       position: relative;
       z-index: 1;
     }
 
-    .pill-label::after {
+    .footer-pill-lbl::after {
       content: '';
       position: absolute;
       right: -10px;
@@ -629,16 +713,16 @@
       width: 20px;
       height: 100%;
       background: inherit;
-      transform: skewX(-18deg);
+      transform: skewX(-20deg);
       z-index: -1;
     }
 
-    .pill-val {
+    .footer-pill-val {
       font-family: 'Orbitron', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
-      color: #9f1239;
-      padding: 0 20px 0 22px;
+      color: #be123c;
+      padding: 0 18px 0 22px;
       height: 100%;
       display: flex;
       align-items: center;
@@ -653,68 +737,96 @@
       <div class="header-landscape"></div>
       
       <div class="scene-container">
-        <svg class="header-scene-svg" viewBox="0 0 270 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="header-scene-svg" viewBox="0 0 260 112" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <filter id="scene-shadow" x="-10%" y="-10%" width="130%" height="130%">
-              <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#881337" flood-opacity="0.32"/>
+            <filter id="ruby-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
             </filter>
-            <linearGradient id="scan-cone-grad" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.45"/>
+            <linearGradient id="crystal-roof-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#fb7185"/>
+              <stop offset="100%" stop-color="#be123c"/>
+            </linearGradient>
+            <linearGradient id="warm-core-light" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="60%" stop-color="#fef08a"/>
+              <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+            <linearGradient id="drone-beam-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.5"/>
               <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
             </linearGradient>
-            <linearGradient id="vault-core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#fff1f2"/>
-              <stop offset="100%" stop-color="#ffe4e6"/>
+            <linearGradient id="sakura-grad-1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#fda4af"/>
+              <stop offset="100%" stop-color="#e11d48"/>
             </linearGradient>
-            <linearGradient id="drone-horn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#fef08a"/>
-              <stop offset="100%" stop-color="#f59e0b"/>
+            <linearGradient id="sakura-grad-2" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#f43f5e"/>
+              <stop offset="100%" stop-color="#9f1239"/>
             </linearGradient>
           </defs>
 
-          <g opacity="0.38">
-            <circle cx="150" cy="58" r="46" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4,6"/>
-            <circle cx="150" cy="58" r="32" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
-            <line x1="90" y1="58" x2="210" y2="58" stroke="#ffffff" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+          <g opacity="0.85">
+            <circle cx="178" cy="30" r="4.5" fill="#ffffff" opacity="0.6"/>
+            <circle cx="183" cy="22" r="6.5" fill="#ffffff" opacity="0.5"/>
+            <circle cx="180" cy="12" r="8" fill="#ffffff" opacity="0.4"/>
+            <circle cx="188" cy="4" r="9.5" fill="#ffffff" opacity="0.25"/>
           </g>
 
-          <g filter="url(#scene-shadow)">
-            <polygon points="42,34 12,96 72,96" fill="url(#scan-cone-grad)"/>
-            <ellipse cx="42" cy="96" rx="30" ry="3.5" fill="#fbbf24" fill-opacity="0.18"/>
-            
-            <path d="M33 26 C28 16 20 20 22 23 C26 27 30 28 34 29 Z" fill="url(#drone-horn-grad)" stroke="#b45309" stroke-width="1.2" stroke-linejoin="round"/>
-            <path d="M51 26 C56 16 64 20 62 23 C58 27 54 28 50 29 Z" fill="url(#drone-horn-grad)" stroke="#b45309" stroke-width="1.2" stroke-linejoin="round"/>
-            
-            <circle cx="42" cy="32" r="14" fill="#ffffff" stroke="#e11d48" stroke-width="2.5"/>
-            <circle cx="42" cy="32" r="6.5" fill="#be123c"/>
-            <circle cx="40" cy="30" r="2" fill="#ffffff"/>
-            <path d="M37 38 Q42 41 47 38" stroke="#be123c" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M12 96 Q32 80 62 96 Z" fill="#fb7185" opacity="0.3"/>
+          <path d="M42 98 Q72 82 102 98 Z" fill="#e11d48" opacity="0.35"/>
 
-            <rect x="86" y="52" width="6" height="42" rx="3" fill="#ffffff" stroke="#881337" stroke-width="2"/>
-            <circle cx="89" cy="50" r="4" fill="#fbbf24" stroke="#b45309" stroke-width="1.5"/>
-            
-            <rect x="238" y="46" width="6" height="48" rx="3" fill="#ffffff" stroke="#881337" stroke-width="2"/>
-            <circle cx="241" cy="44" r="4" fill="#f43f5e" stroke="#9f1239" stroke-width="1.5"/>
-            
-            <line x1="92" y1="66" x2="238" y2="60" stroke="#ffffff" stroke-width="3" stroke-dasharray="6,4"/>
-            <line x1="92" y1="66" x2="238" y2="60" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="6,4"/>
+          <rect x="36" y="78" width="7" height="20" rx="3" fill="#881337"/>
+          <circle cx="39" cy="62" r="22" fill="url(#sakura-grad-2)"/>
+          <circle cx="28" cy="65" r="16" fill="url(#sakura-grad-2)"/>
+          <circle cx="50" cy="67" r="15" fill="url(#sakura-grad-2)"/>
 
-            <g transform="translate(125, 28)">
-              <path d="M16 28 V15 C16 4 36 4 36 15 V28" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
-              <path d="M16 28 V15 C16 4 36 4 36 15 V28" fill="none" stroke="#be123c" stroke-width="3" stroke-linecap="round"/>
-              <rect x="0" y="24" width="52" height="44" rx="14" fill="#ffffff" stroke="#be123c" stroke-width="3.5"/>
-              <rect x="7" y="31" width="38" height="30" rx="8" fill="url(#vault-core-grad)" stroke="#fecdd3" stroke-width="1.5"/>
-              <circle cx="26" cy="42" r="4" fill="#be123c"/>
-              <path d="M26 45 V52" stroke="#be123c" stroke-width="3" stroke-linecap="round"/>
-              <circle cx="26" cy="42" r="1.5" fill="#fbbf24"/>
-            </g>
+          <polygon points="68,52 38,98 98,98" fill="url(#drone-beam-grad)"/>
+          <ellipse cx="68" cy="98" rx="28" ry="3.5" fill="#fbbf24" fill-opacity="0.2"/>
 
-            <g transform="translate(202, 20)">
-              <polygon points="12,0 24,20 0,20" fill="#fbbf24" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-              <line x1="12" y1="7" x2="12" y2="13" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
-              <circle cx="12" cy="16.5" r="1" fill="#78350f"/>
-            </g>
+          <g transform="translate(48, 30)">
+            <path d="M10 6 C6 -2 0 1 2 4 C5 7 8 8 11 9 Z" fill="#fef08a" stroke="#b45309" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M26 6 C30 -2 36 1 34 4 C31 7 28 8 25 9 Z" fill="#fef08a" stroke="#b45309" stroke-width="1.2" stroke-linejoin="round"/>
+            <circle cx="18" cy="12" r="12" fill="#ffffff" stroke="#e11d48" stroke-width="2.5"/>
+            <circle cx="18" cy="12" r="5.5" fill="#be123c"/>
+            <circle cx="16.5" cy="10.5" r="1.8" fill="#ffffff"/>
+            <path d="M14 17 Q18 19.5 22 17" stroke="#be123c" stroke-width="1.2" stroke-linecap="round"/>
           </g>
+
+          <rect x="126" y="58" width="64" height="38" rx="4" fill="#fff1f2" stroke="#fecdd3" stroke-width="1.5"/>
+          <rect x="124" y="94" width="68" height="4" rx="2" fill="#be123c"/>
+
+          <path d="M116 59 L158 26 L200 59 Z" fill="url(#crystal-roof-grad)"/>
+          <path d="M116 59 L158 26 L200 59 Z" fill="none" stroke="#881337" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M122 55 L158 29 L194 55" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+
+          <rect x="172" y="32" width="12" height="17" rx="1.5" fill="#ffffff" stroke="#f43f5e" stroke-width="1.2"/>
+          <rect x="170" y="30" width="16" height="4" rx="1.5" fill="#fbbf24"/>
+
+          <circle cx="158" cy="44" r="5.5" fill="url(#warm-core-light)" filter="url(#ruby-glow)"/>
+          <circle cx="158" cy="44" r="5.5" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+
+          <rect x="135" y="66" width="16" height="16" rx="2" fill="url(#warm-core-light)" filter="url(#ruby-glow)"/>
+          <path d="M143 66 V82 M135 74 H151" stroke="#b45309" stroke-width="1.5"/>
+          <rect x="134" y="65" width="18" height="18" rx="2" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+
+          <rect x="163" y="68" width="17" height="28" rx="3" fill="#be123c" stroke="#881337" stroke-width="1.5"/>
+          <circle cx="176" cy="82" r="1.5" fill="#fbbf24"/>
+
+          <path d="M198 78 V95 M208 78 V95 M218 78 V95 M228 78 V95" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+          <path d="M195 83 H231 M195 91 H231" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="198" cy="94" r="5" fill="#f43f5e"/>
+          <circle cx="202" cy="92" r="3.5" fill="#fb7185"/>
+          <circle cx="228" cy="94" r="6" fill="#f43f5e"/>
+          <circle cx="229" cy="90" r="2.5" fill="#fbbf24"/>
+
+          <path d="M238 35 L240 26 L248 29 L240 32 Z" fill="#fef08a" opacity="0.95" filter="url(#ruby-glow)"/>
+          <path d="M112 24 L113 18 L118 20 L113 22 Z" fill="#fb7185" opacity="0.9"/>
+          <circle cx="250" cy="58" r="1.8" fill="#fde047" opacity="0.8"/>
+          <circle cx="102" cy="45" r="1.5" fill="#ffffff" opacity="0.85"/>
         </svg>
       </div>
       
@@ -726,14 +838,22 @@
           <div class="divider-dot"></div>
           <div class="divider-line"></div>
         </div>
+
         <div class="tags-row">
-          <div class="list-type-tag {{ listTypeClass }}">
-            <span>{{ emoji }}</span>
-            <span>{{ listTypeName }}</span>
+          <div class="cyber-pill pill-type {{ listTypeClass }}">
+            <span class="pill-prefix">分类</span>
+            <span class="pill-value">
+              <span>{{ emoji }}</span>
+              <span>{{ listTypeName }}</span>
+            </span>
           </div>
-          <div class="security-status-tag">
-            <span class="status-beacon"></span>
-            <span>RESTRICTED ARCHIVE</span>
+
+          <div class="cyber-pill pill-status">
+            <span class="pill-prefix">状态</span>
+            <span class="pill-value">
+              <span class="status-beacon"></span>
+              <span>管控封禁</span>
+            </span>
           </div>
         </div>
       </div>
@@ -760,14 +880,23 @@
       <ul class="ban-grid">
         {{ each items item index }}
         <li class="ban-item">
+          {{ if listTypeClass === "purified" }}
+          <div class="pfl-badge">
+            <span class="pfl-badge-num">#{{ item.displayIndex }}</span>
+            <span class="pfl-badge-sep"></span>
+            <span class="pfl-badge-tag">{{ item.reasons && item.reasons.length > 0 ? item.reasons[0] : "规则" }}</span>
+          </div>
+          {{ /if }}
           <div class="img-box">
+            {{ if listTypeClass !== "purified" }}
             <span class="card-badge">#{{ item.displayIndex }}</span>
+            {{ /if }}
             <img src="{{ item.thumbnailPath }}" alt="{{ item.fileNameNoExt }}"
               onerror="this.style.display='none'; const ph = document.createElement('div'); ph.className='error-placeholder'; ph.innerHTML='<div>图片加载失败</div><div>' + this.alt + '</div>'; this.parentNode.appendChild(ph);" />
           </div>
           <div class="filename-area">
-            <div class="filename">{{ item.fileNameNoExt }}</div>
-            {{ if item.reasons && item.reasons.length > 0 }}
+            <div class="filename" title="{{ item.fileNameNoExt }}">{{ item.fileNameNoExt }}</div>
+            {{ if listTypeClass !== "purified" && item.reasons && item.reasons.length > 0 }}
             <div class="ban-reasons">
               {{ each item.reasons reason }}
               <span class="reason-tag">{{ reason }}</span>
@@ -786,12 +915,16 @@
     <div class="footer">
       <div class="footer-content">
         <div class="footer-pill">
-          <span class="pill-label">运行版本</span>
-          <span class="pill-val">v{{ Version }}</span>
+          <span class="footer-pill-lbl">版本</span>
+          <span class="footer-pill-val">v{{ Version }}</span>
         </div>
         <div class="footer-pill">
-          <span class="pill-label">机器人框架</span>
-          <span class="pill-val">Yunzai</span>
+          <span class="footer-pill-lbl">框架</span>
+          <span class="footer-pill-val">Yunzai</span>
+        </div>
+        <div class="footer-pill">
+          <span class="footer-pill-lbl">项目</span>
+          <span class="footer-pill-val">Miao-Plugin-MBT</span>
         </div>
       </div>
     </div>
