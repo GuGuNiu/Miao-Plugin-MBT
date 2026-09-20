@@ -1887,9 +1887,21 @@ class Hermes {
     });
   }
 
+  static #isPrivateHost(hostname) {
+    const hn = String(hostname || "").toLowerCase().replace(/^\[|\]$/g, "");
+    if (!hn || hn === "localhost" || hn === "127.0.0.1" || hn === "::1" || hn === "0.0.0.0") return true;
+    if (/^(10\.|127\.|0\.|169\.254\.|192\.168\.)/.test(hn)) return true;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(hn)) return true;
+    if (/^(fc|fd|fe80:)/i.test(hn)) return true;
+    return false;
+  }
+
   static #proxyRequest(url, reqOptions, proxy, options, redirects) {
     const scheme = String(proxy.scheme || "http").toLowerCase();
     const isHttp = url.startsWith("http:");
+    if (this.#isPrivateHost(new URL(url).hostname)) {
+      return Promise.resolve({ success: false, status: 0, body: null, error: new Error("目标地址不允许访问") });
+    }
     if (scheme.startsWith("socks")) {
       return isHttp ? this.#httpViaSocks(url, reqOptions, proxy, options, redirects) : this.#httpsViaSocks(url, reqOptions, proxy, options, redirects);
     }
