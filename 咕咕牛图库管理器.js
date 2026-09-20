@@ -9719,8 +9719,10 @@ class MiaoPluginMBT extends plugin {
                   }
                 }
                 if (!prefixMatched) {
+                  let ccMatched = false;
                   const ccMatch = subject.match(/^([a-zA-Z\u4e00-\u9fa5]+)(?:\(([^)]+)\))?[:：]\s*(?:\[([^\]]+)\]\s*)?(.+)/);
                   if (ccMatch) {
+                    ccMatched = true;
                     const rawPrefix = ccMatch[1].toLowerCase();
                     commit.commitPrefix = Commit_Prefix_Map[rawPrefix] || rawPrefix;
                     commit.commitScope = ccMatch[2] || ccMatch[3];
@@ -9763,20 +9765,27 @@ class MiaoPluginMBT extends plugin {
                     if (inList) html += "</ul>";
                     commit.descriptionBodyHtml = html;
                   }
-                  if (commit.displayParts.length === 0 && commit.commitTitle) {
+                  if (!ccMatched && commit.displayParts.length === 0 && commit.commitTitle) {
                     const segments = commit.commitTitle.split(/[/、，,\s]+/).map((n) => n.trim()).filter(Boolean);
                     if (segments.length > 0) {
-                      const matches = [];
+                      const segResults = [];
                       for (const seg of segments) {
                         const aliasRes = await Tianshu.NormalizeName(seg, {});
                         if (aliasRes.exists) {
-                          matches.push({ mainName: aliasRes.mainName, gameKey: aliasRes.gameKey });
+                          segResults.push({ matched: true, mainName: aliasRes.mainName, gameKey: aliasRes.gameKey });
+                        } else {
+                          segResults.push({ matched: false, rawName: seg });
                         }
                       }
-                      if (matches.length > 0 && matches.length >= Math.ceil(segments.length * 0.5)) {
+                      const matchCount = segResults.filter((r) => r.matched).length;
+                      if (matchCount > 0 && matchCount >= Math.ceil(segments.length * 0.5)) {
                         commit.isDescription = false;
-                        for (const m of matches) {
-                          commit.displayParts.push({ type: "character", name: m.mainName, game: m.gameKey, imageUrl: await resolveCharFace(m.gameKey, m.mainName) });
+                        for (const r of segResults) {
+                          if (r.matched) {
+                            commit.displayParts.push({ type: "character", name: r.mainName, game: r.gameKey, imageUrl: await resolveCharFace(r.gameKey, r.mainName) });
+                          } else {
+                            commit.displayParts.push({ type: "character", name: r.rawName, game: "unknown", imageUrl: BtnFaceUrl });
+                          }
                         }
                       }
                     }
