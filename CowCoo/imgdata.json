@@ -18647,5 +18647,71 @@
       "phash": "cd635a5a5a42a595"
     },
     "timestamp": "2026-09-17T14:01:37.177Z"
+  },
+  {
+    "gid": "9482252184",
+    "path": "gs-character/莉奈娅/莉奈娅Gu1.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "莉奈娅",
+    "attributes": {
+      "filename": "莉奈娅Gu1.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "b1316353c1960615574cfa5a0d47d5da",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-09-20T16:07:55.310Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/149101685",
+      "pixivPid": "149101685"
+    }
+  },
+  {
+    "gid": "1222830179",
+    "path": "gs-character/桑多涅/桑多涅Gu9.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "桑多涅",
+    "attributes": {
+      "filename": "桑多涅Gu9.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "808138f46538e924228872e5e59a5be1",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-09-20T16:08:14.310Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/148305837",
+      "pixivPid": "148305837"
+    }
+  },
+  {
+    "gid": "5416649686",
+    "path": "gs-character/沃雅妮莎/沃雅妮莎Gu1.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "沃雅妮莎",
+    "attributes": {
+      "filename": "沃雅妮莎Gu1.webp",
+      "rated": "none",
+      "layout": "normal",
+      "isBan": false,
+      "md5": "5985c53b69484f4e0db2acbad16ae15c",
+      "other": [],
+      "secTags": []
+    },
+    "timestamp": "2026-09-20T16:08:27.292Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/149820564",
+      "pixivPid": "149820564"
+    }
   }
 ]
