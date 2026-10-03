@@ -205,6 +205,7 @@ class Hestia {
     for (const [id, res] of this.#g.strongRes) {
       snap[id] = { type: res.type, activeGen: res.activeGen, alive: !!res.object, age: Date.now() - res.createdAt, strong: true };
     }
+    snap.Themis = Themis.stats;
     return snap;
   }
 
@@ -220,6 +221,46 @@ class Hestia {
       else dead++;
     }
     return { total: this.#g.activeRes.size + this.#g.strongRes.size, alive, dead, weak: this.#g.activeRes.size, strong: this.#g.strongRes.size, activeGen: this.activeGen };
+  }
+}
+
+class Themis {
+  static #ledger = new Map();
+
+  static register(token, dirPath, gen = Moirai.currentGen) {
+    if (!token || !dirPath) return;
+    this.#ledger.set(token, { path: dirPath, gen, birth: Date.now() });
+  }
+
+  static unregister(token) {
+    return this.#ledger.delete(token);
+  }
+
+  static async sweep({ maxGen = null, maxAgeMs = null } = {}) {
+    const victims = [];
+    for (const [token, entry] of this.#ledger) {
+      if (entry.path === Morpheus.profileDir) continue;
+      if ((maxGen !== null && entry.gen <= maxGen) || (maxAgeMs !== null && Date.now() - entry.birth > maxAgeMs)) victims.push(token);
+    }
+    const results = await Promise.allSettled(victims.map((token) => Ananke.obliterate(this.#ledger.get(token).path)));
+    victims.forEach((token, i) => { if (results[i].status === "succeeded") this.#ledger.delete(token); });
+  }
+
+  static purgeSync() {
+    for (const [, entry] of this.#ledger) {
+      try {
+        fs.rmSync(entry.path, { recursive: true, force: true });
+      } catch {}
+    }
+    this.#ledger.clear();
+  }
+
+  static get stats() {
+    const entries = [];
+    for (const [token, entry] of this.#ledger) {
+      entries.push({ token, path: entry.path, gen: entry.gen, age: Date.now() - entry.birth });
+    }
+    return { total: entries.length, entries };
   }
 }
 
@@ -3491,6 +3532,7 @@ class MBTSignalTrap extends EventEmitter {
     if (this._isShuttingDown) return;
     this._isShuttingDown = true;
     this.emit("shutdown", signal);
+    setTimeout(() => process.exit(0), 5000).unref?.();
   }
 
   _bindSysEvents() {
@@ -3916,7 +3958,7 @@ class Cerberus {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YzPath = path.resolve(__dirname, "..", "..");
-const Version = `5.2.7-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
+const Version = `5.2.8-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
 const PFL = {
   NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2,
   getDescription: (level) => ["不过滤", "过滤R18", "全部敏感项"][level] ?? "未知"
@@ -3963,6 +4005,9 @@ const DFC = {
   logPrefix: Charon,
   logDateFormat: "format:%m-%d %H:%M",
   DockerMode: false,
+  DSProcess: false,
+  RRThreshold: 0,
+  IRMs: -1,
   FileUrl_Threshold: 2097152
 };
 
@@ -5210,8 +5255,10 @@ class Morpheus {
   static #profileId = null;
   static #regToken = null;
   static #shotCount = 0;
-  static #rsThreshold = 200;
   static #browserInitLock = false;
+  static #recovering = null;
+  static #lastShotAt = 0;
+  static #envThreshold = null;
 
   static get RenderDir() {
     return path.join(MiaoPluginMBT.Paths.TempNiuPath, "Render");
@@ -5276,8 +5323,99 @@ class Morpheus {
     }
   }
 
+  static get profileDir() {
+    return this.#profileId ? path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile", this.#profileId) : null;
+  }
+
+  static get idleAge() {
+    return this.#lastShotAt ? Date.now() - this.#lastShotAt : 0;
+  }
+
+  static #threshold() {
+    const v = Number(MiaoPluginMBT.MBTConfig?.RRThreshold ?? 0);
+    return v > 0 ? v : (this.#envThreshold ??= (DockerMod?.isDockerEnv?.() ? 50 : 200));
+  }
+
+  static async #sweepProfiles() {
+    const root = path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile");
+    let entries;
+    try {
+      entries = await fsPromises.readdir(root, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    const staleMs = 2 * 60 * 60 * 1000;
+    for (const entry of entries) {
+      if (!entry.isDirectory() || (this.#profileId && entry.name === this.#profileId)) continue;
+      const fullPath = path.join(root, entry.name);
+      try {
+        if (Date.now() - (await fsPromises.stat(fullPath)).mtimeMs > staleMs) await Ananke.obliterate(fullPath);
+      } catch {}
+    }
+  }
+
+  static #redisKey() {
+    return "CowCoo:Morpheus:WSEndpoint";
+  }
+
+  static async #reuseBrowser() {
+    if (typeof redis === "undefined") return null;
+    const key = this.#redisKey();
+    const ws = await redis.get(key).catch(() => null);
+    if (!ws) return null;
+    const browser = await PuppCow.connect({ browserWSEndpoint: ws }).catch(() => null);
+    if (!browser) {
+      await redis.del(key).catch(() => {});
+      return null;
+    }
+    this.#browserInstance = browser;
+    this.#profileId = null;
+    browser.on("disconnected", () => { this.#browserInstance = null; this.#profileId = null; });
+    this.#bindExitHooks();
+    return browser;
+  }
+
+  static #bindExitHooks() {
+    if (this.#hasBoundExit) return;
+    const cleanup = () => {
+      if (this.#browserInstance) {
+        try {
+          const proc = this.#browserInstance.process();
+          if (proc && proc.pid) {
+            if (process.platform === "win32") {
+              spawn("taskkill", ["/pid", proc.pid, "/f", "/t"], { windowsHide: true, stdio: "ignore" });
+            } else {
+              try {
+                process.kill(-proc.pid, "SIGKILL");
+              } catch {
+                try {
+                  process.kill(proc.pid, "SIGKILL");
+                } catch {}
+              }
+            }
+          }
+        } catch {}
+        this.#browserInstance = null;
+      }
+      try {
+        Themis.purgeSync();
+      } catch {}
+    };
+    const register = (evt) => {
+      process.on(evt, cleanup);
+      this.#cleanupBindings.add({ event: evt, fn: cleanup });
+    };
+    register("exit");
+    register("SIGINT");
+    register("SIGTERM");
+    this.#regToken = `Morpheus:Browser:${Date.now()}`;
+    Hestia.register("Puppeteer", this.#regToken, this.#browserInstance, () => { this.reset(); });
+    this.#hasBoundExit = true;
+  }
+
   static async #getBrowser(logger = console) {
     const Hades = getHades(logger);
+    if (this.#recovering) await this.#recovering.catch(() => {});
     if (this.#browserInstance) {
       if (this.#isBrowserHealthy()) {
         return this.#browserInstance;
@@ -5298,6 +5436,9 @@ class Morpheus {
         if (waited > 30000) {
           this.#browserInitLock = false;
           this.#browserInstance = null;
+          if (this.#profileId) {
+            Themis.register(`Profile:${this.#profileId}`, path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile", this.#profileId));
+          }
           this.#profileId = null;
           return null;
         }
@@ -5308,11 +5449,16 @@ class Morpheus {
     }
     this.#browserInitLock = true;
 
+    this.#sweepProfiles().catch(() => {});
+
     try {
+      const reused = await this.#reuseBrowser();
+      if (reused) return reused;
       this.#profileId = `${Date.now()}-${crypto.randomBytes(2).toString("hex")}`;
       const userDataDir = path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile", this.#profileId);
       const launchOptions = {
         headless: "new",
+        detached: process.platform !== "win32",
         args: [
           "--disable-gpu",
           "--disable-dev-shm-usage",
@@ -5321,12 +5467,15 @@ class Morpheus {
           "--no-sandbox",
           "--no-zygote",
           "--disable-features=site-per-process",
-          "--allow-file-access-from-files"
+          "--allow-file-access-from-files",
+          "--disable-crash-reporter",
+          "--disable-crashpad"
         ],
         userDataDir
       };
 
-      DockerMod?.applyBrowserArgs?.(launchOptions.args);
+      DockerMod?.applyBrowserArgs?.(launchOptions.args, { DSProcess: MiaoPluginMBT.MBTConfig?.DSProcess === true });
+      Themis.register(`Profile:${this.#profileId}`, userDataDir);
 
       const sysBrowser = this.#FindBrowserPath();
       if (sysBrowser) {
@@ -5337,50 +5486,28 @@ class Morpheus {
       }
 
       this.#browserInstance = await PuppCow.launch(launchOptions);
+      if (typeof redis !== "undefined") redis.set(this.#redisKey(), this.#browserInstance.wsEndpoint(), { EX: 60 * 60 * 24 * 30 }).catch(() => {});
 
       const Launched_Profile_id = this.#profileId;
+      const Launched_Profile_dir = userDataDir;
       this.#browserInstance.on("disconnected", () => {
         if (this.#profileId !== Launched_Profile_id) return;
         this.#browserInstance = null;
         this.#profileId = null;
+        this.#recovering = Ananke.obliterate(Launched_Profile_dir)
+          .then(() => Themis.unregister(`Profile:${Launched_Profile_id}`))
+          .catch(() => {})
+          .finally(() => { this.#recovering = null; });
       });
 
-      if (!this.#hasBoundExit) {
-        const cleanup = () => {
-          if (this.#browserInstance) {
-            try {
-              const proc = this.#browserInstance.process();
-              if (proc && proc.pid) {
-                if (process.platform === "win32") {
-                  spawn("taskkill", ["/pid", proc.pid, "/f", "/t"], { windowsHide: true, stdio: "ignore" });
-                } else {
-                  process.kill(proc.pid, "SIGTERM");
-                }
-              }
-            } catch {}
-            this.#browserInstance = null;
-          }
-        };
-
-        const register = (evt) => {
-          process.on(evt, cleanup);
-          this.#cleanupBindings.add({ event: evt, fn: cleanup });
-        };
-
-        register("exit");
-        register("SIGINT");
-        register("SIGTERM");
-
-        this.#regToken = `Morpheus:Browser:${Date.now()}`;
-        Hestia.register("Puppeteer", this.#regToken, this.#browserInstance, () => {
-          this.reset();
-        });
-
-        this.#hasBoundExit = true;
-      }
+      this.#bindExitHooks();
 
       return this.#browserInstance;
     } catch (err) {
+      if (this.#profileId) {
+        Themis.unregister(`Profile:${this.#profileId}`);
+        Ananke.obliterate(path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile", this.#profileId)).catch(() => {});
+      }
       this.#browserInstance = null;
       this.#profileId = null;
       throw err;
@@ -5423,10 +5550,11 @@ class Morpheus {
 
   static async shot(businessName, options = {}) {
     const Hades = getHades(options.logger);
+    this.#lastShotAt = Date.now();
     await this.#ensureDir(Hades);
 
     this.#shotCount++;
-    if (this.#shotCount >= this.#rsThreshold) {
+    if (this.#shotCount >= this.#threshold()) {
       this.#shotCount = 0;
       await this.closeBrowser();
     }
@@ -5706,15 +5834,33 @@ class Morpheus {
         await this.#browserInstance.close();
       } catch (e) {
         try {
-          this.#browserInstance.process()?.kill("SIGKILL");
+          const proc = this.#browserInstance.process();
+          if (proc && proc.pid) {
+            if (process.platform === "win32") {
+              spawn("taskkill", ["/pid", proc.pid, "/f", "/t"], { windowsHide: true, stdio: "ignore" });
+            } else {
+              try {
+                process.kill(proc.pid, "SIGTERM");
+              } catch {}
+              const killPid = proc.pid;
+              const escalation = setTimeout(() => {
+                try {
+                  process.kill(-killPid, "SIGKILL");
+                } catch {}
+              }, 3000);
+              if (typeof escalation.unref === "function") escalation.unref();
+            }
+          }
         } catch {}
       }
       this.#browserInstance = null;
     }
+    if (typeof redis !== "undefined") redis.del(this.#redisKey()).catch(() => {});
     if (this.#profileId) {
       const profileDir = path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile", this.#profileId);
       try {
         fs.rmSync(profileDir, { recursive: true, force: true });
+        Themis.unregister(`Profile:${this.#profileId}`);
       } catch {}
       try {
         const parentDir = path.join(MiaoPluginMBT.Paths.TempNiuPath, "Chromium-Profile");
@@ -7870,6 +8016,7 @@ class MiaoPluginMBT extends plugin {
   static InitPromise = null;
   static #pendingInit = null;
   static #pendingTeardown = null;
+  static #botExitBound = false;
   static MBTProcc = new MBTProcPool(HadesEntry());
   static BootStrap = false;
   static MBTConfig = {};
@@ -8139,7 +8286,7 @@ class MiaoPluginMBT extends plugin {
       GitFilePath6: repoJoin("StarRail-CR-Repos", ".git"),
       OpsPath: ops,
       oldOpsPath: path.join(yz, "resources", "Miao-Plugin-MBT", "GuGuNiu-Gallery"),
-      SecTagsPath: opsJoin("SecTags.json"),
+      SecTagsPath: opsJoin("data", "SecTags.json"),
       ComResPath: cow,
       ConfigFilePath: cowJoin("CowSet.yaml"),
       BanListPath: cowJoin("banlist.json"),
@@ -8347,6 +8494,12 @@ class MiaoPluginMBT extends plugin {
     }
     bus.off("reload", moduleReloadListener);
     bus.on("reload", moduleReloadListener);
+    if (!MiaoPluginMBT.#botExitBound && typeof Bot !== "undefined" && Bot && typeof Bot.once === "function") {
+      MiaoPluginMBT.#botExitBound = true;
+      Bot.once("exit", async () => {
+        await MiaoPluginMBT._teardown(false, logger).catch(() => {});
+      });
+    }
   }
 
   static async init(logger = getCore()) {
@@ -8537,6 +8690,7 @@ class MiaoPluginMBT extends plugin {
       if (isReload) {
         MiaoPluginMBT._resetRuntimeState();
         Hestia.reap(Hestia.activeGen - 1);
+        await Themis.sweep({ maxGen: Hestia.activeGen - 1 });
       }
 
       if (global.gc) {
@@ -8568,7 +8722,7 @@ class MiaoPluginMBT extends plugin {
     if (MiaoPluginMBT._MetaCache?.length > 0 && !reloadCache) return MiaoPluginMBT._MetaCache;
     const Hades = getHades(logger);
     const startTime = Date.now();
-    const imageDP = path.join(MiaoPluginMBT.Paths.MountRepoPath, "CowCoo", "imgdata.json");
+    const imageDP = path.join(MiaoPluginMBT.Paths.MountRepoPath, "CowCoo", "data", "AssetData.json");
     let rawData = [];
     try {
       const content = await Ananke.readFile(imageDP, "utf8");
@@ -10133,6 +10287,14 @@ class MiaoPluginMBT extends plugin {
         }
       })(),
       Morpheus.housekeeping(this.logger),
+      Themis.sweep({ maxAgeMs: 24 * 60 * 60 * 1000 }),
+      (async () => {
+        try {
+          const raw = Number(MiaoPluginMBT.MBTConfig?.IRMs ?? -1);
+          const idleMs = (raw === -1 || !Number.isFinite(raw)) ? (DockerMod?.isDockerEnv?.() ? 15 * 60 * 1000 : 0) : raw;
+          if (idleMs > 0 && Morpheus.profileDir && Morpheus.idleAge > idleMs) await Morpheus.closeBrowser();
+        } catch {}
+      })(),
       (async () => {
         try {
           const lockFile = MiaoPluginMBT.Paths.ProvisionPath;
@@ -11167,6 +11329,8 @@ class MiaoPluginMBT extends plugin {
 
     const cleanTempCowCoo = async () => {
       await Ananke.obliterate(MiaoPluginMBT.Paths.TempNiuPath);
+      Themis.purgeSync();
+      if (typeof redis !== "undefined") await redis.del("CowCoo:Morpheus:WSEndpoint").catch(() => {});
       return { count: 1 };
     };
 

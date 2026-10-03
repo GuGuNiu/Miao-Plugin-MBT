@@ -5,11 +5,21 @@ import os from "node:os";
 export function Docker(ctx = {}) {
     const { } = ctx;
 
+    let cachedDockerEnv = null;
+
     function isDockerEnv() {
+        if (cachedDockerEnv !== null) return cachedDockerEnv;
         try {
-            if (fs.existsSync('/.dockerenv')) return true;
-            return fs.readFileSync('/proc/1/cgroup', 'utf8').includes('docker');
-        } catch { return false; }
+            if (fs.existsSync('/.dockerenv')) {
+                cachedDockerEnv = true;
+                return true;
+            }
+            cachedDockerEnv = fs.readFileSync('/proc/1/cgroup', 'utf8').includes('docker');
+            return cachedDockerEnv;
+        } catch {
+            cachedDockerEnv = false;
+            return false;
+        }
     }
 
     async function getHostProfile(logger) {
@@ -56,9 +66,9 @@ export function Docker(ctx = {}) {
         };
     }
 
-    function applyBrowserArgs(args) {
+    function applyBrowserArgs(args, opts = {}) {
         if (!Array.isArray(args)) return args;
-        if (isDockerEnv()) args.push('--single-process');
+        if (opts.DSProcess === true) args.push('--single-process');
         return args;
     }
 
