@@ -3109,7 +3109,7 @@ class MBTQuoCRS {
     if (this.closed || this.tasks.has(id)) return;
     const controller = new AbortController();
     const context = {
-      controller, signal: controller.signal, telemetry: { instant_speed: 0, last_tick: 0, connection_state: "CONNECTING" }
+      controller, signal: controller.signal, telemetry: { instant_speed: 0, last_tick: 0, connection_state: "CONNECTING", payload_bytes: 0, stage_total: 0, stage_done: 0, eta_ms: 0, stall_ms: 0 }
     };
     const now = Date.now();
     const onProgress = (p) => {
@@ -3161,9 +3161,9 @@ class MBTQuoCRS {
   _tick(task, now) {
     task.speed = task.curr - task.prev;
     task.prev = task.curr;
-    const tBytes = task.context?.telemetry?.rx_bytes || 0;
+    const tBytes = task.context?.telemetry?.payload_bytes || task.context?.telemetry?.rx_bytes || 0;
     task.bytes = tBytes;
-    const tIoBytes = task.context?.telemetry?.io_bytes ?? tBytes;
+    const tIoBytes = task.context?.telemetry?.payload_bytes ?? tBytes;
     task.io_bytes = tIoBytes;
     task.active = task.speed > 0 ? Math.max(now, task.lastUpdate) : task.lastUpdate;
   }
@@ -3177,7 +3177,7 @@ class MBTQuoCRS {
       const oldest = Math.min(...Array.from(this.tasks.values()).map((t) => t.start));
       const tObj = Math.max(...Array.from(this.tasks.values()).map((t) => t.context?.telemetry?.git_objects || 0));
       const baseGrace = tObj > 10000 ? 180000 : tObj > 1000 ? 120000 : 90000;
-      const allHandshaking = Array.from(this.tasks.values()).every((t) => (t.context?.telemetry?.rx_bytes ?? 0) === 0);
+      const allHandshaking = Array.from(this.tasks.values()).every((t) => (t.context?.telemetry?.payload_bytes ?? 0) === 0);
       const _maxProg = this._leaderStatus?.maxProgress ?? 0;
       const _anyStage = Array.from(this.tasks.values()).some((t) => {
         const s = t.context?.telemetry?.git_stage;
@@ -3234,12 +3234,16 @@ class MBTQuoCRS {
       maxProgress: leader?.curr ?? 0,
       activeCount,
       leaderSpeed: leader?.context?.telemetry?.ewma_speed ?? 0,
-      leaderBytes: leader?.bytes ?? 0
+      leaderBytes: leader?.bytes ?? 0,
+      leaderEta: leader?.context?.telemetry?.eta_ms ?? 0,
+      leaderStall: leader?.context?.telemetry?.stall_ms ?? 0
     };
 
     if (leader && now - this.lastHB > 240000) {
       const durMins = ((now - leader.start) / 60000).toFixed(1);
-      this.logger.info(`${this.uiRid} 💓 节点:${leader.name} ... (已耗时 ${durMins}分钟, 当前进度: ${leader.curr}%) - 请耐心等待`);
+      const _eta = leader?.context?.telemetry?.eta_ms ?? 0;
+      const _etaText = _eta > 0 ? `, 预计剩余 ${Math.round(_eta / 1000)}秒` : "";
+      this.logger.info(`${this.uiRid} 💓 节点:${leader.name} ... (已耗时 ${durMins}分钟, 当前进度: ${leader.curr}%, 速率 ${((leader?.context?.telemetry?.ewma_speed ?? 0) / 1024).toFixed(1)}KB/s${_etaText}) - 请耐心等待`);
       this.lastHB = now;
     }
 
@@ -3252,7 +3256,7 @@ class MBTQuoCRS {
 
   _judge(task, leader, now) {
     if (task.state !== MBTQuoCRS.Task_State.Running) return;
-    const t = task.context?.telemetry ?? { instant_speed: 0, last_tick: 0, connection_state: "CONNECTING" };
+    const t = task.context?.telemetry ?? { instant_speed: 0, last_tick: 0, connection_state: "CONNECTING", payload_bytes: 0 };
     const fresh = now - t.last_tick < 6000;
     const pulse = fresh && t.instant_speed > 1024;
     const runtime = now - task.start;
@@ -3270,7 +3274,7 @@ class MBTQuoCRS {
       }
 
       let reason = `起步失败(15s无进度, 状态:${t.connection_state || "UNKNOWN"})`;
-      if (runtime > grace * 0.55 && t.rx_bytes < 102400 && (task.name.includes("GitHub") || task.name.includes("Direct"))) {
+      if (runtime > grace * 0.55 && (t.payload_bytes ?? 0) < 102400 && (task.name.includes("GitHub") || task.name.includes("Direct"))) {
         this.logger.debug(`${this.uiRid} | [Quo] 检测TCP流量握手成功但无有效载荷: [${task.name}]`);
         reason = "流量欺诈 (虚假连接)";
       }
@@ -3326,7 +3330,7 @@ class MBTQuoCRS {
   isAllHandshaking() {
     if (this.tasks.size === 0) return false;
     return Array.from(this.tasks.values())
-      .every((t) => (t.context?.telemetry?.rx_bytes ?? 0) === 0);
+      .every((t) => (t.context?.telemetry?.payload_bytes ?? 0) === 0);
   }
 
   _kill(task, reason) {
@@ -3958,7 +3962,7 @@ class Cerberus {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YzPath = path.resolve(__dirname, "..", "..");
-const Version = `5.2.8-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
+const Version = `5.2.8-Pluto-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
 const PFL = {
   NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2,
   getDescription: (level) => ["不过滤", "过滤R18", "全部敏感项"][level] ?? "未知"
@@ -4076,24 +4080,36 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
 
   const telemetry = {
     startTime: Date.now(),
+    startPerf: performance.now(),
     endTime: null,
     rx_bytes: 0,
-    last_tick_bytes: 0,
+    payload_bytes: 0,
+    ctrl_bytes: 0,
     io_bytes: 0,
     last_tick_io_bytes: 0,
+    last_tick_payload_bytes: 0,
     io_chunks: 0,
     protocol: "HTTP/1.1",
     throughput: 0,
     instant_speed: 0,
     ewma_speed: 0,
+    git_rate: 0,
     eta_ms: 0,
     instability: 0,
     git_objects: 0,
     git_stage: "init",
+    stage_total: 0,
+    stage_done: 0,
+    stage_progress: 0,
+    progress_at: 0,
+    tick_span: 0,
+    stall_ms: 0,
     connection_state: "CONNECTING",
     traceId,
     kill_reason: null
   };
+
+  const TRACE_LINE = /^\d{2}:\d{2}:\d{2}\.\d{6}\s+[\w.]+\.c:\d+/;
 
   const constraints = {
     stallThreshold: 60 * 1000,
@@ -4102,8 +4118,11 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
     minBytePulseBytes: 4 * 1024,
     low_Speed_Limit: 1024,
     low_Speed_Strikes: 4,
-    low_Speed_Check_Interval: 30 * 1000,
     hardTimeout: 20 * 60 * 1000,
+    forceKillMs: 2000,
+    deadFloorMs: 30 * 1000,
+    deadStartFloorMs: 45 * 1000,
+    deadSpanFactor: 4,
     ...options.constraints
   };
 
@@ -4216,9 +4235,17 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
 
   const _finalizeMetrics = () => {
     telemetry.endTime = Date.now();
-    const durationSec = Math.max(0.001, (telemetry.endTime - telemetry.startTime) / 1000);
+    const durationSec = Math.max(0.001, (performance.now() - telemetry.startPerf) / 1000);
     telemetry.throughput = Math.round(telemetry.rx_bytes / durationSec);
     return telemetry;
+  };
+
+  const _markProgress = (perfNow) => {
+    const span = perfNow - progressAt;
+    tickSpan = span > 0 ? span : tickSpan;
+    progressAt = perfNow;
+    telemetry.progress_at = progressAt;
+    telemetry.tick_span = Math.round(tickSpan);
   };
 
   const STATE = { IDLE: 0, RUNNING: 1, KILLING: 2, CLOSED: 3, DEAD: 4 };
@@ -4254,10 +4281,12 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
     let lastUpdate = Date.now();
     let lastBytePulse = Date.now();
     let ThrottleSlow = false;
-    let demerits = 0;
-    let lastCheckTime = Date.now();
-    let lastTurtlePercent = 0;
     let lastTelemetryEmit = 0;
+    let lastPulseAt = performance.now();
+    let startPerf = performance.now();
+    let progressAt = performance.now();
+    let tickSpan = 0;
+    let lastStageDone = 0;
 
     const { signal } = options;
     if (signal?.aborted) return reject(new Error("已中止"));
@@ -4289,7 +4318,8 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
 
     let proc;
     try {
-      const spawnOptions = { stdio: "pipe", ...options, env: runEnv, shell: false, detached: process.platform === "win32", windowsHide: true };
+      const { signal: _spawnSignal, constraints: _spawnConstraints, onTelemetry: _spawnTelemetry, traceId: _spawnTraceId, ...spawnRest } = options;
+      const spawnOptions = { stdio: "pipe", ...spawnRest, env: runEnv, shell: false, detached: process.platform === "win32", windowsHide: true };
       currentState = STATE.RUNNING;
       proc = spawn(command, args, spawnOptions);
       MBTProcc?.register?.(proc);
@@ -4333,7 +4363,7 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
           await _killer("SIGKILL");
         } catch {}
         currentState = STATE.DEAD;
-      }, 5000);
+      }, constraints.forceKillMs);
 
       try {
         await _killer("SIGTERM");
@@ -4371,24 +4401,32 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
 
     Pulse = setInterval(() => {
       const now = Date.now();
+      const perfNow = performance.now();
 
       const intervalBytes = telemetry.io_bytes - telemetry.last_tick_io_bytes;
+      const intervalPayload = telemetry.payload_bytes - telemetry.last_tick_payload_bytes;
       telemetry.last_tick_io_bytes = telemetry.io_bytes;
-      const timeDiff = (now - telemetry.last_tick) / 1000;
-      if (timeDiff > 0) {
-        const sample = intervalBytes / timeDiff;
+      telemetry.last_tick_payload_bytes = telemetry.payload_bytes;
+      const elapsed = (perfNow - lastPulseAt) / 1000;
+      lastPulseAt = perfNow;
+
+      const stallMs = perfNow - progressAt;
+      telemetry.stall_ms = Math.round(stallMs);
+      if (elapsed > 0) {
+        const sample = intervalPayload / elapsed;
         telemetry.ewma_speed = telemetry.ewma_speed > 0 ? Math.round(0.4 * sample + 0.6 * telemetry.ewma_speed) : Math.round(sample);
         telemetry.instant_speed = telemetry.ewma_speed;
       }
 
-      const avgSpeed = now - telemetry.startTime > 0 ? telemetry.io_bytes / ((now - telemetry.startTime) / 1000) : 0;
+      const avgSpeed = perfNow - telemetry.startPerf > 0 ? telemetry.payload_bytes / ((perfNow - telemetry.startPerf) / 1000) : 0;
       const diffRatio = avgSpeed > 0 ? Math.abs(telemetry.ewma_speed - avgSpeed) / avgSpeed : 0;
       telemetry.instability = Math.min(100, Math.round(diffRatio * 100));
 
-      if (telemetry.ewma_speed > 0 && telemetry.git_objects > 0 && lastGitDone > 0 && telemetry.git_objects > lastGitDone) {
-        const remain = (telemetry.git_objects - lastGitDone) * (telemetry.rx_bytes / Math.max(1, lastGitDone));
-        telemetry.eta_ms = Math.round((remain / telemetry.ewma_speed) * 1000);
-      }
+      const _stageRemain = telemetry.stage_total - telemetry.stage_done;
+      const _objRate = (telemetry.stage_done - lastStageDone) / elapsed;
+      const _remainSec = _objRate > 0 ? _stageRemain / _objRate : telemetry.git_rate > 0 && telemetry.stage_total > 0 ? (_stageRemain / telemetry.stage_total) * (telemetry.stage_done * 1024) / telemetry.git_rate : 0;
+      telemetry.eta_ms = _stageRemain > 0 && Number.isFinite(_remainSec) && _remainSec > 0 ? Math.round(_remainSec * 1000) : 0;
+      lastStageDone = telemetry.stage_done;
 
       if (telemetry.io_bytes === 0 && telemetry.connection_state === "CONNECTING" && now - telemetry.startTime > 1000) {
         telemetry.connection_state = "HANDSHAKING";
@@ -4409,13 +4447,14 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
         return;
       }
 
-      if (isGitTransfer && intervalBytes >= constraints.minBytePulseBytes) {
+      if (isGitTransfer && intervalPayload >= constraints.minBytePulseBytes) {
         lastBytePulse = now;
         lastUpdate = now;
-        emitProgress({ progress: lastPercent, lastUpdate: now, bytePulse: true, progressPulse: false, bytesTotal: telemetry.rx_bytes, idleMs: 0 });
+        _markProgress(perfNow);
+        emitProgress({ progress: lastPercent, lastUpdate: now, bytePulse: true, progressPulse: false, bytesTotal: telemetry.payload_bytes, idleMs: 0 });
       }
 
-      if (isGitTransfer && intervalBytes > 0 && (
+      if (isGitTransfer && intervalPayload > 0 && (
         telemetry.git_stage === "compressing" ||
         telemetry.git_stage === "resolving" ||
         telemetry.git_stage === "checkout" ||
@@ -4425,53 +4464,36 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
       }
 
       const byteIdleMs = now - lastBytePulse;
-      if (isGitTransfer && telemetry.io_bytes > 0 && byteIdleMs > constraints.byteidleThreshold) {
+      if (isGitTransfer && telemetry.payload_bytes > 0 && byteIdleMs > constraints.byteidleThreshold) {
         const dynByteIdle = lastPercent > 90 ? 240000 : lastPercent > 75 ? 180000 : lastPercent > 50 ? 135000 : lastPercent > 25 ? 120000 : (telemetry.git_stage === "compressing" || telemetry.git_stage === "resolving") ? 180000 : constraints.byteidleThreshold;
         if (byteIdleMs > dynByteIdle) {
           killProcess("E_Git_Byte_Idle_Timeout", `字节空闲超时 (${Math.floor(byteIdleMs / 1000)}s/${Math.floor(dynByteIdle / 1000)}s)`);
           return;
         }
-        if (lastPercent > 25 && intervalBytes > 0) lastBytePulse = now;
       }
 
-      if (isGitTransfer && now - lastUpdate > constraints.zombieThreshold) {
+      if (isGitTransfer && stallMs > constraints.zombieThreshold) {
         const zStage = telemetry.git_stage || "";
-        const zExtended = zStage === "resolving" || zStage === "checkout";
-        const zThresh = zExtended ? constraints.zombieThreshold * 2 : constraints.zombieThreshold;
-        if (telemetry.ewma_speed > constraints.low_Speed_Limit || telemetry.instant_speed > constraints.low_Speed_Limit) {
-          lastUpdate = now;
-        } else if (now - lastUpdate > zThresh) {
-          killProcess("E_Git_Zombie_Idle", `检测到僵尸连接 (超过 ${Math.floor((now - lastUpdate) / 1000)}s无有效进度,阶段:${zStage || "UNKNOWN"})`);
+        const zFloor = zStage === "resolving" || zStage === "checkout" ? constraints.deadFloorMs * 2 : constraints.deadFloorMs;
+        const zThresh = Math.max(zFloor, tickSpan * constraints.deadSpanFactor);
+        if (stallMs > zThresh) {
+          killProcess("E_Git_Zombie_Idle", `检测到僵尸连接 (进度停滞${Math.floor(stallMs / 1000)}s/阈值${Math.floor(zThresh / 1000)}s, 推进间隔${Math.round(tickSpan / 100) / 10}s, 阶段:${zStage || "UNKNOWN"})`);
           return;
         }
       }
 
-      if (isGitTransfer && (lastPercent > 0 || telemetry.git_objects > 0) && !options.disableTurtleCheck) {
-        if (now - lastCheckTime >= constraints.low_Speed_Check_Interval) {
-          lastCheckTime = now;
-          const _turtleStage = telemetry.git_stage;
-          if (_turtleStage === "resolving" || _turtleStage === "checkout") {
-            demerits = 0;
-          } else if (lastPercent > lastTurtlePercent) {
-            demerits = 0;
-          } else if (telemetry.instant_speed < constraints.low_Speed_Limit) {
-            demerits++;
-            if (typeof onSlowSpeed === "function" && !ThrottleSlow) {
-              ThrottleSlow = true;
-              onSlowSpeed();
-            }
-            let dynamicStrikes = constraints.low_Speed_Strikes;
-            if (lastPercent > 50) dynamicStrikes += 2;
-            if (lastPercent > 75) dynamicStrikes += 3;
-            if (lastPercent > 90) dynamicStrikes += 4;
-            if (demerits >= dynamicStrikes) {
-              killProcess("E_Git_Speed_Floor", `检测到下载龟速 (连续 ${demerits} 次检测周期速度 < ${(constraints.low_Speed_Limit / 1024).toFixed(1)}KB/s, 进度:${lastPercent}%)`);
-              return;
-            }
-          } else {
-            demerits = 0;
-          }
-          lastTurtlePercent = lastPercent;
+      if (isGitTransfer && !options.disableTurtleCheck && (lastPercent > 0 || telemetry.stage_total > 0)) {
+        const _startup = perfNow - startPerf < constraints.deadStartFloorMs;
+        const _floor = _startup ? constraints.deadStartFloorMs : constraints.deadFloorMs;
+        const _thresh = Math.max(_floor, tickSpan * constraints.deadSpanFactor);
+        if (stallMs > _thresh) {
+          const _stage = telemetry.git_stage || "UNKNOWN";
+          killProcess("E_Git_Speed_Floor", `进度推进停滞${Math.floor(stallMs / 1000)}s (阈值${Math.floor(_thresh / 1000)}s, 实测推进间隔${Math.round(tickSpan / 100) / 10}s, 阶段:${_stage}, 进度:${lastPercent}%)`);
+          return;
+        }
+        if (typeof onSlowSpeed === "function" && !ThrottleSlow && stallMs > _thresh * 0.6) {
+          ThrottleSlow = true;
+          onSlowSpeed();
         }
       }
 
@@ -4497,10 +4519,8 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
         emitTelemetry(true);
         return;
       }
-      if (telemetry.ewma_speed > 0 && now - lastActiveTime > 1200) {
-        telemetry.ewma_speed = Math.round(telemetry.ewma_speed * 0.5);
-        telemetry.instant_speed = telemetry.ewma_speed;
-        if (telemetry.ewma_speed === 0 && telemetry.connection_state === "TRANSFERRING") telemetry.connection_state = "IDLE";
+      if (telemetry.instant_speed <= 0 && telemetry.connection_state === "TRANSFERRING") {
+        telemetry.connection_state = "IDLE";
         emitTelemetry(true);
       }
     }, 1200);
@@ -4516,11 +4536,10 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
 
     const OutStream = (streamName, data, externalCallback) => {
       const now = Date.now();
-      lastActiveTime = now;
 
       if (data && data.length) {
         telemetry.last_tick = now;
-        if (streamName === "stdout") telemetry.rx_bytes += data.length;
+        lastActiveTime = now;
         telemetry.io_bytes += data.length;
         telemetry.io_chunks++;
         if (telemetry.connection_state === "CONNECTING") telemetry.connection_state = "HANDSHAKING";
@@ -4543,6 +4562,13 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
       for (const line of parts) {
         if (!line.trim()) continue;
         if (["127.0.0.1", "Connection established", "SOCKS5", "Proxy replied", "gnutls_handshake"].some((s) => line.includes(s))) continue;
+        const _isTrace = TRACE_LINE.test(line);
+        if (_isTrace) {
+          telemetry.ctrl_bytes += line.length + 1;
+        } else {
+          telemetry.payload_bytes += line.length + 1;
+          telemetry.rx_bytes += line.length + 1;
+        }
         if (streamName === "stdout") {
           if (stdoutLen < Constraints.MAX_BUFFER) {
             stdoutChunks.push(line + "\n");
@@ -4577,11 +4603,20 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
             telemetry.connection_state = "HANDSHAKING";
             telemetry.git_stage = "handshake";
           }
-          if (line.includes("Counting objects")) { telemetry.git_stage = "counting"; lastGitDone = 0; }
-          else if (line.includes("Compressing objects")) { telemetry.git_stage = "compressing"; lastGitDone = 0; }
-          else if (line.includes("Receiving objects")) { telemetry.git_stage = "receiving"; lastGitDone = 0; }
-          else if (line.includes("Resolving deltas")) { telemetry.git_stage = "resolving"; lastGitDone = 0; }
-          else if (line.includes("Updating files") || line.includes("Checking out files")) { telemetry.git_stage = "checkout"; lastGitDone = 0; }
+          if (line.includes("Counting objects")) { telemetry.git_stage = "counting"; lastGitDone = 0; telemetry.stage_done = 0; _markProgress(performance.now()); }
+          else if (line.includes("Compressing objects")) { telemetry.git_stage = "compressing"; lastGitDone = 0; telemetry.stage_done = 0; _markProgress(performance.now()); }
+          else if (line.includes("Receiving objects")) { telemetry.git_stage = "receiving"; lastGitDone = 0; telemetry.stage_done = 0; _markProgress(performance.now()); }
+          else if (line.includes("Resolving deltas")) { telemetry.git_stage = "resolving"; lastGitDone = 0; telemetry.stage_done = 0; _markProgress(performance.now()); }
+          else if (line.includes("Updating files") || line.includes("Checking out files")) { telemetry.git_stage = "checkout"; lastGitDone = 0; telemetry.stage_done = 0; _markProgress(performance.now()); }
+
+          const payloadMatch = line.match(/,\s*([\d.]+)\s*(K|M|G)iB\s*\|\s*([\d.]+)\s*(K|M|G)iB\/s/);
+          if (payloadMatch) {
+            const _u = { K: 1024, M: 1024 * 1024, G: 1024 * 1024 * 1024 };
+            const _cum = parseFloat(payloadMatch[1]) * _u[payloadMatch[2]];
+            const _rate = parseFloat(payloadMatch[3]) * _u[payloadMatch[4]];
+            if (Number.isFinite(_cum)) telemetry.payload_bytes = Math.max(telemetry.payload_bytes, _cum);
+            if (Number.isFinite(_rate) && _rate > 0) telemetry.git_rate = _rate;
+          }
 
           const objectsMatch = line.match(/\((\d+)\/(\d+)\)/);
           if (objectsMatch?.[1] && objectsMatch?.[2]) {
@@ -4589,22 +4624,26 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
             const total = parseInt(objectsMatch[2], 10);
             if (Number.isFinite(total) && total > 0) {
               telemetry.git_objects = total;
+              telemetry.stage_total = total;
               if (Number.isFinite(done) && done >= 0) {
                 const stage = telemetry.git_stage;
                 const w = StageWeight[stage] || [0, 100];
                 const stageProgress = done / total;
+                telemetry.stage_progress = stageProgress;
                 const progress = Math.floor(w[0] + stageProgress * (w[1] - w[0]));
                 const progressPulse = done > lastGitDone || progress > lastPercent;
                 if (progress > lastPercent) lastPercent = progress;
                 if (progressPulse) {
                   lastGitDone = Math.max(lastGitDone, done);
+                  telemetry.stage_done = lastGitDone;
+                  _markProgress(performance.now());
                   lastUpdate = now;
                   emitProgress({
                     progress: lastPercent,
                     lastUpdate: now,
                     bytePulse: false,
                     progressPulse: true,
-                    bytesTotal: telemetry.rx_bytes,
+                    bytesTotal: telemetry.payload_bytes,
                     idleMs: Math.max(0, now - lastBytePulse),
                     stage,
                     stageProgress: Math.round(stageProgress * 100)
@@ -4618,12 +4657,13 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
             if (line.includes("Unpacking")) {
               telemetry.git_stage = "checkout";
               lastUpdate = now;
+              _markProgress(performance.now());
               emitProgress({
                 progress: Math.max(lastPercent, 99),
                 lastUpdate: now,
                 bytePulse: false,
                 progressPulse: true,
-                bytesTotal: telemetry.rx_bytes,
+                bytesTotal: telemetry.payload_bytes,
                 idleMs: Math.max(0, now - lastBytePulse),
                 stage: "checkout"
               });
@@ -9212,8 +9252,8 @@ class MiaoPluginMBT extends plugin {
                   if (Cer_SessionId) {
                     cerberus.pulse(Cer_SessionId, {
                       event: "telemetry",
-                      progress: Number(telemetryData?.progress || 0),
-                      bytes: Number(telemetryData?.io_bytes ?? (telemetryData?.rx_bytes || 0)),
+                      progress: Number(telemetryData?.stage_progress > 0 ? Math.round(telemetryData.stage_progress * 100) : 0),
+                      bytes: Number(telemetryData?.payload_bytes ?? (telemetryData?.rx_bytes || 0)),
                       state: "running"
                     });
                   }
