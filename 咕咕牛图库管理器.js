@@ -3972,7 +3972,7 @@ const Valid_Tags = Object.fromEntries(
   [
     ["彩蛋", "other", "Egg"],
     ["ai", "other", "LLMCanvas"],
-    ["横屏", "layout", "fullscreen"],
+    ["横屏", "PicType", "fs"],
     ["r18", "rated", "r18"],
     ["p18", "rated", "p18"]
   ].map(([name, key, value]) => [name, { key, value }])
@@ -4240,6 +4240,12 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
     return telemetry;
   };
 
+  let lastPulseAt = performance.now();
+  let startPerf = performance.now();
+  let progressAt = performance.now();
+  let tickSpan = 0;
+  let lastStageDone = 0;
+
   const _markProgress = (perfNow) => {
     const span = perfNow - progressAt;
     tickSpan = span > 0 ? span : tickSpan;
@@ -4282,11 +4288,11 @@ function MBTPipeControl(command, args, options = {}, timeout = 0, onStdErr, onSt
     let lastBytePulse = Date.now();
     let ThrottleSlow = false;
     let lastTelemetryEmit = 0;
-    let lastPulseAt = performance.now();
-    let startPerf = performance.now();
-    let progressAt = performance.now();
-    let tickSpan = 0;
-    let lastStageDone = 0;
+    lastPulseAt = performance.now();
+    startPerf = performance.now();
+    progressAt = performance.now();
+    tickSpan = 0;
+    lastStageDone = 0;
 
     const { signal } = options;
     if (signal?.aborted) return reject(new Error("已中止"));
@@ -7895,8 +7901,8 @@ class MBTCF {
         }
 
         if (item.attributes) {
-          const { other = [], layout } = item.attributes;
-          if ((policy.filterAi && other.includes("LLMCanvas")) || (policy.filterEgg && other.includes("Egg")) || (policy.filterLayout && layout === "fullscreen")) {
+          const { other = [], PicType } = item.attributes;
+          if ((policy.filterAi && other.includes("LLMCanvas")) || (policy.filterEgg && other.includes("Egg")) || (policy.filterLayout && PicType === "fs")) {
             killList.add(normPath);
           }
         }
@@ -11823,7 +11829,7 @@ class MiaoPluginMBT extends plugin {
                 if (cfg.PFL_Ops > 0 && MBTCF._checkPFL(imgDataEntry, cfg.PFL_Ops)) reasons.push("净化");
                 if (cfg.Ai === false && other.includes("LLMCanvas")) reasons.push("Ai");
                 if (cfg.EasterEgg === false && other.includes("Egg")) reasons.push("彩蛋");
-                if (cfg.layout === false && imgDataEntry.attributes.layout === "fullscreen") reasons.push("横屏");
+                if (cfg.layout === false && imgDataEntry.attributes.PicType === "fs") reasons.push("横屏");
               }
               if (reasons.length === 0) reasons.push("规则");
 
