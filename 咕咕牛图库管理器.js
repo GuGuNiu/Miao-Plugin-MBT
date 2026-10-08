@@ -3041,6 +3041,7 @@ class MBTProcPool {
 class MBTQuoCRS {
   static Task_State = { Pending: 0, Running: 1, Melting: 2, Aborting: 3, Dead: 4 };
   static CRS_State = { Init: 0, Racing: 1, Finalizing: 2,Closed: 3 };
+  static Grace_Ms = 8000;
 
   constructor(logger, Rid, logTag, colorCode, parentSignal = null, cerSessionId = null) {
     this.logger = HadesEntry({ module: "Quo" }, logger || getCore());
@@ -3053,6 +3054,9 @@ class MBTQuoCRS {
     this.closed = false;
     this._state = MBTQuoCRS.CRS_State.Init;
     this.lastHB = Date.now();
+    this._startAt = Date.now();
+    this._graceTimer = null;
+    this._graceErr = null;
     this._activeGen = Moirai.currentGen;
     this._cerSessionId = cerSessionId;
     ({ promise: this.promise, resolve: this.resolve, reject: this.reject } = Promise.withResolvers());
@@ -3091,6 +3095,7 @@ class MBTQuoCRS {
 
   addTask(id, factory, BPP = false, delay = 0) {
     if (this.closed || this.tasks.has(id)) return;
+    this._cancelGrace();
 
     if (delay <= 0) {
       this._activate(id, factory, BPP);
@@ -3373,8 +3378,30 @@ class MBTQuoCRS {
     this._accPend();
 
     if (this.tasks.size === 0 && this.pendingTimers.size === 0 && !this.closed) {
-      this._finalize(null, err || new Error("所有任务失败"));
+      this._deferFinalize(err || new Error("所有任务失败"));
     }
+  }
+
+  _deferFinalize(err) {
+    if (this._graceTimer) return;
+    const remain = MBTQuoCRS.Grace_Ms - (Date.now() - this._startAt);
+    if (remain <= 0) {
+      this._finalize(null, err);
+      return;
+    }
+    this._graceErr = err;
+    this._graceTimer = setTimeout(() => {
+      this._graceTimer = null;
+      if (this.closed || this.tasks.size > 0 || this.pendingTimers.size > 0) return;
+      this._finalize(null, this._graceErr || new Error("所有任务失败"));
+    }, remain);
+  }
+
+  _cancelGrace() {
+    if (!this._graceTimer) return;
+    clearTimeout(this._graceTimer);
+    this._graceTimer = null;
+    this._graceErr = null;
   }
 
   _finalize(result, error) {
@@ -3395,6 +3422,10 @@ class MBTQuoCRS {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
+    }
+    if (this._graceTimer) {
+      clearTimeout(this._graceTimer);
+      this._graceTimer = null;
     }
 
     for (const [id] of this.pendingTimers) clearTimeout(id);
@@ -3582,7 +3613,8 @@ const Git_Strike_Strategies = new Map([
   [/Invalid input|502|522|504|index-pack|expected flush after ref listing|bad\/illegal format|missing URL|RPC failed|url cannot be parsed|credential url cannot be parsed/i, { time: 60 * 60 * 1000, type: "协议/服务端故障" }],
   [/403|429|redirection|too many requests/i, { time: 15 * 60 * 1000, type: "限流/拒绝" }],
   [/ESLOWNET|E_GIT_IO_STALL|E_GIT_BYTE_IDLE_TIMEOUT|E_GIT_ZOMBIE_IDLE|E_GIT_SPEED_FLOOR|龟速|假死|LowSpeed|stall threshold/i, { time: 10 * 60 * 1000, type: "性能降级" }],
-  [/timed out|timeout|命令执行超时|Connection refused|resolve host|Could not resolve|Connection was reset|Recv failure|Failed to connect|unable to access|handshake failed|gnutls_handshake/i, { time: 5 * 60 * 1000, type: "网络波动" }],
+  [/schannel|SSL\/TLS connection failed|SSL connect error|gnutls_handshake|handshake failed/i, { time: 15 * 60 * 1000, type: "TLS握手异常" }],
+  [/timed out|timeout|命令执行超时|Connection refused|resolve host|Could not resolve|Connection was reset|Recv failure|Failed to connect|unable to access/i, { time: 5 * 60 * 1000, type: "网络波动" }],
   [/early EOF|index-pack failed|unpack-objects|write error|No space left|磁盘已满|out of memory|memory exhausted/i, { time: 3 * 60 * 1000, type: "本地资源不足" }],
   [/repository.*not found|Authentication failed|403 Forbidden|401 Unauthorized/i, { time: 30 * 60 * 1000, type: "仓库/认证异常" }]
 ]);
@@ -3593,9 +3625,6 @@ const Git_H2_Errors = [
   /unexpected disconnect while reading sideband packet/i,
   /RPC failed; curl 56 Failure when receiving data from the peer/i,
   /Protocol "HTTP\/2" not supported or disabled/i,
-  /schannel: failed to receive handshake/i,
-  /SSL\/TLS connection failed/i,
-  /curl 35 SSL connect error/i,
   /Failed to connect to .* port \d+ after \d+ ms/i
 ];
 
@@ -3614,6 +3643,7 @@ const Git_Diag128_Patterns = [
   { regex: /403 Forbidden/i, label: "403 拒绝访问" },
   { regex: /RPC failed; curl \d+/i, label: "RPC/cURL 传输层错误" },
   { regex: /unexpected disconnect while reading sideband packet/i, label: "HTTP/2 侧带包断开 (尝试降级HTTP/1.1)" },
+  { regex: /schannel|gnutls|SSL\/TLS connection failed|SSL connect error/i, label: "TLS握手失败 (schannel/gnutls/节点不可达)" },
   { regex: /SSL certificate problem/i, label: "SSL证书验证失败" },
   { regex: /Could not resolve host/i, label: "DNS解析失败" },
   { regex: /Connection refused/i, label: "连接被拒绝" },
@@ -9219,6 +9249,7 @@ class MiaoPluginMBT extends plugin {
             if (!udpReach) currentGitConfigs.push("http.version=HTTP/1.1");
             if (preferV6) currentGitConfigs.push("core.ipv6=true");
             currentGitConfigs.push("http.sslVerify=false");
+            if (process.platform === "win32") currentGitConfigs.push("http.sslBackend=openssl");
             if (isDowngrade) currentGitConfigs.push("http.version=HTTP/1.1");
             if (!useAirlock) {
               const proxyEnv = extraEnv || sysProxyEnv;
@@ -9384,6 +9415,8 @@ class MiaoPluginMBT extends plugin {
 
       let zbWaves = 0;
       let forceH1 = false;
+      const waveFails = [];
+      const waveFailSuffix = () => (waveFails.length > 0 ? ` [失败明细: ${waveFails.join(" | ")}]` : "");
       while (true) {
         if (isShuttingDown) break;
         if (Cer_SessionId) {
@@ -9455,8 +9488,9 @@ class MiaoPluginMBT extends plugin {
           if (activeCRS.closed) return;
           const now = Date.now();
           const elapsed = now - waveStartTime;
+          const starved = activeCRS.tasks.size === 0 && activeCRS.pendingTimers.size === 0;
 
-          if (useGitHubAsBackup && !UL && elapsed >= 75000 && !BPPJob && !activeCRS.tasks.has("GitHub")) {
+          if (useGitHubAsBackup && !UL && (elapsed >= 75000 || starved) && !BPPJob && !activeCRS.tasks.has("GitHub")) {
             BPPJob = true;
             activeCRS.addTask("GitHub", createTaskFactory(githubNode, forceH1), true, 0);
           }
@@ -9464,17 +9498,18 @@ class MiaoPluginMBT extends plugin {
           const status = activeCRS.getStatus();
 
           const maxConcurrent = UL ? UL.maxConcurrent : 2;
-          if (status.activeCount < maxConcurrent && nodePool.length > 0) {
+          if ((starved || status.activeCount < maxConcurrent) && nodePool.length > 0) {
             const lSpd = status.leaderSpeed || 0;
             const lBytes = status.leaderBytes || 0;
             const needBoost =
+              starved ||
               (status.activeCount === 0 && elapsed > 20000) ||
               (status.maxProgress < 30 && elapsed > 20000) ||
               (status.maxProgress < 80 && elapsed > 35000 && lSpd < 51200) ||
               (lBytes === 0 && elapsed > 35000) ||
               (status.maxProgress >= 99 && status.activeCount === 0);
             if (needBoost) {
-              const need = maxConcurrent - status.activeCount;
+              const need = starved ? maxConcurrent : maxConcurrent - status.activeCount;
               for (let i = 0; i < need && nodePool.length > 0; i++) {
                 const nextNode = nodePool.shift();
                 if (nextNode) {
@@ -9536,6 +9571,9 @@ class MiaoPluginMBT extends plugin {
             MiaoPluginMBT.freeNode(n.name);
             booked = booked.filter((x) => x !== n.name);
           }
+          const failBrief = PoseidonSpear.diagnose128(waveError?.stderr || "") || PoseidonSpear.sanitize(waveError?.stderr || waveError?.message || "").split("\n").filter(Boolean).slice(-1)[0]?.slice(0, 60) || "未知错误";
+          waveFails.push(`${waveNodes.map((n) => n.name).join("/")}: ${failBrief}`);
+          if (waveFails.length > 6) waveFails.shift();
           if (lBytes === 0) {
             zbWaves++;
             if (!forceH1 && zbWaves >= 2) {
@@ -9544,7 +9582,7 @@ class MiaoPluginMBT extends plugin {
             }
             if (zbWaves >= 4) {
               if (Cer_SessionId) cerberus.finishSession(Cer_SessionId, false, { event: "circuit-breaker", code: "E_Zero_Byte_All", message: "连续零字节熔断" });
-              return { success: false, nodeName: "全部零字节", error: new Error("连续零字节熔断"), mode: MODE, modeMsg: logModeMsg };
+              return { success: false, nodeName: "全部零字节", error: new Error(`连续零字节熔断${waveFailSuffix()}`), mode: MODE, modeMsg: logModeMsg };
             }
           } else {
             zbWaves = 0;
@@ -9575,13 +9613,15 @@ class MiaoPluginMBT extends plugin {
             }
 
             if (Cer_SessionId) cerberus.finishSession(Cer_SessionId, false, { event: "all-failed", code: waveError?.code, message: waveError?.message });
-            return { success: false, nodeName: "全部失败", error: waveError, mode: MODE, modeMsg: logModeMsg };
+            const failErr = waveError || new Error("所有可用节点均尝试失败");
+            failErr.message = `${failErr.message}${waveFailSuffix()}`;
+            return { success: false, nodeName: "全部失败", error: failErr, mode: MODE, modeMsg: logModeMsg };
           }
           await common.sleep(2000);
         }
       }
       if (Cer_SessionId) cerberus.finishSession(Cer_SessionId, false, { event: "exhausted", code: "E_All_Node_Failed", message: "所有可用节点均尝试失败" });
-      return { success: false, nodeName: "全部失败", error: new Error("所有可用节点均尝试失败"), mode: MODE, modeMsg: logModeMsg };
+      return { success: false, nodeName: "全部失败", error: new Error(`所有可用节点均尝试失败${waveFailSuffix()}`), mode: MODE, modeMsg: logModeMsg };
     } catch (SmartErr) {
       Hades.E(`${RidColored} ${logTag} 调度失败:${SmartErr.message}`);
       if (Cer_SessionId) cerberus.finishSession(Cer_SessionId, false, { event: "smart-failed", code: SmartErr?.code, message: SmartErr?.message });
