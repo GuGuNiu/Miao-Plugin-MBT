@@ -15740,5 +15740,30 @@
       "url": "https://www.pixiv.net/artworks/150518399",
       "pixivPid": "150518399"
     }
+  },
+  {
+    "gid": "8595815160",
+    "path": "gs-character/沃雅妮莎/沃雅妮莎Gu3.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "沃雅妮莎",
+    "attributes": {
+      "filename": "沃雅妮莎Gu3.webp",
+      "rated": "none",
+      "PicType": "tp",
+      "isBan": false,
+      "md5": "18e83864e3dc68a6934e03641d400f19",
+      "other": [],
+      "secTags": [],
+      "abnormal": false,
+      "phash": "",
+      "generation": 9
+    },
+    "timestamp": "2026-10-09T10:11:43.215Z",
+    "source": {
+      "platform": "x",
+      "url": "https://x.com/mu_ooa/status/2107983906834416100/photo/1",
+      "xAccountId": "mu_ooa"
+    }
   }
 ]
