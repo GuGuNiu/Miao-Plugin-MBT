@@ -3992,7 +3992,7 @@ class Cerberus {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const YzPath = path.resolve(__dirname, "..", "..");
-const Version = `5.2.8-Pluto-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
+const Version = `5.2.9-${crypto.createHash("md5").update(fs.readFileSync(__filename)).digest("hex").substring(0, 6).toUpperCase()}`;
 const PFL = {
   NONE: 0, RX18_ONLY: 1, PX18_PLUS: 2,
   getDescription: (level) => ["不过滤", "过滤R18", "全部敏感项"][level] ?? "未知"
@@ -4026,7 +4026,7 @@ const DFC = {
   CommTTL: 2700000,
   LargeRepoNums: [2, 5],
   Depth: 1,
-  CronUpdate: "0 */12 * * *",
+  CronUpdate: "0 */6 * * *",
   Repo_Ops: true,
   PFL_Ops: PFL.NONE,
   RenderScale: 300,
@@ -4042,7 +4042,11 @@ const DFC = {
   DSProcess: false,
   RRThreshold: 0,
   IRMs: -1,
-  FileUrl_Threshold: 2097152
+  FileUrl_Threshold: 2097152,
+  Worker_IdleMs: 300000,
+  Worker_Concurrency: 32,
+  Worker_SyncTimeout: 60000,
+  Worker_ScanTimeout: 120000
 };
 
 const [Repo1, Repo2, Repo3, Repo4, Repo5, Repo6] = ["一号仓库", "二号仓库", "三号仓库", "四号仓库", "五号仓库", "六号仓库"];
@@ -4086,6 +4090,7 @@ const Nomos_Universe_Rows = [
 const Cre_Target_Keys = ["MiaoCRE", "ZZZCRE", "WavesCRE"];
 const Temp_Html_Cron_Keywords = ["guguniu", "render-"];
 const Temp_Html_Keywords = ["guguniu", "render-", "cowcoo", "guguniu-gallery", "gutools", "cooweb"];
+const Img_Re = /\.(webp|png|jpg|jpeg|bmp)$/i;
 const Lock_Specs = [
   ["MetaMutex", 60000],
   ["GitMutex", 1800000],
@@ -5245,60 +5250,87 @@ const _wFallback = {
 
 const _wFactory = (ctx = {}) => {
   let _w = null;
+  let _idleTimer = null;
+  let _pending = 0;
+  let _chain = Promise.resolve();
+
   const _wPath = ctx.modulePath || path.join(MiaoPluginMBT.Paths.OpsPath, "modules", "infra", "worker.js");
   const dirNames = ctx.dirNames ?? Nomos.DirNames ?? [];
 
+  const _idleMs = () => DFC.Worker_IdleMs;
+  const _concurrency = () => DFC.Worker_Concurrency;
+  const _timeoutOf = (type) => (type === "SCAN_STATS" ? DFC.Worker_ScanTimeout : DFC.Worker_SyncTimeout);
+
+  const _clearIdle = () => { _idleTimer && clearTimeout(_idleTimer); _idleTimer = null; };
+
+  const _spawn = () => {
+    if (_w) return _w;
+    const w = new Worker(_wPath, { type: "module", workerData: { dirNames, concurrency: _concurrency() } });
+    w.on("error", (err) => { Hades?.D?.("Worker线程错误:", err?.message); if (_w === w) _w = null; });
+    w.on("exit", () => { if (_w === w) _w = null; });
+    w.unref?.();
+    return (_w = w);
+  };
+
+  const _kill = () => {
+    _clearIdle();
+    const w = _w;
+    _w = null;
+    try { w?.terminate(); } catch {}
+  };
+
+  const _armIdle = () => {
+    _clearIdle();
+    if (_pending > 0 || !_w) return;
+    _idleTimer = setTimeout(() => { if (_pending === 0) _kill(); }, _idleMs());
+    _idleTimer?.unref?.();
+  };
+
+  const _rawRun = (type, payload) =>
+    new Promise((resolve, reject) => {
+      const w = _spawn();
+      const id = Date.now().toString(36) + MBTMath.Range(100000, 999999).toString(36);
+      const timeoutMs = _timeoutOf(type);
+      let settled = false;
+      let timer = null;
+      const _done = (fn, arg) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        timer = null;
+        w.off("message", onMsg); w.off("error", onErr); w.off("exit", onExit);
+        fn(arg);
+      };
+      const onMsg = (msg) => { if (msg.id !== id) return; msg.type === "ERROR" ? _done(reject, new Error(msg.error)) : _done(resolve, msg.result); };
+      const onErr = (err) => _done(reject, err);
+      const onExit = (code) => _done(reject, new Error(`Worker线程异常退出，退出码: ${code}`));
+      timer = setTimeout(() => { _kill(); _done(reject, new Error(`Worker ${type} 超时(${timeoutMs}ms)，已硬重置`)); }, timeoutMs);
+      w.on("message", onMsg);
+      w.once("error", onErr);
+      w.once("exit", onExit);
+      w.postMessage({ type, id, payload });
+    });
+
   return {
-    async run(type, payload) {
-      if (!_w) {
-        _w = new Worker(_wPath, { type: "module", workerData: { dirNames } });
-        _w.on("error", (err) => {
-          Hades?.D?.("Worker线程错误:", err?.message);
-          _w = null;
-        });
-        _w.on("exit", () => {
-          _w = null;
-        });
-      }
-
-      try {
-        return await new Promise((resolve, reject) => {
-          const id = Date.now().toString(36) + MBTMath.Range(100000, 999999).toString(36);
-          const onMsg = (msg) => {
-            if (msg.id !== id) return;
-            cleanup();
-            msg.type === "ERROR" ? reject(new Error(msg.error)) : resolve(msg.result);
-          };
-          const onErr = (err) => {
-            cleanup();
-            reject(err);
-          };
-          const onExit = (code) => {
-            cleanup();
-            reject(new Error(`Worker线程异常退出，退出码: ${code}`));
-          };
-          const cleanup = () => {
-            if (!_w) return;
-            _w.off("message", onMsg);
-            _w.off("error", onErr);
-            _w.off("exit", onExit);
-          };
-          _w.on("message", onMsg);
-          _w.once("error", onErr);
-          _w.once("exit", onExit);
-          _w.postMessage({ type, id, payload });
-        });
-      } catch (err) {
-        Hades?.W?.(`Worker ${type} 失败: ${err?.message}`);
-        const fn = _wFallback[type];
-        return fn ? fn(payload) : Promise.reject(new Error(`未知任务类型: ${type}`));
-      }
+    run: (type, payload) => {
+      const exec = _chain.then(async () => {
+        _clearIdle();
+        _pending++;
+        try {
+          return await _rawRun(type, payload);
+        } catch (err) {
+          Hades?.W?.(`Worker ${type} 失败: ${err?.message}`);
+          const fn = _wFallback[type];
+          return fn ? fn(payload) : Promise.reject(new Error(`未知任务类型: ${type}`));
+        } finally {
+          _pending--;
+          _armIdle();
+        }
+      });
+      _chain = exec.then(() => {}, () => {});
+      return exec;
     },
-
-    terminate() {
-      _w?.terminate();
-      _w = null;
-    }
+    terminate: () => { _chain = Promise.resolve(); _pending = 0; _kill(); }
   };
 };
 
@@ -6311,8 +6343,6 @@ class Ananke {
       Hades?.E?.("Worker SYNC_BATCH 失败，启用回退:", err?.message);
       DocHub?.report?.(null, "Worker同步", err, `任务数: ${tasks?.length || 0}`, Hades).catch(() => {});
       return { success: 0, fail: tasks.length, error: err };
-    } finally {
-      HotModule.terminate("worker");
     }
   }
 
@@ -6663,8 +6693,6 @@ class Nomos {
   static #_POOL_TTL = 1209600;
   static #_configCache = new Map();
   static #_CONFIG_TTL = 7 * 24 * 60 * 60;
-  static #_scriptCache = new Map();
-  static #_SCRIPT_TTL = 3 * 24 * 60 * 60;
 
   static #_cacheGet(map, key) {
     const entry = map.get(key);
@@ -6755,23 +6783,6 @@ class Nomos {
   static async getOraclePrompt(Hades = null) {
     const config = await this.getOracleConfig(Hades);
     return config?.ai_config?.prompt?.system || "";
-  }
-
-  static async getWorker(Hades = null) {
-    const cacheKey = "Script:Worker";
-    const cached = this.#_cacheGet(this.#_scriptCache, cacheKey);
-    if (cached) return cached;
-
-    const builtinPath = path.join(MiaoPluginMBT.Paths.OpsPath, "modules", "infra", "worker.js");
-    try {
-      const localRaw = await Ananke.readFile(builtinPath, "utf-8");
-      if (localRaw) {
-        this.#_cacheSet(this.#_scriptCache, cacheKey, localRaw, this.#_SCRIPT_TTL);
-        return localRaw;
-      }
-    } catch {}
-
-    return null;
   }
 
   static #_crppLastPull = 0;
@@ -7422,11 +7433,7 @@ class Tianshu {
     if (scanRepos.length > 0) {
       try {
         const worker = await HotModule.load("worker", { dirNames: Nomos.DirNames });
-        try {
-          scanResults = await worker.run("SCAN_STATS", { repos: scanRepos, _dirNames: Nomos.DirNames });
-        } finally {
-          HotModule.terminate("worker");
-        }
+        scanResults = await worker.run("SCAN_STATS", { repos: scanRepos, _dirNames: Nomos.DirNames });
       } catch (err) {
         Hades?.E?.("Worker SCAN_STATS 失败:", err?.message);
       }
@@ -8515,7 +8522,7 @@ class MiaoPluginMBT extends plugin {
       },
       {
         name: `${DFC.logPrefix}临时文件清理`,
-        cron: "0 0 3 * * *",
+        cron: "0 0 */5 * * *",
         fnc: QuantumFlux(() => this.CronSweep()),
         log: true
       },
@@ -9649,6 +9656,7 @@ class MiaoPluginMBT extends plugin {
           newCommitsCount: 0,
           diffStat: null,
           MBTCoreChange: false,
+          changedFiles: [],
           log: null
         };
 
@@ -9716,7 +9724,8 @@ class MiaoPluginMBT extends plugin {
             wasHardReset: false,
             newCommitsCount: 0,
             diffStat: null,
-            MBTCoreChange: false
+            MBTCoreChange: false,
+            changedFiles: []
           };
           const run_opts = { cwd: localPath, ...pipe_opts };
 
@@ -9764,10 +9773,12 @@ class MiaoPluginMBT extends plugin {
                       deletions: parseInt((diffOut.match(/(\d+)\s+deletion/) || [0, 0])[1])
                     };
                     result.newCommitsCount = parseInt((await MBTPipeControl("git", ["rev-list", "--count", `${oldCommit}..${newCommit}`], run_opts, 5000)).stdout.trim()) || 1;
-                    if (RepoNum === 1)
-                      result.MBTCoreChange = (await MBTPipeControl("git", ["diff", "--name-only", oldCommit, newCommit], run_opts, 5000)).stdout
-                        .trim()
-                        .includes("咕咕牛图库管理器.js");
+                    const changedList = (await MBTPipeControl("git", ["diff", "--name-only", "--no-renames", "--diff-filter=ACMR", oldCommit, newCommit], run_opts, 5000).catch(() => ({ stdout: "" }))).stdout
+                      .split("\n")
+                      .map((p) => p.trim())
+                      .filter(Boolean);
+                    result.changedFiles = changedList;
+                    if (RepoNum === 1) result.MBTCoreChange = changedList.includes("咕咕牛图库管理器.js");
                   } catch {}
                 } else result.newCommitsCount = 1;
               }
@@ -10303,6 +10314,89 @@ class MiaoPluginMBT extends plugin {
 
     nodeList.sort((a, b) => a.score - b.score);
     return nodeList.filter((n) => n.latency !== Infinity);
+  }
+
+  static async ReadRows(logger = getCore()) {
+    try {
+      const raw = await Ananke.readFile(path.join(MiaoPluginMBT.Paths.MountRepoPath, "CowCoo", "data", "AssetData.json"), "utf8");
+      return raw ? JSON.parse(raw) : [];
+    } catch (err) {
+      getHades(logger).D(`读取图库索引失败: ${err?.message}`);
+      return [];
+    }
+  }
+
+  static async SnapIndex(logger = getCore()) {
+    const gids = new Set();
+    const paths = new Set();
+    const hashes = new Set();
+    for (const item of await MiaoPluginMBT.ReadRows(logger)) {
+      if (item?.gid) gids.add(String(item.gid));
+      if (item?.path) paths.add(toPosix(item.path).toLowerCase());
+      if (item?.attributes?.phash) hashes.add(String(item.attributes.phash));
+    }
+    return { gids, paths, hashes };
+  }
+
+  static async PickShots(reportResults, PreIndex, logger = getCore()) {
+    const Hades = getHades(logger);
+    const rows = await MiaoPluginMBT.ReadRows(Hades);
+    const byPath = new Map(rows.map((item) => [toPosix(item?.path ?? "").toLowerCase(), item]));
+    const dirNames = Nomos.DirNames;
+    const shots = [];
+    for (const repo of reportResults ?? []) {
+      if (!repo?.repoPath) continue;
+      for (const raw of repo.changedFiles ?? []) {
+        const rel = toPosix(raw);
+        if (!Img_Re.test(rel)) continue;
+        if (!dirNames.some((d) => rel.startsWith(`${d}/`))) continue;
+        const item = byPath.get(rel.toLowerCase());
+        const oldByGid = item?.gid ? PreIndex.gids.has(String(item.gid)) : PreIndex.paths.has(rel.toLowerCase());
+        const oldByHash = item?.attributes?.phash ? PreIndex.hashes.has(String(item.attributes.phash)) : false;
+        if (oldByGid || oldByHash) continue;
+        shots.push({ rel, abs: path.join(repo.repoPath, rel), item });
+      }
+    }
+    return shots;
+  }
+
+  static async SendShots(e, isScheduled, shots, logger = getCore()) {
+    if (!shots?.length) return false;
+    const Hades = getHades(logger);
+    const forwardList = [];
+    for (const [i, { rel, abs, item }] of shots.entries()) {
+      const fileName = path.basename(rel);
+      const MsgNode = [];
+      const imgSeg = MiaoPluginMBT.ToImgSeg(abs, { audit: true, fallbackText: `[图片无法加载: ${fileName}]` });
+      if (!imgSeg) continue;
+      MsgNode.push(imgSeg);
+      const textInfoLines = [`${i + 1}. ${fileName}`];
+      if (item?.attributes?.rated === "r18") textInfoLines.push("分级：R18");
+      else if (item?.attributes?.rated === "p18") textInfoLines.push("分级：P18");
+      const stats = await Ananke.stat(abs);
+      if (stats) textInfoLines.push(`体积：${await Ananke.measure(stats.size, true)}`);
+      MsgNode.push(textInfoLines.join("\n"));
+      forwardList.push(MsgNode);
+    }
+    if (forwardList.length === 0) return false;
+    const shotCount = forwardList.length;
+    forwardList.unshift(`咕咕牛本次更新了 ${shotCount} 张面板图，以下是本次的更新内容：`);
+    await common.sleep(1500);
+    const title = `咕咕牛图库新增 - ${shotCount} 张`;
+    if (!isScheduled && e) {
+      const ok = await Pheme.forward(e, forwardList, title);
+      if (!ok) {
+        for (const node of forwardList) {
+          const seg = Array.isArray(node) ? node.find((n) => n?.type === "image") : null;
+          if (!seg) continue;
+          await Pheme.send(e, seg);
+          await common.sleep(500);
+        }
+      }
+      return true;
+    }
+    await MiaoPluginMBT.SendMasterMsg(await common.makeForwardMsg(e, forwardList, title), e, 0, Hades);
+    return true;
   }
 
   static async SendMasterMsg(msg, e = null, delay = 0) {
@@ -11169,6 +11263,7 @@ class MiaoPluginMBT extends plugin {
       let allSuccess = true;
       let HasAnyChanges = false;
       const errorList = [];
+      const PreIndex = await MiaoPluginMBT.SnapIndex(Hades);
 
       const deployRepoResult = async (repoNum, localPath, repoDisplayName, MBTKey, DefKey, targetBranch, isCore = false, senseChain) => {
         if (repoNum === 4) {
@@ -11232,7 +11327,9 @@ class MiaoPluginMBT extends plugin {
           hasChanges: result.hasChanges,
           hasValidLogs: hasValidLogs,
           shouldHighlight: shouldHighlight,
-          MBTCoreChange: result.MBTCoreChange || false
+          MBTCoreChange: result.MBTCoreChange || false,
+          repoPath: localPath,
+          changedFiles: result.changedFiles || []
         };
       };
 
@@ -11308,6 +11405,10 @@ class MiaoPluginMBT extends plugin {
         summaryText = "更新过程中遇到问题，请检查日志！";
       }
 
+      const ChangedAll = reportResults.flatMap((r) => (r.changedFiles ?? []).map(toPosix));
+      const CodeTouched = ChangedAll.some((p) => p === "咕咕牛图库管理器.js" || p.startsWith("CowCoo/modules/"));
+      const NewShots = HasAnyChanges && !CodeTouched ? await MiaoPluginMBT.PickShots(reportResults, PreIndex, Hades) : [];
+
       const ViewProps = {
         duration,
         results: reportResults,
@@ -11335,6 +11436,7 @@ class MiaoPluginMBT extends plugin {
         const imgSegment = MiaoPluginMBT.ToImgSeg(imgBuffer);
         if (!isScheduled && e) {
           await Pheme.send(e, imgSegment);
+          await MiaoPluginMBT.SendShots(e, isScheduled, NewShots, Hades);
 
           if (!allSuccess && errorList.length > 0) {
             await common.sleep(500);
@@ -11347,6 +11449,7 @@ class MiaoPluginMBT extends plugin {
           }
         } else if (notifyStatus) {
           await MiaoPluginMBT.SendMasterMsg(imgSegment, e, 0, Hades);
+          await MiaoPluginMBT.SendShots(e, isScheduled, NewShots, Hades);
           if (!allSuccess && errorList.length > 0) {
             await MiaoPluginMBT.SendMasterMsg(await common.makeForwardMsg(e, errorList, "咕咕牛定时更新失败详情"), e, 1000, Hades);
           }
@@ -11513,7 +11616,7 @@ class MiaoPluginMBT extends plugin {
       );
 
       const [scanResults, diskStats, robotSizeRaw, installStats, ...repoResults] = await Promise.all([
-        worker.run("SCAN_STATS", ScanRepos).finally(() => HotModule.terminate("worker")),
+        worker.run("SCAN_STATS", ScanRepos),
         statfs(MiaoPluginMBT.Paths.YzPath).catch(() => ({ blocks: 0, bsize: 0, bfree: 0 })),
         Ananke.measure(MiaoPluginMBT.Paths.YzPath),
         Ananke.stat(MiaoPluginMBT.Paths.MountRepoPath).catch(() => null),
@@ -12499,6 +12602,35 @@ class MiaoPluginMBT extends plugin {
   }
 }
 
+const SrcID = (source) => {
+  const keys = Object.keys(source ?? {});
+  const i = keys.indexOf("url");
+  const v = i >= 0 ? source[keys[i + 1]] : null;
+  return v == null || String(v).trim() === "" ? null : String(v);
+};
+
+const FindMeta = async (fileName, type = "") => {
+  try {
+    const cache = await MiaoPluginMBT.ImgMetaAC();
+    const target = String(fileName ?? "").toLowerCase();
+    if (!Array.isArray(cache) || !target) return null;
+    const prefer = { miao: ["gs-character", "sr-character"], zzz: ["zzz-character"], waves: ["waves-character"] }[type] ?? [];
+    const matched = cache.filter((item) => path.basename(toPosix(item?.path ?? "")).toLowerCase() === target);
+    return matched.find((item) => !prefer.length || prefer.includes(item.storagebox_type)) ?? matched[0] ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const SrcLine = (meta) => {
+  const src = meta?.source;
+  if (!src || typeof src !== "object") return null;
+  const id = SrcID(src);
+  const url = typeof src.url === "string" ? src.url.trim() : "";
+  const lines = [src.platform && `来源: ${src.platform}`, id && `ID: ${id}`, url && `链接: ${url}`].filter(Boolean);
+  return lines.length ? lines.join("\n") : null;
+};
+
 class SleeperAgent extends plugin {
   constructor() {
     super({
@@ -12575,10 +12707,11 @@ class SleeperAgent extends plugin {
               const CREName = fileName.replace(/Gu\d+\.webp$/i, "");
               const promptText = `输入#咕咕牛查看${CREName}可以看图库全部图片`;
               const imgSegment = MiaoPluginMBT.ToImgSeg(absolutePath);
-              const forwardList = [promptText, imgSegment];
+              const sourceLine = SrcLine(await FindMeta(fileName, type));
+              const forwardList = sourceLine ? [promptText, sourceLine, imgSegment] : [promptText, imgSegment];
               await Pheme.forward(e, forwardList, `原图 - ${fileName}`);
               await common.sleep(300);
-              await Pheme.send(e, segment.at(e.user_id), false, { recallMsg: 15 });
+              await Pheme.send(e, segment.at(e.user_id), false);
             } catch {
               await Pheme.quote(e, `无法获取原图，请稍后再试。`);
             }

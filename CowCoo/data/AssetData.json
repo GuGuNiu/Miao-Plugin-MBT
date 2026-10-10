@@ -44,7 +44,9 @@
     },
     "timestamp": "2025-10-20T10:11:03.171Z",
     "source": {
-      "platform": "pixiv"
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/135993552",
+      "pixivPid": "135993552"
     }
   },
   {
@@ -77,26 +79,17 @@
       "md5": "061de7017b31a61788c5236c895eacc8",
       "rated": "none",
       "other": [],
-      "phash": "f98921cc0c220e68"
+      "phash": "f98921cc0c220e68",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-08-10T11:26:35.792Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "gs-character",
-    "gid": "1140076248",
-    "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu15.webp",
-    "attributes": {
-      "filename": "芙宁娜Gu15.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "69cd370cd32120c36be05eb914be9cab",
-      "rated": "none",
-      "other": [],
-      "phash": "db55aafa5973124a"
-    },
-    "timestamp": "2025-08-10T12:45:38.900Z"
+    "timestamp": "2025-08-10T11:26:35.792Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/127966388",
+      "pixivPid": "127966388"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -171,9 +164,9 @@
     "storagebox_type": "gs-character",
     "gid": "8036013890",
     "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu23.webp",
+    "path": "gs-character/芙宁娜/芙宁娜Gu5.webp",
     "attributes": {
-      "filename": "芙宁娜Gu23.webp",
+      "filename": "芙宁娜Gu5.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "49c4556fb763bc106b6d1bd0af324ff2",
@@ -188,9 +181,9 @@
     "storagebox_type": "gs-character",
     "gid": "9776436744",
     "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu21.webp",
+    "path": "gs-character/芙宁娜/芙宁娜Gu15.webp",
     "attributes": {
-      "filename": "芙宁娜Gu21.webp",
+      "filename": "芙宁娜Gu15.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "c5e19da3924355c8639259b0ddd48096",
@@ -237,9 +230,17 @@
       "md5": "6a84470d99d2a45ad84f8344a67db9d8",
       "rated": "none",
       "other": [],
-      "phash": "dbc5187145a247aa"
+      "phash": "dbc5187145a247aa",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-08-21T13:09:20.153Z"
+    "timestamp": "2025-08-21T13:09:20.153Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/114923540",
+      "pixivPid": "114923540"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -255,9 +256,16 @@
       "rated": "none",
       "other": [],
       "phash": "d8598ce403840700",
-      "abnormal": true
+      "abnormal": false,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2025-08-13T05:23:12.751Z"
+    "timestamp": "2025-08-13T05:23:12.751Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/115144707",
+      "pixivPid": "115144707"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -279,7 +287,9 @@
     },
     "timestamp": "2025-08-21T13:09:12.608Z",
     "source": {
-      "platform": "pixiv"
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/111421782",
+      "pixivPid": "111421782"
     }
   },
   {
@@ -312,9 +322,9 @@
     "storagebox_type": "gs-character",
     "gid": "3522672871",
     "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu20.webp",
+    "path": "gs-character/芙宁娜/芙宁娜Gu19.webp",
     "attributes": {
-      "filename": "芙宁娜Gu20.webp",
+      "filename": "芙宁娜Gu19.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "e5d5f224dc56f09df4446b56655a6aae",
@@ -323,23 +333,6 @@
       "phash": "f35d32620da50d49"
     },
     "timestamp": "2025-08-10T12:47:27.267Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "gs-character",
-    "gid": "9012036301",
-    "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu19.webp",
-    "attributes": {
-      "filename": "芙宁娜Gu19.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "ed27a36bc52fdbfd5773a87361f5c560",
-      "rated": "none",
-      "other": [],
-      "phash": "ca4555701a8a6a6e"
-    },
-    "timestamp": "2025-08-10T11:34:22.773Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -398,18 +391,25 @@
       "rated": "none",
       "other": [],
       "phash": "f94535ba255a1563",
-      "abnormal": false
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-08-10T11:36:23.206Z"
+    "timestamp": "2025-08-10T11:36:23.206Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/120074066",
+      "pixivPid": "120074066"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
     "storagebox_type": "gs-character",
     "gid": "2590598625",
     "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu22.webp",
+    "path": "gs-character/芙宁娜/芙宁娜Gu6.webp",
     "attributes": {
-      "filename": "芙宁娜Gu22.webp",
+      "filename": "芙宁娜Gu6.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "3a9219a5129b880e1dc684489c3619fd",
@@ -445,50 +445,10 @@
     },
     "timestamp": "2025-08-10T11:39:26.005Z",
     "source": {
-      "platform": "pixiv"
-    }
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "gs-character",
-    "gid": "2451228484",
-    "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu5.webp",
-    "attributes": {
-      "filename": "芙宁娜Gu5.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "72777b3c7a638c3b53b6c54833736e95",
-      "rated": "none",
-      "other": [],
-      "phash": "dd91356c3a2741a5",
-      "abnormal": false,
-      "secTags": [],
-      "generation": 9
-    },
-    "timestamp": "2025-10-23T07:42:23.872Z",
-    "source": {
       "platform": "pixiv",
-      "url": "https://www.pixiv.net/artworks/121635427",
-      "pixivPid": "121635427"
+      "url": "https://www.pixiv.net/artworks/131373633",
+      "pixivPid": "131373633"
     }
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "gs-character",
-    "gid": "3336068740",
-    "characterName": "芙宁娜",
-    "path": "gs-character/芙宁娜/芙宁娜Gu6.webp",
-    "attributes": {
-      "filename": "芙宁娜Gu6.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "f01268f5c4ac69c23df10388a3d5d974",
-      "rated": "none",
-      "other": [],
-      "phash": "dac5593455a30daa"
-    },
-    "timestamp": "2025-08-10T12:39:32.429Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -791,9 +751,16 @@
       "rated": "none",
       "other": [],
       "phash": "f87a4bbc16530de9",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2025-10-23T07:42:23.872Z"
+    "timestamp": "2025-10-23T07:42:23.872Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/135384622",
+      "pixivPid": "135384622"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -928,9 +895,17 @@
       "md5": "71319e6d1c9ca84068cac2d8bd43bad6",
       "rated": "p18",
       "other": [],
-      "phash": "f2c94979922b2a41"
+      "phash": "f2c94979922b2a41",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2025-12-01T11:36:33.228Z"
+    "timestamp": "2025-12-01T11:36:33.228Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/103274143",
+      "pixivPid": "103274143"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -1300,9 +1275,17 @@
       "md5": "a0276527ad4be65bca944e05a17b96c1",
       "rated": "p18",
       "other": [],
-      "phash": "e9250e4a21b5956a"
+      "phash": "e9250e4a21b5956a",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 7.5
     },
-    "timestamp": "2025-12-01T11:36:33.232Z"
+    "timestamp": "2025-12-01T11:36:33.232Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/120216139",
+      "pixivPid": "120216139"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -1847,9 +1830,17 @@
       "md5": "d566db7b589ce79cdb03dddaeeef37f9",
       "rated": "none",
       "other": [],
-      "phash": "cd31a74a72b573a5"
+      "phash": "cd31a74a72b573a5",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-05-23T04:28:33.694Z"
+    "timestamp": "2025-05-23T04:28:33.694Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/130333688",
+      "pixivPid": "130333688"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -1864,9 +1855,17 @@
       "md5": "02c5a833c5b932a2cd63d93888ec17b0",
       "rated": "none",
       "other": [],
-      "phash": "dd8d6222627a7171"
+      "phash": "dd8d6222627a7171",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-09-06T05:14:53.273Z"
+    "timestamp": "2025-09-06T05:14:53.273Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/134769092",
+      "pixivPid": "134769092"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -2142,9 +2141,9 @@
     "storagebox_type": "sr-character",
     "gid": "9132709978",
     "characterName": "遐蝶",
-    "path": "sr-character/遐蝶/遐蝶Gu16.webp",
+    "path": "sr-character/遐蝶/遐蝶Gu6.webp",
     "attributes": {
-      "filename": "遐蝶Gu16.webp",
+      "filename": "遐蝶Gu6.webp",
       "PicType": "fs",
       "isBan": false,
       "md5": "cf6c426b63e2397d53d1ec485ae7c899",
@@ -2199,9 +2198,9 @@
     "storagebox_type": "sr-character",
     "gid": "4947167254",
     "characterName": "遐蝶",
-    "path": "sr-character/遐蝶/遐蝶Gu17.webp",
+    "path": "sr-character/遐蝶/遐蝶Gu3.webp",
     "attributes": {
-      "filename": "遐蝶Gu17.webp",
+      "filename": "遐蝶Gu3.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "94907be6f6e11a22aa1be825bdf1318a",
@@ -2270,26 +2269,17 @@
       "md5": "cde63ec69488ea2f217ef6c91c7f5138",
       "rated": "p18",
       "other": [],
-      "phash": "9a7575a775f5ace5"
+      "phash": "9a7575a775f5ace5",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-07-25T06:01:18.590Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "sr-character",
-    "gid": "6393914944",
-    "characterName": "遐蝶",
-    "path": "sr-character/遐蝶/遐蝶Gu3.webp",
-    "attributes": {
-      "filename": "遐蝶Gu3.webp",
-      "PicType": "fs",
-      "isBan": false,
-      "md5": "bb22415d124fdf0471078a33c96bba3c",
-      "rated": "none",
-      "other": [],
-      "phash": "9c59670770dafa72"
-    },
-    "timestamp": "2025-05-03T10:18:29.753Z"
+    "timestamp": "2025-07-25T06:01:18.590Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/126361482",
+      "pixivPid": "126361482"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -2307,23 +2297,6 @@
       "phash": "d8396607f266e3fe"
     },
     "timestamp": "2025-05-03T10:18:29.753Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT",
-    "storagebox_type": "sr-character",
-    "gid": "3082191796",
-    "characterName": "遐蝶",
-    "path": "sr-character/遐蝶/遐蝶Gu6.webp",
-    "attributes": {
-      "filename": "遐蝶Gu6.webp",
-      "PicType": "fs",
-      "isBan": false,
-      "md5": "fbc76077e738279e8425248c931ee269",
-      "rated": "none",
-      "other": [],
-      "phash": "98495227f3ece9ed"
-    },
-    "timestamp": "2025-05-05T11:49:32.023Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -3833,31 +3806,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-2",
     "storagebox_type": "gs-character",
-    "gid": "8089709277",
-    "characterName": "甘雨",
-    "path": "gs-character/甘雨/甘雨Gu2.webp",
-    "attributes": {
-      "filename": "甘雨Gu2.webp",
-      "PicType": "fs",
-      "isBan": false,
-      "md5": "2cefac3889ca501675967b77222ce39c",
-      "rated": "p18",
-      "other": [],
-      "phash": "8778747d596bf3f3",
-      "abnormal": true,
-      "secTags": [],
-      "generation": 9
-    },
-    "timestamp": "2025-09-06T03:29:28.768Z",
-    "source": {
-      "platform": "pixiv",
-      "url": "https://www.pixiv.net/artworks/99776486",
-      "pixivPid": "99776486"
-    }
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
     "gid": "4729465411",
     "characterName": "甘雨",
     "path": "gs-character/甘雨/甘雨Gu4.webp",
@@ -3896,9 +3844,9 @@
     "storagebox_type": "gs-character",
     "gid": "8454423194",
     "characterName": "甘雨",
-    "path": "gs-character/甘雨/甘雨Gu9.webp",
+    "path": "gs-character/甘雨/甘雨Gu2.webp",
     "attributes": {
-      "filename": "甘雨Gu9.webp",
+      "filename": "甘雨Gu2.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "06a64c27e35182bbb02fcbe809ca8642",
@@ -4696,14 +4644,18 @@
     "attributes": {
       "filename": "流浪者Gu5.webp",
       "PicType": "tp",
-      "isBan": false,
+      "isBan": true,
       "md5": "cf595c9a25cb22820b192510880f1722",
       "rated": "none",
       "other": [],
       "phash": "f1562912a958d95e",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-05-03T10:18:29.752Z"
+    "timestamp": "2025-05-03T10:18:29.752Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -4731,14 +4683,18 @@
     "attributes": {
       "filename": "流浪者Gu7.webp",
       "PicType": "tp",
-      "isBan": false,
+      "isBan": true,
       "md5": "189098271f35b3fe87f843c5af442759",
       "rated": "none",
       "other": [],
       "phash": "e9c540700af206ca",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-05-03T10:18:29.752Z"
+    "timestamp": "2025-05-03T10:18:29.752Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -6153,9 +6109,9 @@
     "storagebox_type": "gs-character",
     "gid": "5289719054",
     "characterName": "茜特菈莉",
-    "path": "gs-character/茜特菈莉/茜特菈莉Gu22.webp",
+    "path": "gs-character/茜特菈莉/茜特菈莉Gu19.webp",
     "attributes": {
-      "filename": "茜特菈莉Gu22.webp",
+      "filename": "茜特菈莉Gu19.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "1cecdc3ff09cd726e7b5653dae1e722a",
@@ -6170,35 +6126,22 @@
     "storagebox_type": "gs-character",
     "gid": "2467220334",
     "characterName": "茜特菈莉",
-    "path": "gs-character/茜特菈莉/茜特菈莉Gu23.webp",
-    "attributes": {
-      "filename": "茜特菈莉Gu23.webp",
-      "PicType": "fs",
-      "isBan": false,
-      "md5": "f08002b9c7953aadde206cf99d6fffd8",
-      "rated": "none",
-      "other": [],
-      "phash": "fc7318f815870f93"
-    },
-    "timestamp": "2025-12-01T11:36:33.278Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "1506734473",
-    "characterName": "茜特菈莉",
     "path": "gs-character/茜特菈莉/茜特菈莉Gu14.webp",
     "attributes": {
       "filename": "茜特菈莉Gu14.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "245cb9f5f5436248f892cc80621ea9e8",
-      "rated": "p18",
+      "PicType": "fs",
+      "isBan": true,
+      "md5": "f08002b9c7953aadde206cf99d6fffd8",
+      "rated": "none",
       "other": [],
-      "phash": "ca5d54aa2911113a",
-      "abnormal": true
+      "phash": "fc7318f815870f93",
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.279Z"
+    "timestamp": "2025-12-01T11:36:33.278Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -6216,40 +6159,6 @@
       "phash": "d9c575fa4aa24a55"
     },
     "timestamp": "2025-12-01T11:36:33.279Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "2566654136",
-    "characterName": "茜特菈莉",
-    "path": "gs-character/茜特菈莉/茜特菈莉Gu19.webp",
-    "attributes": {
-      "filename": "茜特菈莉Gu19.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "9591aad7c0bba2990392ed4d357bcb55",
-      "rated": "r18",
-      "other": [],
-      "phash": "dd623a701d312231"
-    },
-    "timestamp": "2025-12-01T11:36:33.279Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "5512360843",
-    "characterName": "茜特菈莉",
-    "path": "gs-character/茜特菈莉/茜特菈莉Gu21.webp",
-    "attributes": {
-      "filename": "茜特菈莉Gu21.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "5d05446b3d7ec34cd8a2cbb7ca5931da",
-      "rated": "none",
-      "other": [],
-      "phash": "da8d55f52a222a50"
-    },
-    "timestamp": "2025-12-01T11:36:33.280Z"
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -7255,9 +7164,17 @@
       "md5": "117819f06c73a2618bfcb1242b9ab54c",
       "rated": "none",
       "other": [],
-      "phash": "f8cf28f438140720"
+      "phash": "f8cf28f438140720",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 8
     },
-    "timestamp": "2025-12-01T11:36:33.197Z"
+    "timestamp": "2025-12-01T11:36:33.197Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/131881373",
+      "pixivPid": "131881373"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -7279,7 +7196,9 @@
     },
     "timestamp": "2025-12-01T11:36:33.197Z",
     "source": {
-      "platform": "pixiv"
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/131593336",
+      "pixivPid": "131593336"
     }
   },
   {
@@ -8356,23 +8275,6 @@
   {
     "storagebox": "Miao-Plugin-MBT-3",
     "storagebox_type": "sr-character",
-    "gid": "1832288153",
-    "characterName": "飞霄",
-    "path": "sr-character/飞霄/飞霄Gu2.webp",
-    "attributes": {
-      "filename": "飞霄Gu2.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "b8332a0b7b852dd418c2b6875e6d958c",
-      "rated": "r18",
-      "other": [],
-      "phash": "9c45b20975acda52"
-    },
-    "timestamp": "2025-05-27T07:49:59.190Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
     "gid": "5510095614",
     "characterName": "飞霄",
     "path": "sr-character/飞霄/飞霄Gu3.webp",
@@ -8392,9 +8294,9 @@
     "storagebox_type": "sr-character",
     "gid": "8578581081",
     "characterName": "飞霄",
-    "path": "sr-character/飞霄/飞霄Gu4.webp",
+    "path": "sr-character/飞霄/飞霄Gu2.webp",
     "attributes": {
-      "filename": "飞霄Gu4.webp",
+      "filename": "飞霄Gu2.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "64c488d80a020f524061edc92f25ba02",
@@ -8971,24 +8873,6 @@
       "rated": "none",
       "other": [],
       "phash": "dc39350e72da7874"
-    },
-    "timestamp": "2025-05-26T03:40:25.510Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "7896759510",
-    "characterName": "花火",
-    "path": "sr-character/花火/花火Gu43.webp",
-    "attributes": {
-      "filename": "花火Gu43.webp",
-      "PicType": "fs",
-      "isBan": false,
-      "md5": "26256593c1dab6cd3dcd1a801d477618",
-      "rated": "none",
-      "other": [],
-      "phash": "c3c33c0cd8bcf2cc",
-      "abnormal": true
     },
     "timestamp": "2025-05-26T03:40:25.510Z"
   },
@@ -9937,9 +9821,9 @@
     "storagebox_type": "sr-character",
     "gid": "1108803741",
     "characterName": "卡芙卡",
-    "path": "sr-character/卡芙卡/卡芙卡Gu7.webp",
+    "path": "sr-character/卡芙卡/卡芙卡Gu2.webp",
     "attributes": {
-      "filename": "卡芙卡Gu7.webp",
+      "filename": "卡芙卡Gu2.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "bce136216f77c9360353dcc5d5e9a820",
@@ -9953,65 +9837,11 @@
   {
     "storagebox": "Miao-Plugin-MBT-3",
     "storagebox_type": "sr-character",
-    "gid": "2423296245",
-    "characterName": "卡芙卡",
-    "path": "sr-character/卡芙卡/卡芙卡Gu2.webp",
-    "attributes": {
-      "filename": "卡芙卡Gu2.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "2970f1fe5aec476754968e544658d086",
-      "rated": "r18",
-      "other": [],
-      "phash": "c87364f00ef101e0",
-      "abnormal": true
-    },
-    "timestamp": "2025-05-19T07:45:25.802Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "7735266996",
+    "gid": "3477649377",
     "characterName": "卡芙卡",
     "path": "sr-character/卡芙卡/卡芙卡Gu3.webp",
     "attributes": {
       "filename": "卡芙卡Gu3.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "7dda529721baca0ab58c71c10f972b6d",
-      "rated": "none",
-      "other": [],
-      "phash": "f0706a7909650575",
-      "abnormal": true
-    },
-    "timestamp": "2025-05-19T07:45:25.803Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "2304641205",
-    "characterName": "卡芙卡",
-    "path": "sr-character/卡芙卡/卡芙卡Gu6.webp",
-    "attributes": {
-      "filename": "卡芙卡Gu6.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "78059c947d39ace8cdaad9b3afa564af",
-      "rated": "none",
-      "other": [],
-      "phash": "c8f1597309b1a4a0",
-      "abnormal": true
-    },
-    "timestamp": "2025-05-19T07:45:25.803Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-3",
-    "storagebox_type": "sr-character",
-    "gid": "3477649377",
-    "characterName": "卡芙卡",
-    "path": "sr-character/卡芙卡/卡芙卡Gu5.webp",
-    "attributes": {
-      "filename": "卡芙卡Gu5.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "46afb93f1316105b3796c5bc7251adfd",
@@ -12516,7 +12346,7 @@
       "rated": "none",
       "other": [],
       "phash": "fa4920b224110320",
-      "abnormal": true,
+      "abnormal": false,
       "secTags": [],
       "generation": 9
     },
@@ -12718,14 +12548,18 @@
     "attributes": {
       "filename": "林尼Gu1.webp",
       "PicType": "tp",
-      "isBan": false,
+      "isBan": true,
       "md5": "41051b105e7c14e6deb8f5f4046e5717",
       "rated": "none",
       "other": [],
       "phash": "f9b151f105ad25a1",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.232Z"
+    "timestamp": "2025-12-01T11:36:33.232Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -12736,14 +12570,18 @@
     "attributes": {
       "filename": "林尼Gu2.webp",
       "PicType": "tp",
-      "isBan": false,
+      "isBan": true,
       "md5": "b888e4b5a6bfdaa78fff32b0a9d037a7",
       "rated": "none",
       "other": [],
       "phash": "d8b892f20aea2ae2",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.232Z"
+    "timestamp": "2025-12-01T11:36:33.232Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -12790,14 +12628,18 @@
     "attributes": {
       "filename": "琳妮特Gu7.webp",
       "PicType": "tp",
-      "isBan": false,
+      "isBan": true,
       "md5": "16228a55c111fc3a5ea31aa1519a85b1",
       "rated": "p18",
       "other": [],
       "phash": "f88270f007e008f0",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.233Z"
+    "timestamp": "2025-12-01T11:36:33.233Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -14743,32 +14585,15 @@
     "storagebox_type": "zzz-character",
     "gid": "2983955895",
     "characterName": "浮波柚叶",
-    "path": "zzz-character/浮波柚叶/浮波柚叶Gu2.webp",
+    "path": "zzz-character/浮波柚叶/浮波柚叶Gu1.webp",
     "attributes": {
-      "filename": "浮波柚叶Gu2.webp",
+      "filename": "浮波柚叶Gu1.webp",
       "PicType": "tp",
       "isBan": false,
       "md5": "735ff733a0fd849df7bd802f26080f66",
       "rated": "none",
       "other": [],
       "phash": "d4551686eade74f8"
-    },
-    "timestamp": "2025-12-01T11:36:33.201Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-4",
-    "storagebox_type": "zzz-character",
-    "gid": "6371340175",
-    "characterName": "浮波柚叶",
-    "path": "zzz-character/浮波柚叶/浮波柚叶Gu1.webp",
-    "attributes": {
-      "filename": "浮波柚叶Gu1.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "afce5c5f4583845981d9f922ec8dd4b7",
-      "rated": "none",
-      "other": [],
-      "phash": "c80a56c7776a58f4"
     },
     "timestamp": "2025-12-01T11:36:33.201Z"
   },
@@ -15141,9 +14966,17 @@
       "isBan": false,
       "md5": "6329429bb398e4a19ff4fb9579ab0e47",
       "other": [],
-      "phash": "9e594daae6746db5"
+      "phash": "9e594daae6746db5",
+      "abnormal": false,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2026-03-10 19:10:43"
+    "timestamp": "2026-03-10 19:10:43",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/142073858",
+      "pixivPid": "142073858"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -15756,7 +15589,7 @@
       "other": [],
       "secTags": [],
       "abnormal": false,
-      "phash": "",
+      "phash": "d9257551542a228a",
       "generation": 9
     },
     "timestamp": "2026-10-09T10:11:43.215Z",
