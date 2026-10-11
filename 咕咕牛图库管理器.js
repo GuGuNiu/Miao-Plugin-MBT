@@ -7207,6 +7207,10 @@ class Tianshu {
 
     if (gap > 2) sc -= gap * 4;
     if (minLen <= 2 && q[0] !== t[0]) sc -= 24;
+
+    if (t.includes(q) === false && q.includes(t) && t.length < q.length) {
+      sc -= (q.length - t.length) * 60;
+    }
     return sc;
   }
 
@@ -10333,11 +10337,14 @@ class MiaoPluginMBT extends plugin {
       for (const raw of repo.changedFiles ?? []) {
         const rel = toPosix(raw);
         if (!Img_Re.test(rel)) continue;
+        if (rel === "咕咕牛图库管理器.js" || rel.startsWith("CowCoo/")) continue;
         if (!dirNames.some((d) => rel.startsWith(`${d}/`))) continue;
-        const item = byPath.get(rel.toLowerCase());
-        const oldByGid = item?.gid ? PreIndex.gids.has(String(item.gid)) : PreIndex.paths.has(rel.toLowerCase());
-        const oldByHash = item?.attributes?.phash ? PreIndex.hashes.has(String(item.attributes.phash)) : false;
-        if (oldByGid || oldByHash) continue;
+        const lower = rel.toLowerCase();
+        const item = byPath.get(lower);
+        const isOld = PreIndex.paths.has(lower)
+          || (item?.gid ? PreIndex.gids.has(String(item.gid)) : false)
+          || (item?.attributes?.phash ? PreIndex.hashes.has(String(item.attributes.phash)) : false);
+        if (isOld) continue;
         shots.push({ rel, abs: path.join(repo.repoPath, rel), item });
       }
     }
@@ -10348,13 +10355,16 @@ class MiaoPluginMBT extends plugin {
     if (!shots?.length) return false;
     const Hades = getHades(logger);
     const forwardList = [];
-    for (const [i, { rel, abs, item }] of shots.entries()) {
+    let shotIndex = 0;
+    for (const { rel, abs, item } of shots) {
+      if (item?.attributes?.isBan === true) continue;
       const fileName = path.basename(rel);
       const MsgNode = [];
       const imgSeg = MiaoPluginMBT.ToImgSeg(abs, { audit: true, fallbackText: `[图片无法加载: ${fileName}]` });
       if (!imgSeg) continue;
       MsgNode.push(imgSeg);
-      const textInfoLines = [`${i + 1}. ${fileName}`];
+      shotIndex++;
+      const textInfoLines = [`${shotIndex}. ${fileName}`];
       if (item?.attributes?.rated === "r18") textInfoLines.push("分级：R18");
       else if (item?.attributes?.rated === "p18") textInfoLines.push("分级：P18");
       const stats = await Ananke.stat(abs);
@@ -11382,9 +11392,7 @@ class MiaoPluginMBT extends plugin {
         summaryText = "更新过程中遇到问题，请检查日志！";
       }
 
-      const ChangedAll = reportResults.flatMap((r) => (r.changedFiles ?? []).map(toPosix));
-      const CodeTouched = ChangedAll.some((p) => p === "咕咕牛图库管理器.js" || p.startsWith("CowCoo/modules/"));
-      const NewShots = HasAnyChanges && !CodeTouched ? await MiaoPluginMBT.PickShots(reportResults, PreIndex, Hades) : [];
+      const NewShots = HasAnyChanges ? await MiaoPluginMBT.PickShots(reportResults, PreIndex, Hades) : [];
 
       const ViewProps = {
         duration,

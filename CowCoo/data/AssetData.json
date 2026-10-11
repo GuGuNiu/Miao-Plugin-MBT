@@ -758,7 +758,7 @@
       "rated": "none",
       "other": [],
       "phash": "f87a4bbc16530de9",
-      "abnormal": true,
+      "abnormal": false,
       "secTags": [],
       "generation": 9
     },
@@ -1522,7 +1522,7 @@
     "attributes": {
       "filename": "纳西妲Gu8.webp",
       "PicType": "tp",
-      "isBan": false,
+      "isBan": true,
       "md5": "27c0b5aee335d14bef4cb736bf1987b0",
       "rated": "none",
       "other": [
@@ -1530,9 +1530,13 @@
         "LLMCanvas"
       ],
       "phash": "d931317115b61555",
-      "abnormal": true
+      "abnormal": true,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.247Z"
+    "timestamp": "2025-12-01T11:36:33.247Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -3115,7 +3119,7 @@
       "PicType": "tp",
       "isBan": false,
       "md5": "c090883f34a9e2fe9afd8ec79ad89438",
-      "rated": "p18",
+      "rated": "none",
       "other": [],
       "phash": "da4586ba09450f49",
       "abnormal": false,
@@ -3737,7 +3741,7 @@
       "PicType": "tp",
       "isBan": false,
       "md5": "cd5aa86d7b60fe9ff331066bd4dea265",
-      "rated": "p18",
+      "rated": "none",
       "other": [],
       "phash": "d9c55db032aa5156",
       "abnormal": false,
@@ -4956,24 +4960,6 @@
       "rated": "none",
       "other": [],
       "phash": "c99539542a7aea71",
-      "abnormal": true
-    },
-    "timestamp": "2025-05-25T03:53:11.006Z"
-  },
-  {
-    "storagebox": "Miao-Plugin-MBT-2",
-    "storagebox_type": "gs-character",
-    "gid": "5736952368",
-    "characterName": "那维莱特",
-    "path": "gs-character/那维莱特/那维莱特Gu4.webp",
-    "attributes": {
-      "filename": "那维莱特Gu4.webp",
-      "PicType": "tp",
-      "isBan": false,
-      "md5": "dae42dbdb53d3c9e772b1858d6612a18",
-      "rated": "none",
-      "other": [],
-      "phash": "e89a9af20aa98aa9",
       "abnormal": true
     },
     "timestamp": "2025-05-25T03:53:11.006Z"
@@ -7247,11 +7233,16 @@
       "PicType": "tp",
       "isBan": false,
       "md5": "9b37387c1fe87b78253a9eafe8fd1288",
-      "rated": "p18",
+      "rated": "none",
       "other": [],
-      "phash": "d945547a2a464580"
+      "phash": "d945547a2a464580",
+      "abnormal": false,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.198Z"
+    "timestamp": "2025-12-01T11:36:33.198Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -11770,11 +11761,16 @@
       "PicType": "tp",
       "isBan": false,
       "md5": "3881db07da62cbca1714bc27d6c7ae4f",
-      "rated": "p18",
+      "rated": "none",
       "other": [],
-      "phash": "fa0d159628b2725b"
+      "phash": "fa0d159628b2725b",
+      "abnormal": false,
+      "secTags": []
     },
-    "timestamp": "2025-12-01T11:36:33.212Z"
+    "timestamp": "2025-12-01T11:36:33.212Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-4",
@@ -12421,7 +12417,7 @@
       "PicType": "tp",
       "isBan": false,
       "md5": "e3430c54d52ce7c7771d197d9bdcd5d7",
-      "rated": "p18",
+      "rated": "none",
       "other": [],
       "phash": "d9ea6546a542912a",
       "abnormal": false,
