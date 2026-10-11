@@ -252,10 +252,10 @@
       "filename": "芙宁娜Gu11.webp",
       "PicType": "tp",
       "isBan": false,
-      "md5": "b580136c206d770efe5e80029cb8fbd6",
+      "md5": "764223895bf1d55c79edeb19d45a96f4",
       "rated": "none",
       "other": [],
-      "phash": "d8598ce403840700",
+      "phash": "d2b10cc6204f0a63",
       "abnormal": false,
       "secTags": [],
       "generation": 9
@@ -604,10 +604,10 @@
       "filename": "哥伦比娅Gu5.webp",
       "PicType": "fs",
       "isBan": false,
-      "md5": "9342f1d496de4b11c1028982b05aad1a",
+      "md5": "70377f467fa5a5bc206d2992b9372650",
       "rated": "none",
       "other": [],
-      "phash": "db482c784c310531",
+      "phash": "c9558a5c4a5b0a41",
       "abnormal": false,
       "secTags": [],
       "generation": 9
@@ -704,13 +704,20 @@
       "filename": "菈乌玛Gu4.webp",
       "PicType": "tp",
       "isBan": false,
-      "md5": "812288a8ae02faa25b3fbc3d7f09b241",
+      "md5": "bbca94b91f7e2be3ec84ebcb1466d61a",
       "rated": "none",
       "other": [],
-      "phash": "f3d75cdc8c2c8e88",
-      "abnormal": true
+      "phash": "fb75227a54222d55",
+      "abnormal": true,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2025-10-23T07:42:23.872Z"
+    "timestamp": "2025-10-23T07:42:23.872Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/135240738",
+      "pixivPid": "135240738"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT",
@@ -892,10 +899,10 @@
       "filename": "雷电将军Gu19.webp",
       "PicType": "tp",
       "isBan": false,
-      "md5": "71319e6d1c9ca84068cac2d8bd43bad6",
+      "md5": "8cdde73434901eb04d6261f4a28688b7",
       "rated": "p18",
       "other": [],
-      "phash": "f2c94979922b2a41",
+      "phash": "f1c525721a5a0222",
       "abnormal": false,
       "secTags": [],
       "generation": 9
@@ -6062,12 +6069,18 @@
       "filename": "茜特菈莉Gu17.webp",
       "PicType": "tp",
       "isBan": false,
-      "md5": "8e22e835d943a472ece36434525232a0",
-      "rated": "p18",
+      "md5": "9667e9c7e1776e814834ae7cbaee186e",
+      "rated": "none",
       "other": [],
-      "phash": "d9b13a5a2513324a"
+      "phash": "d9c5323453b1551a",
+      "abnormal": true,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2025-12-01T11:36:33.277Z"
+    "timestamp": "2025-12-01T11:36:33.277Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -6079,13 +6092,18 @@
       "filename": "茜特菈莉Gu18.webp",
       "PicType": "tp",
       "isBan": false,
-      "md5": "aed9e8e41279221856828c1b03817a3c",
-      "rated": "r18",
+      "md5": "e2b6742a3eb4fa3ec225dcb33b1f46fb",
+      "rated": "none",
       "other": [],
-      "phash": "d9653a7a05a24b13",
-      "abnormal": false
+      "phash": "d9e5654aa261a532",
+      "abnormal": true,
+      "secTags": [],
+      "generation": 9
     },
-    "timestamp": "2025-12-01T11:36:33.277Z"
+    "timestamp": "2025-12-01T11:36:33.277Z",
+    "source": {
+      "platform": "pixiv"
+    }
   },
   {
     "storagebox": "Miao-Plugin-MBT-2",
@@ -12342,10 +12360,10 @@
       "filename": "刻晴Gu5.webp",
       "PicType": "tp",
       "isBan": false,
-      "md5": "a64ece2ba17906bf8eff5481a90f9f59",
+      "md5": "70aca5c816ccdf5553c98dffdf79941d",
       "rated": "none",
       "other": [],
-      "phash": "fa4920b224110320",
+      "phash": "fa5951b225238b20",
       "abnormal": false,
       "secTags": [],
       "generation": 9
@@ -15597,6 +15615,154 @@
       "platform": "x",
       "url": "https://x.com/mu_ooa/status/2107983906834416100/photo/1",
       "xAccountId": "mu_ooa"
+    }
+  },
+  {
+    "gid": "3023544468",
+    "path": "gs-character/奥黛塔/奥黛塔Gu4.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "奥黛塔",
+    "attributes": {
+      "filename": "奥黛塔Gu4.webp",
+      "rated": "none",
+      "PicType": "tp",
+      "isBan": true,
+      "md5": "255e848aa46e69ad99ff59ff4655f499",
+      "other": [],
+      "secTags": [],
+      "abnormal": true,
+      "phash": "c95932512a519535"
+    },
+    "timestamp": "2026-10-11T05:39:35.629Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/150378023",
+      "pixivPid": "150378023"
+    }
+  },
+  {
+    "gid": "8104856753",
+    "path": "sr-character/火花/火花Gu4.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "characterName": "火花",
+    "attributes": {
+      "filename": "火花Gu4.webp",
+      "rated": "none",
+      "PicType": "tp",
+      "isBan": false,
+      "md5": "4f6e4bb464cd156ec71479b7ec8539d7",
+      "other": [],
+      "secTags": [],
+      "abnormal": false,
+      "phash": "99551183ba79d5d5",
+      "generation": 9
+    },
+    "timestamp": "2026-10-11T05:39:58.057Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/147991487",
+      "pixivPid": "147991487"
+    }
+  },
+  {
+    "gid": "7972850327",
+    "path": "gs-character/菈乌玛/菈乌玛Gu6.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "菈乌玛",
+    "attributes": {
+      "filename": "菈乌玛Gu6.webp",
+      "rated": "none",
+      "PicType": "tp",
+      "isBan": true,
+      "md5": "96ed276f530fcf3525943f016608212a",
+      "other": [],
+      "secTags": [],
+      "abnormal": true,
+      "phash": "d9751a9485968655"
+    },
+    "timestamp": "2026-10-11T05:40:18.232Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/134954520",
+      "pixivPid": "134954520"
+    }
+  },
+  {
+    "gid": "9203990009",
+    "path": "gs-character/薇斯纳/薇斯纳Gu2.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "薇斯纳",
+    "attributes": {
+      "filename": "薇斯纳Gu2.webp",
+      "rated": "none",
+      "PicType": "tp",
+      "isBan": false,
+      "md5": "a6f59a0198df55452750071e870fd81c",
+      "other": [],
+      "secTags": [],
+      "abnormal": false,
+      "phash": "da550155250daaa6",
+      "generation": 9
+    },
+    "timestamp": "2026-10-11T05:40:29.472Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/149988517",
+      "pixivPid": "149988517"
+    }
+  },
+  {
+    "gid": "2406423861",
+    "path": "gs-character/沃雅妮莎/沃雅妮莎Gu4.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "gs-character",
+    "characterName": "沃雅妮莎",
+    "attributes": {
+      "filename": "沃雅妮莎Gu4.webp",
+      "rated": "none",
+      "PicType": "tp",
+      "isBan": false,
+      "md5": "91eeb05def84a90ca91e4f82b4a9b760",
+      "other": [],
+      "secTags": [],
+      "abnormal": false,
+      "phash": "c89144b38c870684",
+      "generation": 9
+    },
+    "timestamp": "2026-10-11T05:40:47.342Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/150653336",
+      "pixivPid": "150653336"
+    }
+  },
+  {
+    "gid": "4988430193",
+    "path": "sr-character/虚照/虚照Gu1.webp",
+    "storagebox": "Miao-Plugin-MBT",
+    "storagebox_type": "sr-character",
+    "characterName": "虚照",
+    "attributes": {
+      "filename": "虚照Gu1.webp",
+      "rated": "p18",
+      "PicType": "tp",
+      "isBan": false,
+      "md5": "268563de3eedf523259d0a8c517cef0e",
+      "other": [],
+      "secTags": [],
+      "abnormal": false,
+      "phash": "d89d6402eae5f572",
+      "generation": 9
+    },
+    "timestamp": "2026-10-11T05:50:20.674Z",
+    "source": {
+      "platform": "pixiv",
+      "url": "https://www.pixiv.net/artworks/150070113",
+      "pixivPid": "150070113"
     }
   }
 ]

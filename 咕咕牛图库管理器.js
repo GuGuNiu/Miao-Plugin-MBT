@@ -7730,15 +7730,7 @@ class Presenter {
 
         if (forwardList.length > 1) {
           const ok = await Pheme.forward(e, forwardList, makeForwardMsgTitle);
-          if (!ok) {
-            for (const node of forwardList) {
-              const imgSegs = Array.isArray(node) ? node.filter((n) => n?.type === "image") : node?.type === "image" ? [node] : [];
-              for (const seg of imgSegs) {
-                await Pheme.send(e, seg);
-                await common.sleep(500);
-              }
-            }
-          }
+          if (!ok) Hades.W(`第 ${batchNum}/${pageCount} 批合并转发发送失败。`);
           await common.sleep(sleepInterval);
         }
       }
@@ -7838,15 +7830,7 @@ class Presenter {
 
         if (forwardList.length > 1) {
           const ok = await Pheme.forward(e, forwardList, makeForwardMsgTitle);
-          if (!ok) {
-            for (const node of forwardList) {
-              const imgSegs = Array.isArray(node) ? node.filter((n) => n?.type === "image") : node?.type === "image" ? [node] : [];
-              for (const seg of imgSegs) {
-                await Pheme.send(e, seg);
-                await common.sleep(500);
-              }
-            }
-          }
+          if (!ok) Hades.W(`第 ${batchNum}/${pageCount} 批合并转发发送失败。`);
           await common.sleep(sleepInterval);
         }
       }
@@ -10385,15 +10369,8 @@ class MiaoPluginMBT extends plugin {
     const title = `咕咕牛图库新增 - ${shotCount} 张`;
     if (!isScheduled && e) {
       const ok = await Pheme.forward(e, forwardList, title);
-      if (!ok) {
-        for (const node of forwardList) {
-          const seg = Array.isArray(node) ? node.find((n) => n?.type === "image") : null;
-          if (!seg) continue;
-          await Pheme.send(e, seg);
-          await common.sleep(500);
-        }
-      }
-      return true;
+      if (!ok) Hades.W(`面板图合并转发发送失败 (共 ${shotCount} 张)`);
+      return ok;
     }
     await MiaoPluginMBT.SendMasterMsg(await common.makeForwardMsg(e, forwardList, title), e, 0, Hades);
     return true;
