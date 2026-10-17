@@ -4026,7 +4026,7 @@ const DFC = {
   CommTTL: 2700000,
   LargeRepoNums: [2, 5],
   Depth: 1,
-  CronUpdate: "0 */6 * * *",
+  CronUpdate: "0 */3 * * *",
   Repo_Ops: true,
   PFL_Ops: PFL.NONE,
   RenderScale: 300,
